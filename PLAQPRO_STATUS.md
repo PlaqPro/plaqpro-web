@@ -5,13 +5,12 @@
 
 ## 🔐 Accès & Déploiement
 
-### URL Netlify
+### URL de production
 ```
-https://dancing-sunshine-a666d7.netlify.app
+https://plaqpro.github.io/plaqpro-web/
 ```
-> Déployer via **Netlify Drop** (drag & drop du dossier `C:\PlaQproWEB`)
-> ou via CLI : `netlify deploy --prod --dir C:\PlaQproWEB`
-> Le fichier `_redirects` contient : `/* /index.html 200` (SPA routing)
+> Hébergement : GitHub Pages (déploiement automatique sur git push vers master)
+> Workflow : `.github/workflows/deploy.yml` → branche `gh-pages` → GitHub Pages
 
 ### Serveur local de développement
 ```

@@ -48,7 +48,9 @@
       "Bash(gh auth *)",
       "Bash(git commit *)",
       "Bash(ls wrangler.jsonc)",
-      "Bash(rm wrangler.jsonc)"
+      "Bash(rm wrangler.jsonc)",
+      "Bash(ls PlaQproWEB/)",
+      "Bash(rm -rf PlaQproWEB)"
     ]
   }
 }
