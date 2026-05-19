@@ -1,0 +1,394 @@
+// ============================================================
+//  PLAQPRO WEB — Assistant IA (Groq API)
+//  assistant_ia.js
+// ============================================================
+
+const AssistantIA = {
+
+  MODEL:    'llama-3.1-8b-instant',
+  _open:    false,
+  _loading: false,
+  _history: [],
+
+
+  SYSTEM: `Tu es un assistant conseil en plaquisterie et peinture intégré dans PlaqPro+.
+Tu réponds aux questions sur les matériaux, normes DTU, conseils de pose, et choix de produits.
+IMPORTANT : Tu ne calcules JAMAIS de quantités toi-même. Pour tout calcul de plaques, rails, peinture ou autres quantités, tu dis toujours : 'Utilisez le Calcul Express de PlaqPro+ pour obtenir un résultat précis avec les bons ratios professionnels.'
+Tu réponds en français, de façon courte et pratique.`,
+
+  // ── Initialisation ────────────────────────────────────────
+  init() {
+    this._injectStyles();
+    this._buildWidget();
+    this._checkGroq();
+  },
+
+  // ── Vérification clé Groq ─────────────────────────────────
+  _checkGroq() {
+    const key = localStorage.getItem('plaqpro_groq_key') || '';
+    this._setStatus(key ? 'online' : 'offline');
+  },
+
+  _setStatus(s) {
+    const dot = document.getElementById('ia-status-dot');
+    const lbl = document.getElementById('ia-status-lbl');
+    if (!dot || !lbl) return;
+    if (s === 'online') {
+      dot.style.background = 'var(--ia-green)';
+      dot.style.boxShadow  = '0 0 6px var(--ia-green)';
+      lbl.textContent      = 'En ligne';
+    } else {
+      dot.style.background = '#A78BFA';
+      dot.style.boxShadow  = '0 0 6px #A78BFA';
+      lbl.textContent      = 'Version Pro';
+    }
+  },
+
+  // ── Construction du widget ────────────────────────────────
+  _buildWidget() {
+    const btn = document.createElement('button');
+    btn.id = 'ia-toggle-btn';
+    btn.innerHTML = '🤖';
+    btn.title = 'Assistant IA PlaqPro+';
+    btn.onclick = () => this.toggle();
+    document.body.appendChild(btn);
+
+    const win = document.createElement('div');
+    win.id = 'ia-window';
+    win.innerHTML = `
+      <div id="ia-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">🤖</span>
+          <div>
+            <div style="font-weight:700;font-size:14px;color:#F0F2F8">Assistant PlaqPro+</div>
+            <div style="display:flex;align-items:center;gap:5px;margin-top:2px">
+              <span id="ia-status-dot" style="width:7px;height:7px;border-radius:50%;background:#4E5770;display:inline-block"></span>
+              <span id="ia-status-lbl" style="font-size:11px;color:#8892AA">Vérification…</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="ia-hdr-btn" onclick="AssistantIA.clearHistory()" title="Effacer">🗑</button>
+          <button class="ia-hdr-btn" onclick="AssistantIA.toggle()" title="Fermer">✕</button>
+        </div>
+      </div>
+
+      <div id="ia-messages">
+        <div class="ia-msg ia-msg-bot">
+          <div class="ia-bubble">
+            Bonjour ! Je suis votre assistant conseil en plaquisterie.<br>
+            Posez-moi vos questions sur les matériaux, normes DTU ou techniques de pose. 💬
+          </div>
+        </div>
+      </div>
+
+      <div id="ia-input-row">
+        <textarea id="ia-input" placeholder="Ex: Quelle vis utiliser pour du BA13 sur ossature ?" rows="1"
+          onkeydown="AssistantIA._onKey(event)"></textarea>
+        <button id="ia-send-btn" onclick="AssistantIA.send()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    `;
+    document.body.appendChild(win);
+
+    const ta = document.getElementById('ia-input');
+    ta.addEventListener('input', () => {
+      ta.style.height = 'auto';
+      ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+    });
+  },
+
+  // ── Toggle ────────────────────────────────────────────────
+  toggle() {
+    this._open = !this._open;
+    const win = document.getElementById('ia-window');
+    const btn = document.getElementById('ia-toggle-btn');
+    win.classList.toggle('ia-open', this._open);
+    btn.classList.toggle('ia-btn-active', this._open);
+    btn.innerHTML = this._open ? '✕' : '🤖';
+    if (this._open) {
+      this._checkGroq();
+      setTimeout(() => document.getElementById('ia-input')?.focus(), 200);
+    }
+  },
+
+  // ── Envoi message ─────────────────────────────────────────
+  async send() {
+    if (this._loading) return;
+    const input = document.getElementById('ia-input');
+    const text  = input.value.trim();
+    if (!text) return;
+
+    const gc = groqConfig();
+    if (!gc) { this._promptCle(); return; }
+    const { url: endpoint, headers } = gc;
+
+    input.value = '';
+    input.style.height = 'auto';
+
+    this._addMessage('user', text);
+    this._history.push({ role: 'user', content: text });
+
+    this._loading = true;
+    document.getElementById('ia-send-btn').disabled = true;
+    const thinkingId = this._addMessage('bot', '<span class="ia-typing"><span></span><span></span><span></span></span>', true);
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model:    this.MODEL,
+          messages: [
+            { role: 'system', content: this.SYSTEM },
+            ...this._history.slice(-10)
+          ],
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${response.status}`);
+      }
+
+      const data   = await response.json();
+      const reply  = data.choices?.[0]?.message?.content?.trim() || '';
+      const bubble = document.getElementById(thinkingId);
+      if (bubble) bubble.innerHTML = this._formatMD(reply);
+      this._history.push({ role: 'assistant', content: reply });
+
+    } catch (err) {
+      const bubble = document.getElementById(thinkingId);
+      if (bubble) bubble.innerHTML = `<span style="color:#F75B5B">⚠ Erreur : ${err.message}</span>`;
+    }
+
+    this._loading = false;
+    document.getElementById('ia-send-btn').disabled = false;
+    document.getElementById('ia-input')?.focus();
+    this._scrollBottom();
+  },
+
+  // ── Formatage Markdown basique ────────────────────────────
+  _formatMD(text) {
+    return text
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g,     '<em>$1</em>')
+      .replace(/`(.+?)`/g,       '<code>$1</code>')
+      .replace(/^### (.+)$/gm,   '<h4>$1</h4>')
+      .replace(/^## (.+)$/gm,    '<h3>$1</h3>')
+      .replace(/^- (.+)$/gm,     '<li>$1</li>')
+      .replace(/(<li>.*<\/li>)/s,'<ul>$1</ul>')
+      .replace(/\n\n/g,          '<br><br>')
+      .replace(/\n/g,            '<br>');
+  },
+
+  // ── Helpers ───────────────────────────────────────────────
+  _addMessage(role, html, isTemp = false) {
+    const id  = 'ia-msg-' + Date.now();
+    const div = document.createElement('div');
+    div.className = `ia-msg ia-msg-${role === 'user' ? 'user' : 'bot'}`;
+    div.innerHTML = `<div class="ia-bubble" id="${id}">${html}</div>`;
+    document.getElementById('ia-messages').appendChild(div);
+    this._scrollBottom();
+    return id;
+  },
+
+  _scrollBottom() {
+    const el = document.getElementById('ia-messages');
+    if (el) el.scrollTop = el.scrollHeight;
+  },
+
+  _onKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); }
+  },
+
+  clearHistory() {
+    this._history = [];
+    const msgs = document.getElementById('ia-messages');
+    if (msgs) msgs.innerHTML = `
+      <div class="ia-msg ia-msg-bot">
+        <div class="ia-bubble">Conversation effacée. Comment puis-je vous aider ? 💬</div>
+      </div>`;
+  },
+
+  _promptCle() {
+    const id = 'ia-cle-' + Date.now();
+    this._addMessage('bot', `
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div>🔑 <strong>Entrez votre clé Groq gratuite :</strong></div>
+        <input id="${id}" type="password" placeholder="gsk_..."
+          style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 10px;color:#F0F2F8;font-size:12px;outline:none;width:100%;box-sizing:border-box"
+          onkeydown="if(event.key==='Enter')AssistantIA._validerCle('${id}')">
+        <button onclick="AssistantIA._validerCle('${id}')"
+          style="background:linear-gradient(135deg,#5B9BFF,#3B7DE8);border:none;border-radius:8px;padding:7px 14px;color:white;font-size:12px;cursor:pointer;align-self:flex-start">
+          Valider
+        </button>
+        <a href="https://console.groq.com" target="_blank"
+          style="color:#4F8EF7;font-size:11px;text-decoration:none">
+          Obtenez une clé gratuite sur console.groq.com →
+        </a>
+      </div>
+    `);
+    setTimeout(() => document.getElementById(id)?.focus(), 100);
+  },
+
+  _validerCle(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const cle = input.value.trim();
+    if (!cle || !cle.startsWith('gsk_')) {
+      input.style.borderColor = '#F75B5B';
+      input.placeholder = 'Clé invalide — commence par gsk_';
+      input.value = '';
+      return;
+    }
+    localStorage.setItem('plaqpro_groq_key', cle);
+    this._checkGroq();
+    this._addMessage('bot', '✅ <strong>Clé enregistrée !</strong> Posez maintenant votre question.');
+  },
+
+  // ── Styles ────────────────────────────────────────────────
+  _injectStyles() {
+    const s = document.createElement('style');
+    s.textContent = `
+      :root {
+        --ia-bg:     rgba(13,15,20,0.97);
+        --ia-border: rgba(255,255,255,0.10);
+        --ia-accent: #4F8EF7;
+        --ia-green:  #2DD4A0;
+        --ia-user:   rgba(79,142,247,0.18);
+        --ia-bot:    rgba(255,255,255,0.05);
+      }
+
+      #ia-toggle-btn {
+        position: fixed; bottom: 28px; right: 28px; z-index: 9000;
+        width: 54px; height: 54px; border-radius: 50%;
+        background: linear-gradient(135deg, #5B9BFF, #3B7DE8);
+        border: 1px solid rgba(79,142,247,0.4);
+        box-shadow: 0 6px 24px rgba(79,142,247,0.45);
+        font-size: 22px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.2s ease;
+      }
+      #ia-toggle-btn:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 10px 32px rgba(79,142,247,0.6); }
+      #ia-toggle-btn.ia-btn-active { background: rgba(30,35,50,0.95); font-size: 18px; }
+
+      #ia-window {
+        position: fixed; bottom: 96px; right: 28px; z-index: 8999;
+        width: 380px; height: 520px;
+        background: var(--ia-bg);
+        border: 1px solid var(--ia-border);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+        display: flex; flex-direction: column;
+        opacity: 0; pointer-events: none;
+        transform: translateY(16px) scale(0.96);
+        transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+        backdrop-filter: blur(24px);
+        overflow: hidden;
+      }
+      #ia-window.ia-open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
+
+      #ia-header {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--ia-border);
+        background: rgba(255,255,255,0.03);
+        display: flex; align-items: center; justify-content: space-between;
+        flex-shrink: 0;
+      }
+      .ia-hdr-btn {
+        width: 28px; height: 28px; border-radius: 8px;
+        background: rgba(255,255,255,0.06); border: 1px solid var(--ia-border);
+        color: #8892AA; font-size: 13px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.15s;
+      }
+      .ia-hdr-btn:hover { background: rgba(255,255,255,0.12); color: #F0F2F8; }
+
+      #ia-messages {
+        flex: 1; overflow-y: auto; padding: 14px 12px;
+        display: flex; flex-direction: column; gap: 10px;
+        scroll-behavior: smooth;
+      }
+      #ia-messages::-webkit-scrollbar { width: 4px; }
+      #ia-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+      .ia-msg { display: flex; }
+      .ia-msg-user  { justify-content: flex-end; }
+      .ia-msg-bot   { justify-content: flex-start; }
+
+      .ia-bubble {
+        max-width: 88%; padding: 10px 14px;
+        border-radius: 16px; font-size: 13px; line-height: 1.55;
+        color: #F0F2F8; word-break: break-word;
+      }
+      .ia-msg-user .ia-bubble {
+        background: var(--ia-user);
+        border: 1px solid rgba(79,142,247,0.25);
+        border-bottom-right-radius: 4px;
+      }
+      .ia-msg-bot .ia-bubble {
+        background: var(--ia-bot);
+        border: 1px solid var(--ia-border);
+        border-bottom-left-radius: 4px;
+      }
+      .ia-bubble code { background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+      .ia-bubble strong { color: #fff; }
+      .ia-bubble h3,h4 { margin: 6px 0 3px; font-size: 13px; color: var(--ia-accent); }
+      .ia-bubble ul { padding-left: 16px; margin: 4px 0; }
+      .ia-bubble li { margin-bottom: 2px; }
+
+      .ia-cursor { display: inline-block; animation: ia-blink 0.8s infinite; color: var(--ia-accent); }
+      @keyframes ia-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+      .ia-typing { display: inline-flex; gap: 4px; align-items: center; padding: 2px 0; }
+      .ia-typing span {
+        width: 7px; height: 7px; border-radius: 50%;
+        background: #4E5770; animation: ia-dot 1.2s infinite;
+      }
+      .ia-typing span:nth-child(2) { animation-delay: 0.2s; }
+      .ia-typing span:nth-child(3) { animation-delay: 0.4s; }
+      @keyframes ia-dot { 0%,80%,100%{transform:scale(0.8);opacity:0.4} 40%{transform:scale(1.1);opacity:1} }
+
+      #ia-input-row {
+        display: flex; align-items: flex-end; gap: 8px;
+        padding: 10px 12px;
+        border-top: 1px solid var(--ia-border);
+        background: rgba(255,255,255,0.02);
+        flex-shrink: 0;
+      }
+      #ia-input {
+        flex: 1; background: rgba(255,255,255,0.06);
+        border: 1px solid var(--ia-border);
+        border-radius: 12px; padding: 9px 12px;
+        color: #F0F2F8; font-size: 13px; font-family: inherit;
+        resize: none; outline: none; line-height: 1.4;
+        min-height: 38px; max-height: 120px;
+        transition: border-color 0.15s;
+      }
+      #ia-input:focus { border-color: var(--ia-accent); }
+      #ia-input::placeholder { color: #4E5770; }
+      #ia-send-btn {
+        width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+        background: linear-gradient(135deg, #5B9BFF, #3B7DE8);
+        border: none; color: white; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.15s; box-shadow: 0 3px 10px rgba(79,142,247,0.35);
+      }
+      #ia-send-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(79,142,247,0.5); }
+      #ia-send-btn:disabled { opacity: 0.4; cursor: default; }
+
+      @media (max-width: 480px) {
+        #ia-window { width: calc(100vw - 20px); right: 10px; bottom: 80px; }
+        #ia-toggle-btn { right: 16px; bottom: 16px; }
+      }
+    `;
+    document.head.appendChild(s);
+  },
+};
+
+document.addEventListener('DOMContentLoaded', () => AssistantIA.init());
