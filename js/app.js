@@ -941,6 +941,7 @@ const Pages = {
       montantTVA: d.totaux.montantTVA,
       tva:        d.totaux.tva,
     });
+    Pages._devisEnCours.id = saved.id;
     App.toast('Devis ' + saved.numero + ' enregistré !');
   },
 
