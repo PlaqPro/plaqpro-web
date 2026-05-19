@@ -662,7 +662,16 @@ const Pages = {
     } else {
       // Afficher le dernier devis
       const d = devisExistants[devisExistants.length - 1];
-      Pages._devisEnCours = { ...d, chantierId: id };
+      Pages._devisEnCours = {
+        ...d,
+        chantierId: id,
+        totaux: d.totaux || {
+          totalHT:    d.totalHT    || 0,
+          totalTTC:   d.totalTTC   || 0,
+          montantTVA: d.montantTVA || (d.totalHT ? d.totalHT * (d.tva || 0.1) : 0),
+          tva:        d.tva        || 0.1,
+        },
+      };
       Pages.afficherDevis(d, chantier, client);
     }
   },
