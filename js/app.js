@@ -672,7 +672,7 @@ const Pages = {
           tva:        d.tva        || 0.1,
         },
       };
-      Pages.afficherDevis(d, chantier, client);
+      Pages.afficherDevis(Pages._devisEnCours, chantier, client);
     }
   },
 
