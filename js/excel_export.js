@@ -138,46 +138,27 @@ const ExcelExport = {
       // Ligne vide
       r++;
 
-      // En-têtes colonnes
-      const headers = ['Réf.', 'Désignation', 'Unité', 'Quantité', 'Prix Unit. HT', 'Total HT'];
-      headers.forEach((h, i) => {
-        ws[String.fromCharCode(65+i) + r] = { v: h, t: 's', s: this._styleHeader(this.COLORS.bleuMoyen, this.COLORS.blanc, true, 10) };
+      // Headers colonnes — structure PlaqPro : poste / totalClient
+      const headers = ['Poste', 'Détail', 'Base HT', 'Marge', 'Total HT client'];
+      ['A','B','C','D','E'].forEach((c, i) => {
+        ws[`${c}${r}`] = { v: headers[i], t: 's', s: this._styleHeader(this.COLORS.bleuMoyen, this.COLORS.blanc, true, 10) };
       });
       r++;
 
-      // Lignes devis
+      // Lignes devis — champs réels : poste, baseHT, marge, totalClient
       const lignes = devis.lignes || [];
-      let totalHT = 0;
-      lignes.forEach((l, idx) => {
-        const fond = idx % 2 === 0 ? this.COLORS.blanc : this.COLORS.gris;
-        ws[`A${r}`] = { v: l.reference || '', t: 's', s: this._styleCell(false, 'left', fond) };
-        ws[`B${r}`] = { v: l.designation || l.description || '', t: 's', s: this._styleCell(false, 'left', fond) };
-        ws[`C${r}`] = { v: l.unite || 'u', t: 's', s: this._styleCell(false, 'center', fond) };
-        ws[`D${r}`] = { v: this._fmt(l.quantite || l.qte || 0), t: 'n', s: this._styleCell(false, 'right', fond), z: '#,##0.00' };
-        ws[`E${r}`] = { v: this._fmt(l.prixUnitaire || l.prixU || 0), t: 'n', s: this._styleCell(false, 'right', fond), z: '#,##0.00 €' };
-        const total = this._fmt((l.quantite || l.qte || 0) * (l.prixUnitaire || l.prixU || 0));
-        ws[`F${r}`] = { v: total, t: 'n', s: this._styleCell(true, 'right', fond), z: '#,##0.00 €' };
-        totalHT += total;
-        r++;
-      });
+      let totalHT  = devis.totalHT || 0;
 
-      // Si pas de lignes → afficher les données de calcul
-      if (!lignes.length && devis.totalHT) {
-        totalHT = devis.totalHT || 0;
-        const postes = [
-          ['CLOISONS', 'Travaux de cloisons (plaques, ossature)', 'forfait', 1, devis.totalHT * 0.4],
-          ['JOINTS',   'Jointage et finition plâtre', 'forfait', 1, devis.totalHT * 0.2],
-          ['PEINTURE', 'Peinture intérieure', 'forfait', 1, devis.totalHT * 0.2],
-          ['MO',       "Main d'œuvre", 'h', 1, devis.totalHT * 0.2],
-        ];
-        postes.forEach((p, idx) => {
+      if (lignes.length) {
+        totalHT = 0;
+        lignes.forEach((l, idx) => {
           const fond = idx % 2 === 0 ? this.COLORS.blanc : this.COLORS.gris;
-          ws[`A${r}`] = { v: p[0], t: 's', s: this._styleCell(false, 'left', fond) };
-          ws[`B${r}`] = { v: p[1], t: 's', s: this._styleCell(false, 'left', fond) };
-          ws[`C${r}`] = { v: p[2], t: 's', s: this._styleCell(false, 'center', fond) };
-          ws[`D${r}`] = { v: p[3], t: 'n', s: this._styleCell(false, 'right', fond), z: '#,##0.00' };
-          ws[`E${r}`] = { v: this._fmt(p[4]), t: 'n', s: this._styleCell(false, 'right', fond), z: '#,##0.00 €' };
-          ws[`F${r}`] = { v: this._fmt(p[4]), t: 'n', s: this._styleCell(true, 'right', fond), z: '#,##0.00 €' };
+          ws[`A${r}`] = { v: l.poste || l.designation || '', t: 's', s: this._styleCell(true, 'left', fond) };
+          ws[`B${r}`] = { v: l.description || '', t: 's', s: this._styleCell(false, 'left', fond) };
+          ws[`C${r}`] = { v: this._fmt(l.baseHT || 0), t: 'n', s: this._styleCell(false, 'right', fond), z: '#,##0.00 €' };
+          ws[`D${r}`] = { v: l.marge ? '+' + Math.round(l.marge * 100) + '%' : '', t: 's', s: this._styleCell(false, 'center', fond) };
+          ws[`E${r}`] = { v: this._fmt(l.totalClient || 0), t: 'n', s: this._styleCell(true, 'right', fond), z: '#,##0.00 €' };
+          totalHT += this._fmt(l.totalClient || 0);
           r++;
         });
       }
@@ -186,9 +167,10 @@ const ExcelExport = {
       r++;
 
       // Totaux
-      const tva      = devis.tva || 0.10;
-      const totalTVA = totalHT * tva;
-      const totalTTC = totalHT + totalTVA;
+      const totaux   = devis.totaux || {};
+      const tva      = totaux.tva || devis.tva || 0.10;
+      const totalTTC = totaux.totalTTC || devis.totalTTC || (totalHT * (1 + tva));
+      const totalTVA = totaux.montantTVA || (totalHT * tva);
 
       const ligTotaux = [
         ['', '', '', '', 'Total HT', totalHT, this.COLORS.blanc],
@@ -208,13 +190,13 @@ const ExcelExport = {
       ws[`A${r}`] = { v: config.piedPageDevis || 'Devis valable 30 jours.', t: 's', s: this._styleCell(false, 'left', this.COLORS.gris) };
 
       // Dimensions colonnes
-      ws['!ref'] = `A1:F${r}`;
-      ws['!cols'] = [{ wch: 12 }, { wch: 35 }, { wch: 10 }, { wch: 10 }, { wch: 16 }, { wch: 16 }];
+      ws['!ref'] = `A1:E${r}`;
+      ws['!cols'] = [{ wch: 22 }, { wch: 30 }, { wch: 14 }, { wch: 10 }, { wch: 16 }];
       ws['!merges'] = [
         { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },
-        { s: { r: 0, c: 4 }, e: { r: 0, c: 5 } },
+        { s: { r: 0, c: 4 }, e: { r: 0, c: 4 } },
         { s: { r: 1, c: 0 }, e: { r: 1, c: 1 } },
-        { s: { r: r-1, c: 0 }, e: { r: r-1, c: 5 } },
+        { s: { r: r-1, c: 0 }, e: { r: r-1, c: 4 } },
       ];
 
       XLSX.utils.book_append_sheet(wb, ws, 'Devis');
