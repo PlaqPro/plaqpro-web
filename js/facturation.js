@@ -88,6 +88,7 @@ Object.assign(Pages, {
                 ? `<button class="btn btn-primary btn-sm" onclick="Pages.marquerPayee(${f.id})">✅ Payée</button>` : ''}
               <button class="btn btn-secondary btn-sm" onclick="EmailDevis.envoyerFacture(${f.id})">📧</button>
               <button class="btn btn-secondary btn-sm" onclick="DocPrint.apercu('facture',${f.id})">🖨</button>
+              <button class="btn btn-secondary btn-sm" onclick="ExcelExport.exporterFacture(${f.id})">📊</button>
             </div>
           </td>
         </tr>
