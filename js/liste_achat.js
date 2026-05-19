@@ -21,6 +21,7 @@ Pages.listeAchat = function(params) {
       </select>
       <div style="display:flex;gap:8px">
         <button class="btn btn-secondary" id="btn-achat-print" onclick="ListeAchat.imprimer()" style="display:none">🖨 Imprimer</button>
+        <button class="btn btn-secondary" id="btn-achat-excel" onclick="ExcelExport.exporterListeAchat(ListeAchat._chantier,ListeAchat._lignes,ListeAchat._totaux)" style="display:none">📊 Excel</button>
         <button class="btn btn-secondary" id="btn-achat-copy"  onclick="ListeAchat.copier()"   style="display:none">📋 Copier</button>
         <button class="btn btn-primary"   id="btn-achat-devis" onclick="ListeAchat.versDevis()" style="display:none">📄 Créer devis</button>
       </div>
@@ -224,7 +225,7 @@ const ListeAchat = {
     const config = DB.getConfig();
 
     // Afficher les boutons
-    ['btn-achat-print','btn-achat-copy','btn-achat-devis'].forEach(id => {
+    ['btn-achat-print','btn-achat-copy','btn-achat-devis','btn-achat-excel'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'inline-flex';
     });

@@ -169,6 +169,7 @@ Object.assign(Pages, {
           ? `<button class="btn btn-primary" onclick="Pages.marquerPayee(${factureId})">✅ Marquer payée</button>` : ''}
         <button class="btn btn-primary" onclick="EmailDevis.envoyerFacture(${factureId})">📧 Envoyer au client</button>
         <button class="btn btn-secondary" onclick="DocPrint.apercu('facture',${factureId})">🖨 Imprimer / PDF</button>
+        <button class="btn btn-secondary" onclick="ExcelExport.exporterFacture(${factureId})">📊 Excel</button>
         <button class="btn btn-secondary" onclick="Pages.telechargerXMLFacturX(${factureId})" title="Télécharger le fichier XML Factur-X (ZUGFeRD EN16931)">🇪🇺 XML Factur-X</button>
         <button class="btn btn-secondary" onclick="App.closeModal()">Fermer</button>
       </div>`
