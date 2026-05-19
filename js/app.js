@@ -631,6 +631,7 @@ const Pages = {
           <button class="btn btn-secondary" id="btn-generer-devis" onclick="Pages.genererDevis()" style="display:none">⚡ Générer depuis métrés</button>
           <button class="btn btn-primary" id="btn-save-devis" onclick="Pages.sauvegarderDevis()" style="display:none">💾 Enregistrer</button>
           <button class="btn btn-secondary" id="btn-print-devis" onclick="Pages.imprimerDevis()" style="display:none">🖨 Aperçu / Imprimer</button>
+          <button class="btn btn-secondary" id="btn-excel-devis" onclick="Pages.exporterDevisExcel()" style="display:none">📊 Excel</button>
         </div>
       </div>
       <div id="devis-content"></div>
@@ -697,6 +698,7 @@ const Pages = {
 
     document.getElementById('btn-save-devis').style.display = 'inline-flex';
     document.getElementById('btn-print-devis').style.display = 'inline-flex';
+    document.getElementById('btn-excel-devis').style.display = 'inline-flex';
     Pages.afficherDevis(Pages._devisEnCours, chantier, client);
   },
 
@@ -849,6 +851,7 @@ const Pages = {
 
     document.getElementById('btn-save-devis').style.display = 'inline-flex';
     document.getElementById('btn-print-devis').style.display = 'inline-flex';
+    document.getElementById('btn-excel-devis').style.display = 'inline-flex';
   },
 
   majMargeLigne(index, valeur) {
@@ -942,7 +945,14 @@ const Pages = {
   },
 
   imprimerDevis() {
+    const btnXls = document.getElementById('btn-excel-devis');
+    if (btnXls && Pages._devisEnCours?.id) btnXls.style.display = 'inline-flex';
     window.print();
+  },
+
+  exporterDevisExcel() {
+    if (Pages._devisEnCours?.id) ExcelExport.exporterDevis(Pages._devisEnCours.id);
+    else App.toast('Enregistrez le devis d\'abord', 'error');
   },
 
   // ── Base tarifaire ────────────────────────────────────────

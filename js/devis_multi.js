@@ -98,6 +98,7 @@ var DevisMulti = {
       + '<div class="dm-header-actions">'
       + '<button class="btn btn-secondary btn-sm" onclick="DevisMulti._nouveau()" title="Nouveau devis vide">🗑 Nouveau</button>'
       + '<button class="btn btn-secondary btn-sm" onclick="DevisMulti.imprimer()">🖨 Imprimer A4</button>'
+      + '<button class="btn btn-secondary btn-sm" onclick="DevisMulti.exporterExcel()">📊 Excel</button>'
       + '<button class="btn btn-primary" onclick="DevisMulti.enregistrer()">💾 Enregistrer le devis</button>'
       + '</div>'
       + '</div>'
@@ -743,6 +744,12 @@ var DevisMulti = {
     win.document.close();
     win.focus();
     setTimeout(function() { win.print(); }, 500);
+  },
+
+  exporterExcel: function() {
+    var devis = DB.devis[DB.devis.length - 1];
+    if (devis) ExcelExport.exporterDevis(devis.id);
+    else App.toast('Aucun devis à exporter', 'error');
   },
 
   // ── Styles ────────────────────────────────────────────────
