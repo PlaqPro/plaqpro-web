@@ -182,7 +182,7 @@ const ExcelExport = {
         ['', '', '', '', 'TOTAL TTC', totalTTC, this.COLORS.bleuClair],
       ];
 
-      ligTotaux.forEach(([a,b,c,d,label,val,fond]) => {
+      ligTotaux.forEach(([_a,_b,_c,_d,label,val,fond]) => {
         ws[`A${r}`] = ws[`B${r}`] = ws[`C${r}`] = ws[`D${r}`] = { v: '', t: 's' };
         ws[`E${r}`] = { v: label, t: 's', s: this._styleCell(true, 'right', fond, label === 'TOTAL TTC' ? this.COLORS.bleuFonce : this.COLORS.texte) };
         ws[`F${r}`] = { v: this._fmt(val), t: 'n', s: this._styleCell(true, 'right', fond, label === 'TOTAL TTC' ? this.COLORS.bleuFonce : this.COLORS.texte), z: '#,##0.00 €' };
