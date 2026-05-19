@@ -1,0 +1,409 @@
+// ============================================================
+//  PLAQPRO WEB — Module Facturation
+//  facturation.js
+// ============================================================
+
+Object.assign(Pages, {
+
+  // ── Liste des factures ────────────────────────────────────
+  factures() {
+    const factures = DB.factures;
+    const div = document.createElement('div');
+
+    const counts = {
+      brouillon: factures.filter(f => f.statut === 'Brouillon').length,
+      envoyee:   factures.filter(f => f.statut === 'Envoyée').length,
+      payee:     factures.filter(f => f.statut === 'Payée').length,
+      annulee:   factures.filter(f => f.statut === 'Annulée').length,
+    };
+
+    div.innerHTML = `
+      <div class="flex justify-between items-center mb-16">
+        <div class="nav-tabs" id="fac-tabs">
+          <button class="nav-tab active" onclick="Pages.filtrerFactures('', this)">Toutes (${factures.length})</button>
+          <button class="nav-tab" onclick="Pages.filtrerFactures('Brouillon', this)">Brouillon (${counts.brouillon})</button>
+          <button class="nav-tab" onclick="Pages.filtrerFactures('Envoyée', this)">Envoyées (${counts.envoyee})</button>
+          <button class="nav-tab" onclick="Pages.filtrerFactures('Payée', this)">Payées (${counts.payee})</button>
+          <button class="nav-tab" onclick="Pages.filtrerFactures('Annulée', this)">Annulées (${counts.annulee})</button>
+        </div>
+      </div>
+
+      ${factures.length === 0 ? `
+        <div class="card">
+          <div class="empty-state">
+            <div class="empty-state-icon">🧾</div>
+            <div class="empty-state-title">Aucune facture</div>
+            <div class="empty-state-sub">Convertissez un devis accepté en facture depuis la page Devis</div>
+            <button class="btn btn-primary" onclick="App.navigate('devis')">Aller aux devis</button>
+          </div>
+        </div>
+      ` : `
+        <div class="card">
+          <div class="table-wrap">
+            <table id="factures-table">
+              <thead>
+                <tr>
+                  <th>N° Facture</th>
+                  <th>Devis lié</th>
+                  <th>Client</th>
+                  <th>Chantier</th>
+                  <th>Date</th>
+                  <th>Échéance</th>
+                  <th>Total TTC</th>
+                  <th>Statut</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="factures-body">
+                ${Pages._renderLignesFactures(factures)}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `}
+    `;
+    return div;
+  },
+
+  _renderLignesFactures(factures) {
+    return factures.map(f => {
+      const chantier = DB.getChantier(f.chantierId);
+      const client   = chantier ? DB.getClient(chantier.clientId) : null;
+      const enRetard = f.statut !== 'Payée' && f.statut !== 'Annulée'
+                    && f.dateEcheance && new Date(f.dateEcheance) < new Date();
+      return `
+        <tr>
+          <td class="font-mono"><strong>${f.numero}</strong></td>
+          <td class="font-mono text-sm text-secondary">${f.devisNumero || '—'}</td>
+          <td>${client?.nom || '—'}</td>
+          <td class="text-secondary text-sm">${chantier?.nom || '—'}</td>
+          <td>${App.formatDate(f.date)}</td>
+          <td class="${enRetard ? 'text-danger' : ''}">${App.formatDate(f.dateEcheance)}${enRetard ? ' ⚠' : ''}</td>
+          <td><strong class="font-mono">${Calculs.fmt(f.totalTTC)}</strong></td>
+          <td>${Pages._badgeFacture(f.statut)}</td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn btn-secondary btn-sm" onclick="Pages.voirFacture(${f.id})">👁 Voir</button>
+              ${f.statut !== 'Payée' && f.statut !== 'Annulée'
+                ? `<button class="btn btn-primary btn-sm" onclick="Pages.marquerPayee(${f.id})">✅ Payée</button>` : ''}
+              <button class="btn btn-secondary btn-sm" onclick="EmailDevis.envoyerFacture(${f.id})">📧</button>
+              <button class="btn btn-secondary btn-sm" onclick="DocPrint.apercu('facture',${f.id})">🖨</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  _badgeFacture(statut) {
+    const map = {
+      'Brouillon': 'badge-gray',
+      'Envoyée':   'badge-blue',
+      'Payée':     'badge-green',
+      'Annulée':   'badge-red',
+      'Avoir':     'badge-orange',
+    };
+    return `<span class="badge ${map[statut] || 'badge-gray'}">${statut}</span>`;
+  },
+
+  filtrerFactures(statut, btn) {
+    document.querySelectorAll('#fac-tabs .nav-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    const list = statut ? DB.factures.filter(f => f.statut === statut) : DB.factures;
+    const body = document.getElementById('factures-body');
+    if (body) body.innerHTML = Pages._renderLignesFactures(list);
+  },
+
+  // ── Convertir un devis en facture ─────────────────────────
+  convertirEnFacture(devisId) {
+    const devis = DB.getById(DB.KEYS.devis, devisId);
+    if (!devis) { App.toast('Devis introuvable', 'error'); return; }
+    if (devis.statut !== 'Accepté') { App.toast('Seuls les devis Acceptés peuvent être facturés', 'error'); return; }
+
+    const existing = DB.factures.find(f => f.devisId === devisId);
+    if (existing) {
+      if (!confirm(`Une facture ${existing.numero} existe déjà pour ce devis. Créer quand même ?`)) return;
+    }
+
+    const date = new Date().toISOString().split('T')[0];
+    const ech  = new Date(); ech.setDate(ech.getDate() + 30);
+
+    const facture = DB.addFacture({
+      devisId:     devis.id,
+      devisNumero: devis.numero,
+      chantierId:  devis.chantierId,
+      date,
+      dateEcheance: ech.toISOString().split('T')[0],
+      statut:      'Brouillon',
+      lignes:      devis.lignes || [],
+      totalHT:     devis.totalHT     || 0,
+      totalTTC:    devis.totalTTC    || 0,
+      montantTVA:  devis.montantTVA  || 0,
+      tva:         devis.tva         || 0.1,
+      datePaiement: null,
+    });
+
+    App.toast(`Facture ${facture.numero} créée !`);
+    App.navigate('factures');
+    setTimeout(() => Pages.voirFacture(facture.id), 150);
+  },
+
+  // ── Afficher le détail d'une facture ──────────────────────
+  voirFacture(factureId) {
+    const facture = DB.getById(DB.KEYS.factures, factureId);
+    if (!facture) return;
+    const chantier = DB.getChantier(facture.chantierId);
+    const client   = chantier ? DB.getClient(chantier.clientId) : null;
+    const config   = DB.getConfig();
+
+    App.openModal(
+      `Facture ${facture.numero}`,
+      Pages._detailFacture(facture, chantier, client, config),
+      `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select class="form-control" style="width:140px"
+          onchange="Pages._changerStatutFacture(${factureId}, this.value)">
+          ${['Brouillon','Envoyée','Payée','Annulée','Avoir']
+            .map(s => `<option ${facture.statut === s ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+        ${facture.statut !== 'Payée' && facture.statut !== 'Annulée'
+          ? `<button class="btn btn-primary" onclick="Pages.marquerPayee(${factureId})">✅ Marquer payée</button>` : ''}
+        <button class="btn btn-primary" onclick="EmailDevis.envoyerFacture(${factureId})">📧 Envoyer au client</button>
+        <button class="btn btn-secondary" onclick="DocPrint.apercu('facture',${factureId})">🖨 Imprimer / PDF</button>
+        <button class="btn btn-secondary" onclick="Pages.telechargerXMLFacturX(${factureId})" title="Télécharger le fichier XML Factur-X (ZUGFeRD EN16931)">🇪🇺 XML Factur-X</button>
+        <button class="btn btn-secondary" onclick="App.closeModal()">Fermer</button>
+      </div>`
+    );
+  },
+
+  // ── Factur-X 2026 — génération XML ZUGFeRD/EN16931 ────────
+  _genererXMLFacturX(facture, client, chantier, config) {
+    const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const fmtDate = d => (d || '').replace(/-/g, '');
+    const fmtAmt  = n => parseFloat(n || 0).toFixed(2);
+    const now     = fmtDate(new Date().toISOString().slice(0, 10));
+    const echeance= fmtDate(facture.dateEcheance || '');
+    const tvaRate = Math.round((facture.tva || 0.1) * 100);
+    const totalHT = parseFloat(facture.totalHT  || 0);
+    const montantTVA = parseFloat(facture.montantTVA || totalHT * (facture.tva || 0.1));
+    const totalTTC= parseFloat(facture.totalTTC || 0);
+    const siretVendeur  = esc(config.siret  || '');
+    const siretAcheteur = esc(client?.siret || '');
+
+    const lignesXML = (facture.lignes || []).map((l, i) => `
+      <ram:IncludedSupplyChainTradeLineItem>
+        <ram:AssociatedDocumentLineDocument>
+          <ram:LineID>${i + 1}</ram:LineID>
+        </ram:AssociatedDocumentLineDocument>
+        <ram:SpecifiedTradeProduct>
+          <ram:Name>${esc(l.poste || l.designation || l.nom || 'Prestation')}</ram:Name>
+        </ram:SpecifiedTradeProduct>
+        <ram:SpecifiedLineTradeAgreement>
+          <ram:NetPriceProductTradePrice>
+            <ram:ChargeAmount>${fmtAmt(l.baseHT || l.prixUnitaire || 0)}</ram:ChargeAmount>
+          </ram:NetPriceProductTradePrice>
+        </ram:SpecifiedLineTradeAgreement>
+        <ram:SpecifiedLineTradeDelivery>
+          <ram:BilledQuantity unitCode="C62">${parseFloat(l.quantite || 1).toFixed(4)}</ram:BilledQuantity>
+        </ram:SpecifiedLineTradeDelivery>
+        <ram:SpecifiedLineTradeSettlement>
+          <ram:ApplicableTradeTax>
+            <ram:TypeCode>VAT</ram:TypeCode>
+            <ram:CategoryCode>S</ram:CategoryCode>
+            <ram:RateApplicablePercent>${tvaRate}</ram:RateApplicablePercent>
+          </ram:ApplicableTradeTax>
+          <ram:SpecifiedTradeSettlementLineMonetarySummation>
+            <ram:LineTotalAmount>${fmtAmt(l.totalClient || l.prixUnitaire || 0)}</ram:LineTotalAmount>
+          </ram:SpecifiedTradeSettlementLineMonetarySummation>
+        </ram:SpecifiedLineTradeSettlement>
+      </ram:IncludedSupplyChainTradeLineItem>`).join('');
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<rsm:CrossIndustryInvoice
+  xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
+  xmlns:qdt="urn:un:unece:uncefact:data:standard:QualifiedDataType:100"
+  xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100"
+  xmlns:udt="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100">
+  <rsm:ExchangedDocumentContext>
+    <ram:GuidelineSpecifiedDocumentContextParameter>
+      <ram:ID>urn:factur-x.eu:1p0:en16931</ram:ID>
+    </ram:GuidelineSpecifiedDocumentContextParameter>
+  </rsm:ExchangedDocumentContext>
+  <rsm:ExchangedDocument>
+    <ram:ID>${esc(facture.numero)}</ram:ID>
+    <ram:TypeCode>380</ram:TypeCode>
+    <ram:IssueDateTime>
+      <udt:DateTimeString format="102">${now}</udt:DateTimeString>
+    </ram:IssueDateTime>
+  </rsm:ExchangedDocument>
+  <rsm:SupplyChainTradeTransaction>
+    ${lignesXML}
+    <ram:ApplicableHeaderTradeAgreement>
+      <ram:SellerTradeParty>
+        <ram:Name>${esc(config.nomEntreprise || 'Entreprise')}</ram:Name>
+        <ram:PostalTradeAddress>
+          <ram:LineOne>${esc(config.adresse || '')}</ram:LineOne>
+          <ram:CountryID>FR</ram:CountryID>
+        </ram:PostalTradeAddress>
+        ${config.email ? `<ram:URIUniversalCommunication><ram:URIID schemeID="EM">${esc(config.email)}</ram:URIID></ram:URIUniversalCommunication>` : ''}
+        ${siretVendeur ? `<ram:SpecifiedLegalOrganization><ram:ID schemeID="0002">${siretVendeur}</ram:ID></ram:SpecifiedLegalOrganization>` : ''}
+        ${config.tvaIntra ? `<ram:SpecifiedTaxRegistration><ram:ID schemeID="VA">${esc(config.tvaIntra)}</ram:ID></ram:SpecifiedTaxRegistration>` : ''}
+      </ram:SellerTradeParty>
+      <ram:BuyerTradeParty>
+        <ram:Name>${esc(client?.nom || 'Client')}</ram:Name>
+        ${client?.adresse ? `<ram:PostalTradeAddress><ram:LineOne>${esc(client.adresse)}</ram:LineOne><ram:CountryID>FR</ram:CountryID></ram:PostalTradeAddress>` : ''}
+        ${client?.email ? `<ram:URIUniversalCommunication><ram:URIID schemeID="EM">${esc(client.email)}</ram:URIID></ram:URIUniversalCommunication>` : ''}
+        ${siretAcheteur ? `<ram:SpecifiedLegalOrganization><ram:ID schemeID="0002">${siretAcheteur}</ram:ID></ram:SpecifiedLegalOrganization>` : ''}
+      </ram:BuyerTradeParty>
+    </ram:ApplicableHeaderTradeAgreement>
+    <ram:ApplicableHeaderTradeDelivery/>
+    <ram:ApplicableHeaderTradeSettlement>
+      <ram:InvoiceCurrencyCode>EUR</ram:InvoiceCurrencyCode>
+      <ram:SpecifiedTradePaymentTerms>
+        ${echeance ? `<ram:DueDateDateTime><udt:DateTimeString format="102">${echeance}</udt:DateTimeString></ram:DueDateDateTime>` : ''}
+        <ram:Description>${esc(config.conditionsPaiement || 'Paiement à 30 jours')}</ram:Description>
+      </ram:SpecifiedTradePaymentTerms>
+      <ram:ApplicableTradeTax>
+        <ram:CalculatedAmount>${fmtAmt(montantTVA)}</ram:CalculatedAmount>
+        <ram:TypeCode>VAT</ram:TypeCode>
+        <ram:BasisAmount>${fmtAmt(totalHT)}</ram:BasisAmount>
+        <ram:CategoryCode>S</ram:CategoryCode>
+        <ram:RateApplicablePercent>${tvaRate}</ram:RateApplicablePercent>
+      </ram:ApplicableTradeTax>
+      <ram:SpecifiedTradeSettlementHeaderMonetarySummation>
+        <ram:LineTotalAmount>${fmtAmt(totalHT)}</ram:LineTotalAmount>
+        <ram:TaxBasisTotalAmount>${fmtAmt(totalHT)}</ram:TaxBasisTotalAmount>
+        <ram:TaxTotalAmount currencyID="EUR">${fmtAmt(montantTVA)}</ram:TaxTotalAmount>
+        <ram:GrandTotalAmount>${fmtAmt(totalTTC)}</ram:GrandTotalAmount>
+        <ram:DuePayableAmount>${fmtAmt(facture.statut === 'Payée' ? 0 : totalTTC)}</ram:DuePayableAmount>
+      </ram:SpecifiedTradeSettlementHeaderMonetarySummation>
+    </ram:ApplicableHeaderTradeSettlement>
+  </rsm:SupplyChainTradeTransaction>
+</rsm:CrossIndustryInvoice>`;
+  },
+
+  telechargerXMLFacturX(factureId) {
+    const facture  = DB.getById(DB.KEYS.factures, factureId);
+    if (!facture) return;
+    const chantier = DB.getChantier(facture.chantierId);
+    const client   = chantier ? DB.getClient(chantier.clientId) : null;
+    const config   = DB.getConfig();
+    const xml      = this._genererXMLFacturX(facture, client, chantier, config);
+    const blob = new Blob([xml], { type: 'application/xml;charset=utf-8' });
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = 'facturx_' + facture.numero.replace(/[^a-z0-9]/gi, '_') + '.xml';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    App.toast('XML Factur-X téléchargé', 'success');
+  },
+
+  _detailFacture(facture, chantier, client, config) {
+    const lignes   = facture.lignes  || [];
+    const totalHT  = facture.totalHT  || 0;
+    const tva      = facture.tva      || 0.1;
+    const enRetard = facture.statut !== 'Payée' && facture.statut !== 'Annulée'
+                  && facture.dateEcheance && new Date(facture.dateEcheance) < new Date();
+
+    const d = document.createElement('div');
+    d.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div>
+          <div class="text-xs text-tertiary mb-4">ENTREPRISE</div>
+          <strong>${config.nomEntreprise}</strong><br>
+          <span class="text-secondary text-sm">${config.adresse}</span><br>
+          <span class="text-secondary text-sm">${config.telephone} · ${config.email}</span>
+          ${config.siret ? `<br><span class="text-secondary text-sm">SIRET : ${config.siret}</span>` : ''}
+        </div>
+        <div>
+          <div class="text-xs text-tertiary mb-4">CLIENT</div>
+          <strong>${client?.nom || '—'}</strong><br>
+          <span class="text-secondary text-sm">${client?.adresse || ''} ${client?.cp || ''} ${client?.ville || ''}</span>
+          ${client?.email ? `<br><span class="text-secondary text-sm">${client.email}</span>` : ''}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;
+           background:var(--bg-tertiary);border-radius:var(--radius-md);padding:12px">
+        <div><div class="text-xs text-tertiary mb-2">DATE</div><strong>${App.formatDate(facture.date)}</strong></div>
+        <div><div class="text-xs text-tertiary mb-2">ÉCHÉANCE</div>
+          <strong class="${enRetard ? 'text-danger' : ''}">${App.formatDate(facture.dateEcheance)}${enRetard ? ' ⚠' : ''}</strong>
+        </div>
+        <div><div class="text-xs text-tertiary mb-2">CHANTIER</div><strong>${chantier?.nom || '—'}</strong></div>
+        <div><div class="text-xs text-tertiary mb-2">DEVIS LIÉ</div><strong class="font-mono">${facture.devisNumero || '—'}</strong></div>
+      </div>
+
+      ${facture.datePaiement
+        ? `<div style="padding:10px 14px;background:rgba(45,212,160,0.1);border:1px solid rgba(45,212,160,0.3);
+               border-radius:var(--radius-md);margin-bottom:12px;font-size:13px;color:#2DD4A0">
+             ✅ Payée le ${App.formatDate(facture.datePaiement)}</div>`
+        : ''}
+
+      <table style="width:100%;border-collapse:collapse;margin-bottom:14px">
+        <thead>
+          <tr style="background:var(--bg-tertiary)">
+            <th style="padding:9px 12px;text-align:left;font-size:11px;color:var(--text-tertiary);text-transform:uppercase">Prestation</th>
+            <th style="padding:9px 12px;text-align:right;font-size:11px;color:var(--text-tertiary);text-transform:uppercase">Base HT</th>
+            <th style="padding:9px 12px;text-align:right;font-size:11px;color:var(--text-tertiary);text-transform:uppercase">Marge</th>
+            <th style="padding:9px 12px;text-align:right;font-size:11px;color:var(--text-tertiary);text-transform:uppercase">Total HT</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${lignes.map(l => `
+            <tr style="border-bottom:0.5px solid var(--border)">
+              <td style="padding:9px 12px">${l.poste}</td>
+              <td style="padding:9px 12px;text-align:right;font-family:var(--font-mono)">${Calculs.fmt(l.baseHT)}</td>
+              <td style="padding:9px 12px;text-align:right;font-family:var(--font-mono)">${Math.round((l.marge||0)*100)} %</td>
+              <td style="padding:9px 12px;text-align:right;font-family:var(--font-mono);font-weight:600;color:var(--accent)">${Calculs.fmt(l.totalClient)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+
+      <div style="max-width:360px;margin-left:auto">
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border)">
+          <span class="text-secondary">Total HT</span>
+          <span class="font-mono">${Calculs.fmt(totalHT)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border)">
+          <span class="text-secondary">TVA ${Math.round(tva*100)}%</span>
+          <span class="font-mono">${Calculs.fmt(facture.montantTVA || 0)}</span>
+        </div>
+        <div class="total-row mt-8">
+          <span class="total-label">TOTAL TTC</span>
+          <span class="total-value">${Calculs.fmt(facture.totalTTC || 0)}</span>
+        </div>
+      </div>
+
+      <!-- Badge Factur-X 2026 -->
+      <div style="margin-top:20px;padding:10px 14px;background:rgba(45,212,160,0.07);border:1px solid rgba(45,212,160,0.2);border-radius:8px;display:flex;align-items:center;gap:10px;font-size:12px">
+        <span style="font-size:16px">🇪🇺</span>
+        <div>
+          <div style="font-weight:700;color:#2DD4A0">Facture conforme Factur-X 2026</div>
+          <div style="color:var(--text-tertiary);font-size:11px">Format électronique européen EN16931 (ZUGFeRD 2.x) — téléchargez le fichier XML pour votre comptable ou logiciel de facturation</div>
+        </div>
+      </div>
+    `;
+    return d;
+  },
+
+  _changerStatutFacture(factureId, statut) {
+    const updates = { statut };
+    if (statut === 'Payée') {
+      const f = DB.getById(DB.KEYS.factures, factureId);
+      if (!f?.datePaiement) updates.datePaiement = new Date().toISOString().split('T')[0];
+    }
+    DB.updateFacture(factureId, updates);
+    App.toast(`Statut : ${statut}`);
+    App.navigate('factures');
+    App.closeModal();
+  },
+
+  marquerPayee(factureId) {
+    DB.updateFacture(factureId, {
+      statut: 'Payée',
+      datePaiement: new Date().toISOString().split('T')[0],
+    });
+    App.toast('Facture marquée comme payée !');
+    App.navigate('factures');
+    App.closeModal();
+  },
+});

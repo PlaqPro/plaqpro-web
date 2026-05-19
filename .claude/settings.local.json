@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pkill -f \"http.server 8080\")",
+      "Bash(python3 -m http.server 8080 --directory C:/PlaQproWEB)",
+      "Bash(node -e ' *)",
+      "Bash(node *)",
+      "Bash(python -m http.server 8080)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/index.html)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/js/document_print.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/js/calculatrice.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/js/graphiques.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/login.html)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/css/style.css)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/js/quiz_plaquiste.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/js/facturation.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/_redirects)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/js/calendrier.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/js/prospection.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/js/db.js)",
+      "Bash(Get-Item \"C:\\\\PlaQproWEB\\\\js\\\\pack_maconnerie.js\")",
+      "Bash(Select-Object Name, Length)",
+      "PowerShell(Get-ChildItem C:\\\\PlaQproWEB -File | Select-Object Name, @{N='KB';E={[math]::Round\\($_.Length/1KB,1\\)}} | Format-Table -AutoSize)",
+      "PowerShell($src = \\(Get-ChildItem C:\\\\PlaQproWEB -Recurse -File | Measure-Object -Property Length -Sum\\); $dst = \\(Get-ChildItem C:\\\\PlaQproWEB_BACKUP_2605_SOIR -Recurse -File | Measure-Object -Property Length -Sum\\); \"Source : $\\($src.Count\\) fichiers, $\\([math]::Round\\($src.Sum/1KB\\)\\) KB\"; \"Backup : $\\($dst.Count\\) fichiers, $\\([math]::Round\\($dst.Sum/1KB\\)\\) KB\"; if \\($src.Count -eq $dst.Count\\) { \"✅ Backup identique\" } else { \"⚠️ Différence : $\\($src.Count - $dst.Count\\) fichier\\(s\\)\" })",
+      "PowerShell(robocopy \"C:\\\\PlaQproWEB\" \"C:\\\\PlaQproWEB_BACKUP_FINAL_1805_V2\" /E /NFL /NDL /NJH /NJS)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(Start-Process \"C:\\\\PlaQproWEB\\\\index.html\")",
+      "PowerShell(New-Item *)",
+      "Bash(npx *)",
+      "PowerShell(Start-Process \"http://localhost:8080\")",
+      "Bash(powershell *)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(netlify --version)",
+      "Bash(netlify status *)",
+      "PowerShell(Get-Command *)",
+      "Bash(grep -v \"^js$\\\\|^css$\\\\|^assets$\\\\|^netlify$\")",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}

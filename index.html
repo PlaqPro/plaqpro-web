@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>PlaqPro Web — ERP Plaquiste & Peinture</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    @media print {
+      .sidebar, .topbar, .btn, .nav-tabs,
+      #btn-generer-devis, #btn-save-devis, #btn-print-devis { display: none !important; }
+      .main { margin-left: 0 !important; }
+      .card { box-shadow: none !important; border: 1px solid #444 !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <img src="assets/Logo Plaqpro+.png" alt="PlaqPro+" style="width:100%;max-width:160px;display:block;margin:0 auto">
+    </div>
+    <div id="sidebar-nav"></div>
+    <div class="sidebar-footer">
+      <a class="nav-item" href="#" onclick="App.navigate('config');return false;">
+        <span class="nav-icon">⚙️</span><span>Configuration</span>
+      </a>
+      <div style="height:1px;background:var(--border);margin:6px 8px"></div>
+      <!-- Pause café -->
+      <a class="nav-item" href="#" onclick="PauseCafe.show();return false;"
+         style="color:#D4956A;font-size:12px" title="Pause café ☕">
+        <span class="nav-icon">☕</span><span>Pause café</span>
+      </a>
+      <!-- Popup jeux -->
+      <div style="position:relative">
+        <div id="games-popup" style="display:none;position:absolute;bottom:calc(100% + 8px);left:0;right:0;
+             background:#1a1d27;border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-md);
+             padding:8px;z-index:9999;box-shadow:0 -8px 32px rgba(0,0,0,0.7)">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-tertiary);margin-bottom:6px;padding:0 6px">🔧 Utilitaires</div>
+          <a class="nav-item" href="#" style="border-radius:var(--radius-sm)"
+             onclick="document.getElementById('games-popup').style.display='none';if(typeof Calculatrice !== 'undefined') Calculatrice.toggle();return false;">
+            <span class="nav-icon">🧮</span><span>Calculatrice</span>
+          </a>
+          <a class="nav-item" href="#" style="border-radius:var(--radius-sm)"
+             onclick="document.getElementById('games-popup').style.display='none';if(typeof AnalysePhoto !== 'undefined') AnalysePhoto.showModal();return false;">
+            <span class="nav-icon">📸</span><span>Analyser une photo</span>
+          </a>
+          <a class="nav-item" href="#" style="border-radius:var(--radius-sm)"
+             onclick="document.getElementById('games-popup').style.display='none';if(typeof AnalysePhoto !== 'undefined') AnalysePhoto.showModalFournisseur();return false;">
+            <span class="nav-icon">🧾</span><span>Scanner une facture</span>
+          </a>
+          <div style="height:1px;background:rgba(255,255,255,0.07);margin:6px 0"></div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-tertiary);margin:4px 0 6px 6px">🎮 Jeux</div>
+          <a class="nav-item" href="#" style="border-radius:var(--radius-sm)"
+             onclick="document.getElementById('games-popup').style.display='none';App.navigate('quiz');return false;">
+            <span class="nav-icon">🧠</span><span>Quiz Plaquiste</span>
+          </a>
+          <a class="nav-item" href="#" style="border-radius:var(--radius-sm)"
+             onclick="document.getElementById('games-popup').style.display='none';App.navigate('plaqtetris');return false;">
+            <span class="nav-icon">🎲</span><span>PlaqTetris</span>
+          </a>
+        </div>
+        <a class="nav-item" href="#" onclick="Quiz.toggleGamesPopup(event);return false;"
+           style="opacity:0.65;font-size:12px" title="Utilitaires & Jeux">
+          <span class="nav-icon">🎮</span><span>Utilitaires & Jeux</span>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="App.closeSidebar()"></div>
+
+  <main class="main">
+    <div class="topbar">
+      <button class="hamburger" id="hamburger-btn" onclick="App.toggleSidebar()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div id="topbar-title" class="topbar-title">Tableau de bord</div>
+      <div class="topbar-actions">
+        <button class="btn btn-secondary btn-sm topbar-btn-hide" onclick="Pages.modalNouveauClient()">+ Client</button>
+        <button class="btn btn-secondary btn-sm topbar-btn-hide" onclick="Pages.modalNouveauChantier()">+ Chantier</button>
+        <button class="btn btn-primary btn-sm" onclick="App.navigate('calculateur')">⚡ Calcul</button>
+      </div>
+    </div>
+    <div id="content" class="content"></div>
+  </main>
+
+  <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-title">Titre</span>
+        <button class="modal-close" onclick="App.closeModal()">✕</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer" id="modal-footer"></div>
+    </div>
+  </div>
+
+  <script>
+    // Hamburger sidebar toggle
+    App = window.App || {};
+    App.toggleSidebar = function() {
+      document.body.classList.toggle('sidebar-open');
+    };
+    App.closeSidebar = function() {
+      document.body.classList.remove('sidebar-open');
+    };
+  </script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/calculs.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/alertes.js"></script>
+  <script src="js/calculateur.js"></script>
+  <script src="js/liste_achat.js"></script>
+  <script src="js/page_cloisons.js"></script>
+  <script src="js/page_peinture.js"></script>
+  <script src="js/tarifs.js"></script>
+  <script src="js/memo_oublis.js"></script>
+  <script src="js/pdf_export.js"></script>
+  <script src="js/produits_complet.js"></script>
+  <script src="js/produits_web.js"></script>
+  <script src="js/assistant_ia.js"></script>
+  <script src="js/facturation.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="js/document_print.js"></script>
+  <script src="js/quiz_plaquiste.js"></script>
+  <script src="js/calculatrice.js"></script>
+  <script src="js/meteo.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/graphiques.js"></script>
+  <script src="js/calendrier.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/prospection.js"></script>
+  <script src="js/pack_maconnerie.js"></script>
+  <script src="js/pack_electricite.js"></script>
+  <script src="js/pack_plomberie.js"></script>
+  <script src="js/pack_exterieur.js"></script>
+  <script src="js/analyse_photo.js"></script>
+  <script src="js/pause_cafe.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="js/dpgf.js"></script>
+  <script src="js/aide.js"></script>
+  <script src="js/mode_chantier.js"></script>
+  <script src="js/projets_types.js"></script>
+  <script src="js/devis_multi.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script src="js/email_devis.js"></script>
+  <script src="js/signature.js"></script>
+
+  <script>
+  // Etendre la sidebar et navigate pour inclure le calculateur
+  document.addEventListener('DOMContentLoaded', function() {
+
+    // Surcharger renderSidebar
+    const nav = [
+      { section: 'Principal' },
+      { page: 'dashboard',   icon: '⊞', label: 'Tableau de bord' },
+      { page: 'calculateur', icon: '⚡', label: 'Calcul Express', accent: true },
+      { section: 'Gestion' },
+      { page: 'clients',     icon: '👤', label: 'Clients' },
+      { page: 'chantiers',   icon: '🏗', label: 'Chantiers' },
+      { page: 'calendrier',  icon: '📅', label: 'Calendrier' },
+      { page: 'prospection', icon: '🎯', label: 'Prospection IA' },
+      { section: 'Travaux' },
+      { page: 'metrages',    icon: '📐', label: 'Métrés' },
+      { page: 'cloisons',    icon: '🧱', label: 'Cloisons' },
+      { page: 'peinture',    icon: '🎨', label: 'Peinture' },
+      { section: 'Commercial' },
+      { page: 'dpgf',           icon: '🏛', label: "Appels d'offres" },
+      { page: 'devis',          icon: '📄', label: 'Devis' },
+      { page: 'devis_complet',  icon: '📋', label: 'Devis complet' },
+      { page: 'factures',       icon: '🧾', label: 'Factures' },
+      { page: 'projets_types',  icon: '📦', label: 'Projets types' },
+        { page: 'liste_achat', icon: '🛒', label: 'Liste d\'achat' },
+        { page: 'tarifs', icon: '💶', label: 'Grille tarifaire' },
+        { page: 'memo',   icon: '✅', label: 'Mémo chantier' },
+      { section: 'Params' },
+      { page: 'produits',    icon: '💰', label: 'Base tarifaire' },
+      { section: 'Packs Métier' },
+      { page: 'maconnerie',  icon: '🧱', label: 'Pack Maçonnerie' },
+      { page: 'electricite', icon: '⚡', label: 'Électricité' },
+      { page: 'plomberie',   icon: '🔧', label: 'Plomberie' },
+      { page: 'exterieur',   icon: '🌿', label: 'Extérieur & Paysage' },
+      { page: 'aide',        icon: '❓', label: 'Guide & Aide' },
+    ];
+
+    const sidebar = document.getElementById('sidebar-nav');
+    sidebar.innerHTML = '';
+
+    nav.forEach(item => {
+      if (item.section) {
+        const s = document.createElement('div');
+        s.className = 'sidebar-section';
+        s.innerHTML = '<div class="sidebar-section-title">' + item.section + '</div>';
+        sidebar.appendChild(s);
+      } else {
+        const a = document.createElement('a');
+        a.className = 'nav-item';
+        a.dataset.page = item.page;
+        a.href = '#';
+        if (item.accent) {
+          a.style.background = 'linear-gradient(135deg,rgba(79,142,247,0.2),rgba(45,212,160,0.12))';
+          a.style.borderColor = 'rgba(79,142,247,0.3)';
+          a.style.color = 'var(--accent)';
+          a.style.fontWeight = '600';
+        }
+        a.innerHTML = '<span class="nav-icon">' + item.icon + '</span><span>' + item.label + '</span>';
+        a.addEventListener('click', function(e) {
+          e.preventDefault();
+          navigateTo(item.page);
+        });
+        sidebar.appendChild(a);
+      }
+    });
+
+    // Fonction de navigation étendue
+    function navigateTo(page, params) {
+      params = params || {};
+
+      document.querySelectorAll('.nav-item').forEach(function(el) {
+        el.classList.remove('active');
+      });
+      const active = document.querySelector('[data-page="' + page + '"]');
+      if (active) active.classList.add('active');
+
+      const titles = {
+        dashboard:   'Tableau de bord',
+        calculateur: 'Calcul Express',
+        clients:     'Clients',
+        chantiers:   'Chantiers',
+        metrages:    'Métrés',
+        cloisons:    '🧱 Cloisons',
+        peinture:    '🎨 Peinture',
+        devis:       'Devis',
+        factures:    '🧾 Factures',
+        liste_achat: '🛒 Liste d\'achat',
+        tarifs:      '💶 Grille tarifaire',
+        memo:        '✅ Mémo chantier',
+        produits:    'Base tarifaire',
+        config:      'Configuration',
+        quiz:        '🎮 Quiz Plaquiste',
+        plaqtetris:  '🎲 PlaqTetris',
+        calendrier:  '📅 Calendrier',
+        devis_complet: '📋 Devis Complet — Multi-corps',
+        projets_types: '📦 Projets types',
+        prospection: '🎯 Prospection IA — Permis de construire',
+        maconnerie:  '🧱 Pack Maçonnerie',
+        electricite: '⚡ Pack Électricité — NF C 15-100',
+        plomberie:   '🔧 Pack Plomberie — DTU 60.1 / DTU 60.11',
+        exterieur:   '🌿 Pack Extérieur & Paysagisme',
+        dpgf:        "🏛 DPGF — Appels d'offres",
+        aide:        '❓ Guide & Aide',
+        chantier_mobile: '🏗 Mode Chantier',
+      };
+      document.getElementById('topbar-title').textContent = titles[page] || page;
+
+      const content = document.getElementById('content');
+      content.innerHTML = '';
+      content.className = 'content fade-in';
+
+      const pageMap = {
+        dashboard:   function() { return Pages.dashboard(); },
+        calculateur: function() { return Pages.calculateur(); },
+        clients:     function() { return Pages.clients(); },
+        chantiers:   function() { return Pages.chantiers(params); },
+        metrages:    function() { return Pages.metrages(params); },
+        cloisons:    function() { return Pages.cloisons(params); },
+        peinture:    function() { return Pages.peinture(params); },
+        dpgf:          function() { return Pages.dpgf(); },
+        devis:         function() { return Pages.devis(params); },
+        devis_complet: function() { return Pages.devisComplet(); },
+        factures:      function() { return Pages.factures(); },
+        projets_types: function() { return Pages.projetsTypes(); },
+        liste_achat: function() { return Pages.listeAchat(params); },
+        tarifs:      function() { return Pages.tarifs(params); },
+        memo:        function() { return Pages.memo(params); },
+        produits:    function() { return Pages.produits(); },
+        config:      function() { return Pages.config(); },
+        quiz:        function() { return Pages.quiz(); },
+        plaqtetris:  function() { return Pages.plaqtetris(); },
+        calendrier:  function() { return Pages.calendrier(); },
+        prospection: function() { return Pages.prospection(); },
+        maconnerie:  function() { return Pages.maconnerie(); },
+        electricite: function() { return Pages.electricite(); },
+        plomberie:   function() { return Pages.plomberie(); },
+        exterieur:   function() { return Pages.exterieur(); },
+        aide:        function() { return Pages.aide(); },
+        chantier_mobile: function() { return Pages.chantier_mobile(); },
+      };
+
+      if (pageMap[page]) {
+        content.appendChild(pageMap[page]());
+      }
+    }
+
+    // Remplacer App.navigate
+    App.navigate = navigateTo;
+
+    // Fermer sidebar au changement de page sur mobile
+    var _origNavigate = navigateTo;
+    App.navigate = function(page, params) {
+      _origNavigate(page, params);
+      App.closeSidebar();
+    };
+
+    // Lancer la page initiale (support ?page=xxx depuis login mobile)
+    var _initPage = new URLSearchParams(window.location.search).get('page');
+    var _forceDesktop = sessionStorage.getItem('plaqpro_force_desktop');
+    if (_initPage && !_forceDesktop && pageMap[_initPage]) {
+      navigateTo(_initPage);
+    } else {
+      sessionStorage.removeItem('plaqpro_force_desktop');
+      navigateTo('dashboard');
+    }
+  });
+  </script>
+
+</body>
+</html>
