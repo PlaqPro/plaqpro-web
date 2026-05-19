@@ -168,9 +168,13 @@ const ExcelExport = {
 
       // Totaux
       const totaux   = devis.totaux || {};
+      const _tht     = totaux.totalHT    || devis.totalHT    || totalHT;
+      const _ttc     = totaux.totalTTC   || devis.totalTTC   || (_tht * (1 + (totaux.tva || devis.tva || 0.1)));
+      const _tva_val = totaux.montantTVA || devis.montantTVA || (_tht * (totaux.tva || devis.tva || 0.1));
       const tva      = totaux.tva || devis.tva || 0.10;
-      const totalTTC = totaux.totalTTC || devis.totalTTC || (totalHT * (1 + tva));
-      const totalTVA = totaux.montantTVA || (totalHT * tva);
+      const totalTTC = _ttc;
+      const totalTVA = _tva_val;
+      totalHT        = _tht;
 
       const ligTotaux = [
         ['', '', '', '', 'Total HT', totalHT, this.COLORS.blanc],
