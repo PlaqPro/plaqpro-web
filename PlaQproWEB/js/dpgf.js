@@ -1,0 +1,749 @@
+// ============================================================
+//  PLAQPRO WEB — Module DPGF / Appels d'offres
+//  dpgf.js
+// ============================================================
+
+Pages.dpgf = function () {
+  DPGF._injectStyles();
+  const div = document.createElement('div');
+  div.innerHTML = DPGF._buildPage();
+  setTimeout(() => DPGF._bindEvents(div), 0);
+  return div;
+};
+
+var DPGF = {
+
+  _lignes:    [],   // [{numero_lot, designation, unite, quantite, prix_unitaire, total, cctp_reference, lot, _prix_saisi, _marge}]
+  _fileName:  '',
+  _rawText:   '',
+
+  // ── Page HTML ─────────────────────────────────────────────
+  _buildPage() {
+    return `
+      <div style="max-width:1100px;margin:0 auto;padding:0 4px">
+
+        <!-- Hero -->
+        <div style="background:linear-gradient(135deg,rgba(79,142,247,0.12),rgba(45,212,160,0.08));border:1px solid rgba(79,142,247,0.2);border-radius:16px;padding:28px 32px;margin-bottom:20px;display:flex;align-items:center;gap:20px">
+          <div style="font-size:48px;flex-shrink:0">🏛</div>
+          <div>
+            <div style="font-size:20px;font-weight:800;color:var(--text-primary);margin-bottom:6px">Répondez automatiquement aux appels d'offres</div>
+            <div style="font-size:14px;color:var(--text-secondary);line-height:1.6">Uploadez votre DPGF → PlaqPro+ le complète avec vos prix en quelques minutes !<br>Formats acceptés : <strong style="color:var(--text-primary)">.xlsx / .xls / .csv / .pdf</strong></div>
+          </div>
+        </div>
+
+        <!-- Zone upload -->
+        <div id="dpgf-upload-zone" style="border:2px dashed rgba(79,142,247,0.4);border-radius:14px;padding:48px 24px;text-align:center;cursor:pointer;transition:all .25s;margin-bottom:20px;background:rgba(79,142,247,0.03)">
+          <div style="font-size:40px;margin-bottom:12px">📂</div>
+          <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px">Glissez votre fichier DPGF ici</div>
+          <div style="font-size:13px;color:var(--text-tertiary);margin-bottom:16px">ou cliquez pour parcourir</div>
+          <input type="file" id="dpgf-file-input" accept=".xlsx,.xls,.csv,.pdf" style="display:none">
+          <button class="btn btn-primary" onclick="document.getElementById('dpgf-file-input').click()">📁 Choisir un fichier</button>
+        </div>
+
+        <!-- État chargement -->
+        <div id="dpgf-loading" style="display:none;text-align:center;padding:32px">
+          <div class="dpgf-spinner"></div>
+          <div id="dpgf-loading-msg" style="margin-top:14px;font-size:14px;color:var(--text-secondary)">Lecture du fichier…</div>
+        </div>
+
+        <!-- Tableau de correspondance -->
+        <div id="dpgf-table-zone" style="display:none">
+
+          <!-- Toolbar -->
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+            <div style="font-size:16px;font-weight:800;color:var(--text-primary)">
+              📋 Tableau de correspondance — <span id="dpgf-file-name" style="color:var(--accent);font-weight:600"></span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-secondary" onclick="DPGF._verifierCCTP()" style="font-size:12px">🔍 Vérification CCTP</button>
+              <button class="btn btn-secondary" onclick="DPGF._exporterExcel()" style="font-size:12px">📥 Exporter DPGF complété</button>
+              <button class="btn btn-primary"   onclick="DPGF._genererDevis()"  style="font-size:12px">📄 Générer devis PlaqPro+</button>
+            </div>
+          </div>
+
+          <!-- Filtre lots -->
+          <div id="dpgf-lots-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"></div>
+
+          <!-- Table -->
+          <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border)">
+            <table id="dpgf-table" style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead>
+                <tr style="background:var(--bg-tertiary)">
+                  <th class="dpgf-th" style="width:38px">#</th>
+                  <th class="dpgf-th">Désignation DPGF</th>
+                  <th class="dpgf-th" style="width:55px">Lot</th>
+                  <th class="dpgf-th" style="width:55px">Unité</th>
+                  <th class="dpgf-th" style="width:65px">Qté</th>
+                  <th class="dpgf-th" style="width:80px">P.U. base</th>
+                  <th class="dpgf-th" style="width:68px">Marge %</th>
+                  <th class="dpgf-th" style="width:90px">P.U. final</th>
+                  <th class="dpgf-th" style="width:95px">Total HT</th>
+                  <th class="dpgf-th" style="width:95px">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="dpgf-tbody"></tbody>
+            </table>
+          </div>
+
+          <!-- Récap par lot -->
+          <div id="dpgf-recap" style="margin-top:20px"></div>
+
+          <!-- Alerte CCTP -->
+          <div id="dpgf-cctp-alert" style="display:none;margin-top:14px"></div>
+        </div>
+
+      </div>`;
+  },
+
+  // ── Bind events ───────────────────────────────────────────
+  _bindEvents(root) {
+    const zone  = root.querySelector('#dpgf-upload-zone');
+    const input = root.querySelector('#dpgf-file-input');
+
+    if (zone) {
+      zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--accent)'; zone.style.background = 'rgba(79,142,247,0.07)'; });
+      zone.addEventListener('dragleave', () => { zone.style.borderColor = 'rgba(79,142,247,0.4)'; zone.style.background = 'rgba(79,142,247,0.03)'; });
+      zone.addEventListener('drop', e => { e.preventDefault(); zone.style.borderColor = 'rgba(79,142,247,0.4)'; zone.style.background = 'rgba(79,142,247,0.03)'; if (e.dataTransfer.files[0]) DPGF._handleFile(e.dataTransfer.files[0]); });
+      zone.addEventListener('click', e => { if (e.target === zone || e.target.tagName === 'DIV') input && input.click(); });
+    }
+    if (input) {
+      input.addEventListener('change', e => { if (e.target.files[0]) DPGF._handleFile(e.target.files[0]); });
+    }
+  },
+
+  // ── Traitement fichier ────────────────────────────────────
+  async _handleFile(file) {
+    this._fileName = file.name;
+    this._lignes   = [];
+    this._showLoading(true, 'Lecture du fichier…');
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    let text = '';
+
+    try {
+      if (ext === 'pdf') {
+        text = await this._readPDF(file);
+      } else if (['xlsx', 'xls', 'csv'].includes(ext)) {
+        text = await this._readExcel(file);
+      } else {
+        throw new Error('Format non supporté');
+      }
+    } catch (err) {
+      this._showLoading(false);
+      App.showToast('Erreur lecture fichier : ' + err.message, 'error');
+      return;
+    }
+
+    this._rawText = text;
+    this._showLoading(true, 'Analyse IA en cours…');
+
+    try {
+      await this._analyserAvecGroq(text);
+    } catch (err) {
+      this._showLoading(false);
+      App.showToast('Erreur analyse IA : ' + err.message, 'error');
+      return;
+    }
+
+    this._showLoading(false);
+    this._afficherTableau();
+  },
+
+  // ── Lecture Excel/CSV ─────────────────────────────────────
+  async _readExcel(file) {
+    return new Promise((resolve, reject) => {
+      if (typeof XLSX === 'undefined') { reject(new Error('SheetJS non disponible')); return; }
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const wb = XLSX.read(e.target.result, { type: 'binary' });
+          let text = '';
+          wb.SheetNames.forEach(name => {
+            const ws = wb.Sheets[name];
+            text += '\n--- Feuille: ' + name + ' ---\n';
+            text += XLSX.utils.sheet_to_csv(ws, { FS: '\t' });
+          });
+          resolve(text);
+        } catch (err) { reject(err); }
+      };
+      reader.onerror = () => reject(new Error('Lecture impossible'));
+      reader.readAsBinaryString(file);
+    });
+  },
+
+  // ── Lecture PDF (texte simple) ────────────────────────────
+  async _readPDF(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const arr  = new Uint8Array(e.target.result);
+        let text = '';
+        // Extraction naïve du texte entre parenthèses PDF
+        const str = new TextDecoder('latin1').decode(arr);
+        const matches = str.match(/\(([^\)]{2,200})\)/g) || [];
+        const words = matches
+          .map(m => m.slice(1, -1).replace(/\\n/g, '\n').replace(/\\\(/g, '(').replace(/\\\)/g, ')'))
+          .filter(w => /[a-zA-ZÀ-ÿ0-9]/.test(w));
+        text = words.join(' ');
+        resolve(text.slice(0, 18000));
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  },
+
+  // ── Analyse Groq ──────────────────────────────────────────
+  async _analyserAvecGroq(text) {
+    const prompt = `Tu es expert en marchés publics BTP français.
+Analyse ce DPGF/CCTP et extrais TOUTES les lignes de travaux liées à : plâtrerie, cloisons, plafonds, peinture, revêtements sols, isolation.
+Pour chaque ligne retourne un objet JSON strict :
+{
+  "numero_lot": "ex: 10.1",
+  "designation": "description complète",
+  "lot": "Plâtrerie|Cloisons|Plafonds|Peinture|Revêtements|Isolation|Autre",
+  "unite": "m²|ml|u|forfait|m3",
+  "quantite": nombre ou null,
+  "prix_unitaire": nombre ou null,
+  "cctp_reference": "référence article CCTP si mentionné"
+}
+Retourne UNIQUEMENT un tableau JSON valide, sans commentaire, sans markdown.
+Voici le contenu DPGF (max 12000 caractères) :
+${text.slice(0, 12000)}`;
+
+    const _gcDpgf = groqConfig();
+    if (!_gcDpgf) throw new Error('Clé Groq requise en local — configurez-la dans Paramètres');
+    const resp = await fetch(_gcDpgf.url, {
+      method: 'POST',
+      headers: _gcDpgf.headers,
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 4096,
+        temperature: 0.1,
+      }),
+    });
+
+    if (!resp.ok) throw new Error('Groq ' + resp.status);
+    const data = await resp.json();
+    const raw  = (data.choices[0]?.message?.content || '').trim();
+
+    let parsed;
+    try {
+      const jsonMatch = raw.match(/\[[\s\S]*\]/);
+      parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
+    } catch {
+      throw new Error('Réponse IA non parseable');
+    }
+
+    this._lignes = parsed.map((l, i) => ({
+      id:            i,
+      numero_lot:    l.numero_lot    || '',
+      designation:   l.designation   || '',
+      lot:           l.lot           || 'Autre',
+      unite:         l.unite         || 'u',
+      quantite:      parseFloat(l.quantite)     || 0,
+      prix_unitaire: parseFloat(l.prix_unitaire) || 0,
+      cctp_reference: l.cctp_reference || '',
+      _prix_base:    parseFloat(l.prix_unitaire) || 0,
+      _marge:        0,
+      _source:       'dpgf',
+    }));
+
+    // Enrichissement depuis la base produits
+    this._lignes.forEach(l => this._matcherProduit(l));
+  },
+
+  // ── Matcher produit base PlaqPro+ ─────────────────────────
+  _matcherProduit(ligne) {
+    const catalog = (typeof ProdMoteur !== 'undefined' && ProdMoteur.PRODUITS)
+      ? ProdMoteur.PRODUITS : [];
+    const userProds = DB.produits || [];
+    const all = [...catalog, ...userProds];
+
+    const words = ligne.designation.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    let best = null, bestScore = 0;
+
+    all.forEach(p => {
+      const pname = (p.nom || p.designation || '').toLowerCase();
+      let score = 0;
+      words.forEach(w => { if (pname.includes(w)) score++; });
+      if (score > bestScore) { bestScore = score; best = p; }
+    });
+
+    if (best && bestScore >= 2) {
+      if (!ligne._prix_base || ligne._prix_base === 0) {
+        ligne._prix_base = parseFloat(best.prix || best.prix_ht || 0);
+        ligne.prix_unitaire = ligne._prix_base;
+        ligne._source = 'base';
+      }
+      ligne._produit_match = best.nom || best.designation || '';
+    }
+  },
+
+  // ── P.U. final avec marge ─────────────────────────────────
+  _puFinal(ligne) {
+    const base = parseFloat(ligne.prix_unitaire) || 0;
+    const m    = parseFloat(ligne._marge) || 0;
+    return base * (1 + m / 100);
+  },
+
+  _totalLigne(ligne) {
+    return this._puFinal(ligne) * (parseFloat(ligne.quantite) || 0);
+  },
+
+  // ── Affichage tableau ─────────────────────────────────────
+  _afficherTableau(filtreLot) {
+    const zone  = document.getElementById('dpgf-table-zone');
+    const tbody = document.getElementById('dpgf-tbody');
+    const fname = document.getElementById('dpgf-file-name');
+    const lotsDiv = document.getElementById('dpgf-lots-btns');
+    if (!zone || !tbody) return;
+
+    if (fname) fname.textContent = this._fileName;
+    zone.style.display = '';
+
+    // Filtres lots
+    const lots = [...new Set(this._lignes.map(l => l.lot))];
+    if (lotsDiv) {
+      lotsDiv.innerHTML = `<button class="dpgf-lot-btn${!filtreLot ? ' active' : ''}" onclick="DPGF._afficherTableau()">Tous (${this._lignes.length})</button>` +
+        lots.map(lot => {
+          const n = this._lignes.filter(l => l.lot === lot).length;
+          return `<button class="dpgf-lot-btn${filtreLot === lot ? ' active' : ''}" onclick="DPGF._afficherTableau('${lot}')">${lot} (${n})</button>`;
+        }).join('');
+    }
+
+    const visible = filtreLot ? this._lignes.filter(l => l.lot === filtreLot) : this._lignes;
+
+    tbody.innerHTML = visible.map(l => {
+      const puFinal   = this._puFinal(l);
+      const total     = this._totalLigne(l);
+      const sourceBadge = l._source === 'base'
+        ? `<span style="font-size:10px;background:rgba(45,212,160,0.15);color:#2DD4A0;border-radius:4px;padding:1px 5px;margin-left:4px" title="${l._produit_match || ''}">✓ base</span>`
+        : '';
+
+      return `<tr id="dpgf-row-${l.id}" style="border-bottom:1px solid var(--border)">
+        <td class="dpgf-td" style="color:var(--text-tertiary);font-size:11px">${l.numero_lot || l.id + 1}</td>
+        <td class="dpgf-td">
+          <div style="font-weight:600;color:var(--text-primary)">${this._esc(l.designation)}${sourceBadge}</div>
+          ${l.cctp_reference ? `<div style="font-size:11px;color:var(--text-tertiary)">${this._esc(l.cctp_reference)}</div>` : ''}
+        </td>
+        <td class="dpgf-td"><span class="dpgf-lot-tag" style="background:${this._lotColor(l.lot)}20;color:${this._lotColor(l.lot)}">${l.lot}</span></td>
+        <td class="dpgf-td" style="text-align:center">${this._esc(l.unite)}</td>
+        <td class="dpgf-td" style="text-align:right">${this._fmt(l.quantite)}</td>
+        <td class="dpgf-td" style="text-align:right;color:var(--text-secondary)">${l._prix_base ? this._fmtE(l._prix_base) : '—'}</td>
+        <td class="dpgf-td">
+          <div style="display:flex;align-items:center;gap:4px">
+            <input type="number" class="dpgf-input" style="width:48px;text-align:right" value="${l._marge || 0}"
+              onchange="DPGF._updateMarge(${l.id}, this.value)" min="-50" max="200" step="1">
+            <span style="font-size:11px;color:var(--text-tertiary)">%</span>
+          </div>
+        </td>
+        <td class="dpgf-td">
+          <input type="number" class="dpgf-input" style="width:74px;text-align:right" value="${puFinal ? puFinal.toFixed(2) : ''}"
+            placeholder="0.00" onchange="DPGF._updatePrix(${l.id}, this.value)">
+        </td>
+        <td class="dpgf-td" style="text-align:right;font-weight:700;color:var(--text-primary)">${total ? this._fmtE(total) : '—'}</td>
+        <td class="dpgf-td">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <button class="dpgf-action-btn" onclick="DPGF._rechercherBase(${l.id})" title="Trouver dans ma base">🔍</button>
+            <button class="dpgf-action-btn" onclick="DPGF._saisirPrixManuel(${l.id})" title="Saisir prix manuellement">✏️</button>
+            <button class="dpgf-action-btn" onclick="DPGF._suggererIA(${l.id})" title="Suggérer prix via IA">✨</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    this._renderRecap();
+  },
+
+  // ── Mise à jour prix/marge ────────────────────────────────
+  _updateMarge(id, val) {
+    const l = this._lignes.find(x => x.id === id);
+    if (!l) return;
+    l._marge = parseFloat(val) || 0;
+    this._refreshRow(l);
+    this._renderRecap();
+  },
+
+  _updatePrix(id, val) {
+    const l = this._lignes.find(x => x.id === id);
+    if (!l) return;
+    l.prix_unitaire = parseFloat(val) || 0;
+    l._marge = 0;
+    this._refreshRow(l);
+    this._renderRecap();
+  },
+
+  _refreshRow(l) {
+    const row = document.getElementById('dpgf-row-' + l.id);
+    if (!row) return;
+    const puFinal = this._puFinal(l);
+    const total   = this._totalLigne(l);
+    const cells   = row.querySelectorAll('td');
+    // PU input (index 7) + total (index 8)
+    if (cells[7]) cells[7].querySelector('input').value = puFinal ? puFinal.toFixed(2) : '';
+    if (cells[8]) cells[8].textContent = total ? this._fmtE(total) : '—';
+  },
+
+  // ── Boutons action ────────────────────────────────────────
+  _rechercherBase(id) {
+    const l = this._lignes.find(x => x.id === id);
+    if (!l) return;
+    const catalog    = (typeof ProdMoteur !== 'undefined' && ProdMoteur.PRODUITS) ? ProdMoteur.PRODUITS : [];
+    const userProds  = DB.produits || [];
+    const all        = [...catalog, ...userProds].slice(0, 80);
+    const words      = l.designation.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const results    = all
+      .map(p => {
+        const pname = (p.nom || p.designation || '').toLowerCase();
+        let score = 0;
+        words.forEach(w => { if (pname.includes(w)) score++; });
+        return { p, score };
+      })
+      .filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map(x => x.p);
+
+    const body = document.createElement('div');
+    body.style.cssText = 'display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto';
+
+    if (!results.length) {
+      body.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px;padding:12px 0">Aucun produit correspondant trouvé.</div>';
+    } else {
+      results.forEach(p => {
+        const prix = parseFloat(p.prix || p.prix_ht || 0);
+        const btn  = document.createElement('button');
+        btn.className = 'dpgf-result-item';
+        btn.innerHTML = `<span style="flex:1;font-size:13px">${this._esc(p.nom || p.designation || '')}</span><span style="font-size:12px;font-weight:700;color:var(--accent)">${this._fmtE(prix)}</span>`;
+        btn.onclick = () => {
+          l.prix_unitaire = prix; l._prix_base = prix; l._source = 'base'; l._produit_match = p.nom || p.designation || '';
+          this._refreshRow(l); this._renderRecap();
+          App.closeModal();
+          App.showToast('Prix appliqué depuis la base', 'success');
+        };
+        body.appendChild(btn);
+      });
+    }
+    App.openModal('🔍 Trouver dans la base — ' + l.designation.slice(0, 40), body, '');
+  },
+
+  _saisirPrixManuel(id) {
+    const l = this._lignes.find(x => x.id === id);
+    if (!l) return;
+    const body = document.createElement('div');
+    body.innerHTML = `
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">${this._esc(l.designation)}</div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <label style="font-size:13px;color:var(--text-secondary)">Prix unitaire HT (€)</label>
+        <input type="number" id="dpgf-manual-prix" class="dpgf-input" style="width:110px" value="${l.prix_unitaire || ''}" placeholder="0.00" step="0.01">
+      </div>`;
+    const footer = `<button class="btn btn-primary" onclick="
+      const v = parseFloat(document.getElementById('dpgf-manual-prix').value);
+      if (!isNaN(v)) { DPGF._updatePrix(${id}, v); DPGF._renderRecap(); App.closeModal(); App.showToast('Prix mis à jour','success'); }
+    ">Appliquer</button>`;
+    App.openModal('✏️ Saisie manuelle', body, footer);
+  },
+
+  async _suggererIA(id) {
+    const l = this._lignes.find(x => x.id === id);
+    if (!l) return;
+    App.showToast('IA analyse le prix…', 'info');
+    const prompt = `Estime un prix unitaire HT raisonnable en France pour cette prestation BTP plaquiste :
+"${l.designation}" (unité: ${l.unite})
+Réponds UNIQUEMENT avec un nombre décimal (ex: 45.50), sans unité ni texte.`;
+
+    try {
+      const _gcSug = groqConfig();
+      if (!_gcSug) { App.showToast('Clé Groq requise en local', 'error'); return; }
+      const resp = await fetch(_gcSug.url, {
+        method: 'POST',
+        headers: _gcSug.headers,
+        body: JSON.stringify({
+          model: 'llama-3.1-8b-instant',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 20, temperature: 0.2,
+        }),
+      });
+      const data = await resp.json();
+      const raw  = (data.choices[0]?.message?.content || '').replace(',', '.').replace(/[^\d.]/g, '');
+      const prix = parseFloat(raw);
+      if (isNaN(prix) || prix <= 0) throw new Error('Prix non valide');
+      l.prix_unitaire = prix; l._prix_base = prix; l._source = 'ia';
+      this._refreshRow(l); this._renderRecap();
+      App.showToast(`Prix IA : ${this._fmtE(prix)} appliqué`, 'success');
+    } catch (err) {
+      App.showToast('Erreur IA : ' + err.message, 'error');
+    }
+  },
+
+  // ── Récap par lot ─────────────────────────────────────────
+  _renderRecap() {
+    const zone = document.getElementById('dpgf-recap');
+    if (!zone) return;
+
+    const lots   = [...new Set(this._lignes.map(l => l.lot))];
+    const tva    = 0.10;
+    let totalHT  = 0;
+
+    const rows = lots.map(lot => {
+      const lignesLot = this._lignes.filter(l => l.lot === lot);
+      const tot = lignesLot.reduce((s, l) => s + this._totalLigne(l), 0);
+      totalHT += tot;
+      return `<div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="width:10px;height:10px;border-radius:50%;background:${this._lotColor(lot)};display:inline-block;flex-shrink:0"></span>
+          <span style="font-size:13px;font-weight:600;color:var(--text-primary)">${lot}</span>
+          <span style="font-size:11px;color:var(--text-tertiary)">${lignesLot.length} ligne${lignesLot.length > 1 ? 's' : ''}</span>
+        </div>
+        <span style="font-weight:700;color:var(--text-primary)">${this._fmtE(tot)}</span>
+      </div>`;
+    }).join('');
+
+    const tvaMt  = totalHT * tva;
+    const ttc    = totalHT + tvaMt;
+    const lignesRemplies = this._lignes.filter(l => l.prix_unitaire > 0).length;
+    const pct = this._lignes.length ? Math.round(lignesRemplies / this._lignes.length * 100) : 0;
+
+    zone.innerHTML = `
+      <div class="card" style="border:1px solid var(--border)">
+        <div class="card-header">
+          <span class="card-title">📊 Récapitulatif par lot</span>
+          <span style="font-size:12px;color:${pct < 50 ? '#F7A64F' : pct < 100 ? '#4F8EF7' : '#2DD4A0'}">${pct}% des lignes renseignées</span>
+        </div>
+        <div class="card-body" style="padding:0">
+          ${rows || '<div style="padding:16px;color:var(--text-tertiary);font-size:13px">Aucune ligne analysée</div>'}
+          <div style="padding:12px 16px;background:var(--bg-tertiary)">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:13px;color:var(--text-secondary)">Total HT</span>
+              <span style="font-weight:700;font-size:15px;color:var(--text-primary)">${this._fmtE(totalHT)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:13px;color:var(--text-secondary)">TVA 10%</span>
+              <span style="font-size:14px;color:var(--text-secondary)">${this._fmtE(tvaMt)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border)">
+              <span style="font-size:14px;font-weight:700;color:var(--text-primary)">Total TTC</span>
+              <span style="font-size:18px;font-weight:900;color:var(--accent)">${this._fmtE(ttc)}</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  },
+
+  // ── Vérification CCTP ─────────────────────────────────────
+  async _verifierCCTP() {
+    App.showToast('Vérification CCTP en cours…', 'info');
+    const lignesRemplies = this._lignes.filter(l => l.prix_unitaire > 0);
+    if (!lignesRemplies.length) { App.showToast('Renseignez d\'abord les prix', 'error'); return; }
+
+    const resume = lignesRemplies.slice(0, 30).map(l =>
+      `${l.designation} | ${l.unite} | qté ${l.quantite} | PU ${l.prix_unitaire}€ | total ${this._totalLigne(l).toFixed(0)}€`
+    ).join('\n');
+
+    const prompt = `Expert BTP, vérifie ces lignes DPGF pour incohérences :
+${resume}
+
+Signale : prix aberrants, unités suspectes, totaux incohérents, prestations hors lot plaquiste.
+Réponds en JSON strict : { "alertes": [{"ligne":"...", "probleme":"...","niveau":"warning|error"}], "ok": true|false }`;
+
+    try {
+      const _gcCctp = groqConfig();
+      if (!_gcCctp) { App.showToast('Clé Groq requise en local', 'error'); return; }
+      const resp = await fetch(_gcCctp.url, {
+        method: 'POST',
+        headers: _gcCctp.headers,
+        body: JSON.stringify({
+          model: 'llama-3.1-8b-instant',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 1024, temperature: 0.1,
+        }),
+      });
+      const data = await resp.json();
+      const raw  = (data.choices[0]?.message?.content || '').trim();
+      const jm   = raw.match(/\{[\s\S]*\}/);
+      const parsed = JSON.parse(jm ? jm[0] : raw);
+      this._afficherAlerteCCTP(parsed);
+    } catch (err) {
+      App.showToast('Erreur vérification : ' + err.message, 'error');
+    }
+  },
+
+  _afficherAlerteCCTP(data) {
+    const zone = document.getElementById('dpgf-cctp-alert');
+    if (!zone) return;
+
+    if (data.ok && (!data.alertes || !data.alertes.length)) {
+      zone.style.display = '';
+      zone.innerHTML = `<div style="background:rgba(45,212,160,0.1);border:1px solid rgba(45,212,160,0.3);border-radius:10px;padding:14px 18px;color:#2DD4A0;font-size:13px">✅ Vérification CCTP : aucune anomalie détectée</div>`;
+      return;
+    }
+
+    const alertes = (data.alertes || []).map(a => `
+      <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:16px;flex-shrink:0">${a.niveau === 'error' ? '❌' : '⚠️'}</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-primary)">${this._esc(a.ligne)}</div>
+          <div style="font-size:12px;color:var(--text-secondary)">${this._esc(a.probleme)}</div>
+        </div>
+      </div>`).join('');
+
+    zone.style.display = '';
+    zone.innerHTML = `
+      <div style="background:rgba(247,166,79,0.08);border:1px solid rgba(247,166,79,0.3);border-radius:10px;padding:16px">
+        <div style="font-size:14px;font-weight:700;color:#F7A64F;margin-bottom:10px">⚠️ ${data.alertes.length} anomalie${data.alertes.length > 1 ? 's' : ''} CCTP détectée${data.alertes.length > 1 ? 's' : ''}</div>
+        ${alertes}
+      </div>`;
+  },
+
+  // ── Export Excel ──────────────────────────────────────────
+  _exporterExcel() {
+    if (typeof XLSX === 'undefined') { App.showToast('SheetJS non disponible', 'error'); return; }
+    const rows = [['N°', 'Désignation', 'Lot', 'Unité', 'Quantité', 'PU HT (€)', 'Total HT (€)', 'Réf. CCTP']];
+    this._lignes.forEach(l => {
+      rows.push([
+        l.numero_lot || l.id + 1,
+        l.designation,
+        l.lot,
+        l.unite,
+        l.quantite,
+        this._puFinal(l).toFixed(2),
+        this._totalLigne(l).toFixed(2),
+        l.cctp_reference || '',
+      ]);
+    });
+
+    const totalHT = this._lignes.reduce((s, l) => s + this._totalLigne(l), 0);
+    rows.push([]);
+    rows.push(['', '', '', '', '', 'TOTAL HT', totalHT.toFixed(2), '']);
+    rows.push(['', '', '', '', '', 'TVA 10%', (totalHT * 0.10).toFixed(2), '']);
+    rows.push(['', '', '', '', '', 'TOTAL TTC', (totalHT * 1.10).toFixed(2), '']);
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [8,40,12,8,10,12,14,16].map(w => ({ wch: w }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'DPGF complété');
+    XLSX.writeFile(wb, 'DPGF_complete_' + Date.now() + '.xlsx');
+    App.showToast('Export Excel généré', 'success');
+  },
+
+  // ── Générer devis PlaqPro+ ────────────────────────────────
+  _genererDevis() {
+    const lignesOk = this._lignes.filter(l => l.prix_unitaire > 0);
+    if (!lignesOk.length) { App.showToast('Renseignez d\'abord les prix', 'error'); return; }
+
+    const chantiers = DB.chantiers || [];
+    const opts = chantiers.map(c =>
+      `<option value="${c.id}">${this._esc(c.nom || c.adresse || c.id)}</option>`
+    ).join('');
+
+    const body = document.createElement('div');
+    body.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:13px;color:var(--text-secondary);display:block;margin-bottom:4px">Chantier associé</label>
+          <select id="dpgf-chantier-sel" style="width:100%;padding:8px;background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border);border-radius:8px">
+            <option value="">— Aucun chantier —</option>${opts}
+          </select>
+        </div>
+        <div style="background:var(--bg-tertiary);border-radius:8px;padding:12px;font-size:13px">
+          <div style="font-weight:700;color:var(--text-primary);margin-bottom:6px">${lignesOk.length} prestation${lignesOk.length > 1 ? 's' : ''} — Récap :</div>
+          ${[...new Set(lignesOk.map(l => l.lot))].map(lot => {
+            const t = lignesOk.filter(l => l.lot === lot).reduce((s, l) => s + this._totalLigne(l), 0);
+            return `<div style="display:flex;justify-content:space-between;color:var(--text-secondary)"><span>${lot}</span><span style="font-weight:700;color:var(--text-primary)">${this._fmtE(t)}</span></div>`;
+          }).join('')}
+          <div style="display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+            <span style="font-weight:700">Total HT</span>
+            <span style="font-weight:900;color:var(--accent)">${this._fmtE(lignesOk.reduce((s, l) => s + this._totalLigne(l), 0))}</span>
+          </div>
+        </div>
+      </div>`;
+
+    const footer = `<button class="btn btn-primary" onclick="DPGF._confirmerGenererDevis()">📄 Créer le devis</button>`;
+    App.openModal('📄 Générer devis PlaqPro+', body, footer);
+  },
+
+  _confirmerGenererDevis() {
+    const chantierId = document.getElementById('dpgf-chantier-sel')?.value || '';
+    const lignesOk   = this._lignes.filter(l => l.prix_unitaire > 0);
+
+    const lignes = lignesOk.map(l => ({
+      designation: l.designation,
+      quantite:    l.quantite || 1,
+      unite:       l.unite || 'u',
+      prixUnitaire: this._puFinal(l),
+      tva:         10,
+    }));
+
+    const totalHT = lignes.reduce((s, l) => s + l.prixUnitaire * l.quantite, 0);
+
+    const devis = {
+      chantierId: chantierId || null,
+      lignes,
+      totalHT,
+      totalTVA:  totalHT * 0.10,
+      totalTTC:  totalHT * 1.10,
+      statut:    'En attente',
+      source:    'DPGF — ' + this._fileName,
+      date:      new Date().toISOString(),
+    };
+
+    DB.addDevis(devis);
+    App.closeModal();
+    App.showToast('Devis créé avec succès', 'success');
+    setTimeout(() => App.navigate('devis'), 600);
+  },
+
+  // ── Utilitaires ───────────────────────────────────────────
+  _showLoading(show, msg) {
+    const el  = document.getElementById('dpgf-loading');
+    const msg_el = document.getElementById('dpgf-loading-msg');
+    if (el) el.style.display = show ? '' : 'none';
+    if (msg_el && msg) msg_el.textContent = msg;
+  },
+
+  _esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  },
+
+  _fmt(n) {
+    const v = parseFloat(n);
+    return isNaN(v) ? '—' : v.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+  },
+
+  _fmtE(n) {
+    const v = parseFloat(n);
+    return isNaN(v) || v === 0 ? '—' : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 }).format(v);
+  },
+
+  _lotColor(lot) {
+    const MAP = {
+      'Plâtrerie': '#4F8EF7', 'Cloisons': '#A78BFA', 'Plafonds': '#2DD4A0',
+      'Peinture': '#F7A64F', 'Revêtements': '#F472B6', 'Isolation': '#34D399', 'Autre': '#6B7280',
+    };
+    return MAP[lot] || '#6B7280';
+  },
+
+  // ── Styles ────────────────────────────────────────────────
+  _injectStyles() {
+    if (document.getElementById('dpgf-styles')) return;
+    const s = document.createElement('style');
+    s.id = 'dpgf-styles';
+    s.textContent = `
+      .dpgf-th { padding:10px 12px; text-align:left; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-tertiary); white-space:nowrap; }
+      .dpgf-td { padding:9px 12px; vertical-align:middle; }
+      #dpgf-tbody tr:hover { background:rgba(255,255,255,0.02); }
+      .dpgf-input { background:var(--bg-tertiary); color:var(--text-primary); border:1px solid var(--border); border-radius:6px; padding:4px 6px; font-size:12px; outline:none; transition:border-color .2s; }
+      .dpgf-input:focus { border-color:var(--accent); }
+      .dpgf-action-btn { background:transparent; border:1px solid var(--border); border-radius:5px; padding:3px 6px; cursor:pointer; font-size:13px; transition:all .2s; color:var(--text-secondary); }
+      .dpgf-action-btn:hover { border-color:var(--accent); background:rgba(79,142,247,0.1); }
+      .dpgf-lot-btn { padding:5px 12px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--text-secondary); font-size:12px; cursor:pointer; transition:all .2s; }
+      .dpgf-lot-btn:hover, .dpgf-lot-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+      .dpgf-lot-tag { padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; }
+      .dpgf-result-item { display:flex; align-items:center; gap:8px; padding:10px 14px; border:1px solid var(--border); border-radius:8px; background:transparent; cursor:pointer; text-align:left; color:var(--text-primary); transition:all .2s; width:100%; }
+      .dpgf-result-item:hover { background:rgba(79,142,247,0.08); border-color:var(--accent); }
+      .dpgf-spinner { width:36px; height:36px; border:3px solid rgba(79,142,247,0.2); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto; }
+      @keyframes spin { to { transform:rotate(360deg); } }
+    `;
+    document.head.appendChild(s);
+  },
+};
