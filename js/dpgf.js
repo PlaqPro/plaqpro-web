@@ -412,12 +412,70 @@ ${text.slice(0, 12000)}`;
     if (typeof XLSX === 'undefined') { App.toast('SheetJS non disponible', 'error'); return; }
     if (!this._lignes.length) { App.toast('Aucune donnée à exporter', 'error'); return; }
 
+    // Afficher modal saisie infos affaire
+    const body = document.createElement('div');
+    body.style.cssText = 'display:flex;flex-direction:column;gap:10px';
+    body.innerHTML = `
+      <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:4px">Ces informations apparaîtront dans l'en-tête du rapport</div>
+      ${[
+        ['dpgf-aff-nom', 'Nom de l\'opération',       'Triangle Sud — 117 Bd Marius Vivier Merle Lyon'],
+        ['dpgf-aff-ref', 'Référence affaire',           'Ex: 25028'],
+        ['dpgf-aff-dce', 'Date DCE',                    'Ex: 30/04/2026'],
+        ['dpgf-aff-moa', 'Maître d\'ouvrage (MOA)',     'Ex: AEW'],
+        ['dpgf-aff-moe', 'Maître d\'œuvre (MOE)',       'Ex: Kilinc Architecture'],
+        ['dpgf-aff-eco', 'Économiste',                  'Ex: DPG Co'],
+        ['dpgf-aff-lot', 'Lot',                         'Ex: Lot 09 — Aménagements Intérieurs'],
+      ].map(([id, label, ph]) => `
+        <div>
+          <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:3px">${label}</label>
+          <input id="${id}" type="text" class="dpgf-input" style="width:100%;box-sizing:border-box" placeholder="${ph}"
+            value="${localStorage.getItem(id) || ''}">
+        </div>
+      `).join('')}
+    `;
+
+    const footer = `
+      <button class="btn btn-secondary" onclick="App.closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="DPGF._exporterAvecInfos()">📊 Générer le rapport</button>
+    `;
+    App.openModal('📋 Informations de l\'affaire', body, footer);
+  },
+
+  _exporterAvecInfos() {
+    ['dpgf-aff-nom','dpgf-aff-ref','dpgf-aff-dce','dpgf-aff-moa','dpgf-aff-moe','dpgf-aff-eco','dpgf-aff-lot'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) localStorage.setItem(id, el.value);
+    });
+    const infos = {
+      nom: document.getElementById('dpgf-aff-nom')?.value || '',
+      ref: document.getElementById('dpgf-aff-ref')?.value || '',
+      dce: document.getElementById('dpgf-aff-dce')?.value || '',
+      moa: document.getElementById('dpgf-aff-moa')?.value || '',
+      moe: document.getElementById('dpgf-aff-moe')?.value || '',
+      eco: document.getElementById('dpgf-aff-eco')?.value || '',
+      lot: document.getElementById('dpgf-aff-lot')?.value || '',
+    };
+    App.closeModal();
+    this._genererRapport(infos);
+  },
+
+  _genererRapport(infos) {
+    if (typeof XLSX === 'undefined') { App.toast('SheetJS non disponible', 'error'); return; }
+    if (!this._lignes.length) { App.toast('Aucune donnée à exporter', 'error'); return; }
+
     const wb     = XLSX.utils.book_new();
     const config = DB.getConfig ? DB.getConfig() : {};
     const profil = DB.getProfil ? DB.getProfil() : {};
     const tva    = profil.tvaPro ? profil.tvaPro / 100 : 0.20;
     const tvaLbl = Math.round(tva * 100) + '%';
     const today  = new Date().toLocaleDateString('fr-FR');
+    const nomAff = infos.nom || this._fileName;
+    const refAff = infos.ref ? 'Affaire ' + infos.ref : '';
+    const dceAff = infos.dce ? '— DCE ' + infos.dce : '';
+    const moaAff = infos.moa ? 'MOA : ' + infos.moa : '';
+    const moeAff = infos.moe ? 'MOE : ' + infos.moe : '';
+    const ecoAff = infos.eco ? 'Économiste : ' + infos.eco : '';
+    const lotAff = infos.lot || 'Lot travaux';
 
     const BL = '1F3864', BM = '2E5FA3', BC = 'DCE6F1', OR = 'E67E22', OC = 'FEF0E6', GR = '27AE60', GC = 'E8F5EF', GS = 'F2F2F2', WH = 'FFFFFF';
     const mkFont  = (bold, color, sz) => ({ bold: !!bold, color: { rgb: color || '000000' }, sz: sz || 10, name: 'Arial' });
@@ -434,12 +492,13 @@ ${text.slice(0, 12000)}`;
     // ── Onglet 1 : Synthèse avec formules ──────────────────
     const aoa1 = [];
     aoa1.push(['🏗 ' + (config.nomEntreprise || 'MON ENTREPRISE') + ' — RAPPORT DE SYNTHÈSE DPGF', '', '', '', '', '', '', '', '']);
-    aoa1.push(['Fichier : ' + this._fileName, '', '', '', 'Généré le ' + today, '', '', '', '']);
+    aoa1.push([nomAff, '', '', '', [refAff, dceAff].filter(Boolean).join(' '), '', '', '', '']);
+    aoa1.push([[moaAff, moeAff, ecoAff].filter(Boolean).join(' — '), '', '', '', 'Généré le ' + today, '', '', lotAff, '']);
     aoa1.push(['⚠️ Prix AATB à titre indicatif — modifiez la colonne G, les totaux se recalculent automatiquement', '', '', '', '', '', '', '', '']);
     aoa1.push([]);
     aoa1.push(['Index', 'Désignation', 'Unité', 'Qté DO', 'PU Estimateur (€)', 'Montant DO (€)', 'PU AATB (€) ← modifiable', 'Montant AATB (€)', 'Alerte']);
 
-    const dataStart = 6;
+    const dataStart = 7;
     let rn = dataStart;
     this._lignes.forEach(l => {
       const puDO   = l._prix_base || 0;
@@ -484,16 +543,23 @@ ${text.slice(0, 12000)}`;
       { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } },
       { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } },
       { s: { r: 1, c: 4 }, e: { r: 1, c: 8 } },
-      { s: { r: 2, c: 0 }, e: { r: 2, c: 8 } },
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } },
+      { s: { r: 2, c: 4 }, e: { r: 2, c: 6 } },
+      { s: { r: 2, c: 7 }, e: { r: 2, c: 8 } },
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 8 } },
     ];
 
     // Styles onglet 1
     if (ws1['A1']) ws1['A1'].s = { font: mkFont(true, WH, 13), fill: mkFill(BL), alignment: mkAlign('left') };
-    if (ws1['A2']) ws1['A2'].s = { font: mkFont(false, WH, 10), fill: mkFill(BM), alignment: mkAlign('left') };
-    if (ws1['A3']) ws1['A3'].s = { font: mkFont(false, OR, 10), fill: mkFill(OC), alignment: mkAlign('left', true) };
+    if (ws1['A2']) ws1['A2'].s = { font: mkFont(false, WH, 11), fill: mkFill(BM), alignment: mkAlign('left') };
+    if (ws1['E2']) ws1['E2'].s = { font: mkFont(false, WH, 10), fill: mkFill(BM), alignment: mkAlign('right') };
+    if (ws1['A3']) ws1['A3'].s = { font: mkFont(false, WH, 10), fill: mkFill(BM), alignment: mkAlign('left') };
+    if (ws1['E3']) ws1['E3'].s = { font: mkFont(false, WH, 10), fill: mkFill(BM), alignment: mkAlign('center') };
+    if (ws1['H3']) ws1['H3'].s = { font: mkFont(true, WH, 10), fill: mkFill(BM), alignment: mkAlign('center') };
+    if (ws1['A4']) ws1['A4'].s = { font: mkFont(false, OR, 10), fill: mkFill(OC), alignment: mkAlign('left', true) };
     const cols = ['A','B','C','D','E','F','G','H','I'];
     cols.forEach(c => {
-      const ref = c + '5';
+      const ref = c + '6';
       if (!ws1[ref]) ws1[ref] = { t:'s', v:'' };
       if (typeof ws1[ref].v === 'undefined') ws1[ref].v = '';
       ws1[ref].t = 's';
@@ -532,7 +598,9 @@ ${text.slice(0, 12000)}`;
     }
     ws1['!rows'] = [];
     ws1['!rows'][0] = { hpt: 24 };
-    ws1['!rows'][4] = { hpt: 22 };
+    ws1['!rows'][1] = { hpt: 18 };
+    ws1['!rows'][2] = { hpt: 18 };
+    ws1['!rows'][5] = { hpt: 22 };
     for (let r = dataStart; r <= lastData; r++) ws1['!rows'][r-1] = { hpt: 16 };
     ws1['!rows'][tRow1-1] = { hpt: 18 };
     ws1['!rows'][tRow1]   = { hpt: 18 };
@@ -681,7 +749,7 @@ ${text.slice(0, 12000)}`;
     XLSX.utils.book_append_sheet(wb, ws3, 'Base prix marché');
 
     XLSX.writeFile(wb, 'Synthese_DPGF_' + new Date().toISOString().split('T')[0] + '.xlsx');
-    App.toast('📊 Rapport synthèse exporté — 3 onglets mis en forme', 'success');
+    App.toast('📊 Rapport synthèse exporté — 2 onglets', 'success');
   },
 
   // ── P.U. final avec marge ─────────────────────────────────
