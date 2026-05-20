@@ -808,7 +808,7 @@ const Pages = {
           </div>
 
           <!-- Ligne libre avec IA -->
-          <div class="mt-16" style="padding:14px 16px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-md)">
+          <div class="mt-16 no-print" style="padding:14px 16px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-md)">
             <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">
               + Ajouter une ligne personnalisée
             </div>
@@ -835,7 +835,7 @@ const Pages = {
 
       <!-- Devis existants -->
       ${DB.getDevisByChantier(parseInt(document.getElementById('sel-chantier-devis')?.value || 0)).length > 0 ? `
-      <div class="card mt-16">
+      <div class="card mt-16 no-print">
         <div class="card-header"><span class="card-title">Historique des devis</span></div>
         <div class="table-wrap">
           <table>
