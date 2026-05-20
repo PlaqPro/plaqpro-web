@@ -610,3 +610,9 @@ body.sidebar-open .hamburger span:nth-child(3) { transform: translateY(-7px) rot
   .empty-state { padding: 32px 16px; }
 
 }
+
+@media print {
+  .no-print { display: none !important; }
+  .print-only { display: inline !important; }
+  [class*="historique"], .card:has(.card-title:contains("Historique")) { display: none !important; }
+}

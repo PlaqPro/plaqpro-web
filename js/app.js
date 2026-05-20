@@ -774,9 +774,12 @@ const Pages = {
                 <td style="padding:12px 14px;font-weight:500">${l.poste}</td>
                 <td style="padding:12px 14px;text-align:right;font-family:var(--font-mono)">${Calculs.fmt(l.baseHT)}</td>
                 <td style="padding:12px 14px;text-align:center">
-                  <input type="number" value="${Math.round((l.marge || 0) * 100)}" min="0" max="200"
-                    style="width:70px;text-align:center;border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:4px 8px;font-family:var(--font-mono);font-size:13px"
-                    onchange="Pages.majMargeLigne(${i}, this.value)"> %
+                  <span class="no-print" style="display:inline-flex;align-items:center;gap:4px">
+                    <input type="number" value="${Math.round((l.marge || 0) * 100)}" min="0" max="200"
+                      style="width:70px;text-align:center;border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:4px 8px;font-family:var(--font-mono);font-size:13px"
+                      onchange="Pages.majMargeLigne(${i}, this.value)"> %
+                  </span>
+                  <span class="print-only" style="display:none;font-family:var(--font-mono)">${Math.round((l.marge || 0) * 100)} %</span>
                 </td>
                 <td style="padding:12px 14px;text-align:right;font-family:var(--font-mono);font-weight:600;color:var(--accent)">${Calculs.fmt(l.totalClient)}</td>
               </tr>`).join('')}
