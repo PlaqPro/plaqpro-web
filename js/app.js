@@ -728,7 +728,7 @@ const Pages = {
               ${chantier ? chantier.nom : '—'} · ${client ? client.nom : '—'} · ${App.formatDate(devis.date)}
             </div>
           </div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="no-print" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <select class="form-control" style="width:140px" onchange="Pages.mettreAJourStatutDevis(this.value)">
               ${['Brouillon','Envoyé','Accepté','Refusé'].map(s => `<option ${devis.statut === s ? 'selected' : ''}>${s}</option>`).join('')}
             </select>

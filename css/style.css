@@ -617,4 +617,5 @@ body.sidebar-open .hamburger span:nth-child(3) { transform: translateY(-7px) rot
   [class*="historique"], .card:has(.card-title:contains("Historique")) { display: none !important; }
   #assistant-widget, #assistant-toggle, .assistant-btn { display: none !important; }
   .statut-badge, [class*="statut"] { display: none !important; }
+  #assistant-ia-widget, #assistant-fab, [id*="assistant"], [id*="widget"] { display: none !important; }
 }
