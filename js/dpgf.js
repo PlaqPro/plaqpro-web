@@ -173,21 +173,21 @@ var DPGF = {
       }
     } catch (err) {
       this._showLoading(false);
-      App.showToast('Erreur lecture fichier : ' + err.message, 'error');
+      App.toast('Erreur lecture fichier : ' + err.message, 'error');
       return;
     }
 
     this._rawText = text;
 
     if (text === '__AOS_PARSED__') {
-      App.showToast('✅ Format AOS détecté — ' + this._lignes.length + ' lignes analysées', 'success');
+      App.toast('✅ Format AOS détecté — ' + this._lignes.length + ' lignes analysées', 'success');
     } else {
       this._showLoading(true, 'Analyse IA en cours…');
       try {
         await this._analyserAvecGroq(text);
       } catch (err) {
         this._showLoading(false);
-        App.showToast('Erreur analyse IA : ' + err.message, 'error');
+        App.toast('Erreur analyse IA : ' + err.message, 'error');
         return;
       }
     }
@@ -405,8 +405,8 @@ ${text.slice(0, 12000)}`;
   },
 
   _exporterRapportSynthese() {
-    if (typeof XLSX === 'undefined') { App.showToast('SheetJS non disponible', 'error'); return; }
-    if (!this._lignes.length) { App.showToast('Aucune donnée à exporter', 'error'); return; }
+    if (typeof XLSX === 'undefined') { App.toast('SheetJS non disponible', 'error'); return; }
+    if (!this._lignes.length) { App.toast('Aucune donnée à exporter', 'error'); return; }
 
     const wb = XLSX.utils.book_new();
 
@@ -458,7 +458,7 @@ ${text.slice(0, 12000)}`;
     XLSX.utils.book_append_sheet(wb, ws3, 'Base prix marché');
 
     XLSX.writeFile(wb, 'Rapport_Synthese_' + Date.now() + '.xlsx');
-    App.showToast('📊 Rapport synthèse exporté (3 onglets)', 'success');
+    App.toast('📊 Rapport synthèse exporté (3 onglets)', 'success');
   },
 
   // ── P.U. final avec marge ─────────────────────────────────
@@ -606,7 +606,7 @@ ${text.slice(0, 12000)}`;
           l.prix_unitaire = prix; l._prix_base = prix; l._source = 'base'; l._produit_match = p.nom || p.designation || '';
           this._refreshRow(l); this._renderRecap();
           App.closeModal();
-          App.showToast('Prix appliqué depuis la base', 'success');
+          App.toast('Prix appliqué depuis la base', 'success');
         };
         body.appendChild(btn);
       });
@@ -626,7 +626,7 @@ ${text.slice(0, 12000)}`;
       </div>`;
     const footer = `<button class="btn btn-primary" onclick="
       const v = parseFloat(document.getElementById('dpgf-manual-prix').value);
-      if (!isNaN(v)) { DPGF._updatePrix(${id}, v); DPGF._renderRecap(); App.closeModal(); App.showToast('Prix mis à jour','success'); }
+      if (!isNaN(v)) { DPGF._updatePrix(${id}, v); DPGF._renderRecap(); App.closeModal(); App.toast('Prix mis à jour','success'); }
     ">Appliquer</button>`;
     App.openModal('✏️ Saisie manuelle', body, footer);
   },
@@ -634,14 +634,14 @@ ${text.slice(0, 12000)}`;
   async _suggererIA(id) {
     const l = this._lignes.find(x => x.id === id);
     if (!l) return;
-    App.showToast('IA analyse le prix…', 'info');
+    App.toast('IA analyse le prix…', 'info');
     const prompt = `Estime un prix unitaire HT raisonnable en France pour cette prestation BTP plaquiste :
 "${l.designation}" (unité: ${l.unite})
 Réponds UNIQUEMENT avec un nombre décimal (ex: 45.50), sans unité ni texte.`;
 
     try {
       const _gcSug = groqConfig();
-      if (!_gcSug) { App.showToast('Clé Groq requise en local', 'error'); return; }
+      if (!_gcSug) { App.toast('Clé Groq requise en local', 'error'); return; }
       const resp = await fetch(_gcSug.url, {
         method: 'POST',
         headers: _gcSug.headers,
@@ -657,9 +657,9 @@ Réponds UNIQUEMENT avec un nombre décimal (ex: 45.50), sans unité ni texte.`;
       if (isNaN(prix) || prix <= 0) throw new Error('Prix non valide');
       l.prix_unitaire = prix; l._prix_base = prix; l._source = 'ia';
       this._refreshRow(l); this._renderRecap();
-      App.showToast(`Prix IA : ${this._fmtE(prix)} appliqué`, 'success');
+      App.toast(`Prix IA : ${this._fmtE(prix)} appliqué`, 'success');
     } catch (err) {
-      App.showToast('Erreur IA : ' + err.message, 'error');
+      App.toast('Erreur IA : ' + err.message, 'error');
     }
   },
 
@@ -719,9 +719,9 @@ Réponds UNIQUEMENT avec un nombre décimal (ex: 45.50), sans unité ni texte.`;
 
   // ── Vérification CCTP ─────────────────────────────────────
   async _verifierCCTP() {
-    App.showToast('Vérification CCTP en cours…', 'info');
+    App.toast('Vérification CCTP en cours…', 'info');
     const lignesRemplies = this._lignes.filter(l => l.prix_unitaire > 0);
-    if (!lignesRemplies.length) { App.showToast('Renseignez d\'abord les prix', 'error'); return; }
+    if (!lignesRemplies.length) { App.toast('Renseignez d\'abord les prix', 'error'); return; }
 
     const resume = lignesRemplies.slice(0, 30).map(l =>
       `${l.designation} | ${l.unite} | qté ${l.quantite} | PU ${l.prix_unitaire}€ | total ${this._totalLigne(l).toFixed(0)}€`
@@ -735,7 +735,7 @@ Réponds en JSON strict : { "alertes": [{"ligne":"...", "probleme":"...","niveau
 
     try {
       const _gcCctp = groqConfig();
-      if (!_gcCctp) { App.showToast('Clé Groq requise en local', 'error'); return; }
+      if (!_gcCctp) { App.toast('Clé Groq requise en local', 'error'); return; }
       const resp = await fetch(_gcCctp.url, {
         method: 'POST',
         headers: _gcCctp.headers,
@@ -751,7 +751,7 @@ Réponds en JSON strict : { "alertes": [{"ligne":"...", "probleme":"...","niveau
       const parsed = JSON.parse(jm ? jm[0] : raw);
       this._afficherAlerteCCTP(parsed);
     } catch (err) {
-      App.showToast('Erreur vérification : ' + err.message, 'error');
+      App.toast('Erreur vérification : ' + err.message, 'error');
     }
   },
 
@@ -784,7 +784,7 @@ Réponds en JSON strict : { "alertes": [{"ligne":"...", "probleme":"...","niveau
 
   // ── Export Excel ──────────────────────────────────────────
   _exporterExcel() {
-    if (typeof XLSX === 'undefined') { App.showToast('SheetJS non disponible', 'error'); return; }
+    if (typeof XLSX === 'undefined') { App.toast('SheetJS non disponible', 'error'); return; }
     const rows = [['N°', 'Désignation', 'Lot', 'Unité', 'Quantité', 'PU HT (€)', 'Total HT (€)', 'Réf. CCTP']];
     this._lignes.forEach(l => {
       rows.push([
@@ -810,13 +810,13 @@ Réponds en JSON strict : { "alertes": [{"ligne":"...", "probleme":"...","niveau
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'DPGF complété');
     XLSX.writeFile(wb, 'DPGF_complete_' + Date.now() + '.xlsx');
-    App.showToast('Export Excel généré', 'success');
+    App.toast('Export Excel généré', 'success');
   },
 
   // ── Générer devis PlaqPro+ ────────────────────────────────
   _genererDevis() {
     const lignesOk = this._lignes.filter(l => l.prix_unitaire > 0);
-    if (!lignesOk.length) { App.showToast('Renseignez d\'abord les prix', 'error'); return; }
+    if (!lignesOk.length) { App.toast('Renseignez d\'abord les prix', 'error'); return; }
 
     const chantiers = DB.chantiers || [];
     const opts = chantiers.map(c =>
@@ -876,7 +876,7 @@ Réponds en JSON strict : { "alertes": [{"ligne":"...", "probleme":"...","niveau
 
     DB.addDevis(devis);
     App.closeModal();
-    App.showToast('Devis créé avec succès', 'success');
+    App.toast('Devis créé avec succès', 'success');
     setTimeout(() => App.navigate('devis'), 600);
   },
 
