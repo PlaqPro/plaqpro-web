@@ -1,8 +1,11 @@
-## ⏱ CHECKPOINT 20/05/2026 16:30
-- Scénario 3 DCE mairie en cours
-- Fichier test : Lot-03-Plâtrerie-Peinture-Plafond.pdf (28p, 68585 chars)
-- Problème identifié : prompt Groq limité à 6000 chars = 9% du document
-- Solution en cours : extraction intelligente partie DPGF
+## ⏱ CHECKPOINT 20/05/2026 17:15
+- Scénario 3 DCE mairie : module combo CCTP+DPGF PDF terminé ✅
+- Triple zone upload : CCTP seul / DPGF seul / CCTP+DPGF combo (violet)
+- Analyse 4 passes Groq séquentielles avec délai 1s anti-rate-limit
+- Lecture PDF étendue à 60 000 chars (était 18 000)
+- DPGF découpé en 2 parties (tiers milieu + dernier tiers) → fusion + déduplification
+- Fichier test : Lot-03-Plâtrerie-Peinture-Plafond.pdf (28p, 68 585 chars, 19 lignes DPGF)
+- Prochain test : charger le PDF dans la zone combo et valider l'extraction
 
 ---
 
