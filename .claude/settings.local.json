@@ -50,7 +50,8 @@
       "Bash(ls wrangler.jsonc)",
       "Bash(rm wrangler.jsonc)",
       "Bash(ls PlaQproWEB/)",
-      "Bash(rm -rf PlaQproWEB)"
+      "Bash(rm -rf PlaQproWEB)",
+      "Bash(dir *)"
     ]
   }
 }
