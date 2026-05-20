@@ -210,6 +210,18 @@ const DB = {
   },
   saveConfig(c) { localStorage.setItem(this.KEYS.config, JSON.stringify(c)); },
 
+  getProfil() {
+    const saved = localStorage.getItem('plaqpro_profil');
+    if (saved) return JSON.parse(saved);
+    return {
+      mixPro: 70, typeInterv: 'multi',
+      tauxHorairePro: 42, tauxHoraireParticulier: 38,
+      margeMatPro: 0.22, margeMatParticulier: 0.32,
+      margeMO: 0.20, tvaPro: 20, tvaParticulier: 10,
+    };
+  },
+  saveProfil(p) { localStorage.setItem('plaqpro_profil', JSON.stringify(p)); },
+
   // ── Init données de démonstration ────────────────────────
   initDemo() {
     if (this.clients.length > 0) return; // déjà initialisé

@@ -1093,8 +1093,85 @@ const Pages = {
   config() {
     const config = DB.getConfig();
     const groqKey = localStorage.getItem('plaqpro_groq_key') || '';
+    const profil = DB.getProfil ? DB.getProfil() : {};
     const div = document.createElement('div');
     div.innerHTML = `
+      <div class="card" style="max-width:860px;margin-bottom:16px">
+        <div class="card-header"><span class="card-title">🏢 Profil entreprise — Positionnement marché</span></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div>
+              <label class="form-label">Répartition clientèle</label>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
+                <span style="font-size:12px;color:var(--text-secondary)">Particuliers</span>
+                <input type="range" id="cfg-mix-pro" min="0" max="100"
+                  value="${profil.mixPro ?? 70}"
+                  style="flex:1"
+                  oninput="document.getElementById('cfg-mix-pro-val').textContent=this.value+'% Pro / '+(100-this.value)+'% Particuliers'">
+                <span style="font-size:12px;color:var(--text-secondary)">Professionnels</span>
+              </div>
+              <div id="cfg-mix-pro-val" style="text-align:center;font-weight:700;color:var(--accent);margin-top:4px">
+                ${profil.mixPro ?? 70}% Pro / ${100-(profil.mixPro ?? 70)}% Particuliers
+              </div>
+            </div>
+            <div>
+              <label class="form-label">Type d'interventions principal</label>
+              <select id="cfg-type-interv" class="form-control" style="margin-top:8px">
+                <option value="multi" ${(profil.typeInterv||'multi')==='multi'?'selected':''}>Multi-travaux (couteau suisse)</option>
+                <option value="placo" ${profil.typeInterv==='placo'?'selected':''}>Plaquisterie / Peinture</option>
+                <option value="renov" ${profil.typeInterv==='renov'?'selected':''}>Rénovation complète</option>
+                <option value="neuf"  ${profil.typeInterv==='neuf'?'selected':''}>Construction neuve</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px">
+            <div>
+              <label class="form-label">Taux MO Pro (€/h)</label>
+              <input type="number" id="cfg-taux-pro" class="form-control" value="${profil.tauxHorairePro ?? 42}" min="20" max="120" step="0.5">
+            </div>
+            <div>
+              <label class="form-label">Taux MO Particulier (€/h)</label>
+              <input type="number" id="cfg-taux-part" class="form-control" value="${profil.tauxHoraireParticulier ?? 38}" min="20" max="120" step="0.5">
+            </div>
+            <div>
+              <label class="form-label">Marge matériaux Pro (%)</label>
+              <input type="number" id="cfg-marge-mat-pro" class="form-control" value="${profil.margeMatPro ?? 22}" min="0" max="100">
+            </div>
+            <div>
+              <label class="form-label">Marge matériaux Particulier (%)</label>
+              <input type="number" id="cfg-marge-mat-part" class="form-control" value="${profil.margeMatParticulier ?? 32}" min="0" max="100">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px">
+            <div>
+              <label class="form-label">TVA chantiers Pro (%)</label>
+              <select id="cfg-tva-pro" class="form-control">
+                <option value="20" ${(profil.tvaPro??20)==20?'selected':''}>20% (neuf / pro)</option>
+                <option value="10" ${profil.tvaPro==10?'selected':''}>10% (rénovation)</option>
+                <option value="5.5" ${profil.tvaPro==5.5?'selected':''}>5,5% (amélioration énergétique)</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">TVA chantiers Particuliers (%)</label>
+              <select id="cfg-tva-part" class="form-control">
+                <option value="10" ${(profil.tvaParticulier??10)==10?'selected':''}>10% (rénovation)</option>
+                <option value="20" ${profil.tvaParticulier==20?'selected':''}>20% (neuf)</option>
+                <option value="5.5" ${profil.tvaParticulier==5.5?'selected':''}>5,5% (amélioration énergétique)</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Marge MO (%)</label>
+              <input type="number" id="cfg-marge-mo" class="form-control" value="${profil.margeMO ?? 20}" min="0" max="100">
+            </div>
+          </div>
+
+          <div style="margin-top:16px;text-align:right">
+            <button class="btn btn-primary" onclick="Pages.sauvegarderProfil()">💾 Enregistrer le profil</button>
+          </div>
+        </div>
+      </div>
       <div class="card" style="max-width:600px">
         <div class="card-header"><span class="card-title">⚙️ Paramètres entreprise</span></div>
         <div class="card-body">
@@ -1619,6 +1696,22 @@ const Pages = {
     localStorage.setItem('plaqpro_ville', ville);
     if (typeof Meteo !== 'undefined') Meteo.changerVille(ville);
     App.toast('Configuration enregistrée !');
+  },
+
+  sauvegarderProfil() {
+    const profil = {
+      mixPro:               parseInt(document.getElementById('cfg-mix-pro')?.value ?? 70),
+      typeInterv:           document.getElementById('cfg-type-interv')?.value || 'multi',
+      tauxHorairePro:       parseFloat(document.getElementById('cfg-taux-pro')?.value ?? 42),
+      tauxHoraireParticulier: parseFloat(document.getElementById('cfg-taux-part')?.value ?? 38),
+      margeMatPro:          parseFloat(document.getElementById('cfg-marge-mat-pro')?.value ?? 22) / 100,
+      margeMatParticulier:  parseFloat(document.getElementById('cfg-marge-mat-part')?.value ?? 32) / 100,
+      margeMO:              parseFloat(document.getElementById('cfg-marge-mo')?.value ?? 20) / 100,
+      tvaPro:               parseFloat(document.getElementById('cfg-tva-pro')?.value ?? 20),
+      tvaParticulier:       parseFloat(document.getElementById('cfg-tva-part')?.value ?? 10),
+    };
+    localStorage.setItem('plaqpro_profil', JSON.stringify(profil));
+    App.toast('✅ Profil enregistré', 'success');
   },
 
   sauvegarderGroqKey() {
