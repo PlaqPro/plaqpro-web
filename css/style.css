@@ -620,4 +620,7 @@ body.sidebar-open .hamburger span:nth-child(3) { transform: translateY(-7px) rot
   #assistant-ia-widget, #assistant-fab, [id*="assistant"], [id*="widget"] { display: none !important; }
   #aide-ctx-btn, [id*="aide"] { display: none !important; }
   #ia-toggle-btn, #ia-window, #calc-window { display: none !important; }
+  @page {
+    margin: 1cm;
+  }
 }
