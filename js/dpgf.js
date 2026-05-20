@@ -580,7 +580,7 @@ ${text.slice(-8000)}` }],
               const pageText = content.items.map(item => item.str).join(' ');
               text += pageText + '\n';
             }
-            resolve(text.slice(0, 18000));
+            resolve(text.slice(0, 60000));
           } else {
             // Fallback si PDF.js non disponible
             const arr = new Uint8Array(e.target.result);
@@ -589,7 +589,7 @@ ${text.slice(-8000)}` }],
             const words = matches
               .map(m => m.slice(1,-1).replace(/\\n/g,'\n').replace(/\\\(/g,'(').replace(/\\\)/g,')'))
               .filter(w => /[a-zA-ZÀ-ÿ0-9]/.test(w));
-            resolve(words.join(' ').slice(0, 18000));
+            resolve(words.join(' ').slice(0, 60000));
           }
         } catch(err) {
           reject(err);
