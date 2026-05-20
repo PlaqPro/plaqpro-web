@@ -194,7 +194,7 @@ const ExcelExport = {
       ws[`A${r}`] = { v: config.piedPageDevis || 'Devis valable 30 jours.', t: 's', s: this._styleCell(false, 'left', this.COLORS.gris) };
 
       // Dimensions colonnes
-      ws['!ref'] = `A1:E${r}`;
+      ws['!ref']  = `A1:F${r}`;
       ws['!cols'] = [{ wch: 22 }, { wch: 30 }, { wch: 14 }, { wch: 10 }, { wch: 16 }];
       ws['!merges'] = [
         { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },
