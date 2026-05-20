@@ -611,7 +611,12 @@ const GestTarifs = {
 // ── Initialiser la grille avec les prix de la base produits ──
 function initTarifsDepuisBase() {
   const existants = Tarifs.getTous();
-  if (existants.length > 0) return; // déjà initialisé
+  // Réinitialisation forcée si version < 2
+  const version = localStorage.getItem('plaqpro_tarifs_version');
+  if (existants.length > 0 && version === '2') return;
+  localStorage.setItem('plaqpro_tarifs_version', '2');
+  // Purge des anciens tarifs mal affectés
+  localStorage.removeItem('plaqpro_tarifs_multi');
 
   const produits = DB.produits;
   let count = 0;
