@@ -75,27 +75,37 @@ var DPGF = {
           </div>
         </div>
 
-        <!-- Double zone upload -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+        <!-- Triple zone upload -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px">
 
-          <!-- Zone CCTP -->
-          <div id="cctp-upload-zone" style="border:2px dashed rgba(247,166,79,0.4);border-radius:14px;padding:32px 16px;text-align:center;cursor:pointer;transition:all .25s;background:rgba(247,166,79,0.03)">
-            <div style="font-size:36px;margin-bottom:10px">📄</div>
-            <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:4px">CCTP — Cahier des charges</div>
-            <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px">Format PDF</div>
+          <!-- Zone CCTP seul -->
+          <div id="cctp-upload-zone" style="border:2px dashed rgba(247,166,79,0.4);border-radius:14px;padding:24px 12px;text-align:center;cursor:pointer;transition:all .25s;background:rgba(247,166,79,0.03)">
+            <div style="font-size:32px;margin-bottom:8px">📄</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:3px">CCTP seul</div>
+            <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:10px">Cahier des charges PDF</div>
             <input type="file" id="cctp-file-input" accept=".pdf" style="display:none">
-            <button class="btn btn-secondary" onclick="document.getElementById('cctp-file-input').click()" style="font-size:12px">📁 Charger le CCTP</button>
-            <div id="cctp-status" style="margin-top:10px;font-size:12px;color:var(--text-tertiary)">Optionnel — enrichit le rapport</div>
+            <button class="btn btn-secondary" onclick="document.getElementById('cctp-file-input').click()" style="font-size:11px">📁 Charger</button>
+            <div id="cctp-status" style="margin-top:8px;font-size:11px;color:var(--text-tertiary)">Optionnel — enrichit le rapport</div>
           </div>
 
-          <!-- Zone DPGF -->
-          <div id="dpgf-upload-zone" style="border:2px dashed rgba(79,142,247,0.4);border-radius:14px;padding:32px 16px;text-align:center;cursor:pointer;transition:all .25s;background:rgba(79,142,247,0.03)">
-            <div style="font-size:36px;margin-bottom:10px">📊</div>
-            <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:4px">DPGF — Bordereau de prix</div>
-            <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px">Format Excel (.xlsx)</div>
+          <!-- Zone DPGF seul -->
+          <div id="dpgf-upload-zone" style="border:2px dashed rgba(79,142,247,0.4);border-radius:14px;padding:24px 12px;text-align:center;cursor:pointer;transition:all .25s;background:rgba(79,142,247,0.03)">
+            <div style="font-size:32px;margin-bottom:8px">📊</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:3px">DPGF seul</div>
+            <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:10px">Bordereau Excel (.xlsx)</div>
             <input type="file" id="dpgf-file-input" accept=".xlsx,.xls,.csv,.pdf" style="display:none">
-            <button class="btn btn-primary" onclick="document.getElementById('dpgf-file-input').click()" style="font-size:12px">📁 Charger le DPGF</button>
-            <div id="dpgf-status" style="margin-top:10px;font-size:12px;color:var(--text-tertiary)">Obligatoire</div>
+            <button class="btn btn-primary" onclick="document.getElementById('dpgf-file-input').click()" style="font-size:11px">📁 Charger</button>
+            <div id="dpgf-status" style="margin-top:8px;font-size:11px;color:var(--text-tertiary)">Obligatoire</div>
+          </div>
+
+          <!-- Zone CCTP+DPGF tout-en-un -->
+          <div id="combo-upload-zone" style="border:2px dashed rgba(167,139,250,0.4);border-radius:14px;padding:24px 12px;text-align:center;cursor:pointer;transition:all .25s;background:rgba(167,139,250,0.03)">
+            <div style="font-size:32px;margin-bottom:8px">📋</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:3px">CCTP + DPGF</div>
+            <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:10px">Document unique PDF</div>
+            <input type="file" id="combo-file-input" accept=".pdf" style="display:none">
+            <button class="btn" onclick="document.getElementById('combo-file-input').click()" style="font-size:11px;background:rgba(167,139,250,0.15);color:#A78BFA;border:1px solid rgba(167,139,250,0.3)">📁 Charger</button>
+            <div id="combo-status" style="margin-top:8px;font-size:11px;color:var(--text-tertiary)">Tout-en-un — scénario mairie</div>
           </div>
 
         </div>
@@ -183,7 +193,20 @@ var DPGF = {
     if (cctpInput) {
       cctpInput.addEventListener('change', e => { if (e.target.files[0]) DPGF._handleCCTP(e.target.files[0]); });
     }
-  },
+
+      // Binding CCTP+DPGF combo
+      const comboInput = root.querySelector('#combo-file-input');
+      const comboZone  = root.querySelector('#combo-upload-zone');
+      if (comboZone) {
+        comboZone.addEventListener('dragover', e => { e.preventDefault(); comboZone.style.borderColor = '#A78BFA'; });
+        comboZone.addEventListener('dragleave', () => { comboZone.style.borderColor = 'rgba(167,139,250,0.4)'; });
+        comboZone.addEventListener('drop', e => { e.preventDefault(); comboZone.style.borderColor = 'rgba(167,139,250,0.4)'; if (e.dataTransfer.files[0]) DPGF._handleCombo(e.dataTransfer.files[0]); });
+        comboZone.addEventListener('click', e => { if (e.target === comboZone || e.target.tagName === 'DIV') comboInput && comboInput.click(); });
+      }
+      if (comboInput) {
+        comboInput.addEventListener('change', e => { if (e.target.files[0]) DPGF._handleCombo(e.target.files[0]); });
+      }
+    },
 
   // ── Traitement CCTP PDF ───────────────────────────────────
   async _handleCCTP(file) {
@@ -338,6 +361,123 @@ ${text.slice(-4000)}`;
         }
       }
     });
+  },
+
+  // ── Traitement CCTP+DPGF combo (document unique) ─────────
+  async _handleCombo(file) {
+    const statusEl = document.getElementById('combo-status');
+    const zoneEl   = document.getElementById('combo-upload-zone');
+    if (statusEl) statusEl.textContent = '⏳ Lecture du document…';
+
+    try {
+      const text = await this._readPDF(file);
+      this._cctpTexte = text;
+      this._fileName  = file.name.replace('.pdf','').replace(/-/g,' ');
+      if (statusEl) statusEl.textContent = '🤖 Analyse IA en cours…';
+
+      const gc = groqConfig();
+      if (!gc) throw new Error('Clé Groq requise');
+
+      const prompt = `Tu es expert en marchés publics BTP français.
+Analyse ce document unique contenant à la fois le CCTP et le DPGF.
+Extrais en JSON strict :
+{
+  "affaire": {
+    "nom": "nom opération / bâtiment",
+    "adresse": "adresse complète",
+    "reference": "numéro affaire",
+    "moa": "maître d'ouvrage",
+    "moe": "maître d'œuvre / architecte",
+    "economiste": "économiste ou BET",
+    "lot": "numéro et intitulé du lot",
+    "date_dce": "date DCE"
+  },
+  "exigences": [
+    {
+      "article": "ex: 3.4",
+      "designation": "désignation poste",
+      "classement": "EI60/CF1h/Rw45/etc",
+      "certification": "ACERMI/EUCEB/CSTB/DTU",
+      "marque_imposee": "PLACO/ISOVER/etc",
+      "remarque": "exigence technique"
+    }
+  ],
+  "lignes_dpgf": [
+    {
+      "article": "ex: 3.3.1",
+      "designation": "désignation complète",
+      "unite": "M2/ML/U/FT",
+      "quantite": nombre
+    }
+  ]
+}
+Règle : lignes_dpgf = uniquement les lignes avec quantité chiffrée. Ignorer titres de sections.
+Retourne UNIQUEMENT le JSON valide sans markdown.
+
+En-tête et prescriptions :
+${text.slice(0, 4000)}
+
+--- Lignes DPGF (fin du document) ---
+${text.slice(-4000)}`;
+
+      const resp = await fetch(gc.url, {
+        method: 'POST',
+        headers: gc.headers,
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 3000,
+          temperature: 0.1,
+        }),
+      });
+
+      const data  = await resp.json();
+      const raw   = (data.choices[0]?.message?.content || '').trim();
+      const clean = raw.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+      const jm    = clean.match(/\{[\s\S]*\}/);
+      if (!jm) throw new Error('Réponse non JSON : ' + clean.slice(0,100));
+      const parsed = JSON.parse(jm[0]);
+
+      this._infosAffaire  = parsed.affaire   || {};
+      this._exigencesCCTP = parsed.exigences || [];
+      const lignesPDF     = parsed.lignes_dpgf || [];
+
+      if (lignesPDF.length > 0) {
+        this._lignes = lignesPDF.map((l, i) => {
+          const matchPM = this.matcherPrixMarche(l.designation || '');
+          const puAATB  = matchPM ? matchPM.pu : 0;
+          return {
+            id:            i,
+            numero_lot:    l.article || '',
+            designation:   l.designation || '',
+            lot:           this._categoriser(l.designation || ''),
+            unite:         l.unite || 'm²',
+            quantite:      parseFloat(l.quantite) || 0,
+            prix_unitaire: puAATB || 0,
+            _prix_base:    0,
+            _prix_aatb:    puAATB,
+            _marge:        0,
+            _source:       puAATB ? 'aatb' : '',
+            _match_pm:     matchPM ? matchPM.libelle : '',
+            _ecart_pct:    0,
+            cctp_reference: '',
+          };
+        });
+        this._rapprocher();
+        this._afficherTableau();
+      }
+
+      const nom    = this._infosAffaire.nom || file.name;
+      const nbLig  = lignesPDF.length;
+      const nbExig = this._exigencesCCTP.length;
+      if (statusEl) statusEl.innerHTML = `✅ <strong>${nom}</strong><br><span style="color:var(--text-tertiary)">${nbExig} exigences + ${nbLig} lignes DPGF</span>`;
+      if (zoneEl) zoneEl.style.borderColor = '#A78BFA';
+      App.toast(`✅ Document analysé — ${nbExig} exigences CCTP + ${nbLig} lignes DPGF extraites`, 'success');
+
+    } catch(err) {
+      if (statusEl) statusEl.textContent = '⚠️ Erreur : ' + err.message;
+      App.toast('Erreur analyse document : ' + err.message, 'error');
+    }
   },
 
   // ── Traitement fichier ────────────────────────────────────
