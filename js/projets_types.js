@@ -228,6 +228,163 @@ var ProjetsTypes = {
         ];
       }
     },
+    {
+      id: 't2',
+      icon: '🏠',
+      titre: 'Appartement T2',
+      description: 'Cloisons, plafond, peinture, sol stratifié, électricité de base',
+      dims: [
+        { key: 'surface',  label: 'Surface totale',    unite: 'm²', defaut: 42, min: 20, max: 120 },
+        { key: 'cloisons', label: 'Longueur cloisons', unite: 'ml', defaut: 12, min: 4,  max: 60  }
+      ],
+      couleur: '#60C8FF',
+      tags: ['Plaquisterie', 'Peinture', 'Électricité'],
+      lignes: function(d) {
+        var s = d.surface || 42;
+        var cl = d.cloisons || 12;
+        var ht = cl * 2.5;
+        return [
+          { ref:'PARF48',  designation:'Rail R48',                          unite:'ml', qte: Math.ceil(cl*2),             prix: DB.getPrixByRef('PARF48')  ||1.65  },
+          { ref:'PAMON48', designation:'Montant M48',                       unite:'u',  qte: Math.ceil(cl/0.6),           prix: DB.getPrixByRef('PAMON48') ||2.45  },
+          { ref:'BA13S',   designation:'Plaque BA13 Standard cloisons',     unite:'u',  qte: Math.ceil(ht*2/2.7*1.1),    prix: DB.getPrixByRef('BA13S')   ||8.50  },
+          { ref:'OSSOSS',  designation:'Ossature plafond F530',             unite:'ml', qte: Math.ceil(s/1.2),            prix: DB.getPrixByRef('OSSOSS')  ||3.80  },
+          { ref:'BA13S',   designation:'Plaque BA13 plafond',               unite:'u',  qte: Math.ceil(s/2.7*1.1),       prix: DB.getPrixByRef('BA13S')   ||8.50  },
+          { ref:'BANDE_PLA',designation:'Bande à plâtre jointage',          unite:'rl', qte: Math.ceil((ht*2+s)*1.1/50), prix: DB.getPrixByRef('BANDE_PLA')||4.20 },
+          { ref:'ENDUIT_F',designation:'Enduit de finition 25kg',           unite:'sac',qte: Math.ceil((ht*2+s)*0.35/25),prix: DB.getPrixByRef('ENDUIT_F') ||18.50 },
+          { ref:'PEINTURE',designation:'Peinture acrylique blanche 10L',    unite:'u',  qte: Math.ceil(s*0.6/35),        prix: 28.00 },
+          { ref:'SOL_STR', designation:'Sol stratifié 8mm AC4',             unite:'m2', qte: Math.ceil(s*1.08),          prix: 14.00 },
+          { ref:'PLINTHE', designation:'Plinthe MDF 6cm',                   unite:'ml', qte: Math.ceil(Math.sqrt(s*4)*1.5), prix: 5.50 },
+          { ref:'PRISE2PT',designation:'Prise 2P+T 16A (lot)',               unite:'u',  qte: Math.ceil(s/8),             prix: DB.getPrixByRef('PRISE2PT')||4.50  },
+          { ref:'CAB_15',  designation:'Câble H07V-U 1.5mm²',               unite:'ml', qte: Math.ceil(s*2),             prix: DB.getPrixByRef('CAB_15')  ||0.85  },
+          { ref:'MO_PLAQ', designation:"Main d'œuvre pose complète",        unite:'h',  qte: Math.round(s*2.5+cl*3),    prix: DB.getPrixByRef('MO_PLAQ') ||38.00 },
+        ];
+      }
+    },
+    {
+      id: 'maison',
+      icon: '🏘',
+      titre: 'Maison individuelle',
+      description: 'Rénovation complète : cloisons, isolation, plafonds, peinture, sols, sanitaires, électricité',
+      dims: [
+        { key: 'surface',  label: 'Surface habitable', unite: 'm²', defaut: 110, min: 50, max: 400 },
+        { key: 'cloisons', label: 'Longueur cloisons', unite: 'ml', defaut: 35,  min: 10, max: 150 },
+        { key: 'nbSdb',    label: 'Nb salles de bain', unite: 'u',  defaut: 2,   min: 1,  max: 5   }
+      ],
+      couleur: '#F75B5B',
+      tags: ['Plaquisterie', 'Isolation', 'Électricité', 'Plomberie'],
+      lignes: function(d) {
+        var s = d.surface || 110;
+        var cl = d.cloisons || 35;
+        var nb = d.nbSdb || 2;
+        var ht = cl * 2.5;
+        return [
+          { ref:'PARF70',   designation:'Rail R70 cloisons',                unite:'ml', qte: Math.ceil(cl*2),            prix: DB.getPrixByRef('PARF70')  ||2.10  },
+          { ref:'PAMON70',  designation:'Montant M70',                      unite:'u',  qte: Math.ceil(cl/0.6),          prix: DB.getPrixByRef('PAMON70') ||3.20  },
+          { ref:'BA13S',    designation:'Plaque BA13 Standard cloisons',    unite:'u',  qte: Math.ceil(ht*2/2.7*1.1),   prix: DB.getPrixByRef('BA13S')   ||8.50  },
+          { ref:'BA13H',    designation:'Plaque BA13 Hydro (SDB)',          unite:'u',  qte: Math.ceil(nb*12),           prix: DB.getPrixByRef('BA13H')   ||11.20 },
+          { ref:'LV45',     designation:'Laine de verre isolation 45mm',    unite:'m2', qte: Math.ceil(s*0.4),           prix: 4.80  },
+          { ref:'OSSOSS',   designation:'Ossature plafond F530',            unite:'ml', qte: Math.ceil(s/1.2),           prix: DB.getPrixByRef('OSSOSS')  ||3.80  },
+          { ref:'BA13S',    designation:'Plaque BA13 plafond',              unite:'u',  qte: Math.ceil(s/2.7*1.1),      prix: DB.getPrixByRef('BA13S')   ||8.50  },
+          { ref:'PEINTURE', designation:'Peinture acrylique 10L',           unite:'u',  qte: Math.ceil(s*0.7/35),       prix: 28.00 },
+          { ref:'SOL_LVT',  designation:'Sol LVT 4mm clipsable',            unite:'m2', qte: Math.ceil(s*0.7*1.08),     prix: 18.00 },
+          { ref:'CARRSOL',  designation:'Carrelage sol SDB/cuisine',        unite:'m2', qte: Math.ceil(nb*8+12),        prix: 22.00 },
+          { ref:'FAIENCE',  designation:'Faïence murale SDB',               unite:'m2', qte: Math.ceil(nb*15),          prix: 18.00 },
+          { ref:'DISJ20',   designation:'Disjoncteur 20A',                  unite:'u',  qte: Math.ceil(s/20),           prix: DB.getPrixByRef('DISJ20')  ||9.50  },
+          { ref:'PRISE2PT', designation:'Prise 2P+T 16A',                   unite:'u',  qte: Math.ceil(s/6),            prix: DB.getPrixByRef('PRISE2PT')||4.50  },
+          { ref:'CAB_15',   designation:'Câble H07V-U 1.5mm²',              unite:'ml', qte: Math.ceil(s*3),            prix: DB.getPrixByRef('CAB_15')  ||0.85  },
+          { ref:'WC_SUS',   designation:'WC suspendu + bâti-support',       unite:'u',  qte: nb,                        prix: DB.getPrixByRef('WC_SUS')  ||280.00},
+          { ref:'MITIG_THE',designation:'Mitigeur thermostatique SDB',      unite:'u',  qte: nb,                        prix: DB.getPrixByRef('MITIG_THE')||185.00},
+          { ref:'MO_PLAQ',  designation:"Main d'œuvre pose complète",       unite:'h',  qte: Math.round(s*4+cl*5),     prix: DB.getPrixByRef('MO_PLAQ') ||38.00 },
+        ];
+      }
+    },
+    {
+      id: 'renov_piece',
+      icon: '🔧',
+      titre: 'Rénovation 1 pièce',
+      description: 'Rénovation légère : doublage, plafond, peinture, sol, électricité de base',
+      dims: [
+        { key: 'surface', label: 'Surface', unite: 'm²', defaut: 16, min: 6, max: 80 }
+      ],
+      couleur: '#A78BFA',
+      tags: ['Plaquisterie', 'Peinture', 'Sol'],
+      lignes: function(d) {
+        var s = d.surface || 16;
+        var perim = Math.ceil(Math.sqrt(s)*4);
+        return [
+          { ref:'BA13S',   designation:'Plaque BA13 doublage murs',         unite:'u',  qte: Math.ceil(perim*2.5/2.7*1.1), prix: DB.getPrixByRef('BA13S')   ||8.50  },
+          { ref:'LV45',    designation:'Laine de verre 45mm doublage',      unite:'m2', qte: Math.ceil(perim*2.5*0.9),     prix: 4.80  },
+          { ref:'OSSOSS',  designation:'Ossature plafond F530',             unite:'ml', qte: Math.ceil(s/1.2),             prix: DB.getPrixByRef('OSSOSS')  ||3.80  },
+          { ref:'BA13S',   designation:'Plaque BA13 plafond',               unite:'u',  qte: Math.ceil(s/2.7*1.1),        prix: DB.getPrixByRef('BA13S')   ||8.50  },
+          { ref:'BANDE_PLA',designation:'Bande à plâtre',                   unite:'rl', qte: Math.ceil((perim*2.5+s)*1.1/50), prix: DB.getPrixByRef('BANDE_PLA')||4.20 },
+          { ref:'ENDUIT_F',designation:'Enduit finition 25kg',              unite:'sac',qte: Math.ceil((perim*2.5+s)*0.35/25), prix: DB.getPrixByRef('ENDUIT_F')||18.50 },
+          { ref:'PEINTURE',designation:'Peinture acrylique blanche 10L',    unite:'u',  qte: Math.ceil((perim*2.5+s)/35), prix: 28.00 },
+          { ref:'SOL_STR', designation:'Sol stratifié 8mm AC4',             unite:'m2', qte: Math.ceil(s*1.08),           prix: 14.00 },
+          { ref:'PLINTHE', designation:'Plinthe MDF 6cm',                   unite:'ml', qte: Math.ceil(perim),            prix: 5.50  },
+          { ref:'PRISE2PT',designation:'Prise 2P+T 16A',                    unite:'u',  qte: Math.ceil(s/10),             prix: DB.getPrixByRef('PRISE2PT')||4.50  },
+          { ref:'MO_PLAQ', designation:"Main d'œuvre pose",                 unite:'h',  qte: Math.round(s*2),             prix: DB.getPrixByRef('MO_PLAQ') ||38.00 },
+        ];
+      }
+    },
+    {
+      id: 'local_med',
+      icon: '🏥',
+      titre: 'Local médical / ERP',
+      description: 'Cloisons phoniques BA13PHF, faux-plafond acoustique, sol vinyle, électricité norme ERP',
+      dims: [
+        { key: 'surface',  label: 'Surface',           unite: 'm²', defaut: 60, min: 20, max: 500 },
+        { key: 'cloisons', label: 'Longueur cloisons', unite: 'ml', defaut: 20, min: 5,  max: 150 }
+      ],
+      couleur: '#2DD4A0',
+      tags: ['Plaquisterie', 'Acoustique', 'Électricité'],
+      lignes: function(d) {
+        var s = d.surface || 60;
+        var cl = d.cloisons || 20;
+        var ht = cl * 2.8;
+        return [
+          { ref:'PARF70',   designation:'Rail R70',                          unite:'ml', qte: Math.ceil(cl*2),            prix: DB.getPrixByRef('PARF70')  ||2.10  },
+          { ref:'PAMON70',  designation:'Montant M70',                       unite:'u',  qte: Math.ceil(cl/0.6),          prix: DB.getPrixByRef('PAMON70') ||3.20  },
+          { ref:'BA13PHF',  designation:'Plaque BA13 Phonique HD',           unite:'u',  qte: Math.ceil(ht*2/2.7*1.1),   prix: DB.getPrixByRef('BA13PHF') ||15.80 },
+          { ref:'LR80',     designation:'Laine de roche 80mm phonique',      unite:'m2', qte: Math.ceil(ht*0.9),          prix: DB.getPrixByRef('LR80')    ||8.90  },
+          { ref:'OSSOSS',   designation:'Ossature plafond acoustique',       unite:'ml', qte: Math.ceil(s/1.2),           prix: DB.getPrixByRef('OSSOSS')  ||3.80  },
+          { ref:'BA13S',    designation:'Plaque BA13 plafond',               unite:'u',  qte: Math.ceil(s/2.7*1.1),      prix: DB.getPrixByRef('BA13S')   ||8.50  },
+          { ref:'SOL_LVT',  designation:'Sol vinyle ESD médical 2mm',        unite:'m2', qte: Math.ceil(s*1.08),          prix: 28.00 },
+          { ref:'PRISE2PT', designation:'Prise 2P+T 16A norme ERP',         unite:'u',  qte: Math.ceil(s/8),             prix: DB.getPrixByRef('PRISE2PT')||4.50  },
+          { ref:'DISJ20',   designation:'Disjoncteur 20A tableau ERP',       unite:'u',  qte: Math.ceil(s/15),            prix: DB.getPrixByRef('DISJ20')  ||9.50  },
+          { ref:'CAB_15',   designation:'Câble H07V-U 1.5mm² éclairage',    unite:'ml', qte: Math.ceil(s*2.5),           prix: DB.getPrixByRef('CAB_15')  ||0.85  },
+          { ref:'BA13F',    designation:'Plaque BA13 Feu dégagements',       unite:'u',  qte: Math.ceil(ht*0.3/2.7),     prix: DB.getPrixByRef('BA13F')   ||13.50 },
+          { ref:'MO_PLAQ',  designation:"Main d'œuvre pose complète",        unite:'h',  qte: Math.round(s*3+cl*4),      prix: DB.getPrixByRef('MO_PLAQ') ||38.00 },
+        ];
+      }
+    },
+    {
+      id: 'garage',
+      icon: '🚗',
+      titre: 'Garage aménagé',
+      description: 'Isolation périphérique, doublage BA13, plafond, électricité atelier, sol béton ciré',
+      dims: [
+        { key: 'surface', label: 'Surface', unite: 'm²', defaut: 25, min: 10, max: 100 }
+      ],
+      couleur: '#F7A64F',
+      tags: ['Isolation', 'Plaquisterie', 'Électricité'],
+      lignes: function(d) {
+        var s = d.surface || 25;
+        var perim = Math.ceil(Math.sqrt(s)*4);
+        return [
+          { ref:'PIR40',   designation:'Panneau isolant PIR 40mm',          unite:'m2', qte: Math.ceil(perim*2.5),       prix: DB.getPrixByRef('PIR40')   ||12.40 },
+          { ref:'PARF48',  designation:'Rail R48 ossature doublage',        unite:'ml', qte: Math.ceil(perim*2),         prix: DB.getPrixByRef('PARF48')  ||1.65  },
+          { ref:'PAMON48', designation:'Montant M48',                       unite:'u',  qte: Math.ceil(perim/0.6),       prix: DB.getPrixByRef('PAMON48') ||2.45  },
+          { ref:'BA13S',   designation:'Plaque BA13 Standard doublage',     unite:'u',  qte: Math.ceil(perim*2.5/2.7*1.1), prix: DB.getPrixByRef('BA13S') ||8.50  },
+          { ref:'OSSOSS',  designation:'Ossature plafond F530',             unite:'ml', qte: Math.ceil(s/1.2),           prix: DB.getPrixByRef('OSSOSS')  ||3.80  },
+          { ref:'BA13S',   designation:'Plaque BA13 plafond',               unite:'u',  qte: Math.ceil(s/2.7*1.1),      prix: DB.getPrixByRef('BA13S')   ||8.50  },
+          { ref:'DISJ20',  designation:'Disjoncteur 20A atelier',           unite:'u',  qte: 2,                          prix: DB.getPrixByRef('DISJ20')  ||9.50  },
+          { ref:'PRISE2PT',designation:'Prise 2P+T 16A (lot)',               unite:'u',  qte: Math.ceil(s/5),             prix: DB.getPrixByRef('PRISE2PT')||4.50  },
+          { ref:'CAB_15',  designation:'Câble H07V-U 1.5mm²',               unite:'ml', qte: Math.ceil(s*2),             prix: DB.getPrixByRef('CAB_15')  ||0.85  },
+          { ref:'PEINTURE',designation:'Peinture sol béton époxy 5L',        unite:'u',  qte: Math.ceil(s/25),            prix: 45.00 },
+          { ref:'MO_PLAQ', designation:"Main d'œuvre pose",                  unite:'h',  qte: Math.round(s*3),            prix: DB.getPrixByRef('MO_PLAQ') ||38.00 },
+        ];
+      }
+    },
   ],
 
   // ── Lignes en cours d'édition par projet ─────────────────
