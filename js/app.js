@@ -1883,6 +1883,18 @@ const Pages = {
         <div class="form-group"><label class="form-label">Email</label>
           <input class="form-control" id="f-email" value="${c.email || ''}"></div>
       </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Type de client</label>
+          <select class="form-control" id="f-type-client">
+            <option value="pro" ${(c.type||'pro')==='pro'?'selected':''}>🏢 Professionnel</option>
+            <option value="particulier" ${c.type==='particulier'?'selected':''}>🏠 Particulier</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">SIRET / SIREN</label>
+          <input class="form-control" id="f-siret-client" value="${c.siret || ''}" placeholder="000 000 000 00000"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label>
+        <input class="form-control" id="f-notes-client" value="${c.notes || ''}" placeholder="Informations complémentaires…"></div>
     `;
     return d;
   },
@@ -1896,6 +1908,9 @@ const Pages = {
       ville: document.getElementById('f-ville').value,
       telephone: document.getElementById('f-tel').value,
       email: document.getElementById('f-email').value,
+      type: document.getElementById('f-type-client')?.value || 'pro',
+      siret: document.getElementById('f-siret-client')?.value || '',
+      notes: document.getElementById('f-notes-client')?.value || '',
     };
     if (id) { DB.updateClient(id, data); App.toast('Client mis à jour'); }
     else     { DB.addClient(data);        App.toast('Client créé !'); }
