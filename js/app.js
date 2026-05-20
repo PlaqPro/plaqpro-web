@@ -377,7 +377,12 @@ const Pages = {
                 const nbCh = DB.getChantiersByClient(c.id).length;
                 return `<tr onclick="Pages.modalEditClient(${c.id})">
                   <td class="font-mono text-xs text-tertiary">${String(c.id).padStart(3,'0')}</td>
-                  <td><strong>${c.nom}</strong></td>
+                  <td>
+                    <strong>${c.nom}</strong>
+                    <span class="badge ${c.type === 'particulier' ? 'badge-orange' : 'badge-blue'}" style="margin-left:6px;font-size:10px">
+                      ${c.type === 'particulier' ? '🏠 Particulier' : '🏢 Pro'}
+                    </span>
+                  </td>
                   <td>${c.cp ? c.cp + ' ' : ''}${c.ville || '—'}</td>
                   <td>${c.telephone || '—'}</td>
                   <td class="text-secondary">${c.email || '—'}</td>
