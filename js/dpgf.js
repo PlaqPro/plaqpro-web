@@ -261,6 +261,37 @@ ${text.slice(0, 6000)}`;
     }
   },
 
+  // ── Rapprochement CCTP ↔ DPGF ────────────────────────────
+  _rapprocher() {
+    if (!this._exigencesCCTP || !this._exigencesCCTP.length) return;
+    this._lignes.forEach(l => {
+      const d = l.designation.toLowerCase();
+      // Chercher par numéro d'article d'abord
+      let match = this._exigencesCCTP.find(e => e.article && l.numero_lot && l.numero_lot.includes(e.article));
+      // Sinon par mots-clés désignation
+      if (!match) {
+        match = this._exigencesCCTP.find(e => {
+          const ed = (e.designation || '').toLowerCase();
+          const mots = ed.split(/\s+/).filter(m => m.length > 4);
+          return mots.some(m => d.includes(m));
+        });
+      }
+      if (match) {
+        l._cctp_article     = match.article     || '';
+        l._cctp_classement  = match.classement  || '';
+        l._cctp_certif      = match.certification || '';
+        l._cctp_marque      = match.marque_imposee || '';
+        l._cctp_remarque    = match.remarque    || '';
+        // Enrichir justification alerte
+        if (match.classement && !l._justif_cctp) {
+          l._justif_cctp = 'CCTP exige ' + match.classement +
+            (match.certification ? ' + ' + match.certification : '') +
+            (match.remarque ? ' — ' + match.remarque : '');
+        }
+      }
+    });
+  },
+
   // ── Traitement fichier ────────────────────────────────────
   async _handleFile(file) {
     this._fileName = file.name;
@@ -327,6 +358,7 @@ ${text.slice(0, 6000)}`;
           if (headerRow >= 0) {
             DPGF._isAOS = true;
             DPGF._parseAOS(rows, headerRow);
+            DPGF._rapprocher();
             resolve('__AOS_PARSED__');
             return;
           }
@@ -441,6 +473,8 @@ ${text.slice(0, 12000)}`;
 
     // Enrichissement depuis la base produits
     this._lignes.forEach(l => this._matcherProduit(l));
+    // Rapprochement CCTP si déjà chargé
+    this._rapprocher();
   },
 
   // ── Matcher produit base PlaqPro+ ─────────────────────────
@@ -732,8 +766,12 @@ ${text.slice(0, 12000)}`;
       let justif = '';
       let reco   = '';
       const d = l.designation.toLowerCase();
+      // Priorité : justification depuis CCTP
+      if (l._justif_cctp) {
+        justif = '📋 ' + l._justif_cctp;
+      }
       if (d.includes('porte') && (d.includes('ei') || d.includes('das'))) {
-        justif = 'Bloc-porte DAS avec ferme-porte, ventouses électromagnétiques et sélecteur — PV DAS obligatoire';
+        if (!justif) justif = 'Bloc-porte DAS avec ferme-porte, ventouses électromagnétiques et sélecteur — PV DAS obligatoire';
         reco   = 'Demander PV DAS existants au MOE — vérifier angle ouverture et charge admissible';
       } else if (d.includes('acoustique') || d.includes('phonique')) {
         justif = 'Plafond acoustique nécessite BA13 perforé + laine minérale 60mm certifiée ACERMI + ossature renforcée';
@@ -808,7 +846,8 @@ ${text.slice(0, 12000)}`;
         const niv = e > 40 ? '🔴 Critique' : e > 20 ? '🟠 Important' : '🟡 Modéré';
         let rec   = 'Négocier bordereau avec MOE';
         const d   = l.designation.toLowerCase();
-        if (d.includes('porte'))                                       rec = 'Demander PV DAS — vérifier SSI existant';
+        if (l._justif_cctp)                                            rec = l._justif_cctp;
+        else if (d.includes('porte'))                                  rec = 'Demander PV DAS — vérifier SSI existant';
         else if (d.includes('acoustique') || d.includes('phonique'))  rec = 'Exiger ACERMI — matériaux spécifiques';
         else if (d.includes('nez de marche'))                         rec = 'Visite mensuration obligatoire';
         else if (d.includes('cloison'))                               rec = 'Vérifier classement EI/Rw — BA13 std ≠ EI60';
