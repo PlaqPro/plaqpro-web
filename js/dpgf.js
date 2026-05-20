@@ -371,100 +371,92 @@ ${text.slice(-4000)}`;
 
     try {
       const text = await this._readPDF(file);
+      if (!text || text.length < 100) throw new Error('PDF illisible — vérifiez le fichier');
       this._cctpTexte = text;
       this._fileName  = file.name.replace('.pdf','').replace(/-/g,' ');
-      if (statusEl) statusEl.textContent = '🤖 Analyse IA en cours… (' + text.length + ' chars)';
-      if (!text || text.length < 100) throw new Error('PDF illisible ou vide — vérifiez le fichier');
+      const len = text.length;
 
       const gc = groqConfig();
       if (!gc) throw new Error('Clé Groq requise');
 
-      // Extraire intelligemment : début (infos + exigences) + fin (lignes DPGF)
-      const debut = text.slice(0, 4000);
-      const fin   = text.slice(-5000);  // plus large pour capturer toutes les lignes DPGF
-
-      const prompt = `Tu es expert en marchés publics BTP français.
-Analyse ce document unique contenant à la fois le CCTP et le DPGF.
-Extrais en JSON strict :
-{
-  "affaire": {
-    "nom": "nom opération / bâtiment",
-    "adresse": "adresse complète",
-    "reference": "numéro affaire",
-    "moa": "maître d'ouvrage",
-    "moe": "maître d'œuvre / architecte",
-    "economiste": "économiste ou BET",
-    "lot": "numéro et intitulé du lot",
-    "date_dce": "date DCE"
-  },
-  "exigences": [
-    {
-      "article": "ex: 3.4",
-      "designation": "désignation poste",
-      "classement": "EI60/CF1h/Rw45/etc",
-      "certification": "ACERMI/EUCEB/CSTB/DTU",
-      "marque_imposee": "PLACO/ISOVER/etc",
-      "remarque": "exigence technique"
-    }
-  ],
-  "lignes_dpgf": [
-    {
-      "article": "ex: 3.3.1",
-      "designation": "désignation complète",
-      "unite": "M2/ML/U/FT",
-      "quantite": nombre
-    }
-  ]
-}
-Règle : lignes_dpgf = uniquement les lignes avec quantité chiffrée. Ignorer titres de sections.
-Retourne UNIQUEMENT le JSON valide sans markdown.
-
-En-tête et prescriptions (début du document) :
-${debut}
-
---- Lignes DPGF (fin du document) ---
-${fin}`;
-
-      const resp = await fetch(gc.url, {
-        method: 'POST',
-        headers: gc.headers,
+      // ── Passe 1 : infos affaire (début) ──
+      if (statusEl) statusEl.textContent = '🤖 Passe 1/3 — Infos affaire…';
+      const r1 = await fetch(gc.url, {
+        method: 'POST', headers: gc.headers,
         body: JSON.stringify({
           model: 'llama-3.3-70b-versatile',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 3000,
-          temperature: 0.1,
+          messages: [{ role: 'user', content: `Extrais les infos administratives de ce document BTP en JSON strict :
+{"nom":"opération","adresse":"adresse","reference":"ref","moa":"MOA","moe":"MOE","economiste":"économiste","lot":"lot","date_dce":"date"}
+Retourne UNIQUEMENT le JSON valide sans markdown.
+---
+${text.slice(0, 4000)}` }],
+          max_tokens: 500, temperature: 0.1,
         }),
       });
+      const d1  = await r1.json();
+      const raw1 = (d1.choices[0]?.message?.content || '').trim().replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+      try { this._infosAffaire = JSON.parse(raw1.match(/\{[\s\S]*\}/)?.[0] || '{}'); } catch { this._infosAffaire = {}; }
 
-      const data  = await resp.json();
-      const raw   = (data.choices[0]?.message?.content || '').trim();
-      const clean = raw.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
-      const jm    = clean.match(/\{[\s\S]*\}/);
-      if (!jm) throw new Error('Réponse non JSON : ' + clean.slice(0,100));
-      const parsed = JSON.parse(jm[0]);
+      // ── Passe 2 : exigences CCTP (milieu) ──
+      if (statusEl) statusEl.textContent = '🤖 Passe 2/3 — Exigences CCTP…';
+      const mid = Math.floor(len / 2);
+      const r2 = await fetch(gc.url, {
+        method: 'POST', headers: gc.headers,
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [{ role: 'user', content: `Extrais les exigences techniques BTP de ce CCTP en JSON strict :
+{"exigences":[{"article":"","designation":"","classement":"EI/CF/Rw...","certification":"ACERMI/EUCEB...","marque_imposee":"","remarque":""}]}
+Retourne UNIQUEMENT le JSON valide sans markdown.
+---
+${text.slice(0, 3000)}
+---
+${text.slice(mid - 2000, mid + 2000)}` }],
+          max_tokens: 1500, temperature: 0.1,
+        }),
+      });
+      const d2  = await r2.json();
+      const raw2 = (d2.choices[0]?.message?.content || '').trim().replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+      try { this._exigencesCCTP = JSON.parse(raw2.match(/\{[\s\S]*\}/)?.[0] || '{}').exigences || []; } catch { this._exigencesCCTP = []; }
 
-      this._infosAffaire  = parsed.affaire   || {};
-      this._exigencesCCTP = parsed.exigences || [];
-      const lignesPDF     = parsed.lignes_dpgf || [];
+      // ── Passe 3 : lignes DPGF (fin) ──
+      if (statusEl) statusEl.textContent = '🤖 Passe 3/3 — Lignes DPGF…';
+      const r3 = await fetch(gc.url, {
+        method: 'POST', headers: gc.headers,
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [{ role: 'user', content: `Extrais TOUTES les lignes de travaux quantifiées de ce DPGF en JSON strict :
+{"lignes":[{"article":"3.3.1","designation":"désignation complète","unite":"M2/ML/U/FT","quantite":12.60}]}
+IMPORTANT : inclure UNIQUEMENT les lignes avec une quantité numérique. Ignorer les titres de sections sans quantité.
+Retourne UNIQUEMENT le JSON valide sans markdown.
+---
+${text.slice(-8000)}` }],
+          max_tokens: 2000, temperature: 0.1,
+        }),
+      });
+      const d3  = await r3.json();
+      const raw3 = (d3.choices[0]?.message?.content || '').trim().replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+      let lignesPDF = [];
+      try { lignesPDF = JSON.parse(raw3.match(/\{[\s\S]*\}/)?.[0] || '{}').lignes || []; } catch { lignesPDF = []; }
 
+      // ── Peuplement tableau ──
       if (lignesPDF.length > 0) {
         this._lignes = lignesPDF.map((l, i) => {
           const matchPM = this.matcherPrixMarche(l.designation || '');
           const puAATB  = matchPM ? matchPM.pu : 0;
           return {
-            id:            i,
-            numero_lot:    l.article || '',
-            designation:   l.designation || '',
-            lot:           this._categoriser(l.designation || ''),
-            unite:         l.unite || 'm²',
-            quantite:      parseFloat(l.quantite) || 0,
-            prix_unitaire: puAATB || 0,
-            _prix_base:    0,
-            _prix_aatb:    puAATB,
-            _marge:        0,
-            _source:       puAATB ? 'aatb' : '',
-            _match_pm:     matchPM ? matchPM.libelle : '',
-            _ecart_pct:    0,
+            id:             i,
+            numero_lot:     l.article    || '',
+            designation:    l.designation || '',
+            lot:            this._categoriser(l.designation || ''),
+            unite:          l.unite      || 'm²',
+            quantite:       parseFloat(l.quantite) || 0,
+            prix_unitaire:  puAATB || 0,
+            _prix_base:     0,
+            _prix_aatb:     puAATB,
+            _marge:         0,
+            _source:        puAATB ? 'aatb' : '',
+            _match_pm:      matchPM ? matchPM.libelle : '',
+            _ecart_pct:     0,
             cctp_reference: '',
           };
         });
@@ -477,11 +469,11 @@ ${fin}`;
       const nbExig = this._exigencesCCTP.length;
       if (statusEl) statusEl.innerHTML = `✅ <strong>${nom}</strong><br><span style="color:var(--text-tertiary)">${nbExig} exigences + ${nbLig} lignes DPGF</span>`;
       if (zoneEl) zoneEl.style.borderColor = '#A78BFA';
-      App.toast(`✅ Document analysé — ${nbExig} exigences CCTP + ${nbLig} lignes DPGF extraites`, 'success');
+      App.toast(`✅ Analyse complète — ${nbExig} exigences CCTP + ${nbLig} lignes DPGF`, 'success');
 
     } catch(err) {
       if (statusEl) statusEl.textContent = '⚠️ Erreur : ' + err.message;
-      App.toast('Erreur analyse document : ' + err.message, 'error');
+      App.toast('Erreur analyse : ' + err.message, 'error');
     }
   },
 
