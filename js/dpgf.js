@@ -423,10 +423,17 @@ ${text.slice(mid - 2000, mid + 2000)}` }],
       // ── Passe 3 : lignes DPGF — extrait ciblé 60% du document ──
       if (statusEl) statusEl.textContent = '🤖 Passe 3/3 — Lignes DPGF…';
       // Les lignes DPGF sont typiquement dans les 40 derniers % du document
-      const dpgfStart = Math.floor(len * 0.55);
+      // DPGF typiquement dans les 25 derniers % du document
+      // Heuristique : chercher le début réel du DPGF par mots-clés
+      let dpgfStart = Math.floor(len * 0.70);
+      const keywords = ['3.1\n', '3.2\n', '3.3\n', 'Chapitre 3', 'CHAPITRE 3', '3 -\n', '3 -  '];
+      for (const kw of keywords) {
+        const pos = text.indexOf(kw, Math.floor(len * 0.40));
+        if (pos > 0 && pos < dpgfStart) { dpgfStart = pos; break; }
+      }
       const dpgfExtrait = text.slice(dpgfStart);
-      // Limiter à 5000 chars max + fin pour rester sous le rate limit
-      const dpgfSlice = dpgfExtrait.slice(0, 5000) + (dpgfExtrait.length > 5000 ? '\n...\n' + dpgfExtrait.slice(-3000) : '');
+      // Prendre jusqu'à 8000 chars de la zone DPGF
+      const dpgfSlice = dpgfExtrait.slice(0, 8000);
 
       const r3 = await fetch(gc.url, {
         method: 'POST', headers: gc.headers,
