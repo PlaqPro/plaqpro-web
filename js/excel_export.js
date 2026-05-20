@@ -26,8 +26,8 @@ const ExcelExport = {
     if (window.XLSX) return window.XLSX;
     return new Promise((resolve, reject) => {
       const s = document.createElement('script');
-      s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
-      s.onload  = () => { window.XLSX = window.XLSX || window.XLSXStyle; resolve(window.XLSX); };
+      s.src = 'https://unpkg.com/xlsx-style@0.8.13/dist/xlsx.full.min.js';
+      s.onload  = () => resolve(window.XLSX);
       s.onerror = () => reject(new Error('Impossible de charger SheetJS'));
       document.head.appendChild(s);
     });
