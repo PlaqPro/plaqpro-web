@@ -684,45 +684,73 @@ ${text.slice(0, 12000)}`;
     ws1['!merges'].push({ s:{r:cr-1,c:0}, e:{r:cr-1,c:8} });
     ws1['!rows'][cr-1] = { hpt: 28 };
 
-    XLSX.utils.book_append_sheet(wb, ws1, 'Synthèse (modifiable)');
+    // ── Bloc alertes & recommandations intégré dans onglet 1 ──
+    cr += 2;
+    ws1['A'+cr] = { t:'s', v:'⚠️ ANALYSE DES ÉCARTS — POSTES À NÉGOCIER AVEC LE MAÎTRE D\'ŒUVRE' };
+    ws1['A'+cr].s = { font: mkFont(true, WH, 11), fill: mkFill(OR), alignment: mkAlign('left'), border: mkBd() };
+    ws1['!merges'].push({ s:{r:cr-1,c:0}, e:{r:cr-1,c:8} });
+    ws1['!rows'][cr-1] = { hpt: 22 };
+    cr++;
 
-    // ── Onglet 2 : Alertes & Recommandations ───────────────
-    const alertes = this._lignes.filter(l => l._prix_base > 0 && (l._prix_aatb || 0) > l._prix_base * 1.10);
-    const aoa2 = [];
-    aoa2.push(['⚠️ ANALYSE DES ÉCARTS — POSTES À NÉGOCIER AVEC LE MAÎTRE D\'ŒUVRE', '', '', '', '', '', '']);
-    aoa2.push([]);
-    aoa2.push(['Index', 'Désignation', 'PU Estimateur', 'PU AATB', 'Écart %', 'Niveau', 'Recommandation']);
-    alertes.forEach(l => {
-      const e   = ((l._prix_aatb - l._prix_base) / l._prix_base * 100).toFixed(0);
-      const niv = e > 40 ? '🔴 Critique' : e > 20 ? '🟠 Important' : '🟡 Modéré';
-      let rec   = 'Négocier bordereau avec MOE';
-      const d   = l.designation.toLowerCase();
-      if (d.includes('porte'))                                       rec = 'Demander PV DAS — vérifier SSI existant';
-      else if (d.includes('acoustique') || d.includes('phonique'))  rec = 'Exiger ACERMI — matériaux spécifiques';
-      else if (d.includes('nez de marche'))                         rec = 'Grand linéaire — visite mensuration obligatoire';
-      else if (d.includes('cloison'))                               rec = 'Vérifier classement EI/Rw — BA13 std ≠ EI60';
-      aoa2.push([l.numero_lot || '', l.designation, l._prix_base, l._prix_aatb, '+' + e + '%', niv, rec]);
+    ['Index','Désignation','PU Estimateur','PU AATB','Écart %','Niveau','Recommandation','',''].forEach((h,i) => {
+      const ref = cols[i] + cr;
+      ws1[ref] = { t:'s', v:h };
+      ws1[ref].s = { font: mkFont(true, WH, 9), fill: mkFill(BM), alignment: mkAlign('center'), border: mkBd() };
     });
-    if (!alertes.length) aoa2.push(['✅ Aucune alerte — prix cohérents avec la base marché', '', '', '', '', '', '']);
-    aoa2.push([]);
-    aoa2.push(['💡 CONSEILS GÉNÉRAUX POUR LA RÉPONSE AO', '', '', '', '', '', '']);
+    ws1['!rows'][cr-1] = { hpt: 18 };
+    cr++;
+
+    const alertes2 = this._lignes.filter(l => l._prix_base > 0 && (l._prix_aatb || 0) > l._prix_base * 1.10);
+    if (!alertes2.length) {
+      ws1['A'+cr] = { t:'s', v:'✅ Aucune alerte — tous les prix sont cohérents avec la base marché' };
+      ws1['A'+cr].s = { font: mkFont(false, GR, 10), fill: mkFill(GC), alignment: mkAlign('left'), border: mkBd() };
+      ws1['!merges'].push({ s:{r:cr-1,c:0}, e:{r:cr-1,c:8} });
+      cr++;
+    } else {
+      alertes2.forEach((l, i) => {
+        const e   = ((l._prix_aatb - l._prix_base) / l._prix_base * 100).toFixed(0);
+        const niv = e > 40 ? '🔴 Critique' : e > 20 ? '🟠 Important' : '🟡 Modéré';
+        let rec   = 'Négocier bordereau avec MOE';
+        const d   = l.designation.toLowerCase();
+        if (d.includes('porte'))                                       rec = 'Demander PV DAS — vérifier SSI existant';
+        else if (d.includes('acoustique') || d.includes('phonique'))  rec = 'Exiger ACERMI — matériaux spécifiques';
+        else if (d.includes('nez de marche'))                         rec = 'Visite mensuration obligatoire';
+        else if (d.includes('cloison'))                               rec = 'Vérifier classement EI/Rw — BA13 std ≠ EI60';
+        const bg = i % 2 === 0 ? GS : WH;
+        const vals = [l.numero_lot||'', l.designation.slice(0,45), l._prix_base+'€', l._prix_aatb+'€', '+'+e+'%', niv, rec, '', ''];
+        vals.forEach((v, ci) => {
+          const ref = cols[ci] + cr;
+          ws1[ref] = { t:'s', v:String(v) };
+          ws1[ref].s = { font: mkFont(ci===5, ci===4?'C0392B':'1D1D1F', 9), fill: mkFill(bg), alignment: mkAlign(ci>1?'center':'left'), border: mkBd() };
+        });
+        ws1['!rows'][cr-1] = { hpt: 16 };
+        cr++;
+      });
+    }
+
+    // Conseils généraux AO
+    cr++;
+    ws1['A'+cr] = { t:'s', v:'📋 CONSEILS GÉNÉRAUX POUR LA RÉPONSE AO' };
+    ws1['A'+cr].s = { font: mkFont(true, WH, 10), fill: mkFill(BM), alignment: mkAlign('left'), border: mkBd() };
+    ws1['!merges'].push({ s:{r:cr-1,c:0}, e:{r:cr-1,c:8} });
+    ws1['!rows'][cr-1] = { hpt: 20 };
+    cr++;
+
     ['• Visite de site OBLIGATOIRE avant dépôt — état réel des supports et SSI',
-     '• Majoration site occupé recommandée : +8% MO (bureaux en activité)',
+     '• Majoration site occupé : +8% MO (bureaux en activité)',
      '• Joindre fiches techniques produits + certifications ACERMI/EUCEB',
      '• Portes DAS : PV en cours de validité + vérifier angle ouverture/charge',
      '• Peintures : phase aqueuse obligatoire — étiquette A+ — directive COV 2010',
      '• Installation chantier / nettoyage final : prévoir 3 à 5% du total HT',
-    ].forEach(c => aoa2.push([c, '', '', '', '', '', '']));
+    ].forEach(conseil => {
+      ws1['A'+cr] = { t:'s', v:conseil };
+      ws1['A'+cr].s = { font: mkFont(false, '1D1D1F', 9), fill: mkFill(cr%2===0?GS:WH), alignment: mkAlign('left'), border: mkBd() };
+      ws1['!merges'].push({ s:{r:cr-1,c:0}, e:{r:cr-1,c:8} });
+      ws1['!rows'][cr-1] = { hpt: 16 };
+      cr++;
+    });
 
-    const ws2 = XLSX.utils.aoa_to_sheet(aoa2);
-    ws2['!cols'] = [8, 42, 14, 12, 10, 14, 45].map(w => ({ wch: w }));
-    ws2['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
-      { s: { r: aoa2.length - 7, c: 0 }, e: { r: aoa2.length - 7, c: 6 } },
-    ];
-    if (ws2['A1']) ws2['A1'].s = { font: mkFont(true, WH, 12), fill: mkFill(OR), alignment: mkAlign('left') };
-    ['A','B','C','D','E','F','G'].forEach(c => { if (ws2[c+'3']) ws2[c+'3'].s = { font: mkFont(true, WH, 10), fill: mkFill(BM), alignment: mkAlign('center'), border: mkBd() }; });
-    XLSX.utils.book_append_sheet(wb, ws2, 'Alertes & Recommandations');
+    XLSX.utils.book_append_sheet(wb, ws1, 'Synthèse (modifiable)');
 
     // ── Onglet 3 : Base prix marché ─────────────────────────
     const pm   = this.getPrixMarche();
