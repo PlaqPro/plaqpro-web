@@ -683,11 +683,9 @@ const Pages = {
 
     const chantier = DB.getChantier(id);
     const client   = chantier ? DB.getClient(chantier.clientId) : null;
-    const profil = DB.getProfil();
-    const chantier = DB.getChantier(id);
-    const client = chantier ? DB.getClient(chantier.clientId) : null;
-    const typeCli = client?.type || 'pro';
-    const marges = typeCli === 'particulier'
+    const profil   = DB.getProfil();
+    const typeCli  = client?.type || 'pro';
+    const marges   = typeCli === 'particulier'
       ? { materiaux: profil.margeMatParticulier, mo: profil.margeMO, tva: profil.tvaParticulier / 100 }
       : { materiaux: profil.margeMatPro,         mo: profil.margeMO, tva: profil.tvaPro / 100 };
     const resultat = Calculs.calculerDevis(id, marges);
