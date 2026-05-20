@@ -100,16 +100,6 @@
     </div>
   </div>
 
-  <script>
-    // Hamburger sidebar toggle
-    App = window.App || {};
-    App.toggleSidebar = function() {
-      document.body.classList.toggle('sidebar-open');
-    };
-    App.closeSidebar = function() {
-      document.body.classList.remove('sidebar-open');
-    };
-  </script>
   <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
   <script src="js/calculs.js"></script>
@@ -123,6 +113,14 @@
   <script src="js/memo_oublis.js"></script>
   <script src="js/pdf_export.js"></script>
   <script src="js/excel_export.js"></script>
+  <script>
+    App.toggleSidebar = function() {
+      document.body.classList.toggle('sidebar-open');
+    };
+    App.closeSidebar = function() {
+      document.body.classList.remove('sidebar-open');
+    };
+  </script>
   <script src="js/produits_complet.js"></script>
   <script src="js/produits_web.js"></script>
   <script src="js/assistant_ia.js"></script>
