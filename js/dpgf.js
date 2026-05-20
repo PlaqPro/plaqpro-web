@@ -846,6 +846,9 @@ ${text.slice(0, 12000)}`;
       cr++;
     });
 
+    // Forcer le !ref pour inclure toutes les lignes générées
+    ws1['!ref'] = 'A1:I' + (cr + 5);
+
     XLSX.utils.book_append_sheet(wb, ws1, 'Synthèse (modifiable)');
 
     // ── Onglet 3 : Base prix marché ─────────────────────────
