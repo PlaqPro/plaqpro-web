@@ -459,9 +459,9 @@ ${text.slice(0, 12000)}`;
         l.unite || 'u',
         qte || '',
         puDO   || '',
-        (puDO && qte)   ? { f: 'D' + rn + '*E' + rn } : '',
+        (puDO && qte)   ? '=D' + rn + '*E' + rn : '',
         puAATB || '',
-        (puAATB && qte) ? { f: 'D' + rn + '*G' + rn } : '',
+        (puAATB && qte) ? '=D' + rn + '*G' + rn : '',
         alerte,
       ]);
       rn++;
@@ -470,10 +470,10 @@ ${text.slice(0, 12000)}`;
     const lastData = rn - 1;
     aoa1.push([]);
     const tRow1 = rn + 1;
-    aoa1.push(['', '', '', '', 'Total HT estimateur', { f: 'SUM(F' + dataStart + ':F' + lastData + ')' }, 'Total HT AATB', { f: 'SUM(H' + dataStart + ':H' + lastData + ')' }, '']);
+    aoa1.push(['', '', '', '', 'Total HT estimateur', '=SUM(F' + dataStart + ':F' + lastData + ')', 'Total HT AATB', '=SUM(H' + dataStart + ':H' + lastData + ')', '']);
     const tRow2 = tRow1 + 1;
-    aoa1.push(['', '', '', '', 'TVA ' + tvaLbl, { f: 'F' + tRow1 + '*' + tva }, 'TVA ' + tvaLbl, { f: 'H' + tRow1 + '*' + tva }, '']);
-    aoa1.push(['', '', '', '', 'TOTAL TTC', { f: 'F' + tRow1 + '+F' + tRow2 }, 'TOTAL TTC', { f: 'H' + tRow1 + '+H' + tRow2 }, '']);
+    aoa1.push(['', '', '', '', 'TVA ' + tvaLbl, '=F' + tRow1 + '*' + tva, 'TVA ' + tvaLbl, '=H' + tRow1 + '*' + tva, '']);
+    aoa1.push(['', '', '', '', 'TOTAL TTC', '=F' + tRow1 + '+F' + tRow2, 'TOTAL TTC', '=H' + tRow1 + '+H' + tRow2, '']);
 
     const ws1 = XLSX.utils.aoa_to_sheet(aoa1);
     ws1['!cols'] = [8, 44, 8, 10, 16, 16, 18, 16, 32].map(w => ({ wch: w }));
