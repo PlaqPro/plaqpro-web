@@ -397,6 +397,7 @@ ${text.slice(0, 4000)}` }],
       const raw1 = (d1.choices[0]?.message?.content || '').trim().replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
       try { this._infosAffaire = JSON.parse(raw1.match(/\{[\s\S]*\}/)?.[0] || '{}'); } catch { this._infosAffaire = {}; }
 
+      await new Promise(r => setTimeout(r, 1000));
       // ── Passe 2 : exigences CCTP (milieu) ──
       if (statusEl) statusEl.textContent = '🤖 Passe 2/3 — Exigences CCTP…';
       const mid = Math.floor(len / 2);
@@ -418,6 +419,7 @@ ${text.slice(mid - 2000, mid + 2000)}` }],
       const raw2 = (d2.choices[0]?.message?.content || '').trim().replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
       try { this._exigencesCCTP = JSON.parse(raw2.match(/\{[\s\S]*\}/)?.[0] || '{}').exigences || []; } catch { this._exigencesCCTP = []; }
 
+      await new Promise(r => setTimeout(r, 1000));
       // ── Passe 3a : lignes DPGF partie 1 (tiers milieu) ──
       if (statusEl) statusEl.textContent = '🤖 Passe 3/4 — Lignes DPGF partie 1…';
       const tier = Math.floor(len / 3);
@@ -440,6 +442,7 @@ ${text.slice(tier, tier * 2)}` }],
       let lignes3a = [];
       try { lignes3a = JSON.parse(raw3a.match(/\{[\s\S]*\}/)?.[0] || '{}').lignes || []; } catch { lignes3a = []; }
 
+      await new Promise(r => setTimeout(r, 1000));
       // ── Passe 3b : lignes DPGF partie 2 (dernier tiers) ──
       if (statusEl) statusEl.textContent = '🤖 Passe 4/4 — Lignes DPGF partie 2…';
       const r3b = await fetch(gc.url, {
