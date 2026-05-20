@@ -618,4 +618,5 @@ body.sidebar-open .hamburger span:nth-child(3) { transform: translateY(-7px) rot
   #assistant-widget, #assistant-toggle, .assistant-btn { display: none !important; }
   .statut-badge, [class*="statut"] { display: none !important; }
   #assistant-ia-widget, #assistant-fab, [id*="assistant"], [id*="widget"] { display: none !important; }
+  #aide-ctx-btn, [id*="aide"] { display: none !important; }
 }
