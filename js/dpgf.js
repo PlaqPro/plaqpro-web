@@ -373,10 +373,15 @@ ${text.slice(-4000)}`;
       const text = await this._readPDF(file);
       this._cctpTexte = text;
       this._fileName  = file.name.replace('.pdf','').replace(/-/g,' ');
-      if (statusEl) statusEl.textContent = '🤖 Analyse IA en cours…';
+      if (statusEl) statusEl.textContent = '🤖 Analyse IA en cours… (' + text.length + ' chars)';
+      if (!text || text.length < 100) throw new Error('PDF illisible ou vide — vérifiez le fichier');
 
       const gc = groqConfig();
       if (!gc) throw new Error('Clé Groq requise');
+
+      // Extraire intelligemment : début (infos + exigences) + fin (lignes DPGF)
+      const debut = text.slice(0, 4000);
+      const fin   = text.slice(-5000);  // plus large pour capturer toutes les lignes DPGF
 
       const prompt = `Tu es expert en marchés publics BTP français.
 Analyse ce document unique contenant à la fois le CCTP et le DPGF.
@@ -414,11 +419,11 @@ Extrais en JSON strict :
 Règle : lignes_dpgf = uniquement les lignes avec quantité chiffrée. Ignorer titres de sections.
 Retourne UNIQUEMENT le JSON valide sans markdown.
 
-En-tête et prescriptions :
-${text.slice(0, 4000)}
+En-tête et prescriptions (début du document) :
+${debut}
 
 --- Lignes DPGF (fin du document) ---
-${text.slice(-4000)}`;
+${fin}`;
 
       const resp = await fetch(gc.url, {
         method: 'POST',
