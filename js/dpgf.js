@@ -226,7 +226,7 @@ Analyse ce CCTP et extrais en JSON strict :
 }
 Retourne UNIQUEMENT le JSON valide, sans markdown, sans commentaire.
 CCTP (extrait) :
-${text.slice(0, 14000)}`;
+${text.slice(0, 6000)}`;
 
       const resp = await fetch(gc.url, {
         method: 'POST',
@@ -234,15 +234,18 @@ ${text.slice(0, 14000)}`;
         body: JSON.stringify({
           model: 'llama-3.3-70b-versatile',
           messages: [{ role: 'user', content: prompt }],
-          max_tokens: 2000,
+          max_tokens: 3000,
           temperature: 0.1,
         }),
       });
 
       const data = await resp.json();
       const raw  = (data.choices[0]?.message?.content || '').trim();
-      const jm   = raw.match(/\{[\s\S]*\}/);
-      const parsed = JSON.parse(jm ? jm[0] : raw);
+      // Nettoyer markdown éventuel
+      const clean = raw.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+      const jm    = clean.match(/\{[\s\S]*\}/);
+      if (!jm) throw new Error('Réponse Groq non JSON : ' + clean.slice(0,200));
+      const parsed = JSON.parse(jm[0]);
 
       this._infosAffaire  = parsed.affaire   || {};
       this._exigencesCCTP = parsed.exigences || [];
