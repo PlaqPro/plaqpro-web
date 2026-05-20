@@ -419,11 +419,16 @@ ${text.slice(mid - 2000, mid + 2000)}` }],
       const raw2 = (d2.choices[0]?.message?.content || '').trim().replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
       try { this._exigencesCCTP = JSON.parse(raw2.match(/\{[\s\S]*\}/)?.[0] || '{}').exigences || []; } catch { this._exigencesCCTP = []; }
 
-      await new Promise(r => setTimeout(r, 1000));
-      // ── Passe 3a : lignes DPGF partie 1 (tiers milieu) ──
-      if (statusEl) statusEl.textContent = '🤖 Passe 3/4 — Lignes DPGF partie 1…';
-      const tier = Math.floor(len / 3);
-      const r3a = await fetch(gc.url, {
+      await new Promise(r => setTimeout(r, 2000));
+      // ── Passe 3 : lignes DPGF — extrait ciblé 60% du document ──
+      if (statusEl) statusEl.textContent = '🤖 Passe 3/3 — Lignes DPGF…';
+      // Les lignes DPGF sont typiquement dans les 40 derniers % du document
+      const dpgfStart = Math.floor(len * 0.55);
+      const dpgfExtrait = text.slice(dpgfStart);
+      // Limiter à 5000 chars max + fin pour rester sous le rate limit
+      const dpgfSlice = dpgfExtrait.slice(0, 5000) + (dpgfExtrait.length > 5000 ? '\n...\n' + dpgfExtrait.slice(-3000) : '');
+
+      const r3 = await fetch(gc.url, {
         method: 'POST', headers: gc.headers,
         body: JSON.stringify({
           model: 'llama-3.3-70b-versatile',
@@ -433,46 +438,14 @@ IMPORTANT : inclure UNIQUEMENT les lignes avec une quantité numérique (ex: 12.
 Ignorer les titres de sections, descriptions sans quantité, et lignes de calcul vides.
 Retourne UNIQUEMENT le JSON valide sans markdown.
 ---
-${text.slice(tier, tier * 2)}` }],
+${dpgfSlice}` }],
           max_tokens: 2000, temperature: 0.1,
         }),
       });
-      const d3a  = await r3a.json();
-      const raw3a = (d3a.choices[0]?.message?.content || '').trim().replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
-      let lignes3a = [];
-      try { lignes3a = JSON.parse(raw3a.match(/\{[\s\S]*\}/)?.[0] || '{}').lignes || []; } catch { lignes3a = []; }
-
-      await new Promise(r => setTimeout(r, 1000));
-      // ── Passe 3b : lignes DPGF partie 2 (dernier tiers) ──
-      if (statusEl) statusEl.textContent = '🤖 Passe 4/4 — Lignes DPGF partie 2…';
-      const r3b = await fetch(gc.url, {
-        method: 'POST', headers: gc.headers,
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          messages: [{ role: 'user', content: `Extrais TOUTES les lignes de travaux quantifiées de ce DPGF en JSON strict :
-{"lignes":[{"article":"3.3.1","designation":"désignation complète","unite":"M2/ML/U/FT","quantite":12.60}]}
-IMPORTANT : inclure UNIQUEMENT les lignes avec une quantité numérique (ex: 12.60, 87.00, 2, 6).
-Ignorer les titres de sections, descriptions sans quantité, et lignes de calcul vides.
-Retourne UNIQUEMENT le JSON valide sans markdown.
----
-${text.slice(tier * 2)}` }],
-          max_tokens: 2000, temperature: 0.1,
-        }),
-      });
-      const d3b  = await r3b.json();
-      const raw3b = (d3b.choices[0]?.message?.content || '').trim().replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
-      let lignes3b = [];
-      try { lignes3b = JSON.parse(raw3b.match(/\{[\s\S]*\}/)?.[0] || '{}').lignes || []; } catch { lignes3b = []; }
-
-      // Fusionner et dédupliquer par article
-      const tousLignes = [...lignes3a, ...lignes3b];
-      const vus = new Set();
-      let lignesPDF = tousLignes.filter(l => {
-        const key = l.article + '|' + l.designation?.slice(0,20);
-        if (vus.has(key)) return false;
-        vus.add(key);
-        return true;
-      });
+      const d3   = await r3.json();
+      const raw3 = (d3.choices[0]?.message?.content || '').trim().replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+      let lignesPDF = [];
+      try { lignesPDF = JSON.parse(raw3.match(/\{[\s\S]*\}/)?.[0] || '{}').lignes || []; } catch { lignesPDF = []; }
 
       // ── Peuplement tableau ──
       if (lignesPDF.length > 0) {
