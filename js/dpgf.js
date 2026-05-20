@@ -419,14 +419,11 @@ ${text.slice(0, 12000)}`;
     const tvaLbl = Math.round(tva * 100) + '%';
     const today  = new Date().toLocaleDateString('fr-FR');
 
-    const BL = '1F3864', BM = '2E5FA3', BC = 'E8F1FC';
-    const OR = 'E67E22', OC = 'FEF0E6';
-    const GR = '27AE60', GC = 'E8F5EF';
-    const GS = 'F5F5F5', WH = 'FFFFFF';
-    const mkFont  = (bold, color, sz) => ({ bold: !!bold, color: { rgb: color || '1D1D1F' }, sz: sz || 10, name: 'Arial' });
-    const mkFill  = (color) => ({ patternType: 'solid', fgColor: { rgb: color } });
+    const BL = '1F3864', BM = '2E5FA3', BC = 'DCE6F1', OR = 'E67E22', OC = 'FEF0E6', GR = '27AE60', GC = 'E8F5EF', GS = 'F2F2F2', WH = 'FFFFFF';
+    const mkFont  = (bold, color, sz) => ({ bold: !!bold, color: { rgb: color || '000000' }, sz: sz || 10, name: 'Arial' });
+    const mkFill  = (color) => ({ patternType: 'solid', fgColor: { rgb: color }, bgColor: { rgb: color } });
     const mkAlign = (h, wrap) => ({ horizontal: h || 'left', vertical: 'center', wrapText: !!wrap });
-    const bd      = { style: 'thin', color: { rgb: 'DDDDDD' } };
+    const bd      = { style: 'thin', color: { rgb: 'CCCCCC' } };
     const mkBd    = () => ({ top: bd, bottom: bd, left: bd, right: bd });
     const sCell   = (ws, ref, bold, fc, bg, ah, wrap, fmt) => {
       if (!ws[ref]) ws[ref] = { t: 's', v: '' };
