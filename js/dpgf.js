@@ -488,32 +488,63 @@ ${text.slice(0, 12000)}`;
     ];
 
     // Styles onglet 1
+    // Ligne titre
     if (ws1['A1']) ws1['A1'].s = { font: mkFont(true, WH, 13), fill: mkFill(BL), alignment: mkAlign('left') };
     if (ws1['A2']) ws1['A2'].s = { font: mkFont(false, WH, 10), fill: mkFill(BM), alignment: mkAlign('left') };
+    if (ws1['E2']) ws1['E2'].s = { font: mkFont(false, WH, 10), fill: mkFill(BM), alignment: mkAlign('right') };
     if (ws1['A3']) ws1['A3'].s = { font: mkFont(false, OR, 10), fill: mkFill(OC), alignment: mkAlign('left', true) };
+    // Headers
     const cols = ['A','B','C','D','E','F','G','H','I'];
-    cols.forEach(c => { const r = 'A5B5C5D5E5F5G5H5I5'.includes(c+'5') ? c+'5' : c+'5'; sCell(ws1, c+'5', true, WH, BM, 'center'); });
+    cols.forEach(c => {
+      const ref = c + '5';
+      if (ws1[ref]) ws1[ref].s = { font: mkFont(true, WH, 10), fill: mkFill(BM), alignment: mkAlign('center'), border: mkBd() };
+      else { ws1[ref] = { t:'s', v:'' }; ws1[ref].s = { font: mkFont(true, WH, 10), fill: mkFill(BM), alignment: mkAlign('center'), border: mkBd() }; }
+    });
+    // Données
     for (let r = dataStart; r <= lastData; r++) {
       const bg = r % 2 === 0 ? GS : WH;
       cols.forEach(c => {
         const ref = c + r;
-        if (ws1[ref]) {
-          const isAATB = c === 'G' || c === 'H';
-          ws1[ref].s = { font: mkFont(isAATB, isAATB ? BL : '333333'), fill: mkFill(isAATB ? BC : bg), alignment: mkAlign(c > 'C' ? 'right' : 'left'), border: mkBd() };
-          if ('EFGH'.includes(c)) ws1[ref].z = '#,##0.00 €';
-        }
+        const isAATB = c === 'G' || c === 'H';
+        const isNum  = 'DEFGH'.includes(c);
+        if (!ws1[ref]) ws1[ref] = { t:'s', v:'' };
+        ws1[ref].s = {
+          font:      mkFont(isAATB, isAATB ? BL : '1D1D1F'),
+          fill:      mkFill(isAATB ? BC : bg),
+          alignment: mkAlign(isNum ? 'right' : 'left'),
+          border:    mkBd(),
+        };
+        if ('EFGH'.includes(c)) ws1[ref].z = '#,##0.00 €';
       });
     }
+    // Ligne vide
+    const emptyRow = lastData + 1;
+    cols.forEach(c => { const ref = c + emptyRow; ws1[ref] = { t:'s', v:'' }; ws1[ref].s = { fill: mkFill(WH) }; });
+    // Totaux
     for (let tr = tRow1; tr <= tRow1 + 2; tr++) {
       const isTTC = tr === tRow1 + 2;
+      const bg    = isTTC ? BC : GS;
       cols.forEach(c => {
         const ref = c + tr;
-        if (ws1[ref]) {
-          ws1[ref].s = { font: mkFont(isTTC, isTTC ? BL : '333333', isTTC ? 11 : 10), fill: mkFill(isTTC ? BC : GS), alignment: mkAlign('right'), border: mkBd() };
-          if ('FH'.includes(c)) ws1[ref].z = '#,##0.00 €';
-        }
+        if (!ws1[ref]) ws1[ref] = { t:'s', v:'' };
+        ws1[ref].s = {
+          font:      mkFont(isTTC, isTTC ? BL : '1D1D1F', isTTC ? 11 : 10),
+          fill:      mkFill(bg),
+          alignment: mkAlign('right'),
+          border:    mkBd(),
+        };
+        if ('FH'.includes(c)) ws1[ref].z = '#,##0.00 €';
       });
     }
+    // Hauteurs de lignes
+    ws1['!rows'] = [];
+    ws1['!rows'][0] = { hpt: 24 };
+    ws1['!rows'][4] = { hpt: 22 };
+    for (let r = dataStart; r <= lastData; r++) ws1['!rows'][r-1] = { hpt: 16 };
+    ws1['!rows'][tRow1-1]   = { hpt: 18 };
+    ws1['!rows'][tRow1]     = { hpt: 18 };
+    ws1['!rows'][tRow1+1]   = { hpt: 22 };
+
     XLSX.utils.book_append_sheet(wb, ws1, 'Synthèse (modifiable)');
 
     // ── Onglet 2 : Alertes & Recommandations ───────────────
