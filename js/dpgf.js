@@ -495,6 +495,8 @@ ${text.slice(0, 12000)}`;
     cols.forEach(c => {
       const ref = c + '5';
       if (!ws1[ref]) ws1[ref] = { t:'s', v:'' };
+      if (typeof ws1[ref].v === 'undefined') ws1[ref].v = '';
+      ws1[ref].t = 's';
       ws1[ref].s = { font: mkFont(true, WH, 10), fill: mkFill(BM), alignment: mkAlign('center'), border: mkBd() };
     });
     for (let r = dataStart; r <= lastData; r++) {
@@ -535,6 +537,85 @@ ${text.slice(0, 12000)}`;
     ws1['!rows'][tRow1-1] = { hpt: 18 };
     ws1['!rows'][tRow1]   = { hpt: 18 };
     ws1['!rows'][tRow1+1] = { hpt: 22 };
+
+    // ── Bloc commentaires détaillés sous totaux ──
+    let cr = tRow1 + 5;
+    // Titre bloc
+    ws1['A'+cr] = { t:'s', v:'📋 NOTES DÉTAILLÉES — JUSTIFICATIONS ET RECOMMANDATIONS PAR POSTE' };
+    ws1['A'+cr].s = { font: mkFont(true, WH, 11), fill: mkFill(OR), alignment: mkAlign('left'), border: mkBd() };
+    ws1['!merges'].push({ s:{r:cr-1,c:0}, e:{r:cr-1,c:8} });
+    ws1['!rows'][cr-1] = { hpt: 22 };
+    cr++;
+
+    // Sous-titre colonnes
+    ['Poste','Désignation','PU DO','PU AATB','Écart','Niveau','Justification technique','Recommandation','Action'].forEach((h,i) => {
+      const ref = cols[i] + cr;
+      ws1[ref] = { t:'s', v:h };
+      ws1[ref].s = { font: mkFont(true, WH, 9), fill: mkFill(BM), alignment: mkAlign('center'), border: mkBd() };
+    });
+    ws1['!rows'][cr-1] = { hpt: 18 };
+    cr++;
+
+    // Lignes commentaires pour chaque poste avec écart
+    const postesAvecEcart = this._lignes.filter(l => l._prix_base > 0 && (l._prix_aatb || 0) > 0);
+    postesAvecEcart.forEach((l, i) => {
+      const puDO   = l._prix_base || 0;
+      const puAATB = l._prix_aatb || 0;
+      const ecart  = puDO > 0 && puAATB > 0 ? ((puAATB - puDO) / puDO * 100).toFixed(0) : 0;
+      const niveau = ecart > 40 ? '🔴 Critique' : ecart > 20 ? '🟠 Important' : ecart > 10 ? '🟡 Modéré' : '✅ OK';
+      const bg     = i % 2 === 0 ? GS : WH;
+
+      let justif = '';
+      let reco   = '';
+      const d = l.designation.toLowerCase();
+      if (d.includes('porte') && (d.includes('ei') || d.includes('das'))) {
+        justif = 'Bloc-porte DAS avec ferme-porte, ventouses électromagnétiques et sélecteur — PV DAS obligatoire';
+        reco   = 'Demander PV DAS existants au MOE — vérifier angle ouverture et charge admissible';
+      } else if (d.includes('acoustique') || d.includes('phonique')) {
+        justif = 'Plafond acoustique nécessite BA13 perforé + laine minérale 60mm certifiée ACERMI + ossature renforcée';
+        reco   = 'Exiger fiche ACERMI du fabricant — prévoir indice Rw et absorption αw dans le devis';
+      } else if (d.includes('cloison') && (d.includes('ei') || d.includes('98'))) {
+        justif = 'Cloison EI60 Rw49dB : 2×BA13 feu + LV45mm ACERMI + ossature 48/70 — BA13 standard insuffisant';
+        reco   = 'Joindre fiche technique PLACOSTIL/PREGYMETAL + attestation ACERMI au dossier';
+      } else if (d.includes('nez de marche')) {
+        justif = 'Grand linéaire (803ml) — profil aluminium + bande PVC antidérapante vissée — norme P98-351';
+        reco   = 'Visite de site mensuration obligatoire avant dépôt — prévoir coupes spéciales paliers';
+      } else if (d.includes('peinture')) {
+        justif = 'Impression + 2 couches aqueuse — étiquette A+ obligatoire — directive COV 2010/75/UE';
+        reco   = 'Joindre FDS peinture — vérifier compatibilité support (béton/plâtre/bois)';
+      } else if (d.includes('lessivage')) {
+        justif = 'Préparation support : lessivage + enduit garnissant + ponçage — état réel à vérifier sur site';
+        reco   = 'Visite de site obligatoire — état des supports peut nécessiter traitement anti-humidité';
+      } else if (l._match_pm) {
+        justif = 'Prix de référence marché : ' + l._match_pm;
+        reco   = 'Prix conforme — vérifier conditions chantier (accès, protection, site occupé)';
+      } else {
+        justif = 'Prix à confirmer selon conditions chantier et fournisseur';
+        reco   = 'Demander devis fournisseur avant dépôt';
+      }
+
+      const vals = [l.numero_lot||'', l.designation.slice(0,45), puDO ? puDO+'€' : '—', puAATB ? puAATB+'€' : '—', ecart > 0 ? '+'+ecart+'%' : '=', niveau, justif, reco, ecart > 15 ? '⚠️ À négocier' : '✅ Conforme'];
+      vals.forEach((v, ci) => {
+        const ref = cols[ci] + cr;
+        ws1[ref] = { t:'s', v: String(v) };
+        ws1[ref].s = {
+          font:      mkFont(false, '1D1D1F', 9),
+          fill:      mkFill(bg),
+          alignment: mkAlign(ci > 1 ? 'center' : 'left', ci > 5),
+          border:    mkBd(),
+        };
+      });
+      ws1['!rows'][cr-1] = { hpt: i > 4 ? 32 : 16 };
+      cr++;
+    });
+
+    // Note finale
+    cr++;
+    ws1['A'+cr] = { t:'s', v:'💡 Majoration site occupé recommandée : +8% MO — Prévoir installation chantier/nettoyage : 3 à 5% du total HT — Visite de site OBLIGATOIRE avant dépôt' };
+    ws1['A'+cr].s = { font: mkFont(false, OR, 9), fill: mkFill(OC), alignment: mkAlign('left', true), border: mkBd() };
+    ws1['!merges'].push({ s:{r:cr-1,c:0}, e:{r:cr-1,c:8} });
+    ws1['!rows'][cr-1] = { hpt: 28 };
+
     XLSX.utils.book_append_sheet(wb, ws1, 'Synthèse (modifiable)');
 
     // ── Onglet 2 : Alertes & Recommandations ───────────────
