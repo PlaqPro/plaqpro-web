@@ -35,6 +35,19 @@
 - "on va être coupé" = prompt trop long
 - "tu es trop malin :-)" = Claude a anticipé
 
+## Module DPGF — État au 20/05/2026 (fin de journée)
+- Scénario 1 ✅ : CCTP PDF (orange) + DPGF Excel (bleu) séparés — fonctionnel
+- Scénario 2 ✅ : PDF unique bien structuré (CCTP puis DPGF) — fonctionnel via zone combo (violet)
+- Scénario 3 ⚠️ : PDF unique mélangé (technique + chiffrage) — écarté, trop risqué
+- Zone combo : avertissement affiché, 3 passes Groq, détection dynamique début DPGF
+- Lecture PDF : jusqu'à 60 000 chars via PDF.js
+- Rapport Excel : 1 onglet, formules, alertes, conseils AO, xlsx-js-style local
+
+## Prochaine session — Priorités
+1. Écran "Gérer ma base prix" dans Paramètres (localStorage plaqpro_prix_marche)
+2. Export DPGF remplie — colonnes prix ENT dans format AOS Excel
+3. Rapprochement CCTP ↔ DPGF enrichi (justifications auto par exigence)
+
 ## Démarrage nouvelle session
 1. Lire CLAUDE_PROFILE_GABRIEL.md
 2. Lire PLAQPRO_STATUS.md
@@ -42,4 +55,4 @@
 4. Résumer en 5 lignes ce qu'on sait
 5. Demander "On reprend où ?" et attendre Gabriel
 
-*Créé le 20/05/2026*
+*Créé le 20/05/2026 — Mis à jour fin de journée 20/05/2026*

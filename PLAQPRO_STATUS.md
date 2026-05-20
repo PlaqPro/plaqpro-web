@@ -1,3 +1,18 @@
+## ⏱ CHECKPOINT FIN DE JOURNÉE 20/05/2026
+### Module DPGF — État final
+- Scénario 1 ✅ : CCTP PDF + DPGF Excel séparés — 100% fonctionnel
+- Scénario 2 ✅ : PDF unique CCTP+DPGF bien structuré — fonctionnel
+- Scénario 3 ⚠️ : PDF unique CCTP+DPGF mélangés — écarté (trop risqué)
+- Avertissement utilisateur ajouté sur zone combo
+- CLAUDE_PROFILE_GABRIEL.md créé pour continuité entre sessions
+
+### Prochaine session (priorités)
+1. Écran "Gérer ma base prix" dans Paramètres
+2. Export DPGF remplie avec prix ENT dans colonnes AOS
+3. Rapprochement CCTP ↔ DPGF enrichi
+
+---
+
 ## ⏱ CHECKPOINT 20/05/2026 17:15
 - Scénario 3 DCE mairie : module combo CCTP+DPGF PDF terminé ✅
 - Triple zone upload : CCTP seul / DPGF seul / CCTP+DPGF combo (violet)
