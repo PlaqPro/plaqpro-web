@@ -417,4 +417,30 @@ Footer (fixe)
 
 ---
 
+---
+
+## 📋 Session 20/05/2026 — Module DPGF AO complet
+
+### TERMINÉ ✅
+- Double upload CCTP PDF + DPGF Excel
+- Lecture PDF via PDF.js (texte lisible)
+- Analyse Groq : extraction infos affaire (MOA/MOE/Économiste/Lot/Référence/DCE)
+- Rapport synthèse 1 onglet : tableau + formules + commentaires + alertes + recommandations + conseils AO
+- Rapprochement automatique CCTP ↔ DPGF (`_rapprocher`)
+- Scénario 2 : PDF unique CCTP+DPGF — extraction `lignes_dpgf` automatique
+- Déploiement GitHub Pages natif (workflow Actions v4)
+- xlsx-js-style en local (`js/xlsx-js-style.js`)
+
+### EN COURS 🔄
+- Scénario 3 : DCE complet mairie (28 pages) — à tester en nouvelle conversation
+- Écran "Gérer ma base prix" dans Paramètres
+- Rapprochement technique CCTP ↔ DPGF à enrichir
+
+### PROCHAINE SESSION
+1. Tester scénario 3 DCE mairie
+2. Écran base prix
+3. Export DPGF remplie avec prix ENT
+
+---
+
 *Dernière mise à jour : 20/05/2026*
