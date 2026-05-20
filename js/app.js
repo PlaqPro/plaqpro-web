@@ -630,6 +630,7 @@ const Pages = {
         <div style="display:flex;gap:8px">
           <button class="btn btn-secondary" id="btn-generer-devis" onclick="Pages.genererDevis()" style="display:none">⚡ Générer depuis métrés</button>
           <button class="btn btn-primary" id="btn-save-devis" onclick="Pages.sauvegarderDevis()" style="display:none">💾 Enregistrer</button>
+          <span class="no-print" style="font-size:11px;color:var(--text-secondary);margin-right:4px" title="Firefox : Impression → Plus de paramètres → En-têtes et pieds de page → Vide">ℹ️</span>
           <button class="btn btn-secondary" id="btn-print-devis" onclick="Pages.imprimerDevis()" style="display:none">🖨 Aperçu / Imprimer</button>
           <button class="btn btn-secondary" id="btn-excel-devis" onclick="Pages.exporterDevisExcel()" style="display:none">📊 Excel</button>
         </div>
