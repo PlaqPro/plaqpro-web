@@ -412,57 +412,171 @@ ${text.slice(0, 12000)}`;
     if (typeof XLSX === 'undefined') { App.toast('SheetJS non disponible', 'error'); return; }
     if (!this._lignes.length) { App.toast('Aucune donnée à exporter', 'error'); return; }
 
-    const wb = XLSX.utils.book_new();
+    const wb     = XLSX.utils.book_new();
+    const config = DB.getConfig ? DB.getConfig() : {};
+    const profil = DB.getProfil ? DB.getProfil() : {};
+    const tva    = profil.tvaPro ? profil.tvaPro / 100 : 0.20;
+    const tvaLbl = Math.round(tva * 100) + '%';
+    const today  = new Date().toLocaleDateString('fr-FR');
 
-    // ─ Onglet 1 : Synthèse (modifiable) ─
-    const rows1 = [['N°', 'Désignation', 'Lot', 'Unité', 'Qté DO', 'P.U. Marché', 'P.U. AATB (modif.)', 'Total HT', 'Écart %']];
-    this._lignes.forEach((l, i) => {
-      const r = i + 2;
-      rows1.push([
-        l.numero_lot || i + 1,
+    const BL = '1F3864', BM = '2E5FA3', BC = 'E8F1FC';
+    const OR = 'E67E22', OC = 'FEF0E6';
+    const GR = '27AE60', GC = 'E8F5EF';
+    const GS = 'F5F5F5', WH = 'FFFFFF';
+    const mkFont  = (bold, color, sz) => ({ bold: !!bold, color: { rgb: color || '1D1D1F' }, sz: sz || 10, name: 'Arial' });
+    const mkFill  = (color) => ({ patternType: 'solid', fgColor: { rgb: color } });
+    const mkAlign = (h, wrap) => ({ horizontal: h || 'left', vertical: 'center', wrapText: !!wrap });
+    const bd      = { style: 'thin', color: { rgb: 'DDDDDD' } };
+    const mkBd    = () => ({ top: bd, bottom: bd, left: bd, right: bd });
+    const sCell   = (ws, ref, bold, fc, bg, ah, wrap, fmt) => {
+      if (!ws[ref]) ws[ref] = { t: 's', v: '' };
+      ws[ref].s = { font: mkFont(bold, fc), fill: mkFill(bg || WH), alignment: mkAlign(ah, wrap), border: mkBd() };
+      if (fmt) ws[ref].z = fmt;
+    };
+
+    // ── Onglet 1 : Synthèse avec formules ──────────────────
+    const aoa1 = [];
+    aoa1.push(['🏗 ' + (config.nomEntreprise || 'MON ENTREPRISE') + ' — RAPPORT DE SYNTHÈSE DPGF', '', '', '', '', '', '', '', '']);
+    aoa1.push(['Fichier : ' + this._fileName, '', '', '', 'Généré le ' + today, '', '', '', '']);
+    aoa1.push(['⚠️ Prix AATB à titre indicatif — modifiez la colonne G, les totaux se recalculent automatiquement', '', '', '', '', '', '', '', '']);
+    aoa1.push([]);
+    aoa1.push(['Index', 'Désignation', 'Unité', 'Qté DO', 'PU Estimateur (€)', 'Montant DO (€)', 'PU AATB (€) ← modifiable', 'Montant AATB (€)', 'Alerte']);
+
+    const dataStart = 6;
+    let rn = dataStart;
+    this._lignes.forEach(l => {
+      const puDO   = l._prix_base || 0;
+      const puAATB = l._prix_aatb || 0;
+      const qte    = l.quantite   || 0;
+      let alerte = '';
+      if (puDO > 0 && puAATB > puDO * 1.40) alerte = '⚠️ Très sous-estimé — vérifier CCTP';
+      else if (puDO > 0 && puAATB > puDO * 1.15) alerte = '⚠️ Insuffisant — négocier MOE';
+      else if (l._match_pm) alerte = '✅ Réf. : ' + l._match_pm;
+      else if (!puAATB) alerte = '❓ Prix à saisir manuellement';
+      aoa1.push([
+        l.numero_lot || '',
         l.designation,
-        l.lot,
-        l.unite,
-        l.quantite,
-        l._prix_aatb || l._prix_base || '',
-        { f: `F${r}` },
-        { f: `E${r}*G${r}` },
-        l._ecart_pct ? Math.round(l._ecart_pct) + '%' : '',
+        l.unite || 'u',
+        qte || '',
+        puDO   || '',
+        (puDO && qte)   ? { f: 'D' + rn + '*E' + rn } : '',
+        puAATB || '',
+        (puAATB && qte) ? { f: 'D' + rn + '*G' + rn } : '',
+        alerte,
       ]);
+      rn++;
     });
-    const lastRow = this._lignes.length + 1;
-    rows1.push([]);
-    rows1.push(['', '', '', '', '', '', 'TOTAL HT',  { f: `SUM(H2:H${lastRow})` }, '']);
-    rows1.push(['', '', '', '', '', '', 'TVA 10%',   { f: `H${lastRow + 2}*0.1` }, '']);
-    rows1.push(['', '', '', '', '', '', 'TOTAL TTC', { f: `H${lastRow + 2}+H${lastRow + 3}` }, '']);
-    const ws1 = XLSX.utils.aoa_to_sheet(rows1);
-    ws1['!cols'] = [6, 40, 12, 8, 10, 14, 16, 14, 10].map(w => ({ wch: w }));
+
+    const lastData = rn - 1;
+    aoa1.push([]);
+    const tRow1 = rn + 1;
+    aoa1.push(['', '', '', '', 'Total HT estimateur', { f: 'SUM(F' + dataStart + ':F' + lastData + ')' }, 'Total HT AATB', { f: 'SUM(H' + dataStart + ':H' + lastData + ')' }, '']);
+    const tRow2 = tRow1 + 1;
+    aoa1.push(['', '', '', '', 'TVA ' + tvaLbl, { f: 'F' + tRow1 + '*' + tva }, 'TVA ' + tvaLbl, { f: 'H' + tRow1 + '*' + tva }, '']);
+    aoa1.push(['', '', '', '', 'TOTAL TTC', { f: 'F' + tRow1 + '+F' + tRow2 }, 'TOTAL TTC', { f: 'H' + tRow1 + '+H' + tRow2 }, '']);
+
+    const ws1 = XLSX.utils.aoa_to_sheet(aoa1);
+    ws1['!cols'] = [8, 44, 8, 10, 16, 16, 18, 16, 32].map(w => ({ wch: w }));
+    ws1['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } },
+      { s: { r: 1, c: 4 }, e: { r: 1, c: 8 } },
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 8 } },
+    ];
+
+    // Styles onglet 1
+    if (ws1['A1']) ws1['A1'].s = { font: mkFont(true, WH, 13), fill: mkFill(BL), alignment: mkAlign('left') };
+    if (ws1['A2']) ws1['A2'].s = { font: mkFont(false, WH, 10), fill: mkFill(BM), alignment: mkAlign('left') };
+    if (ws1['A3']) ws1['A3'].s = { font: mkFont(false, OR, 10), fill: mkFill(OC), alignment: mkAlign('left', true) };
+    const cols = ['A','B','C','D','E','F','G','H','I'];
+    cols.forEach(c => { const r = 'A5B5C5D5E5F5G5H5I5'.includes(c+'5') ? c+'5' : c+'5'; sCell(ws1, c+'5', true, WH, BM, 'center'); });
+    for (let r = dataStart; r <= lastData; r++) {
+      const bg = r % 2 === 0 ? GS : WH;
+      cols.forEach(c => {
+        const ref = c + r;
+        if (ws1[ref]) {
+          const isAATB = c === 'G' || c === 'H';
+          ws1[ref].s = { font: mkFont(isAATB, isAATB ? BL : '333333'), fill: mkFill(isAATB ? BC : bg), alignment: mkAlign(c > 'C' ? 'right' : 'left'), border: mkBd() };
+          if ('EFGH'.includes(c)) ws1[ref].z = '#,##0.00 €';
+        }
+      });
+    }
+    for (let tr = tRow1; tr <= tRow1 + 2; tr++) {
+      const isTTC = tr === tRow1 + 2;
+      cols.forEach(c => {
+        const ref = c + tr;
+        if (ws1[ref]) {
+          ws1[ref].s = { font: mkFont(isTTC, isTTC ? BL : '333333', isTTC ? 11 : 10), fill: mkFill(isTTC ? BC : GS), alignment: mkAlign('right'), border: mkBd() };
+          if ('FH'.includes(c)) ws1[ref].z = '#,##0.00 €';
+        }
+      });
+    }
     XLSX.utils.book_append_sheet(wb, ws1, 'Synthèse (modifiable)');
 
-    // ─ Onglet 2 : Alertes & Recommandations ─
-    const alertes = this._lignes.filter(l => (l._ecart_pct || 0) > 10);
-    const rows2 = [['Désignation', 'Lot', 'Qté', 'P.U. DO', 'P.U. AATB', 'Écart', 'Niveau', 'Recommandation']];
+    // ── Onglet 2 : Alertes & Recommandations ───────────────
+    const alertes = this._lignes.filter(l => l._prix_base > 0 && (l._prix_aatb || 0) > l._prix_base * 1.10);
+    const aoa2 = [];
+    aoa2.push(['⚠️ ANALYSE DES ÉCARTS — POSTES À NÉGOCIER AVEC LE MAÎTRE D\'ŒUVRE', '', '', '', '', '', '']);
+    aoa2.push([]);
+    aoa2.push(['Index', 'Désignation', 'PU Estimateur', 'PU AATB', 'Écart %', 'Niveau', 'Recommandation']);
     alertes.forEach(l => {
-      const niv = l._ecart_pct > 30 ? '🔴 Critique' : l._ecart_pct > 20 ? '🟠 Élevé' : '🟡 Modéré';
-      const rec = l._ecart_pct > 30
-        ? 'Renégocier impérativement — écart critique'
-        : l._ecart_pct > 20 ? 'Demander justification ou variante' : 'Surveiller — écart modéré acceptable';
-      rows2.push([l.designation, l.lot, l.quantite, l._prix_base || '', l._prix_aatb || '', Math.round(l._ecart_pct) + '%', niv, rec]);
+      const e   = ((l._prix_aatb - l._prix_base) / l._prix_base * 100).toFixed(0);
+      const niv = e > 40 ? '🔴 Critique' : e > 20 ? '🟠 Important' : '🟡 Modéré';
+      let rec   = 'Négocier bordereau avec MOE';
+      const d   = l.designation.toLowerCase();
+      if (d.includes('porte'))                                       rec = 'Demander PV DAS — vérifier SSI existant';
+      else if (d.includes('acoustique') || d.includes('phonique'))  rec = 'Exiger ACERMI — matériaux spécifiques';
+      else if (d.includes('nez de marche'))                         rec = 'Grand linéaire — visite mensuration obligatoire';
+      else if (d.includes('cloison'))                               rec = 'Vérifier classement EI/Rw — BA13 std ≠ EI60';
+      aoa2.push([l.numero_lot || '', l.designation, l._prix_base, l._prix_aatb, '+' + e + '%', niv, rec]);
     });
-    if (!alertes.length) rows2.push(['✅ Aucune alerte — tous les prix sont cohérents avec la base marché', '', '', '', '', '', '', '']);
-    const ws2 = XLSX.utils.aoa_to_sheet(rows2);
-    ws2['!cols'] = [40, 12, 8, 12, 12, 8, 12, 40].map(w => ({ wch: w }));
+    if (!alertes.length) aoa2.push(['✅ Aucune alerte — prix cohérents avec la base marché', '', '', '', '', '', '']);
+    aoa2.push([]);
+    aoa2.push(['💡 CONSEILS GÉNÉRAUX POUR LA RÉPONSE AO', '', '', '', '', '', '']);
+    ['• Visite de site OBLIGATOIRE avant dépôt — état réel des supports et SSI',
+     '• Majoration site occupé recommandée : +8% MO (bureaux en activité)',
+     '• Joindre fiches techniques produits + certifications ACERMI/EUCEB',
+     '• Portes DAS : PV en cours de validité + vérifier angle ouverture/charge',
+     '• Peintures : phase aqueuse obligatoire — étiquette A+ — directive COV 2010',
+     '• Installation chantier / nettoyage final : prévoir 3 à 5% du total HT',
+    ].forEach(c => aoa2.push([c, '', '', '', '', '', '']));
+
+    const ws2 = XLSX.utils.aoa_to_sheet(aoa2);
+    ws2['!cols'] = [8, 42, 14, 12, 10, 14, 45].map(w => ({ wch: w }));
+    ws2['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
+      { s: { r: aoa2.length - 7, c: 0 }, e: { r: aoa2.length - 7, c: 6 } },
+    ];
+    if (ws2['A1']) ws2['A1'].s = { font: mkFont(true, WH, 12), fill: mkFill(OR), alignment: mkAlign('left') };
+    ['A','B','C','D','E','F','G'].forEach(c => { if (ws2[c+'3']) ws2[c+'3'].s = { font: mkFont(true, WH, 10), fill: mkFill(BM), alignment: mkAlign('center'), border: mkBd() }; });
     XLSX.utils.book_append_sheet(wb, ws2, 'Alertes & Recommandations');
 
-    // ─ Onglet 3 : Base prix marché ─
-    const rows3 = [['Désignation', 'P.U. marché HT (€/m² ou €/u)']];
-    this.getPrixMarche().forEach(p => rows3.push([p.designation, p.pu]));
-    const ws3 = XLSX.utils.aoa_to_sheet(rows3);
-    ws3['!cols'] = [30, 20].map(w => ({ wch: w }));
+    // ── Onglet 3 : Base prix marché ─────────────────────────
+    const pm   = this.getPrixMarche();
+    const aoa3 = [];
+    aoa3.push(['BASE PRIX DE MARCHÉ — À TITRE INDICATIF', '', '']);
+    aoa3.push(['Ces prix sont des références. Personnalisez-les dans Paramètres > Base prix.', '', '']);
+    aoa3.push([]);
+    aoa3.push(['Poste type', 'PU HT (€)', 'Libellé référence']);
+    pm.forEach(p => aoa3.push([p.designation, p.pu, p.libelle || p.designation]));
+
+    const ws3 = XLSX.utils.aoa_to_sheet(aoa3);
+    ws3['!cols'] = [25, 14, 40].map(w => ({ wch: w }));
+    ws3['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+    ];
+    if (ws3['A1']) ws3['A1'].s = { font: mkFont(true, WH, 12), fill: mkFill(GR), alignment: mkAlign('left') };
+    if (ws3['A2']) ws3['A2'].s = { font: mkFont(false, '555555', 9), fill: mkFill(GC), alignment: mkAlign('left') };
+    if (ws3['A4']) ['A','B','C'].forEach(c => { if (ws3[c+'4']) ws3[c+'4'].s = { font: mkFont(true, WH, 10), fill: mkFill(BM), alignment: mkAlign('center'), border: mkBd() }; });
+    for (let r = 5; r <= pm.length + 4; r++) {
+      const bg = r % 2 === 0 ? GS : WH;
+      ['A','B','C'].forEach(c => { if (ws3[c+r]) { ws3[c+r].s = { font: mkFont(false, '333333'), fill: mkFill(bg), alignment: mkAlign(c === 'B' ? 'right' : 'left'), border: mkBd() }; if (c === 'B') ws3[c+r].z = '#,##0.00 €'; } });
+    }
     XLSX.utils.book_append_sheet(wb, ws3, 'Base prix marché');
 
-    XLSX.writeFile(wb, 'Rapport_Synthese_' + Date.now() + '.xlsx');
-    App.toast('📊 Rapport synthèse exporté (3 onglets)', 'success');
+    XLSX.writeFile(wb, 'Synthese_DPGF_' + new Date().toISOString().split('T')[0] + '.xlsx');
+    App.toast('📊 Rapport synthèse exporté — 3 onglets mis en forme', 'success');
   },
 
   // ── P.U. final avec marge ─────────────────────────────────
