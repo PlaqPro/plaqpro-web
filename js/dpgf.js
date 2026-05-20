@@ -105,7 +105,10 @@ var DPGF = {
             <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:10px">Document unique PDF</div>
             <input type="file" id="combo-file-input" accept=".pdf" style="display:none">
             <button class="btn" onclick="document.getElementById('combo-file-input').click()" style="font-size:11px;background:rgba(167,139,250,0.15);color:#A78BFA;border:1px solid rgba(167,139,250,0.3)">📁 Charger</button>
-            <div id="combo-status" style="margin-top:8px;font-size:11px;color:var(--text-tertiary)">Tout-en-un — scénario mairie</div>
+            <div id="combo-status" style="margin-top:8px;font-size:11px;color:var(--text-tertiary)">Document unique PDF</div>
+              <div style="margin-top:8px;font-size:10px;color:#F7A64F;background:rgba(247,166,79,0.1);border-radius:6px;padding:6px 8px;text-align:left;line-height:1.4">
+                ⚠️ Pour un résultat optimal, ce document doit avoir ses sections CCTP et DPGF <strong>clairement séparées</strong>. Un document où technique et chiffrage sont mélangés donnera des résultats incomplets.
+              </div>
           </div>
 
         </div>
