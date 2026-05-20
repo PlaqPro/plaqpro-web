@@ -346,21 +346,37 @@ ${text.slice(0, 6000)}`;
     });
   },
 
-  // ── Lecture PDF (texte simple) ────────────────────────────
+  // ── Lecture PDF via PDF.js ────────────────────────────
   async _readPDF(file) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = e => {
-        const arr  = new Uint8Array(e.target.result);
-        let text = '';
-        // Extraction naïve du texte entre parenthèses PDF
-        const str = new TextDecoder('latin1').decode(arr);
-        const matches = str.match(/\(([^\)]{2,200})\)/g) || [];
-        const words = matches
-          .map(m => m.slice(1, -1).replace(/\\n/g, '\n').replace(/\\\(/g, '(').replace(/\\\)/g, ')'))
-          .filter(w => /[a-zA-ZÀ-ÿ0-9]/.test(w));
-        text = words.join(' ');
-        resolve(text.slice(0, 18000));
+      reader.onload = async e => {
+        try {
+          if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            const pdf = await pdfjsLib.getDocument({ data: e.target.result }).promise;
+            let text = '';
+            const maxPages = Math.min(pdf.numPages, 20);
+            for (let i = 1; i <= maxPages; i++) {
+              const page = await pdf.getPage(i);
+              const content = await page.getTextContent();
+              const pageText = content.items.map(item => item.str).join(' ');
+              text += pageText + '\n';
+            }
+            resolve(text.slice(0, 18000));
+          } else {
+            // Fallback si PDF.js non disponible
+            const arr = new Uint8Array(e.target.result);
+            const str = new TextDecoder('latin1').decode(arr);
+            const matches = str.match(/\(([^\)]{2,200})\)/g) || [];
+            const words = matches
+              .map(m => m.slice(1,-1).replace(/\\n/g,'\n').replace(/\\\(/g,'(').replace(/\\\)/g,')'))
+              .filter(w => /[a-zA-ZÀ-ÿ0-9]/.test(w));
+            resolve(words.join(' ').slice(0, 18000));
+          }
+        } catch(err) {
+          reject(err);
+        }
       };
       reader.readAsArrayBuffer(file);
     });
