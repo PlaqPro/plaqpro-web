@@ -366,8 +366,12 @@ ${text.slice(0, 12000)}`;
       if (!desig) continue;
       const qte = parseFloat(row[iQte]) || 0;
       const pu  = parseFloat(row[iPU])  || 0;
-      // Ignorer les lignes titre (tout en majuscules sans qte/pu)
-      if (desig === desig.toUpperCase() && desig.length > 3 && !qte && !pu) continue;
+      // Filtrer : lignes sans quantité ET tout en majuscules = section titre
+      const isTitre = desig === desig.toUpperCase() && desig.length > 4;
+      const isSection = isTitre && !qte;
+      if (isSection) continue;
+      // Filtrer : montants de sous-totaux (désignation très courte ou contient uniquement chiffres)
+      if (/^\d+[\.,]\d+$/.test(desig)) continue;
 
       const pm    = this.matcherPrixMarche(desig);
       const puAAT = pm ? pm.pu : 0;
@@ -380,7 +384,7 @@ ${text.slice(0, 12000)}`;
         lot:           this._categoriser(desig),
         unite:         String(row[iUnite] || 'm²').trim(),
         quantite:      qte,
-        prix_unitaire: pu,
+        prix_unitaire: puAAT || pu,
         cctp_reference:'',
         _prix_base:    pu,
         _marge:        0,
