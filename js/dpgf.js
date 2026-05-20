@@ -16,6 +16,48 @@ var DPGF = {
   _lignes:    [],   // [{numero_lot, designation, unite, quantite, prix_unitaire, total, cctp_reference, lot, _prix_saisi, _marge}]
   _fileName:  '',
   _rawText:   '',
+  _isAOS:     false,
+
+  PRIX_MARCHE_DEFAUT: {
+    'cloison 72':          { pu: 68 },
+    'cloison 98':          { pu: 92 },
+    'cloison 100':         { pu: 88 },
+    'doublage':            { pu: 55 },
+    'plafond ba13':        { pu: 52 },
+    'plafond acoustique':  { pu: 92 },
+    'peinture mur':        { pu: 17 },
+    'peinture plafond':    { pu: 16 },
+    'peinture menuiserie': { pu: 24 },
+    'porte ei30':          { pu: 1200 },
+    'porte ei60 simple':   { pu: 1850 },
+    'porte ei60 double':   { pu: 3200 },
+    'trappe':              { pu: 105 },
+    'plinthe bois':        { pu: 28 },
+    'depose plafond':      { pu: 22 },
+    'depose moquette':     { pu: 18 },
+    'nez de marche':       { pu: 16 },
+    'marquage podotactile':{ pu: 52 },
+    'main courante':       { pu: 42 },
+    'lessivage':           { pu: 7.5 },
+    'pictogramme':         { pu: 14 },
+    'peinture anti':       { pu: 15 },
+  },
+
+  getPrixMarche() {
+    return Object.entries(this.PRIX_MARCHE_DEFAUT).map(([k, v]) => ({ designation: k, pu: v.pu }));
+  },
+
+  matcherPrixMarche(designation) {
+    const d = (designation || '').toLowerCase();
+    let best = null, bestScore = 0;
+    Object.entries(this.PRIX_MARCHE_DEFAUT).forEach(([k, v]) => {
+      const words = k.split(' ');
+      let score = 0;
+      words.forEach(w => { if (d.includes(w)) score++; });
+      if (score > bestScore) { bestScore = score; best = { key: k, pu: v.pu }; }
+    });
+    return bestScore >= 1 ? best : null;
+  },
 
   // ── Page HTML ─────────────────────────────────────────────
   _buildPage() {
@@ -56,7 +98,8 @@ var DPGF = {
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn btn-secondary" onclick="DPGF._verifierCCTP()" style="font-size:12px">🔍 Vérification CCTP</button>
-              <button class="btn btn-secondary" onclick="DPGF._exporterExcel()" style="font-size:12px">📥 Exporter DPGF complété</button>
+              <button class="btn btn-secondary" onclick="DPGF._exporterExcel()" style="font-size:12px">📥 DPGF complétée</button>
+              <button class="btn btn-secondary" onclick="DPGF._exporterRapportSynthese()" style="font-size:12px">📊 Rapport synthèse</button>
               <button class="btn btn-primary"   onclick="DPGF._genererDevis()"  style="font-size:12px">📄 Générer devis PlaqPro+</button>
             </div>
           </div>
@@ -135,14 +178,18 @@ var DPGF = {
     }
 
     this._rawText = text;
-    this._showLoading(true, 'Analyse IA en cours…');
 
-    try {
-      await this._analyserAvecGroq(text);
-    } catch (err) {
-      this._showLoading(false);
-      App.showToast('Erreur analyse IA : ' + err.message, 'error');
-      return;
+    if (text === '__AOS_PARSED__') {
+      App.showToast('✅ Format AOS détecté — ' + this._lignes.length + ' lignes analysées', 'success');
+    } else {
+      this._showLoading(true, 'Analyse IA en cours…');
+      try {
+        await this._analyserAvecGroq(text);
+      } catch (err) {
+        this._showLoading(false);
+        App.showToast('Erreur analyse IA : ' + err.message, 'error');
+        return;
+      }
     }
 
     this._showLoading(false);
@@ -157,6 +204,27 @@ var DPGF = {
       reader.onload = e => {
         try {
           const wb = XLSX.read(e.target.result, { type: 'binary' });
+          const ws0 = wb.Sheets[wb.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(ws0, { header: 1, defval: '' });
+
+          // Détection AOS : cherche ligne header avec désignation + unité + qté
+          let headerRow = -1;
+          for (let i = 0; i < Math.min(rows.length, 20); i++) {
+            const cells = rows[i].map(c => String(c).toLowerCase());
+            const hasDesig = cells.some(c => c.includes('désignation') || c.includes('designation'));
+            const hasUnite = cells.some(c => c.includes('unité') || c.includes('unite'));
+            const hasQte   = cells.some(c => c.includes('qté') || c.includes('qte') || c.includes('quantité'));
+            if (hasDesig && hasUnite && hasQte) { headerRow = i; break; }
+          }
+
+          if (headerRow >= 0) {
+            DPGF._isAOS = true;
+            DPGF._parseAOS(rows, headerRow);
+            resolve('__AOS_PARSED__');
+            return;
+          }
+
+          // Fallback CSV texte
           let text = '';
           wb.SheetNames.forEach(name => {
             const ws = wb.Sheets[name];
@@ -279,6 +347,120 @@ ${text.slice(0, 12000)}`;
     }
   },
 
+  // ── Parse AOS (Acte on Site) ─────────────────────────────
+  _parseAOS(rows, headerRow) {
+    const headers = rows[headerRow].map(c => String(c).toLowerCase());
+    const iDesig  = headers.findIndex(c => c.includes('désignation') || c.includes('designation'));
+    const iUnite  = headers.findIndex(c => c.includes('unité') || c.includes('unite'));
+    const iQteDO  = headers.findIndex(c => (c.includes('qté') || c.includes('qte') || c.includes('quantité')) && (c.includes('do') || c.includes('maître') || c.includes('maitre')));
+    const iQteENT = headers.findIndex(c => (c.includes('qté') || c.includes('qte') || c.includes('quantité')) && (c.includes('ent') || c.includes('entreprise')));
+    const iQte    = iQteDO >= 0 ? iQteDO : (iQteENT >= 0 ? iQteENT : headers.findIndex(c => c.includes('qté') || c.includes('qte') || c.includes('quantité')));
+    const iPU     = headers.findIndex(c => c.includes('p.u') || c.includes('pu') || c.includes('prix unit') || c.includes('prix u'));
+    const iIdx    = headers.findIndex(c => c === '#' || c === 'n°' || c === 'no' || c === 'num');
+
+    this._lignes = [];
+    let idx = 0;
+    for (let i = headerRow + 1; i < rows.length; i++) {
+      const row   = rows[i];
+      const desig = String(row[iDesig] || '').trim();
+      if (!desig) continue;
+      const qte = parseFloat(row[iQte]) || 0;
+      const pu  = parseFloat(row[iPU])  || 0;
+      // Ignorer les lignes titre (tout en majuscules sans qte/pu)
+      if (desig === desig.toUpperCase() && desig.length > 3 && !qte && !pu) continue;
+
+      const pm    = this.matcherPrixMarche(desig);
+      const puAAT = pm ? pm.pu : 0;
+      const ecart = (pu > 0 && puAAT > 0) ? ((pu - puAAT) / puAAT * 100) : 0;
+
+      this._lignes.push({
+        id:            idx++,
+        numero_lot:    String(row[iIdx] || ''),
+        designation:   desig,
+        lot:           this._categoriser(desig),
+        unite:         String(row[iUnite] || 'm²').trim(),
+        quantite:      qte,
+        prix_unitaire: pu,
+        cctp_reference:'',
+        _prix_base:    pu,
+        _marge:        0,
+        _source:       puAAT ? 'aatb' : 'dpgf',
+        _prix_aatb:    puAAT,
+        _ecart_pct:    ecart,
+        _match_pm:     pm ? pm.key : '',
+      });
+    }
+  },
+
+  _categoriser(desig) {
+    const d = (desig || '').toLowerCase();
+    if (/cloison|montant|rail|plaque|ba\d/.test(d))              return 'Cloisons';
+    if (/plafond|dalle|faux.plafond|suspente/.test(d))            return 'Plafonds';
+    if (/peinture|lasure|vernis|lessivage|enduit/.test(d))        return 'Peinture';
+    if (/isolation|laine|roche|verre|ouate/.test(d))              return 'Isolation';
+    if (/revêtement|moquette|parquet|carrel|sol|plinthe/.test(d)) return 'Revêtements';
+    if (/porte|bloc.porte|huisserie|menuiserie|fenêtre/.test(d))  return 'Menuiserie';
+    if (/pmr|accessib|rampe|main.cour|podotactile/.test(d))       return 'PMR';
+    return 'Autre';
+  },
+
+  _exporterRapportSynthese() {
+    if (typeof XLSX === 'undefined') { App.showToast('SheetJS non disponible', 'error'); return; }
+    if (!this._lignes.length) { App.showToast('Aucune donnée à exporter', 'error'); return; }
+
+    const wb = XLSX.utils.book_new();
+
+    // ─ Onglet 1 : Synthèse (modifiable) ─
+    const rows1 = [['N°', 'Désignation', 'Lot', 'Unité', 'Qté DO', 'P.U. Marché', 'P.U. AATB (modif.)', 'Total HT', 'Écart %']];
+    this._lignes.forEach((l, i) => {
+      const r = i + 2;
+      rows1.push([
+        l.numero_lot || i + 1,
+        l.designation,
+        l.lot,
+        l.unite,
+        l.quantite,
+        l._prix_aatb || l._prix_base || '',
+        { f: `F${r}` },
+        { f: `E${r}*G${r}` },
+        l._ecart_pct ? Math.round(l._ecart_pct) + '%' : '',
+      ]);
+    });
+    const lastRow = this._lignes.length + 1;
+    rows1.push([]);
+    rows1.push(['', '', '', '', '', '', 'TOTAL HT',  { f: `SUM(H2:H${lastRow})` }, '']);
+    rows1.push(['', '', '', '', '', '', 'TVA 10%',   { f: `H${lastRow + 2}*0.1` }, '']);
+    rows1.push(['', '', '', '', '', '', 'TOTAL TTC', { f: `H${lastRow + 2}+H${lastRow + 3}` }, '']);
+    const ws1 = XLSX.utils.aoa_to_sheet(rows1);
+    ws1['!cols'] = [6, 40, 12, 8, 10, 14, 16, 14, 10].map(w => ({ wch: w }));
+    XLSX.utils.book_append_sheet(wb, ws1, 'Synthèse (modifiable)');
+
+    // ─ Onglet 2 : Alertes & Recommandations ─
+    const alertes = this._lignes.filter(l => (l._ecart_pct || 0) > 10);
+    const rows2 = [['Désignation', 'Lot', 'Qté', 'P.U. DO', 'P.U. AATB', 'Écart', 'Niveau', 'Recommandation']];
+    alertes.forEach(l => {
+      const niv = l._ecart_pct > 30 ? '🔴 Critique' : l._ecart_pct > 20 ? '🟠 Élevé' : '🟡 Modéré';
+      const rec = l._ecart_pct > 30
+        ? 'Renégocier impérativement — écart critique'
+        : l._ecart_pct > 20 ? 'Demander justification ou variante' : 'Surveiller — écart modéré acceptable';
+      rows2.push([l.designation, l.lot, l.quantite, l._prix_base || '', l._prix_aatb || '', Math.round(l._ecart_pct) + '%', niv, rec]);
+    });
+    if (!alertes.length) rows2.push(['✅ Aucune alerte — tous les prix sont cohérents avec la base marché', '', '', '', '', '', '', '']);
+    const ws2 = XLSX.utils.aoa_to_sheet(rows2);
+    ws2['!cols'] = [40, 12, 8, 12, 12, 8, 12, 40].map(w => ({ wch: w }));
+    XLSX.utils.book_append_sheet(wb, ws2, 'Alertes & Recommandations');
+
+    // ─ Onglet 3 : Base prix marché ─
+    const rows3 = [['Désignation', 'P.U. marché HT (€/m² ou €/u)']];
+    this.getPrixMarche().forEach(p => rows3.push([p.designation, p.pu]));
+    const ws3 = XLSX.utils.aoa_to_sheet(rows3);
+    ws3['!cols'] = [30, 20].map(w => ({ wch: w }));
+    XLSX.utils.book_append_sheet(wb, ws3, 'Base prix marché');
+
+    XLSX.writeFile(wb, 'Rapport_Synthese_' + Date.now() + '.xlsx');
+    App.showToast('📊 Rapport synthèse exporté (3 onglets)', 'success');
+  },
+
   // ── P.U. final avec marge ─────────────────────────────────
   _puFinal(ligne) {
     const base = parseFloat(ligne.prix_unitaire) || 0;
@@ -318,12 +500,17 @@ ${text.slice(0, 12000)}`;
       const total     = this._totalLigne(l);
       const sourceBadge = l._source === 'base'
         ? `<span style="font-size:10px;background:rgba(45,212,160,0.15);color:#2DD4A0;border-radius:4px;padding:1px 5px;margin-left:4px" title="${l._produit_match || ''}">✓ base</span>`
+        : l._source === 'aatb'
+        ? `<span style="font-size:10px;background:rgba(79,142,247,0.15);color:#4F8EF7;border-radius:4px;padding:1px 5px;margin-left:4px">✓ aatb</span>`
+        : '';
+      const alerteBadge = (l._ecart_pct || 0) > 15
+        ? `<span style="font-size:10px;background:rgba(239,68,68,0.15);color:#EF4444;border-radius:4px;padding:1px 5px;margin-left:4px" title="Écart prix marché : +${Math.round(l._ecart_pct)}%">⚠️ +${Math.round(l._ecart_pct)}%</span>`
         : '';
 
       return `<tr id="dpgf-row-${l.id}" style="border-bottom:1px solid var(--border)">
         <td class="dpgf-td" style="color:var(--text-tertiary);font-size:11px">${l.numero_lot || l.id + 1}</td>
         <td class="dpgf-td">
-          <div style="font-weight:600;color:var(--text-primary)">${this._esc(l.designation)}${sourceBadge}</div>
+          <div style="font-weight:600;color:var(--text-primary)">${this._esc(l.designation)}${sourceBadge}${alerteBadge}</div>
           ${l.cctp_reference ? `<div style="font-size:11px;color:var(--text-tertiary)">${this._esc(l.cctp_reference)}</div>` : ''}
         </td>
         <td class="dpgf-td"><span class="dpgf-lot-tag" style="background:${this._lotColor(l.lot)}20;color:${this._lotColor(l.lot)}">${l.lot}</span></td>
