@@ -201,7 +201,7 @@ var DPGF = {
       if (!gc) throw new Error('Clé Groq requise');
 
       const prompt = `Tu es expert en marchés publics BTP français.
-Analyse ce CCTP et extrais en JSON strict :
+Analyse ce document (CCTP et/ou DPGF) et extrais en JSON strict :
 {
   "affaire": {
     "nom": "nom de l'opération / bâtiment",
@@ -215,17 +215,26 @@ Analyse ce CCTP et extrais en JSON strict :
   },
   "exigences": [
     {
-      "article": "référence article CCTP",
+      "article": "référence article ex: 2.1",
       "designation": "désignation du poste",
-      "classement": "EI30/EI60/EI120/Rw49/etc si mentionné",
-      "certification": "ACERMI/EUCEB/DAS/etc si mentionné",
-      "marque_imposee": "marque ou gamme imposée si mentionnée",
-      "remarque": "exigence technique particulière"
+      "classement": "EI30/EI60/CF1h/Rw39/Rw47/Rw65/etc si mentionné",
+      "certification": "ACERMI/EUCEB/DAS/DTU/CSTB/etc si mentionné",
+      "marque_imposee": "marque ou gamme imposée ex: PLACO/ISOVER/ECOPHON",
+      "remarque": "exigence technique particulière ex: BA13 hydrofuge, laine minérale 45mm"
+    }
+  ],
+  "lignes_dpgf": [
+    {
+      "article": "référence ex: 1.1",
+      "designation": "désignation complète du poste",
+      "unite": "M2 ou ML ou U ou forfait",
+      "quantite": nombre ou null
     }
   ]
 }
+IMPORTANT : lignes_dpgf ne doit contenir que les lignes avec une quantité chiffrée (ignorer les titres de section).
 Retourne UNIQUEMENT le JSON valide, sans markdown, sans commentaire.
-CCTP (extrait) :
+Document (extrait) :
 ${text.slice(0, 6000)}`;
 
       const resp = await fetch(gc.url, {
@@ -250,10 +259,46 @@ ${text.slice(0, 6000)}`;
       this._infosAffaire  = parsed.affaire   || {};
       this._exigencesCCTP = parsed.exigences || [];
 
+      // Si DPGF intégré dans le PDF — peupler _lignes automatiquement
+      const lignesPDF = parsed.lignes_dpgf || [];
+      if (lignesPDF.length > 0) {
+        this._lignes = lignesPDF.map((l, i) => {
+          const matchPM = this.matcherPrixMarche(l.designation || '');
+          const puAATB  = matchPM ? matchPM.pu : 0;
+          return {
+            id:            i,
+            numero_lot:    l.article || '',
+            designation:   l.designation || '',
+            lot:           this._categoriser(l.designation || ''),
+            unite:         l.unite || 'm²',
+            quantite:      parseFloat(l.quantite) || 0,
+            prix_unitaire: puAATB || 0,
+            _prix_base:    0,
+            _prix_aatb:    puAATB,
+            _marge:        0,
+            _source:       puAATB ? 'aatb' : '',
+            _match_pm:     matchPM ? matchPM.libelle : '',
+            _ecart_pct:    0,
+            cctp_reference: '',
+          };
+        });
+        this._isAOS    = false;
+        this._fileName = file.name.replace('.pdf','');
+        this._rapprocher();
+        // Afficher le tableau
+        this._showLoading(false);
+        this._afficherTableau();
+        const dpgfStatus = document.getElementById('dpgf-status');
+        if (dpgfStatus) dpgfStatus.innerHTML = `✅ <strong>${lignesPDF.length} lignes DPGF</strong> extraites du PDF`;
+        const dpgfZone = document.getElementById('dpgf-upload-zone');
+        if (dpgfZone) dpgfZone.style.borderColor = '#2DD4A0';
+      }
+
       const nom = this._infosAffaire.nom || file.name;
-      if (statusEl) statusEl.innerHTML = `✅ <strong>${nom}</strong><br><span style="color:var(--text-tertiary)">${this._exigencesCCTP.length} exigences extraites</span>`;
+      const msgDPGF = lignesPDF.length > 0 ? ` + ${lignesPDF.length} lignes DPGF` : '';
+      if (statusEl) statusEl.innerHTML = `✅ <strong>${nom}</strong><br><span style="color:var(--text-tertiary)">${this._exigencesCCTP.length} exigences${msgDPGF}</span>`;
       if (zoneEl) zoneEl.style.borderColor = '#2DD4A0';
-      App.toast(`✅ CCTP analysé — ${this._exigencesCCTP.length} exigences techniques extraites`, 'success');
+      App.toast(`✅ PDF analysé — ${this._exigencesCCTP.length} exigences + ${lignesPDF.length} lignes DPGF`, 'success');
 
     } catch (err) {
       if (statusEl) statusEl.textContent = '⚠️ Analyse partielle — ' + err.message;
