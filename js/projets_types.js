@@ -533,16 +533,21 @@ var ProjetsTypes = {
     var ttc     = totalHT + tva;
 
     var devisLignes = lignes.map(function(l) {
+      var baseHT = (parseFloat(l.qte)||0) * (parseFloat(l.prix)||0);
       return {
-        ref:        l.ref || '',
-        designation: l.designation || '',
-        unite:      l.unite || 'u',
-        quantite:   parseFloat(l.qte)  || 0,
-        prixHT:     parseFloat(l.prix) || 0,
-        tva:        10,
-        totalHT:    (parseFloat(l.qte)||0) * (parseFloat(l.prix)||0)
+        poste:       l.designation || l.ref || '',
+        baseHT:      baseHT,
+        marge:       0.30,
+        totalClient: baseHT * 1.30,
+        ref:         l.ref || '',
+        unite:       l.unite || 'u',
+        quantite:    parseFloat(l.qte)  || 0,
+        prixHT:      parseFloat(l.prix) || 0,
       };
     });
+    var totalHT = devisLignes.reduce(function(s,l){ return s + l.totalClient; }, 0);
+    var tva = totalHT * 0.10;
+    var ttc = totalHT + tva;
 
     var today = new Date();
     var dateStr = today.toISOString().split('T')[0];
@@ -560,6 +565,8 @@ var ProjetsTypes = {
       lignes:    devisLignes,
       totalHT:   totalHT,
       totalTTC:  ttc,
+      montantTVA: tva,
+      tva:        0.10,
       notes:     'Généré depuis Projets types — ' + p.titre
     });
 
