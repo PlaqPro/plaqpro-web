@@ -234,8 +234,11 @@ Analyse ce document (CCTP et/ou DPGF) et extrais en JSON strict :
 }
 IMPORTANT : lignes_dpgf ne doit contenir que les lignes avec une quantité chiffrée (ignorer les titres de section).
 Retourne UNIQUEMENT le JSON valide, sans markdown, sans commentaire.
-Document (extrait) :
-${text.slice(0, 6000)}`;
+Document — En-tête et prescriptions (début) :
+${text.slice(0, 4000)}
+
+--- DPGF — Lignes de prix (fin du document) ---
+${text.slice(-4000)}`;
 
       const resp = await fetch(gc.url, {
         method: 'POST',
