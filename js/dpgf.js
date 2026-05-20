@@ -16,7 +16,9 @@ var DPGF = {
   _lignes:    [],   // [{numero_lot, designation, unite, quantite, prix_unitaire, total, cctp_reference, lot, _prix_saisi, _marge}]
   _fileName:  '',
   _rawText:   '',
-  _isAOS:     false,
+  _isAOS:        false,
+  _infosAffaire: {},
+  _cctpTexte:    '',
 
   PRIX_MARCHE_DEFAUT: {
     'cloison 72':          { pu: 68 },
@@ -73,13 +75,29 @@ var DPGF = {
           </div>
         </div>
 
-        <!-- Zone upload -->
-        <div id="dpgf-upload-zone" style="border:2px dashed rgba(79,142,247,0.4);border-radius:14px;padding:48px 24px;text-align:center;cursor:pointer;transition:all .25s;margin-bottom:20px;background:rgba(79,142,247,0.03)">
-          <div style="font-size:40px;margin-bottom:12px">📂</div>
-          <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px">Glissez votre fichier DPGF ici</div>
-          <div style="font-size:13px;color:var(--text-tertiary);margin-bottom:16px">ou cliquez pour parcourir</div>
-          <input type="file" id="dpgf-file-input" accept=".xlsx,.xls,.csv,.pdf" style="display:none">
-          <button class="btn btn-primary" onclick="document.getElementById('dpgf-file-input').click()">📁 Choisir un fichier</button>
+        <!-- Double zone upload -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+
+          <!-- Zone CCTP -->
+          <div id="cctp-upload-zone" style="border:2px dashed rgba(247,166,79,0.4);border-radius:14px;padding:32px 16px;text-align:center;cursor:pointer;transition:all .25s;background:rgba(247,166,79,0.03)">
+            <div style="font-size:36px;margin-bottom:10px">📄</div>
+            <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:4px">CCTP — Cahier des charges</div>
+            <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px">Format PDF</div>
+            <input type="file" id="cctp-file-input" accept=".pdf" style="display:none">
+            <button class="btn btn-secondary" onclick="document.getElementById('cctp-file-input').click()" style="font-size:12px">📁 Charger le CCTP</button>
+            <div id="cctp-status" style="margin-top:10px;font-size:12px;color:var(--text-tertiary)">Optionnel — enrichit le rapport</div>
+          </div>
+
+          <!-- Zone DPGF -->
+          <div id="dpgf-upload-zone" style="border:2px dashed rgba(79,142,247,0.4);border-radius:14px;padding:32px 16px;text-align:center;cursor:pointer;transition:all .25s;background:rgba(79,142,247,0.03)">
+            <div style="font-size:36px;margin-bottom:10px">📊</div>
+            <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:4px">DPGF — Bordereau de prix</div>
+            <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px">Format Excel (.xlsx)</div>
+            <input type="file" id="dpgf-file-input" accept=".xlsx,.xls,.csv,.pdf" style="display:none">
+            <button class="btn btn-primary" onclick="document.getElementById('dpgf-file-input').click()" style="font-size:12px">📁 Charger le DPGF</button>
+            <div id="dpgf-status" style="margin-top:10px;font-size:12px;color:var(--text-tertiary)">Obligatoire</div>
+          </div>
+
         </div>
 
         <!-- État chargement -->
@@ -151,6 +169,92 @@ var DPGF = {
     }
     if (input) {
       input.addEventListener('change', e => { if (e.target.files[0]) DPGF._handleFile(e.target.files[0]); });
+    }
+
+    // Binding CCTP
+    const cctpInput = root.querySelector('#cctp-file-input');
+    const cctpZone  = root.querySelector('#cctp-upload-zone');
+    if (cctpZone) {
+      cctpZone.addEventListener('dragover', e => { e.preventDefault(); cctpZone.style.borderColor = '#F7A64F'; });
+      cctpZone.addEventListener('dragleave', () => { cctpZone.style.borderColor = 'rgba(247,166,79,0.4)'; });
+      cctpZone.addEventListener('drop', e => { e.preventDefault(); cctpZone.style.borderColor = 'rgba(247,166,79,0.4)'; if (e.dataTransfer.files[0]) DPGF._handleCCTP(e.dataTransfer.files[0]); });
+      cctpZone.addEventListener('click', e => { if (e.target === cctpZone || e.target.tagName === 'DIV') cctpInput && cctpInput.click(); });
+    }
+    if (cctpInput) {
+      cctpInput.addEventListener('change', e => { if (e.target.files[0]) DPGF._handleCCTP(e.target.files[0]); });
+    }
+  },
+
+  // ── Traitement CCTP PDF ───────────────────────────────────
+  async _handleCCTP(file) {
+    const statusEl = document.getElementById('cctp-status');
+    const zoneEl   = document.getElementById('cctp-upload-zone');
+    if (statusEl) statusEl.textContent = '⏳ Lecture du CCTP…';
+
+    const text = await this._readPDF(file);
+    this._cctpTexte = text;
+
+    if (statusEl) statusEl.textContent = '🤖 Analyse IA en cours…';
+
+    try {
+      const gc = groqConfig();
+      if (!gc) throw new Error('Clé Groq requise');
+
+      const prompt = `Tu es expert en marchés publics BTP français.
+Analyse ce CCTP et extrais en JSON strict :
+{
+  "affaire": {
+    "nom": "nom de l'opération / bâtiment",
+    "adresse": "adresse complète",
+    "reference": "numéro d'affaire ou de marché",
+    "moa": "maître d'ouvrage",
+    "moe": "maître d'œuvre / architecte",
+    "economiste": "économiste ou BET",
+    "lot": "numéro et intitulé du lot",
+    "date_dce": "date du DCE si mentionnée"
+  },
+  "exigences": [
+    {
+      "article": "référence article CCTP",
+      "designation": "désignation du poste",
+      "classement": "EI30/EI60/EI120/Rw49/etc si mentionné",
+      "certification": "ACERMI/EUCEB/DAS/etc si mentionné",
+      "marque_imposee": "marque ou gamme imposée si mentionnée",
+      "remarque": "exigence technique particulière"
+    }
+  ]
+}
+Retourne UNIQUEMENT le JSON valide, sans markdown, sans commentaire.
+CCTP (extrait) :
+${text.slice(0, 14000)}`;
+
+      const resp = await fetch(gc.url, {
+        method: 'POST',
+        headers: gc.headers,
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 2000,
+          temperature: 0.1,
+        }),
+      });
+
+      const data = await resp.json();
+      const raw  = (data.choices[0]?.message?.content || '').trim();
+      const jm   = raw.match(/\{[\s\S]*\}/);
+      const parsed = JSON.parse(jm ? jm[0] : raw);
+
+      this._infosAffaire  = parsed.affaire   || {};
+      this._exigencesCCTP = parsed.exigences || [];
+
+      const nom = this._infosAffaire.nom || file.name;
+      if (statusEl) statusEl.innerHTML = `✅ <strong>${nom}</strong><br><span style="color:var(--text-tertiary)">${this._exigencesCCTP.length} exigences extraites</span>`;
+      if (zoneEl) zoneEl.style.borderColor = '#2DD4A0';
+      App.toast(`✅ CCTP analysé — ${this._exigencesCCTP.length} exigences techniques extraites`, 'success');
+
+    } catch (err) {
+      if (statusEl) statusEl.textContent = '⚠️ Analyse partielle — ' + err.message;
+      App.toast('CCTP chargé sans analyse IA : ' + err.message, 'warning');
     }
   },
 
@@ -411,34 +515,7 @@ ${text.slice(0, 12000)}`;
   _exporterRapportSynthese() {
     if (typeof XLSX === 'undefined') { App.toast('SheetJS non disponible', 'error'); return; }
     if (!this._lignes.length) { App.toast('Aucune donnée à exporter', 'error'); return; }
-
-    // Afficher modal saisie infos affaire
-    const body = document.createElement('div');
-    body.style.cssText = 'display:flex;flex-direction:column;gap:10px';
-    body.innerHTML = `
-      <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:4px">Ces informations apparaîtront dans l'en-tête du rapport</div>
-      ${[
-        ['dpgf-aff-nom', 'Nom de l\'opération',       'Triangle Sud — 117 Bd Marius Vivier Merle Lyon'],
-        ['dpgf-aff-ref', 'Référence affaire',           'Ex: 25028'],
-        ['dpgf-aff-dce', 'Date DCE',                    'Ex: 30/04/2026'],
-        ['dpgf-aff-moa', 'Maître d\'ouvrage (MOA)',     'Ex: AEW'],
-        ['dpgf-aff-moe', 'Maître d\'œuvre (MOE)',       'Ex: Kilinc Architecture'],
-        ['dpgf-aff-eco', 'Économiste',                  'Ex: DPG Co'],
-        ['dpgf-aff-lot', 'Lot',                         'Ex: Lot 09 — Aménagements Intérieurs'],
-      ].map(([id, label, ph]) => `
-        <div>
-          <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:3px">${label}</label>
-          <input id="${id}" type="text" class="dpgf-input" style="width:100%;box-sizing:border-box" placeholder="${ph}"
-            value="${localStorage.getItem(id) || ''}">
-        </div>
-      `).join('')}
-    `;
-
-    const footer = `
-      <button class="btn btn-secondary" onclick="App.closeModal()">Annuler</button>
-      <button class="btn btn-primary" onclick="DPGF._exporterAvecInfos()">📊 Générer le rapport</button>
-    `;
-    App.openModal('📋 Informations de l\'affaire', body, footer);
+    this._genererRapport(this._infosAffaire || {});
   },
 
   _exporterAvecInfos() {
