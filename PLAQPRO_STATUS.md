@@ -67,6 +67,8 @@ C:\PlaQproWEB_BACKUP_2605_SOIR\   ← sauvegarde complète du soir du 26/05
 | Fichier | Lignes | KB | Rôle |
 |---------|--------|----|------|
 | `auth.js` | 89 | 2,7 | Session, protection accès, badge topbar, déconnexion |
+| `dpgf.js` | ~1 250 | ~62 | Module Appels d'offres — lecture DPGF Excel/AOS, analyse CCTP PDF via Groq, rapport synthèse Excel 2 onglets |
+| `xlsx-js-style.js` | — | 415 | Bibliothèque locale xlsx-js-style v1.2.0 — export Excel avec styles (couleurs, polices, bordures) |
 | `db.js` | 246 | 12,7 | Base localStorage — CRUD générique, nextId(), softDelete() |
 | `calculs.js` | 119 | 6,0 | Fonctions partagées (fmt, arrondis, ratios, unités) |
 | `app.js` | 1 265 | 61,3 | Moteur SPA — navigation, modal, dashboard, clients, chantiers, devis, factures, config |
@@ -95,7 +97,7 @@ C:\PlaQproWEB_BACKUP_2605_SOIR\   ← sauvegarde complète du soir du 26/05
 | `devis_multi.js` | 929 | 45,5 | Devis multi-corps d'état — 9 corps, recherche produits, impression A4 |
 | `sw.js` | 59 | 1,7 | Service Worker — cache offline PWA |
 
-**Total : 28 fichiers · ~14 000 lignes · ~775 KB**
+**Total : 30 fichiers · ~15 250 lignes · ~1 252 KB**
 
 ---
 
@@ -226,6 +228,20 @@ C:\PlaQproWEB_BACKUP_2605_SOIR\   ← sauvegarde complète du soir du 26/05
 - [x] Article libre + 💾 "Sauvegarder en base produits"
 - [x] Totaux HT / TVA 10% / TTC
 - [x] Bouton "Créer ce devis" → modal client/chantier → `DB.addDevis()`
+
+### Module DPGF / Appels d'offres (`dpgf.js`) ✅ TERMINÉ
+- [x] **Double upload** — zone CCTP (PDF) + zone DPGF (Excel), grille 2 colonnes
+- [x] **Lecture PDF via PDF.js** — extraction texte page par page (jusqu'à 20 pages, 18 000 chars)
+- [x] **Détection format AOS** — reconnaissance automatique en-tête (désignation/unité/qté) dans les 20 premières lignes, bypass Groq
+- [x] **Analyse CCTP via Groq** (`llama-3.3-70b-versatile`) — extraction JSON structuré : infos affaire (MOA/MOE/Économiste/Lot/Référence/DCE) + exigences techniques
+- [x] **Analyse DPGF via Groq** (`llama-3.1-8b-instant`) — extraction lignes avec désignation, unité, quantité, prix unitaire
+- [x] **Base prix marché** — 22 familles de travaux plaquisterie/peinture avec PU de référence
+- [x] **Rapport synthèse Excel 2 onglets** (xlsx-js-style v1.2.0) :
+  - Onglet 1 "Synthèse (modifiable)" — en-tête affaire (MOA/MOE/Économiste), tableau avec PU DO + PU AATB + montants, totaux HT/TVA/TTC, bloc NOTES DÉTAILLÉES, bloc ANALYSE DES ÉCARTS, CONSEILS GÉNÉRAUX
+  - Onglet 2 "Base prix marché" — référentiel complet avec PU min/max
+- [x] **Styles professionnels** — couleurs BM (bleu marine), alternance lignes, en-têtes colorés, totaux gras, hauteurs de lignes personnalisées
+- [x] **Formules Excel réelles** — format `{ t:'n', v:valeurPré-calculée, f:'=formule' }` pour recalcul dans Excel
+- [x] **`ws1['!ref']`** — plage dynamique couvrant toutes les lignes générées post-AOA
 
 ### Prospection IA (`prospection.js`)
 - [x] Carte Leaflet des permis de construire
@@ -367,8 +383,11 @@ Footer (fixe)
 | QRCode.js | 1.5.3 | QR code sur devis | Non |
 | Google Fonts | Outfit | Typographie | Non |
 | Open-Meteo | v1 | Météo (géocodage + prévisions) | **Non — gratuit** |
+| PDF.js | 3.11.174 | Extraction texte PDF (CCTP) — `cdnjs.cloudflare.com` | Non |
+| xlsx-js-style | 1.2.0 | Export Excel avec styles — **local** `js/xlsx-js-style.js` | Non |
+| Groq API | v1 | Analyse IA DPGF + CCTP (llama-3.1-8b / llama-3.3-70b) | **Oui — configurée dans l'app** |
 
-> **Aucune clé API requise.** L'API météo Open-Meteo est 100% gratuite et sans inscription.
+> **Aucune clé API requise pour les fonctions de base.** La clé Groq est optionnelle (DPGF + Assistant IA) — configurable dans l'application (⚙️ Configuration → Clé Groq).
 
 ---
 
@@ -398,4 +417,4 @@ Footer (fixe)
 
 ---
 
-*Dernière mise à jour : 18/05/2026*
+*Dernière mise à jour : 20/05/2026*
