@@ -332,7 +332,9 @@ var ProjetsTypes = {
     var footer = '<button class="btn btn-primary" onclick="ProjetsTypes.modalDevis(\'' + id + '\')">'
       + '📄 Créer ce devis</button>';
 
-    App.openModal(p.icon + ' ' + p.titre, body, footer);
+    var bodyNode = document.createElement('div');
+    bodyNode.innerHTML = body;
+    App.openModal(p.icon + ' ' + p.titre, bodyNode, footer);
 
     setTimeout(function() {
       ProjetsTypes.recalc(id);
