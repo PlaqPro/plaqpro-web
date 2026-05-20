@@ -1,3 +1,11 @@
+## ⏱ CHECKPOINT 20/05/2026 16:30
+- Scénario 3 DCE mairie en cours
+- Fichier test : Lot-03-Plâtrerie-Peinture-Plafond.pdf (28p, 68585 chars)
+- Problème identifié : prompt Groq limité à 6000 chars = 9% du document
+- Solution en cours : extraction intelligente partie DPGF
+
+---
+
 # PLAQPRO_STATUS.md — État complet du projet PlaqPro+
 > Mis à jour le **18/05/2026** — Sauvegarde backup `C:\PlaQproWEB_BACKUP_2605_SOIR`
 
