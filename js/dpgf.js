@@ -488,19 +488,15 @@ ${text.slice(0, 12000)}`;
     ];
 
     // Styles onglet 1
-    // Ligne titre
     if (ws1['A1']) ws1['A1'].s = { font: mkFont(true, WH, 13), fill: mkFill(BL), alignment: mkAlign('left') };
     if (ws1['A2']) ws1['A2'].s = { font: mkFont(false, WH, 10), fill: mkFill(BM), alignment: mkAlign('left') };
-    if (ws1['E2']) ws1['E2'].s = { font: mkFont(false, WH, 10), fill: mkFill(BM), alignment: mkAlign('right') };
     if (ws1['A3']) ws1['A3'].s = { font: mkFont(false, OR, 10), fill: mkFill(OC), alignment: mkAlign('left', true) };
-    // Headers
     const cols = ['A','B','C','D','E','F','G','H','I'];
     cols.forEach(c => {
       const ref = c + '5';
-      if (ws1[ref]) ws1[ref].s = { font: mkFont(true, WH, 10), fill: mkFill(BM), alignment: mkAlign('center'), border: mkBd() };
-      else { ws1[ref] = { t:'s', v:'' }; ws1[ref].s = { font: mkFont(true, WH, 10), fill: mkFill(BM), alignment: mkAlign('center'), border: mkBd() }; }
+      if (!ws1[ref]) ws1[ref] = { t:'s', v:'' };
+      ws1[ref].s = { font: mkFont(true, WH, 10), fill: mkFill(BM), alignment: mkAlign('center'), border: mkBd() };
     });
-    // Données
     for (let r = dataStart; r <= lastData; r++) {
       const bg = r % 2 === 0 ? GS : WH;
       cols.forEach(c => {
@@ -517,10 +513,6 @@ ${text.slice(0, 12000)}`;
         if ('EFGH'.includes(c)) ws1[ref].z = '#,##0.00 €';
       });
     }
-    // Ligne vide
-    const emptyRow = lastData + 1;
-    cols.forEach(c => { const ref = c + emptyRow; ws1[ref] = { t:'s', v:'' }; ws1[ref].s = { fill: mkFill(WH) }; });
-    // Totaux
     for (let tr = tRow1; tr <= tRow1 + 2; tr++) {
       const isTTC = tr === tRow1 + 2;
       const bg    = isTTC ? BC : GS;
@@ -536,15 +528,13 @@ ${text.slice(0, 12000)}`;
         if ('FH'.includes(c)) ws1[ref].z = '#,##0.00 €';
       });
     }
-    // Hauteurs de lignes
     ws1['!rows'] = [];
     ws1['!rows'][0] = { hpt: 24 };
     ws1['!rows'][4] = { hpt: 22 };
     for (let r = dataStart; r <= lastData; r++) ws1['!rows'][r-1] = { hpt: 16 };
-    ws1['!rows'][tRow1-1]   = { hpt: 18 };
-    ws1['!rows'][tRow1]     = { hpt: 18 };
-    ws1['!rows'][tRow1+1]   = { hpt: 22 };
-
+    ws1['!rows'][tRow1-1] = { hpt: 18 };
+    ws1['!rows'][tRow1]   = { hpt: 18 };
+    ws1['!rows'][tRow1+1] = { hpt: 22 };
     XLSX.utils.book_append_sheet(wb, ws1, 'Synthèse (modifiable)');
 
     // ── Onglet 2 : Alertes & Recommandations ───────────────
