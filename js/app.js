@@ -68,20 +68,39 @@ const App = {
   // ── Sidebar ───────────────────────────────────────────────
   renderSidebar() {
     const nav = [
-      { section: 'Principal' },
-      { page: 'dashboard', icon: '⊞', label: 'Tableau de bord' },
-      { section: 'Gestion' },
-      { page: 'clients',   icon: '👤', label: 'Clients' },
-      { page: 'chantiers', icon: '🏗', label: 'Chantiers' },
-      { section: 'Travaux' },
-      { page: 'metrages',  icon: '📐', label: 'Métrés' },
-      { page: 'cloisons',  icon: '🧱', label: 'Cloisons' },
-      { page: 'peinture',  icon: '🎨', label: 'Peinture' },
-      { section: 'Commercial' },
-      { page: 'devis',     icon: '📄', label: 'Devis' },
-      { section: 'Paramètres' },
-      { page: 'produits',  icon: '💰', label: 'Base tarifaire' },
-      { page: 'config',    icon: '⚙️',  label: 'Configuration' },
+      { page: 'dashboard',   icon: '⊞',  label: 'Tableau de bord' },
+
+      { section: '👥 Clients & Chantiers' },
+      { page: 'clients',     icon: '👤', label: 'Clients' },
+      { page: 'chantiers',   icon: '🏗',  label: 'Chantiers' },
+      { page: 'calendrier',  icon: '📅', label: 'Calendrier' },
+      { page: 'prospection', icon: '🎯', label: 'Prospection IA' },
+
+      { section: '📐 Chiffrage' },
+      { page: 'metrages',    icon: '📐', label: 'Métrés' },
+      { page: 'cloisons',    icon: '🧱', label: 'Cloisons' },
+      { page: 'peinture',    icon: '🎨', label: 'Peinture' },
+      { page: 'calcul',      icon: '⚡', label: 'Calcul Express' },
+
+      { section: '📄 Commercial' },
+      { page: 'devis',       icon: '📄', label: 'Devis' },
+      { page: 'factures',    icon: '🧾', label: 'Factures' },
+      { page: 'projets',     icon: '📦', label: 'Projets types' },
+      { page: 'liste_achat', icon: '🛒', label: 'Liste d\'achat' },
+
+      { section: '🏛 Appels d\'offres' },
+      { page: 'dpgf',        icon: '🏛', label: 'DPGF / AO' },
+      { page: 'tarifs',      icon: '💶', label: 'Grille tarifaire' },
+      { page: 'memo',        icon: '✅', label: 'Mémo chantier' },
+
+      { section: '🔧 Packs Métier' },
+      { page: 'maconnerie',  icon: '🧱', label: 'Maçonnerie' },
+      { page: 'electricite', icon: '⚡', label: 'Électricité' },
+      { page: 'plomberie',   icon: '🔧', label: 'Plomberie' },
+
+      { section: '⚙️ Paramètres' },
+      { page: 'produits',    icon: '💰', label: 'Base tarifaire' },
+      { page: 'config',      icon: '⚙️', label: 'Configuration' },
     ];
 
     const sidebar = document.getElementById('sidebar-nav');
