@@ -40,6 +40,19 @@ const App = {
       devis:      () => Pages.devis(params),
       produits:   () => Pages.produits(),
       config:     () => Pages.config(),
+      calcul:      () => Pages.calculateur(),
+      calculateur: () => Pages.calculateur(),
+      calendrier:  () => Pages.calendrier(),
+      prospection: () => Pages.prospection(),
+      factures:    () => Pages.factures(),
+      projets:     () => Pages.projetsTypes(),
+      liste_achat: () => Pages.listeAchat(),
+      dpgf:        () => Pages.dpgf(),
+      tarifs:      () => Pages.tarifs(),
+      memo:        () => Pages.memo(),
+      maconnerie:  () => Pages.maconnerie(),
+      electricite: () => Pages.electricite(),
+      plomberie:   () => Pages.plomberie(),
     };
 
     if (pages[page]) {
