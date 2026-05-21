@@ -1493,32 +1493,119 @@ Réponds en JSON strict : { "alertes": [{"ligne":"...", "probleme":"...","niveau
   // ── Export Excel ──────────────────────────────────────────
   _exporterExcel() {
     if (typeof XLSX === 'undefined') { App.toast('SheetJS non disponible', 'error'); return; }
-    const rows = [['N°', 'Désignation', 'Lot', 'Unité', 'Quantité', 'PU HT (€)', 'Total HT (€)', 'Réf. CCTP']];
+
+    const profil  = DB.getProfil ? DB.getProfil() : {};
+    const config  = DB.getConfig ? DB.getConfig() : {};
+    const tva     = profil.tvaPro ? profil.tvaPro / 100 : 0.20;
+    const tvaLbl  = Math.round(tva * 100) + '%';
+    const today   = new Date().toLocaleDateString('fr-FR');
+    const infos   = this._infosAffaire || {};
+
+    const BL='1F3864', BM='2E5FA3', BC='DCE6F1', GS='F2F2F2', WH='FFFFFF';
+    const mkFont  = (b,c,s) => ({ bold:!!b, color:{rgb:c||'000000'}, sz:s||10, name:'Arial' });
+    const mkFill  = (c) => ({ patternType:'solid', fgColor:{rgb:c}, bgColor:{rgb:c} });
+    const mkAlign = (h,w) => ({ horizontal:h||'left', vertical:'center', wrapText:!!w });
+    const bd      = { style:'thin', color:{rgb:'CCCCCC'} };
+    const mkBd    = () => ({ top:bd, bottom:bd, left:bd, right:bd });
+
+    const aoa = [];
+
+    aoa.push(['🏗 ' + (config.nomEntreprise || 'MON ENTREPRISE') + ' — DPGF COMPLÉTÉE', '', '', '', '', '', '', '', '']);
+    aoa.push([infos.nom || this._fileName, '', '', '', infos.ref ? 'Affaire ' + infos.ref : '', '', '', '', '']);
+    aoa.push([[infos.moa ? 'MOA : ' + infos.moa : '', infos.moe ? 'MOE : ' + infos.moe : ''].filter(Boolean).join(' — ') || '', '', '', '', 'Généré le ' + today, '', '', '', '']);
+    aoa.push([infos.lot || '', '', '', '', '', '', '', '', '']);
+    aoa.push([]);
+
+    aoa.push(['Index', 'Désignation', 'Unité', 'Qté DO', 'Qté ENT', 'PU Estimateur (€)', 'PU AATB (€)', 'Montant ENT (€)', 'Alerte']);
+
+    const dataStart = 7;
+    let rn = dataStart;
+    let totalDO = 0, totalENT = 0;
+
     this._lignes.forEach(l => {
-      rows.push([
-        l.numero_lot || l.id + 1,
+      const puDO    = l._prix_base || 0;
+      const puAATB  = this._puFinal(l);
+      const qte     = l.quantite   || 0;
+      const montENT = puAATB * qte;
+      const montDO  = puDO * qte;
+      totalDO  += montDO;
+      totalENT += montENT;
+
+      let alerte = '';
+      if (puDO > 0 && puAATB > puDO * 1.15) alerte = '⚠️ Écart > 15%';
+      else if (!puAATB) alerte = '❓ Prix manquant';
+
+      aoa.push([
+        l.numero_lot || '',
         l.designation,
-        l.lot,
-        l.unite,
-        l.quantite,
-        this._puFinal(l).toFixed(2),
-        this._totalLigne(l).toFixed(2),
-        l.cctp_reference || '',
+        l.unite || 'u',
+        qte || '',
+        qte || '',
+        puDO   || '',
+        puAATB ? puAATB.toFixed(2) : '',
+        montENT ? montENT.toFixed(2) : '',
+        alerte,
       ]);
+      rn++;
     });
 
-    const totalHT = this._lignes.reduce((s, l) => s + this._totalLigne(l), 0);
-    rows.push([]);
-    rows.push(['', '', '', '', '', 'TOTAL HT', totalHT.toFixed(2), '']);
-    rows.push(['', '', '', '', '', 'TVA 10%', (totalHT * 0.10).toFixed(2), '']);
-    rows.push(['', '', '', '', '', 'TOTAL TTC', (totalHT * 1.10).toFixed(2), '']);
+    aoa.push([]);
+    const tRow = rn + 1;
+    aoa.push(['', '', '', '', '', 'Total HT estimateur', totalDO.toFixed(2), 'Total HT AATB', totalENT.toFixed(2)]);
+    aoa.push(['', '', '', '', '', 'TVA ' + tvaLbl, (totalDO * tva).toFixed(2), 'TVA ' + tvaLbl, (totalENT * tva).toFixed(2)]);
+    aoa.push(['', '', '', '', '', 'TOTAL TTC', (totalDO * (1 + tva)).toFixed(2), 'TOTAL TTC', (totalENT * (1 + tva)).toFixed(2)]);
 
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [8,40,12,8,10,12,14,16].map(w => ({ wch: w }));
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [8, 44, 8, 10, 10, 16, 14, 16, 20].map(w => ({ wch: w }));
+    ws['!ref']  = 'A1:I' + (rn + 5);
+
+    if (ws['A1']) ws['A1'].s = { font: mkFont(true, 'FFFFFF', 13), fill: mkFill(BL), alignment: mkAlign('left') };
+    if (ws['A2']) ws['A2'].s = { font: mkFont(false, 'FFFFFF', 11), fill: mkFill(BM), alignment: mkAlign('left') };
+    if (ws['A3']) ws['A3'].s = { font: mkFont(false, 'FFFFFF', 10), fill: mkFill(BM), alignment: mkAlign('left') };
+    if (ws['A4']) ws['A4'].s = { font: mkFont(true, 'FFFFFF', 10), fill: mkFill(BM), alignment: mkAlign('left') };
+    const cols = ['A','B','C','D','E','F','G','H','I'];
+    cols.forEach(c => {
+      const ref = c + '6';
+      if (!ws[ref]) ws[ref] = { t:'s', v:'' };
+      ws[ref].s = { font: mkFont(true, 'FFFFFF', 10), fill: mkFill(BM), alignment: mkAlign('center'), border: mkBd() };
+    });
+    for (let r = dataStart; r < rn; r++) {
+      const bg = r % 2 === 0 ? GS : WH;
+      cols.forEach(c => {
+        const ref = c + r;
+        const isENT = c === 'E' || c === 'G' || c === 'H';
+        if (!ws[ref]) ws[ref] = { t:'s', v:'' };
+        ws[ref].s = {
+          font:      mkFont(isENT, isENT ? BL : '1D1D1F'),
+          fill:      mkFill(isENT ? BC : bg),
+          alignment: mkAlign('DEFGHI'.includes(c) ? 'right' : 'left'),
+          border:    mkBd(),
+        };
+        if ('DFGH'.includes(c)) ws[ref].z = '#,##0.00';
+      });
+    }
+    for (let tr = tRow; tr <= tRow + 2; tr++) {
+      const isTTC = tr === tRow + 2;
+      cols.forEach(c => {
+        const ref = c + tr;
+        if (!ws[ref]) ws[ref] = { t:'s', v:'' };
+        ws[ref].s = { font: mkFont(isTTC, isTTC ? BL : '333333', isTTC ? 11 : 10), fill: mkFill(isTTC ? BC : GS), alignment: mkAlign('right'), border: mkBd() };
+        if ('CFGH'.includes(c)) ws[ref].z = '#,##0.00 €';
+      });
+    }
+    ws['!merges'] = [
+      { s:{r:0,c:0}, e:{r:0,c:8} },
+      { s:{r:1,c:0}, e:{r:1,c:3} },
+      { s:{r:1,c:4}, e:{r:1,c:8} },
+      { s:{r:2,c:0}, e:{r:2,c:3} },
+      { s:{r:2,c:4}, e:{r:2,c:8} },
+      { s:{r:3,c:0}, e:{r:3,c:8} },
+    ];
+
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'DPGF complété');
-    XLSX.writeFile(wb, 'DPGF_complete_' + Date.now() + '.xlsx');
-    App.toast('Export Excel généré', 'success');
+    XLSX.utils.book_append_sheet(wb, ws, 'DPGF complétée');
+    XLSX.writeFile(wb, 'DPGF_' + (infos.ref || Date.now()) + '_' + (config.nomEntreprise || 'entreprise').replace(/\s+/g,'_') + '.xlsx');
+    App.toast('📥 DPGF complétée exportée', 'success');
   },
 
   // ── Générer devis PlaqPro+ ────────────────────────────────
