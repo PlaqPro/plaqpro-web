@@ -1091,6 +1091,7 @@ const Pages = {
   // ── Config ────────────────────────────────────────────────
   config() {
     const config = DB.getConfig();
+    setTimeout(() => Pages._renderPrixMarche(), 50);
     const groqKey = localStorage.getItem('plaqpro_groq_key') || '';
     const profil = DB.getProfil ? DB.getProfil() : {};
     const div = document.createElement('div');
@@ -1346,6 +1347,36 @@ const Pages = {
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-primary" onclick="EmailDevis.sauvegarderConfig()">💾 Enregistrer</button>
             <button class="btn btn-secondary" onclick="EmailDevis.tester()">📧 Tester l'envoi</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-16" style="max-width:900px">
+        <div class="card-header">
+          <span class="card-title">💰 Base prix de marché AATB</span>
+          <span style="font-size:11px;color:var(--text-tertiary)">Utilisée automatiquement dans le module DPGF / AO</span>
+        </div>
+        <div class="card-body">
+          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6">
+            Ces prix de référence sont appliqués automatiquement lors de l'analyse d'un DPGF.
+            Modifiez-les selon vos conditions négociées avec vos fournisseurs.
+          </div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:13px" id="prix-marche-table">
+              <thead>
+                <tr style="background:var(--bg-tertiary)">
+                  <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary)">Poste type</th>
+                  <th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);width:120px">PU HT (€)</th>
+                  <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary)">Libellé référence</th>
+                  <th style="padding:10px 12px;width:80px"></th>
+                </tr>
+              </thead>
+              <tbody id="prix-marche-tbody"></tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
+            <button class="btn btn-primary" onclick="Pages.sauvegarderPrixMarche()">💾 Enregistrer les prix</button>
+            <button class="btn btn-secondary" onclick="Pages.reinitPrixMarche()">🔄 Réinitialiser par défaut</button>
           </div>
         </div>
       </div>
@@ -1668,6 +1699,59 @@ const Pages = {
     localStorage.removeItem('plaqpro_logo_entreprise');
     App.navigate('config');
     App.toast('Logo supprimé');
+  },
+
+  _renderPrixMarche() {
+    const tbody = document.getElementById('prix-marche-tbody');
+    if (!tbody) return;
+    const base = DPGF.getPrixMarche();
+    tbody.innerHTML = Object.entries(base).map(([key, val], i) => `
+      <tr style="border-bottom:1px solid var(--border);background:${i%2===0?'var(--bg-secondary)':'transparent'}">
+        <td style="padding:8px 12px;color:var(--text-secondary);font-size:12px">${key}</td>
+        <td style="padding:8px 12px;text-align:right">
+          <input type="number" class="form-control" style="width:90px;text-align:right;padding:4px 8px;font-size:13px"
+            data-key="${key}" value="${val.pu}" min="0" max="99999" step="0.5">
+        </td>
+        <td style="padding:8px 12px">
+          <input type="text" class="form-control" style="font-size:12px;padding:4px 8px"
+            data-key-lib="${key}" value="${val.libelle || key}" placeholder="Libellé référence">
+        </td>
+        <td style="padding:8px 12px;text-align:center">
+          <button class="btn btn-secondary" style="font-size:11px;padding:3px 8px"
+            onclick="Pages._resetLignePrix('${key}')">↺</button>
+        </td>
+      </tr>
+    `).join('');
+  },
+
+  _resetLignePrix(key) {
+    const defaut = DPGF.PRIX_MARCHE_DEFAUT[key];
+    if (!defaut) return;
+    const inp    = document.querySelector('[data-key="' + key + '"]');
+    const inpLib = document.querySelector('[data-key-lib="' + key + '"]');
+    if (inp)    inp.value    = defaut.pu;
+    if (inpLib) inpLib.value = defaut.libelle || key;
+    App.toast('Prix réinitialisé : ' + key, 'info');
+  },
+
+  sauvegarderPrixMarche() {
+    const inputs = document.querySelectorAll('#prix-marche-tbody [data-key]');
+    const saved  = {};
+    inputs.forEach(inp => {
+      const key    = inp.dataset.key;
+      const pu     = parseFloat(inp.value) || 0;
+      const libEl  = document.querySelector('[data-key-lib="' + key + '"]');
+      const libelle = libEl ? libEl.value : key;
+      saved[key] = { pu, libelle };
+    });
+    localStorage.setItem('plaqpro_prix_marche', JSON.stringify(saved));
+    App.toast('✅ Base prix sauvegardée — ' + Object.keys(saved).length + ' postes', 'success');
+  },
+
+  reinitPrixMarche() {
+    localStorage.removeItem('plaqpro_prix_marche');
+    this._renderPrixMarche();
+    App.toast('🔄 Prix réinitialisés aux valeurs par défaut', 'info');
   },
 
   sauvegarderConfig() {
