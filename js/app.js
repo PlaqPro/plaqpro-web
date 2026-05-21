@@ -802,7 +802,7 @@ const Pages = {
               <span class="font-mono">${totaux.tva === 0 ? '0,00 €' : Calculs.fmt(totaux.montantTVA)}</span>
             </div>
             <div class="total-row mt-8">
-              <span class="total-label">${totaux.tva === 0 ? 'NET À PAYER HT' : 'TOTAL TTC'}</span>
+              <span class="total-label">${totaux.tva === 0 ? 'NET À PAYER' : 'TOTAL TTC'}</span>
               <span class="total-value">${Calculs.fmt(totaux.totalTTC)}</span>
             </div>
           </div>
