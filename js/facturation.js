@@ -145,6 +145,9 @@ Object.assign(Pages, {
     });
 
     App.toast(`Facture ${facture.numero} créée !`);
+      // Marquer le devis comme facturé
+      const devisRef = DB.getById(DB.KEYS.devis, devisId);
+      if (devisRef) { devisRef.facture = facture.numero; DB.save(DB.KEYS.devis, DB.devis); }
     App.navigate('factures');
     setTimeout(() => Pages.voirFacture(facture.id), 150);
   },
@@ -172,6 +175,7 @@ Object.assign(Pages, {
         <button class="btn btn-secondary" onclick="DocPrint.apercu('facture',${factureId})">🖨 Imprimer / PDF</button>
         <button class="btn btn-secondary" onclick="ExcelExport.exporterFacture(${factureId})">📊 Excel</button>
         <button class="btn btn-secondary" onclick="Pages.telechargerXMLFacturX(${factureId})" title="Télécharger le fichier XML Factur-X (ZUGFeRD EN16931)">🇪🇺 XML Factur-X</button>
+        <button class="btn btn-secondary" onclick="Pages.genererAcompte(${factureId})" title="Générer un acompte 30%">💰 Acompte 30%</button>
         <button class="btn btn-secondary" onclick="App.closeModal()">Fermer</button>
       </div>`
     );
@@ -398,6 +402,71 @@ Object.assign(Pages, {
     App.navigate('factures');
     App.closeModal();
   },
+
+    genererAcompte(factureId) {
+      const facture = DB.getById(DB.KEYS.factures, factureId);
+      if (!facture) return;
+      const chantier = DB.getChantier(facture.chantierId);
+      const client   = chantier ? DB.getClient(chantier.clientId) : null;
+      const config   = DB.getConfig();
+      const montant  = parseFloat(facture.totalHT || 0) * 0.30;
+      const montantTTC = montant * (1 + (facture.tva || 0.1));
+      const date     = new Date().toLocaleDateString('fr-FR');
+
+      const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+      <title>Acompte — ${facture.numero}</title>
+      <style>
+        body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a2e;margin:0;padding:30px}
+        .header{display:flex;justify-content:space-between;padding-bottom:20px;border-bottom:3px solid #4F8EF7;margin-bottom:24px}
+        .header-title{font-size:22px;font-weight:800;color:#4F8EF7}
+        .acompte-box{background:#f0f9ff;border:2px solid #4F8EF7;border-radius:8px;padding:20px;text-align:center;margin:20px 0}
+        .acompte-montant{font-size:42px;font-weight:900;color:#4F8EF7}
+        table{width:100%;border-collapse:collapse;margin:12px 0}
+        td{padding:8px 10px;border-bottom:1px solid #eee;font-size:12px}
+        .footer{margin-top:40px;padding-top:16px;border-top:1px solid #ddd;font-size:11px;color:#888}
+        @media print{body{padding:15px}}
+      </style></head><body>
+      <div class="header">
+        <div>
+          <div class="header-title">💰 Appel d'Acompte — 30%</div>
+          <div style="font-size:12px;color:#666">Facture référence : ${facture.numero}</div>
+        </div>
+        <div style="text-align:right;font-size:12px;color:#666">
+          <b>${config.nom || ''}</b><br>${config.adresse || ''}<br>
+          SIRET : ${config.siret || ''}<br>Date : ${date}
+        </div>
+      </div>
+      <div style="margin-bottom:16px;font-size:13px">
+        <b>Client :</b> ${client ? (client.nom || client.societe || '') : ''}<br>
+        ${chantier ? '<b>Chantier :</b> ' + chantier.nom : ''}
+      </div>
+      <div class="acompte-box">
+        <div style="font-size:14px;color:#666;margin-bottom:8px">Acompte à la commande (30%)</div>
+        <div class="acompte-montant">${montantTTC.toFixed(2)} €</div>
+        <div style="font-size:13px;color:#666;margin-top:8px">
+          HT : ${montant.toFixed(2)} € — TVA ${Math.round((facture.tva||0.1)*100)}% : ${(montantTTC-montant).toFixed(2)} €
+        </div>
+      </div>
+      <table><tbody>
+        <tr><td>Montant total chantier HT</td><td style="text-align:right"><b>${parseFloat(facture.totalHT).toFixed(2)} €</b></td></tr>
+        <tr><td>Acompte 30% HT</td><td style="text-align:right"><b>${montant.toFixed(2)} €</b></td></tr>
+        <tr><td>TVA ${Math.round((facture.tva||0.1)*100)}%</td><td style="text-align:right">${(montantTTC-montant).toFixed(2)} €</td></tr>
+        <tr style="background:#f0f9ff"><td><b>Acompte TTC à régler</b></td><td style="text-align:right"><b>${montantTTC.toFixed(2)} €</b></td></tr>
+      </tbody></table>
+      <div style="margin-top:16px;font-size:12px;color:#666">
+        <b>Règlement :</b> ${config.iban ? 'Virement IBAN : ' + config.iban : 'Chèque à l\'ordre de ' + (config.nom||'')}
+      </div>
+      <div class="footer">
+        ${config.nom||''} — SIRET ${config.siret||''} — ${config.rcs||''}<br>
+        ${config.piedPageFacture||''}
+      </div>
+      </body></html>`;
+
+      const win = window.open('', '_blank');
+      win.document.write(html);
+      win.document.close();
+      setTimeout(() => win.print(), 500);
+    },
 
   marquerPayee(factureId) {
     DB.updateFacture(factureId, {

@@ -908,7 +908,7 @@ const Pages = {
                   <td><strong>${Calculs.fmt(d.totalTTC)}</strong></td>
                   <td>${App.statut(d.statut)}</td>
                   <td>
-                    ${d.statut === 'Accepté' ? `<button class="btn btn-primary btn-sm" onclick="Pages.convertirEnFacture(${d.id})">🧾 Facture</button>` : ''}
+                    ${d.statut === 'Accepté' ? `<button class="btn btn-primary btn-sm" onclick="Pages.convertirEnFacture(${d.id})">🧾 → Facture</button>` + ((DB.factures||[]).find(f=>f.devisId===d.id) ? ' <span style="color:#10b981;font-size:11px">✅ Facturée</span>' : '') : ''}
                     <button class="btn btn-secondary btn-sm" onclick="DocPrint.apercu('devis',${d.id})">🖨</button>
                     <button class="btn btn-secondary btn-sm" onclick="EmailDevis.envoyerDevis(${d.id})">📧</button>
                   </td>
@@ -946,6 +946,20 @@ const Pages = {
 
   mettreAJourStatutDevis(statut) {
     if (Pages._devisEnCours) Pages._devisEnCours.statut = statut;
+    // Auto-conversion devis → facture dès acceptation
+    if (statut === 'Accepté' && Pages._devisEnCours) {
+      const devisId = Pages._devisEnCours.id;
+      if (devisId) {
+        const existing = (DB.factures || []).find(f => f.devisId === devisId);
+        if (!existing) {
+          setTimeout(() => {
+            if (confirm('✅ Devis accepté ! Créer la facture maintenant ?')) {
+              Pages.convertirEnFacture(devisId);
+            }
+          }, 300);
+        }
+      }
+    }
   },
 
   async _ameliorerLigneIA() {
