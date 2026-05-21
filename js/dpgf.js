@@ -389,9 +389,9 @@ ${text.slice(-4000)}`;
 
   // ── Vérification documents prêts ─────────────────────────
   _verifierPret() {
-    const btnRapport = document.querySelector('[onclick="DPGF._exporterRapportSynthese()"]');
-    const btnDPGF    = document.querySelector('[onclick="DPGF._exporterExcel()"]');
-    const btnDevis   = document.querySelector('[onclick="DPGF._genererDevis()"]');
+    const btnRapport = document.querySelector('#dpgf-table-zone button[onclick*="_exporterRapportSynthese"]');
+    const btnDPGF    = document.querySelector('#dpgf-table-zone button[onclick*="_exporterExcel"]');
+    const btnDevis   = document.querySelector('#dpgf-table-zone button[onclick*="_genererDevis"]');
     const cctpStatus = document.getElementById('cctp-status');
     const dpgfStatus = document.getElementById('dpgf-status');
     if (this._cctpCharge && !this._dpgfCharge) {
