@@ -1364,11 +1364,12 @@ const Pages = {
           <div style="overflow-x:auto">
             <table style="width:100%;border-collapse:collapse;font-size:13px" id="prix-marche-table">
               <thead>
-                <tr style="background:var(--bg-tertiary)">
-                  <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary)">Poste type</th>
-                  <th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);width:120px">PU HT (€)</th>
-                  <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary)">Libellé référence</th>
-                  <th style="padding:10px 12px;width:80px"></th>
+                <tr id="prix-marche-header" style="background:var(--bg-tertiary)">
+                  <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary)">Poste type</th>
+                  <th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);width:110px">PU Vente (€)</th>
+                  <th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);width:110px">PU Sous-trait. (€)</th>
+                  <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary)">Libellé référence</th>
+                  <th style="padding:10px 12px;width:60px"></th>
                 </tr>
               </thead>
               <tbody id="prix-marche-tbody"></tbody>
@@ -1701,23 +1702,69 @@ const Pages = {
     App.toast('Logo supprimé');
   },
 
-  _renderPrixMarche() {
-    const tbody = document.getElementById('prix-marche-tbody');
+  _renderPrixMarche(corpsFiltré) {
+    const tbody  = document.getElementById('prix-marche-tbody');
+    const theader = document.getElementById('prix-marche-header');
     if (!tbody) return;
+
+    // Boutons corps de métier
+    const CORPS = [
+      { id: 'placo',  label: '🧱 Placo/Peinture' },
+      { id: 'elec',   label: '⚡ Électricité' },
+      { id: 'plomb',  label: '🚿 Plomberie' },
+      { id: 'menu',   label: '🪟 Menuiserie' },
+      { id: 'carre',  label: '🏠 Carrelage/Sol' },
+      { id: 'divers', label: '🔧 Divers' },
+    ];
+
+    // Injecter boutons si pas encore présents
+    let btnsZone = document.getElementById('prix-marche-btns');
+    if (!btnsZone) {
+      btnsZone = document.createElement('div');
+      btnsZone.id = 'prix-marche-btns';
+      btnsZone.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px';
+      tbody.closest('table').parentElement.insertBefore(btnsZone, tbody.closest('table'));
+    }
+    const actif = corpsFiltré || 'placo';
+    btnsZone.innerHTML = CORPS.map(c => {
+      const base = DPGF.getPrixMarche();
+      const n = Object.values(base).filter(v => v.corps === c.id).length;
+      return `<button class="dpgf-lot-btn${actif === c.id ? ' active' : ''}"
+        onclick="Pages._renderPrixMarche('${c.id}')"
+        style="font-size:12px;padding:5px 12px">${c.label} <span style="opacity:.7">(${n})</span></button>`;
+    }).join('');
+
+    // Mettre à jour header colonnes
+    if (theader) {
+      theader.innerHTML = `
+        <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary)">Poste type</th>
+        <th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);width:110px">PU Vente (€)</th>
+        <th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);width:110px">PU Sous-trait. (€)</th>
+        <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary)">Libellé référence</th>
+        <th style="padding:10px 12px;width:60px"></th>
+      `;
+    }
+
+    // Filtrer et afficher
     const base = DPGF.getPrixMarche();
-    tbody.innerHTML = Object.entries(base).map(([key, val], i) => `
+    const filtré = Object.entries(base).filter(([, v]) => v.corps === actif);
+    tbody.innerHTML = filtré.map(([key, val], i) => `
       <tr style="border-bottom:1px solid var(--border);background:${i%2===0?'var(--bg-secondary)':'transparent'}">
-        <td style="padding:8px 12px;color:var(--text-secondary);font-size:12px">${key}</td>
+        <td style="padding:8px 12px;color:var(--text-secondary);font-size:12px">${val.libelle || key}</td>
         <td style="padding:8px 12px;text-align:right">
-          <input type="number" class="form-control" style="width:90px;text-align:right;padding:4px 8px;font-size:13px"
-            data-key="${key}" value="${val.pu}" min="0" max="99999" step="0.5">
+          <input type="number" class="form-control" style="width:85px;text-align:right;padding:4px 6px;font-size:13px"
+            data-key="${key}" value="${val.pu}" min="0" max="99999" step="0.5" title="Prix de vente client">
+        </td>
+        <td style="padding:8px 12px;text-align:right">
+          <input type="number" class="form-control" style="width:85px;text-align:right;padding:4px 6px;font-size:13px;background:rgba(247,166,79,0.08)"
+            data-key-st="${key}" value="${val.puST || ''}" min="0" max="99999" step="0.5" title="Prix sous-traitant">
         </td>
         <td style="padding:8px 12px">
-          <input type="text" class="form-control" style="font-size:12px;padding:4px 8px"
-            data-key-lib="${key}" value="${val.libelle || key}" placeholder="Libellé référence">
+          <input type="text" class="form-control" style="font-size:12px;padding:4px 6px"
+            data-key-lib="${key}" value="${val.libelle || key}" placeholder="Libellé">
         </td>
         <td style="padding:8px 12px;text-align:center">
-          <button class="btn btn-secondary" style="font-size:11px;padding:3px 8px"
+          <button class="btn btn-secondary" style="font-size:11px;padding:3px 6px"
             onclick="Pages._resetLignePrix('${key}')">↺</button>
         </td>
       </tr>
@@ -1735,17 +1782,21 @@ const Pages = {
   },
 
   sauvegarderPrixMarche() {
-    const inputs = document.querySelectorAll('#prix-marche-tbody [data-key]');
-    const saved  = {};
-    inputs.forEach(inp => {
-      const key    = inp.dataset.key;
-      const pu     = parseFloat(inp.value) || 0;
-      const libEl  = document.querySelector('[data-key-lib="' + key + '"]');
-      const libelle = libEl ? libEl.value : key;
-      saved[key] = { pu, libelle };
+    // Charger la base complète existante
+    const base = DPGF.getPrixMarche();
+    const saved = { ...base };
+    // Mettre à jour les postes visibles (corps actif)
+    document.querySelectorAll('#prix-marche-tbody [data-key]').forEach(inp => {
+      const key   = inp.dataset.key;
+      const pu    = parseFloat(inp.value) || 0;
+      const stEl  = document.querySelector('[data-key-st="' + key + '"]');
+      const libEl = document.querySelector('[data-key-lib="' + key + '"]');
+      const puST  = stEl ? parseFloat(stEl.value) || 0 : (saved[key]?.puST || 0);
+      const libelle = libEl ? libEl.value : (saved[key]?.libelle || key);
+      saved[key] = { ...saved[key], pu, puST, libelle };
     });
     localStorage.setItem('plaqpro_prix_marche', JSON.stringify(saved));
-    App.toast('✅ Base prix sauvegardée — ' + Object.keys(saved).length + ' postes', 'success');
+    App.toast('✅ Prix sauvegardés', 'success');
   },
 
   reinitPrixMarche() {
