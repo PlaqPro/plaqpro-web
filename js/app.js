@@ -799,10 +799,10 @@ const Pages = {
                 <option value="0.055" ${totaux.tva==0.055?'selected':''}>TVA 5,5%</option>
                 <option value="0" ${totaux.tva===0?'selected':''}>TVA 0% — Auto-liquidée</option>
               </select>
-              <span class="font-mono">${Calculs.fmt(totaux.montantTVA)}</span>
+              <span class="font-mono">${totaux.tva === 0 ? '0,00 €' : Calculs.fmt(totaux.montantTVA)}</span>
             </div>
             <div class="total-row mt-8">
-              <span class="total-label">TOTAL TTC</span>
+              <span class="total-label">${totaux.tva === 0 ? 'NET À PAYER HT' : 'TOTAL TTC'}</span>
               <span class="total-value">${Calculs.fmt(totaux.totalTTC)}</span>
             </div>
           </div>
