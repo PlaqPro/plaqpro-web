@@ -57,6 +57,7 @@ const App = {
       rentabilite: () => Pages.rentabilite(),
       acoustique:  () => Pages.acoustique(),
       resistanceFeu: () => Pages.resistanceFeu(),
+      thermique:     () => Pages.thermique(),
     };
 
     if (pages[page]) {
@@ -120,6 +121,7 @@ const App = {
       { page: 'rentabilite', icon: '<i class="ph ph-chart-line-up"></i>', label: 'Rentabilité' },
       { page: 'acoustique',  icon: '<i class="ph ph-speaker-high"></i>', label: 'Acoustique Rw' },
       { page: 'resistanceFeu', icon: '<i class="ph ph-fire"></i>', label: 'Résistance au feu' },
+      { page: 'thermique',     icon: '<i class="ph ph-thermometer"></i>', label: 'Thermique RE2020' },
 
       { section: '⚙️ Paramètres' },
       { page: 'produits',    icon: '<i class="ph ph-tag"></i>', label: 'Base tarifaire' },

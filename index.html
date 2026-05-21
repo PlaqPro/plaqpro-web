@@ -157,6 +157,7 @@
   <script src="js/rentabilite.js"></script>
   <script src="js/acoustique.js"></script>
   <script src="js/resistance_feu.js"></script>
+  <script src="js/thermique.js"></script>
 
   <script>
   // Etendre la sidebar et navigate pour inclure le calculateur
@@ -198,6 +199,7 @@
       { page: 'rentabilite', icon: '<i class="ph ph-chart-line-up"></i>', label: 'Rentabilité' },
       { page: 'acoustique',  icon: '<i class="ph ph-speaker-high"></i>', label: 'Acoustique Rw' },
       { page: 'resistanceFeu', icon: '<i class="ph ph-fire"></i>', label: 'Résistance au feu' },
+      { page: 'thermique',     icon: '<i class="ph ph-thermometer"></i>', label: 'Thermique RE2020' },
     ];
 
     const sidebar = document.getElementById('sidebar-nav');
@@ -267,6 +269,7 @@
         rentabilite: '💰 Simulateur Marge & Rentabilité',
         acoustique:  '🔊 Calcul Acoustique Rw',
         resistanceFeu: '🔥 Résistance au Feu — EI30 à EI120',
+        thermique:     '🌡️ Déperditions Thermiques — RE2020',
         exterieur:   '🌿 Pack Extérieur & Paysagisme',
         dpgf:        "🏛 DPGF — Appels d'offres",
         aide:        '❓ Guide & Aide',
@@ -307,6 +310,7 @@
         rentabilite: function() { return Pages.rentabilite(); },
         acoustique:  function() { return Pages.acoustique(); },
         resistanceFeu: function() { return Pages.resistanceFeu(); },
+        thermique:     function() { return Pages.thermique(); },
         exterieur:   function() { return Pages.exterieur(); },
         aide:        function() { return Pages.aide(); },
         chantier_mobile: function() { return Pages.chantier_mobile(); },
