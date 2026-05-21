@@ -793,7 +793,12 @@ const Pages = {
               <span class="font-mono">${Calculs.fmt(totaux.totalHT)}</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border)">
-              <span class="text-secondary">TVA ${Math.round((totaux.tva || 0.1) * 100)}%</span>
+              <select onchange="Pages._changerTVADevis(this.value)" style="background:transparent;border:none;color:var(--text-secondary);font-size:13px;cursor:pointer" title="Changer le taux TVA">
+                <option value="0.20" ${(totaux.tva||0.1)==0.20?'selected':''}>TVA 20%</option>
+                <option value="0.10" ${(totaux.tva||0.1)==0.10?'selected':''}>TVA 10%</option>
+                <option value="0.055" ${totaux.tva==0.055?'selected':''}>TVA 5,5%</option>
+                <option value="0" ${totaux.tva===0?'selected':''}>TVA 0% — Auto-liquidée</option>
+              </select>
               <span class="font-mono">${Calculs.fmt(totaux.montantTVA)}</span>
             </div>
             <div class="total-row mt-8">
@@ -804,7 +809,11 @@ const Pages = {
 
           <!-- Note de bas -->
           <div class="mt-16" style="padding:12px;background:var(--bg-tertiary);border-radius:var(--radius-md);font-size:12px;color:var(--text-tertiary)">
-            Devis valable 30 jours · Prix HT · TVA ${Math.round((totaux.tva || 0.1) * 100)}% (rénovation) · SIRET ${config.siret}
+            Devis valable 30 jours · Prix HT ·
+            ${(totaux.tva === 0 || totaux.tva === '0') ?
+              'TVA 0% — Auto-liquidation TVA art. 283-2 du CGI' :
+              'TVA ' + Math.round((totaux.tva || 0.1) * 100) + '%'
+            } · SIRET ${config.siret}
           </div>
 
           <!-- Ligne libre avec IA -->
@@ -874,7 +883,8 @@ const Pages = {
     // Recalculer totaux
     const r = DB.getRatios();
     const totalHT = Pages._devisEnCours.lignes.reduce((s, l) => s + l.totalClient, 0);
-    const tva = r.TVA_TRAVAUX;
+    const tvaManuelle = Pages._devisEnCours?.totaux?.tva;
+    const tva = tvaManuelle !== undefined ? tvaManuelle : r.TVA_TRAVAUX;
     Pages._devisEnCours.totaux.totalHT   = totalHT;
     Pages._devisEnCours.totaux.montantTVA = totalHT * tva;
     Pages._devisEnCours.totaux.totalTTC  = totalHT * (1 + tva);
@@ -931,7 +941,8 @@ const Pages = {
     if (!Pages._devisEnCours) return;
     Pages._devisEnCours.lignes.push({ poste: desig, baseHT: prix, marge: 0, totalClient: prix });
     const totalHT = Pages._devisEnCours.lignes.reduce((s, l) => s + (l.totalClient || 0), 0);
-    const tva = Pages._devisEnCours.totaux?.tva || 0.1;
+    const tvaDevis = Pages._devisEnCours.totaux?.tva;
+    const tva = tvaDevis !== undefined ? tvaDevis : (Pages._devisEnCours.autoLiquidee ? 0 : 0.1);
     Pages._devisEnCours.totaux = { ...Pages._devisEnCours.totaux, totalHT, montantTVA: totalHT * tva, totalTTC: totalHT * (1 + tva) };
     const ch = DB.getChantier(Pages._devisEnCours.chantierId);
     const cl = ch ? DB.getClient(ch.clientId) : null;
@@ -1151,6 +1162,7 @@ const Pages = {
                 <option value="20" ${(profil.tvaPro??20)==20?'selected':''}>20% (neuf / pro)</option>
                 <option value="10" ${profil.tvaPro==10?'selected':''}>10% (rénovation)</option>
                 <option value="5.5" ${profil.tvaPro==5.5?'selected':''}>5,5% (amélioration énergétique)</option>
+                <option value="0" ${profil.tvaPro==0?'selected':''}>0% (auto-liquidée — marché public ST)</option>
               </select>
             </div>
             <div>
@@ -1159,6 +1171,7 @@ const Pages = {
                 <option value="10" ${(profil.tvaParticulier??10)==10?'selected':''}>10% (rénovation)</option>
                 <option value="20" ${profil.tvaParticulier==20?'selected':''}>20% (neuf)</option>
                 <option value="5.5" ${profil.tvaParticulier==5.5?'selected':''}>5,5% (amélioration énergétique)</option>
+                <option value="0" ${profil.tvaParticulier==0?'selected':''}>0% (auto-liquidée)</option>
               </select>
             </div>
             <div>
@@ -1803,6 +1816,21 @@ const Pages = {
     localStorage.removeItem('plaqpro_prix_marche');
     this._renderPrixMarche();
     App.toast('🔄 Prix réinitialisés aux valeurs par défaut', 'info');
+  },
+
+  _changerTVADevis(val) {
+    const tva = parseFloat(val);
+    if (!Pages._devisEnCours) return;
+    const totalHT = Pages._devisEnCours.totaux?.totalHT || 0;
+    Pages._devisEnCours.totaux = {
+      ...Pages._devisEnCours.totaux,
+      tva,
+      montantTVA: totalHT * tva,
+      totalTTC:   totalHT * (1 + tva),
+    };
+    Pages._devisEnCours.autoLiquidee = (tva === 0);
+    Pages.afficherDevis(Pages._devisEnCours, true);
+    App.toast(tva === 0 ? '✅ TVA auto-liquidée activée' : 'TVA ' + Math.round(tva*100) + '% appliquée', 'success');
   },
 
   sauvegarderConfig() {
