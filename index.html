@@ -154,6 +154,7 @@
   <script src="js/signature.js"></script>
 
   <script src="js/charges.js"></script>
+  <script src="js/rentabilite.js"></script>
 
   <script>
   // Etendre la sidebar et navigate pour inclure le calculateur
@@ -192,6 +193,7 @@
       { page: 'aide',        icon: '❓', label: 'Guide & Aide' },
       { section: '📐 Études techniques' },
       { page: 'charges',     icon: '<i class="ph ph-scales"></i>', label: 'Coeff. de charge' },
+      { page: 'rentabilite', icon: '<i class="ph ph-chart-line-up"></i>', label: 'Rentabilité' },
     ];
 
     const sidebar = document.getElementById('sidebar-nav');
@@ -258,6 +260,7 @@
         electricite: '⚡ Pack Électricité — NF C 15-100',
         plomberie:   '🔧 Pack Plomberie — DTU 60.1 / DTU 60.11',
         charges:     '📐 Coefficient de charge — Eurocode 1',
+        rentabilite: '💰 Simulateur Marge & Rentabilité',
         exterieur:   '🌿 Pack Extérieur & Paysagisme',
         dpgf:        "🏛 DPGF — Appels d'offres",
         aide:        '❓ Guide & Aide',
@@ -295,6 +298,7 @@
         electricite: function() { return Pages.electricite(); },
         plomberie:   function() { return Pages.plomberie(); },
         charges:     function() { return Pages.charges(); },
+        rentabilite: function() { return Pages.rentabilite(); },
         exterieur:   function() { return Pages.exterieur(); },
         aide:        function() { return Pages.aide(); },
         chantier_mobile: function() { return Pages.chantier_mobile(); },
