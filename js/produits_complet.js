@@ -454,7 +454,7 @@ Pages.produits = function() {
         Tout <span class="prod-fam-count">${DB.produits.length}</span>
       </button>
       ${FAMILLES.map(f => `
-        <button class="prod-fam-btn" data-fam="${f}" onclick="ProdMoteur.filtrerFam('${f}', this)">
+        <button class="prod-fam-btn" data-fam="${f}" onclick="ProdMoteur.filtrerFam(this.dataset.fam, this)">
           ${ProdMoteur.iconFam(f)} ${f}
           <span class="prod-fam-count">${DB.produits.filter(p=>p.categorie===f).length}</span>
         </button>
