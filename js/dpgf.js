@@ -1188,7 +1188,7 @@ ${text.slice(0, 12000)}`;
     aoa3.push(['Ces prix sont des références. Personnalisez-les dans Paramètres > Base prix.', '', '']);
     aoa3.push([]);
     aoa3.push(['Poste type', 'PU HT (€)', 'Libellé référence']);
-    pm.forEach(p => aoa3.push([p.designation, p.pu, p.libelle || p.designation]));
+    Object.entries(pm).forEach(([key, val]) => aoa3.push([key, val.pu, val.libelle || key]));
 
     const ws3 = XLSX.utils.aoa_to_sheet(aoa3);
     ws3['!cols'] = [25, 14, 40].map(w => ({ wch: w }));
