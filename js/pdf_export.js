@@ -262,7 +262,7 @@ const PDF = {
         </table>
         <div class="total-bloc">
           <span class="total-label">${totaux.tva === 0 ? 'NET À PAYER' : 'TOTAL TTC'}</span>
-          <span class="total-value">${fmt(totaux.totalTTC)} €</span>
+          <span class="total-value">${fmt(totaux.tva === 0 ? totaux.totalHT : totaux.totalTTC)} €</span>
         </div>
       </div>`;
     }
