@@ -153,6 +153,8 @@
   <script src="js/email_devis.js"></script>
   <script src="js/signature.js"></script>
 
+  <script src="js/charges.js"></script>
+
   <script>
   // Etendre la sidebar et navigate pour inclure le calculateur
   document.addEventListener('DOMContentLoaded', function() {
@@ -188,6 +190,8 @@
       { page: 'plomberie',   icon: '🔧', label: 'Plomberie' },
       { page: 'exterieur',   icon: '🌿', label: 'Extérieur & Paysage' },
       { page: 'aide',        icon: '❓', label: 'Guide & Aide' },
+      { section: '📐 Études techniques' },
+      { page: 'charges',     icon: '<i class="ph ph-scales"></i>', label: 'Coeff. de charge' },
     ];
 
     const sidebar = document.getElementById('sidebar-nav');
@@ -253,6 +257,7 @@
         maconnerie:  '🧱 Pack Maçonnerie',
         electricite: '⚡ Pack Électricité — NF C 15-100',
         plomberie:   '🔧 Pack Plomberie — DTU 60.1 / DTU 60.11',
+        charges:     '📐 Coefficient de charge — Eurocode 1',
         exterieur:   '🌿 Pack Extérieur & Paysagisme',
         dpgf:        "🏛 DPGF — Appels d'offres",
         aide:        '❓ Guide & Aide',
@@ -289,6 +294,7 @@
         maconnerie:  function() { return Pages.maconnerie(); },
         electricite: function() { return Pages.electricite(); },
         plomberie:   function() { return Pages.plomberie(); },
+        charges:     function() { return Pages.charges(); },
         exterieur:   function() { return Pages.exterieur(); },
         aide:        function() { return Pages.aide(); },
         chantier_mobile: function() { return Pages.chantier_mobile(); },

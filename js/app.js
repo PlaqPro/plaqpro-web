@@ -53,6 +53,7 @@ const App = {
       maconnerie:  () => Pages.maconnerie(),
       electricite: () => Pages.electricite(),
       plomberie:   () => Pages.plomberie(),
+      charges:     () => Pages.charges(),
     };
 
     if (pages[page]) {
@@ -110,6 +111,9 @@ const App = {
       { page: 'maconnerie',  icon: '<i class="ph ph-bricks"></i>', label: 'Maçonnerie' },
       { page: 'electricite', icon: '<i class="ph ph-plug"></i>', label: 'Électricité' },
       { page: 'plomberie',   icon: '<i class="ph ph-pipe"></i>', label: 'Plomberie' },
+
+      { section: '📐 Études techniques' },
+      { page: 'charges',     icon: '<i class="ph ph-scales"></i>', label: 'Coeff. de charge' },
 
       { section: '⚙️ Paramètres' },
       { page: 'produits',    icon: '<i class="ph ph-tag"></i>', label: 'Base tarifaire' },
