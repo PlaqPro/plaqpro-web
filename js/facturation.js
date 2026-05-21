@@ -49,7 +49,7 @@ Object.assign(Pages, {
                   <th>Chantier</th>
                   <th>Date</th>
                   <th>Échéance</th>
-                  <th>Total TTC</th>
+                  <th>Total</th>
                   <th>Statut</th>
                   <th></th>
                 </tr>
@@ -366,12 +366,12 @@ Object.assign(Pages, {
           <span class="font-mono">${Calculs.fmt(totalHT)}</span>
         </div>
         <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border)">
-          <span class="text-secondary">TVA ${Math.round(tva*100)}%</span>
-          <span class="font-mono">${Calculs.fmt(facture.montantTVA || 0)}</span>
+          ${tva === 0 ? '' : `<span class="text-secondary">TVA ${Math.round(tva*100)}%</span>
+          <span class="font-mono">${Calculs.fmt(facture.montantTVA || 0)}</span>`}
         </div>
         <div class="total-row mt-8">
-          <span class="total-label">TOTAL TTC</span>
-          <span class="total-value">${Calculs.fmt(facture.totalTTC || 0)}</span>
+          <span class="total-label">${tva === 0 ? 'NET À PAYER' : 'TOTAL TTC'}</span>
+          <span class="total-value">${Calculs.fmt(tva === 0 ? (facture.totalHT || 0) : (facture.totalTTC || 0))}</span>
         </div>
       </div>
 
