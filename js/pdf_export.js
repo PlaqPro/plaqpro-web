@@ -257,11 +257,11 @@ const PDF = {
             <tr><td>Main d'œuvre HT</td><td style="text-align:right;font-family:monospace">${fmt(totaux.totalMOval)} €</td></tr>
             <tr><td>Matériaux facturés (+${Math.round(totaux.margeMat*100)}%)</td><td style="text-align:right;font-family:monospace">${fmt(totaux.htMat)} €</td></tr>
             <tr><td>MO facturée (+${Math.round(totaux.margeMO*100)}%)</td><td style="text-align:right;font-family:monospace">${fmt(totaux.htMO)} €</td></tr>
-            <tr><td>TVA ${Math.round(totaux.tva*100)}%</td><td style="text-align:right;font-family:monospace">${fmt(totaux.totalHT*totaux.tva)} €</td></tr>
+            ${totaux.tva === 0 ? '' : `<tr><td>TVA ${Math.round(totaux.tva*100)}%</td><td style="text-align:right;font-family:monospace">${fmt(totaux.totalHT*totaux.tva)} €</td></tr>`}
           </tbody>
         </table>
         <div class="total-bloc">
-          <span class="total-label">TOTAL TTC</span>
+          <span class="total-label">${totaux.tva === 0 ? 'NET À PAYER' : 'TOTAL TTC'}</span>
           <span class="total-value">${fmt(totaux.totalTTC)} €</span>
         </div>
       </div>`;
