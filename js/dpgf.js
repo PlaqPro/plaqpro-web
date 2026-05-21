@@ -387,6 +387,32 @@ ${text.slice(-4000)}`;
     }
   },
 
+  // ── Vérification documents prêts ─────────────────────────
+  _verifierPret() {
+    const btnRapport = document.querySelector('[onclick="DPGF._exporterRapportSynthese()"]');
+    const btnDPGF    = document.querySelector('[onclick="DPGF._exporterExcel()"]');
+    const btnDevis   = document.querySelector('[onclick="DPGF._genererDevis()"]');
+    const cctpStatus = document.getElementById('cctp-status');
+    const dpgfStatus = document.getElementById('dpgf-status');
+    if (this._cctpCharge && !this._dpgfCharge) {
+      if (dpgfStatus) { dpgfStatus.innerHTML = '⏳ <strong>En attente du DPGF...</strong>'; dpgfStatus.style.color = '#F7A64F'; }
+    }
+    if (this._dpgfCharge && !this._cctpCharge) {
+      if (cctpStatus) { cctpStatus.innerHTML = '⏳ <strong>En attente du CCTP...</strong>'; cctpStatus.style.color = '#F7A64F'; }
+    }
+    const pret = this._cctpCharge && this._dpgfCharge;
+    [btnRapport, btnDPGF, btnDevis].forEach(btn => {
+      if (!btn) return;
+      btn.disabled = !pret;
+      btn.style.opacity = pret ? '1' : '0.4';
+      btn.style.cursor  = pret ? 'pointer' : 'not-allowed';
+      btn.title = pret ? '' : 'Chargez CCTP + DPGF pour activer';
+    });
+    const dpgfZone = document.getElementById('dpgf-upload-zone');
+    if (dpgfZone && !this._dpgfCharge) dpgfZone.style.borderColor = 'rgba(79,142,247,0.4)';
+    if (pret) App.toast('✅ CCTP + DPGF chargés — rapport et export disponibles !', 'success');
+  },
+
   // ── Rapprochement CCTP ↔ DPGF ────────────────────────────
   _rapprocher() {
     if (!this._exigencesCCTP || !this._exigencesCCTP.length) return;
