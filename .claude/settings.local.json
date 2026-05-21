@@ -51,7 +51,13 @@
       "Bash(rm wrangler.jsonc)",
       "Bash(ls PlaQproWEB/)",
       "Bash(rm -rf PlaQproWEB)",
-      "Bash(dir *)"
+      "Bash(dir *)",
+      "Bash(curl -L \"https://unpkg.com/xlsx-js-style@1.2.0/dist/xlsx.bundle.js\" -o js/xlsx-js-style.js)",
+      "Bash(python *)",
+      "Bash(pip install *)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\Gabriel\\\\Desktop\\\\PlaQPro\\\\\" | ForEach-Object { $_.Name })",
+      "Bash(del \"C:\\\\PlaQproWEB\\\\_patch_dpgf.py\")",
+      "Bash(git stash *)"
     ]
   }
 }

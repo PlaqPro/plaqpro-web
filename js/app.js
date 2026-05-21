@@ -68,39 +68,39 @@ const App = {
   // ── Sidebar ───────────────────────────────────────────────
   renderSidebar() {
     const nav = [
-      { page: 'dashboard',   icon: '⊞',  label: 'Tableau de bord' },
+      { page: 'dashboard',   icon: '<i class="ph ph-squares-four"></i>', label: 'Tableau de bord' },
 
       { section: '👥 Clients & Chantiers' },
-      { page: 'clients',     icon: '👤', label: 'Clients' },
-      { page: 'chantiers',   icon: '🏗',  label: 'Chantiers' },
-      { page: 'calendrier',  icon: '📅', label: 'Calendrier' },
-      { page: 'prospection', icon: '🎯', label: 'Prospection IA' },
+      { page: 'clients',     icon: '<i class="ph ph-users"></i>', label: 'Clients' },
+      { page: 'chantiers',   icon: '<i class="ph ph-hard-hat"></i>', label: 'Chantiers' },
+      { page: 'calendrier',  icon: '<i class="ph ph-calendar"></i>', label: 'Calendrier' },
+      { page: 'prospection', icon: '<i class="ph ph-map-pin"></i>', label: 'Prospection IA' },
 
       { section: '📐 Chiffrage' },
-      { page: 'metrages',    icon: '📐', label: 'Métrés' },
-      { page: 'cloisons',    icon: '🧱', label: 'Cloisons' },
-      { page: 'peinture',    icon: '🎨', label: 'Peinture' },
-      { page: 'calcul',      icon: '⚡', label: 'Calcul Express' },
+      { page: 'metrages',    icon: '<i class="ph ph-ruler"></i>', label: 'Métrés' },
+      { page: 'cloisons',    icon: '<i class="ph ph-wall"></i>', label: 'Cloisons' },
+      { page: 'peinture',    icon: '<i class="ph ph-paint-roller"></i>', label: 'Peinture' },
+      { page: 'calcul',      icon: '<i class="ph ph-lightning"></i>', label: 'Calcul Express' },
 
       { section: '📄 Commercial' },
-      { page: 'devis',       icon: '📄', label: 'Devis' },
-      { page: 'factures',    icon: '🧾', label: 'Factures' },
-      { page: 'projets',     icon: '📦', label: 'Projets types' },
-      { page: 'liste_achat', icon: '🛒', label: 'Liste d\'achat' },
+      { page: 'devis',       icon: '<i class="ph ph-file-text"></i>', label: 'Devis' },
+      { page: 'factures',    icon: '<i class="ph ph-receipt"></i>', label: 'Factures' },
+      { page: 'projets',     icon: '<i class="ph ph-package"></i>', label: 'Projets types' },
+      { page: 'liste_achat', icon: '<i class="ph ph-shopping-cart"></i>', label: 'Liste d\'achat' },
 
       { section: '🏛 Appels d\'offres' },
-      { page: 'dpgf',        icon: '🏛', label: 'DPGF / AO' },
-      { page: 'tarifs',      icon: '💶', label: 'Grille tarifaire' },
-      { page: 'memo',        icon: '✅', label: 'Mémo chantier' },
+      { page: 'dpgf',        icon: '<i class="ph ph-bank"></i>', label: 'DPGF / AO' },
+      { page: 'tarifs',      icon: '<i class="ph ph-coins"></i>', label: 'Grille tarifaire' },
+      { page: 'memo',        icon: '<i class="ph ph-check-square"></i>', label: 'Mémo chantier' },
 
       { section: '🔧 Packs Métier' },
-      { page: 'maconnerie',  icon: '🧱', label: 'Maçonnerie' },
-      { page: 'electricite', icon: '⚡', label: 'Électricité' },
-      { page: 'plomberie',   icon: '🔧', label: 'Plomberie' },
+      { page: 'maconnerie',  icon: '<i class="ph ph-bricks"></i>', label: 'Maçonnerie' },
+      { page: 'electricite', icon: '<i class="ph ph-plug"></i>', label: 'Électricité' },
+      { page: 'plomberie',   icon: '<i class="ph ph-pipe"></i>', label: 'Plomberie' },
 
       { section: '⚙️ Paramètres' },
-      { page: 'produits',    icon: '💰', label: 'Base tarifaire' },
-      { page: 'config',      icon: '⚙️', label: 'Configuration' },
+      { page: 'produits',    icon: '<i class="ph ph-tag"></i>', label: 'Base tarifaire' },
+      { page: 'config',      icon: '<i class="ph ph-gear"></i>', label: 'Configuration' },
     ];
 
     const sidebar = document.getElementById('sidebar-nav');

@@ -44,9 +44,9 @@
 - Rapport Excel : 1 onglet, formules, alertes, conseils AO, xlsx-js-style local
 
 ## Prochaine session — Priorités
-1. Écran "Gérer ma base prix" dans Paramètres (localStorage plaqpro_prix_marche)
-2. Export DPGF remplie — colonnes prix ENT dans format AOS Excel
-3. Rapprochement CCTP ↔ DPGF enrichi (justifications auto par exigence)
+1. TVA auto-liquidée (paramètre chantier/client)
+2. Export DPGF remplie avec prix ENT colonnes AOS
+3. Utiliser puST dans module DPGF
 
 ## Démarrage nouvelle session
 1. Lire CLAUDE_PROFILE_GABRIEL.md
@@ -55,4 +55,9 @@
 4. Résumer en 5 lignes ce qu'on sait
 5. Demander "On reprend où ?" et attendre Gabriel
 
-*Créé le 20/05/2026 — Mis à jour fin de journée 20/05/2026*
+## Mise à jour 21/05/2026
+- Base prix multi-corps opérationnelle (68 postes, 6 corps)
+- TVA auto-liquidée : à implémenter (priorité)
+- Export DPGF ENT : à implémenter
+
+*Créé le 20/05/2026 — Mis à jour 21/05/2026*
