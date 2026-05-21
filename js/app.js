@@ -58,6 +58,7 @@ const App = {
       acoustique:  () => Pages.acoustique(),
       resistanceFeu: () => Pages.resistanceFeu(),
       thermique:     () => Pages.thermique(),
+      sectionCable:  () => Pages.sectionCable(),
     };
 
     if (pages[page]) {
@@ -122,6 +123,7 @@ const App = {
       { page: 'acoustique',  icon: '<i class="ph ph-speaker-high"></i>', label: 'Acoustique Rw' },
       { page: 'resistanceFeu', icon: '<i class="ph ph-fire"></i>', label: 'Résistance au feu' },
       { page: 'thermique',     icon: '<i class="ph ph-thermometer"></i>', label: 'Thermique RE2020' },
+      { page: 'sectionCable',  icon: '<i class="ph ph-lightning"></i>', label: 'Section câble' },
 
       { section: '⚙️ Paramètres' },
       { page: 'produits',    icon: '<i class="ph ph-tag"></i>', label: 'Base tarifaire' },

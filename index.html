@@ -158,6 +158,7 @@
   <script src="js/acoustique.js"></script>
   <script src="js/resistance_feu.js"></script>
   <script src="js/thermique.js"></script>
+  <script src="js/section_cable.js"></script>
 
   <script>
   // Etendre la sidebar et navigate pour inclure le calculateur
@@ -200,6 +201,7 @@
       { page: 'acoustique',  icon: '<i class="ph ph-speaker-high"></i>', label: 'Acoustique Rw' },
       { page: 'resistanceFeu', icon: '<i class="ph ph-fire"></i>', label: 'Résistance au feu' },
       { page: 'thermique',     icon: '<i class="ph ph-thermometer"></i>', label: 'Thermique RE2020' },
+      { page: 'sectionCable',  icon: '<i class="ph ph-lightning"></i>', label: 'Section câble' },
     ];
 
     const sidebar = document.getElementById('sidebar-nav');
@@ -270,6 +272,7 @@
         acoustique:  '🔊 Calcul Acoustique Rw',
         resistanceFeu: '🔥 Résistance au Feu — EI30 à EI120',
         thermique:     '🌡️ Déperditions Thermiques — RE2020',
+        sectionCable:  '💡 Section Câble — NF C15-100',
         exterieur:   '🌿 Pack Extérieur & Paysagisme',
         dpgf:        "🏛 DPGF — Appels d'offres",
         aide:        '❓ Guide & Aide',
@@ -311,6 +314,7 @@
         acoustique:  function() { return Pages.acoustique(); },
         resistanceFeu: function() { return Pages.resistanceFeu(); },
         thermique:     function() { return Pages.thermique(); },
+        sectionCable:  function() { return Pages.sectionCable(); },
         exterieur:   function() { return Pages.exterieur(); },
         aide:        function() { return Pages.aide(); },
         chantier_mobile: function() { return Pages.chantier_mobile(); },
