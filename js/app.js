@@ -55,6 +55,7 @@ const App = {
       plomberie:   () => Pages.plomberie(),
       charges:     () => Pages.charges(),
       rentabilite: () => Pages.rentabilite(),
+      acoustique:  () => Pages.acoustique(),
     };
 
     if (pages[page]) {
@@ -116,6 +117,7 @@ const App = {
       { section: '📐 Études techniques' },
       { page: 'charges',     icon: '<i class="ph ph-scales"></i>', label: 'Coeff. de charge' },
       { page: 'rentabilite', icon: '<i class="ph ph-chart-line-up"></i>', label: 'Rentabilité' },
+      { page: 'acoustique',  icon: '<i class="ph ph-speaker-high"></i>', label: 'Acoustique Rw' },
 
       { section: '⚙️ Paramètres' },
       { page: 'produits',    icon: '<i class="ph ph-tag"></i>', label: 'Base tarifaire' },
