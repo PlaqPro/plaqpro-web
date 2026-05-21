@@ -19,7 +19,9 @@ var DPGF = {
   _isAOS:        false,
   _infosAffaire: {},
   _cctpTexte:    '',
-  _wbOriginal:   null,   // Workbook AOS original conservé pour export
+  _wbOriginal:   null,
+  _cctpCharge:   false,
+  _dpgfCharge:   false,   // Workbook AOS original conservé pour export
 
   PRIX_MARCHE_DEFAUT: {
     // ── 🧱 Placo / Peinture ──
@@ -177,9 +179,9 @@ var DPGF = {
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn btn-secondary" onclick="DPGF._verifierCCTP()" style="font-size:12px">🔍 Vérification CCTP</button>
-              <button class="btn btn-secondary" onclick="DPGF._exporterExcel()" style="font-size:12px">📥 DPGF complétée</button>
-              <button class="btn btn-secondary" onclick="DPGF._exporterRapportSynthese()" style="font-size:12px">📊 Rapport synthèse</button>
-              <button class="btn btn-primary"   onclick="DPGF._genererDevis()"  style="font-size:12px">📄 Générer devis PlaqPro+</button>
+              <button class="btn btn-secondary" onclick="DPGF._exporterExcel()" style="font-size:12px;opacity:0.4;cursor:not-allowed" disabled title="Chargez CCTP + DPGF">📥 DPGF complétée</button>
+              <button class="btn btn-secondary" onclick="DPGF._exporterRapportSynthese()" style="font-size:12px;opacity:0.4;cursor:not-allowed" disabled title="Chargez CCTP + DPGF">📊 Rapport synthèse</button>
+              <button class="btn btn-primary"   onclick="DPGF._genererDevis()"  style="font-size:12px;opacity:0.4;cursor:not-allowed" disabled title="Chargez CCTP + DPGF">📄 Générer devis PlaqPro+</button>
             </div>
           </div>
 
@@ -375,7 +377,9 @@ ${text.slice(-4000)}`;
       const msgDPGF = lignesPDF.length > 0 ? ` + ${lignesPDF.length} lignes DPGF` : '';
       if (statusEl) statusEl.innerHTML = `✅ <strong>${nom}</strong><br><span style="color:var(--text-tertiary)">${this._exigencesCCTP.length} exigences${msgDPGF}</span>`;
       if (zoneEl) zoneEl.style.borderColor = '#2DD4A0';
-      App.toast(`✅ PDF analysé — ${this._exigencesCCTP.length} exigences + ${lignesPDF.length} lignes DPGF`, 'success');
+      this._cctpCharge = true;
+      this._verifierPret();
+            App.toast(`✅ PDF analysé — ${this._exigencesCCTP.length} exigences + ${lignesPDF.length} lignes DPGF`, 'success');
 
     } catch (err) {
       if (statusEl) statusEl.textContent = '⚠️ Analyse partielle — ' + err.message;
@@ -536,7 +540,10 @@ ${dpgfSlice}` }],
       const nbExig = this._exigencesCCTP.length;
       if (statusEl) statusEl.innerHTML = `✅ <strong>${nom}</strong><br><span style="color:var(--text-tertiary)">${nbExig} exigences + ${nbLig} lignes DPGF</span>`;
       if (zoneEl) zoneEl.style.borderColor = '#A78BFA';
-      App.toast(`✅ Analyse complète — ${nbExig} exigences CCTP + ${nbLig} lignes DPGF`, 'success');
+      this._cctpCharge = true;
+      this._dpgfCharge = true;
+      this._verifierPret();
+            App.toast(`✅ Analyse complète — ${nbExig} exigences CCTP + ${nbLig} lignes DPGF`, 'success');
 
     } catch(err) {
       if (statusEl) statusEl.textContent = '⚠️ Erreur : ' + err.message;
@@ -546,8 +553,9 @@ ${dpgfSlice}` }],
 
   // ── Traitement fichier ────────────────────────────────────
   async _handleFile(file) {
-    this._fileName = file.name;
-    this._lignes   = [];
+    this._fileName   = file.name;
+    this._lignes     = [];
+    this._dpgfCharge = false;
     this._showLoading(true, 'Lecture du fichier…');
 
     const ext = file.name.split('.').pop().toLowerCase();
@@ -583,6 +591,8 @@ ${dpgfSlice}` }],
     }
 
     this._showLoading(false);
+    this._dpgfCharge = true;
+    this._verifierPret();
     this._afficherTableau();
   },
 
