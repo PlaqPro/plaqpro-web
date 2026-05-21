@@ -410,7 +410,19 @@ ${text.slice(-4000)}`;
     });
     const dpgfZone = document.getElementById('dpgf-upload-zone');
     if (dpgfZone && !this._dpgfCharge) dpgfZone.style.borderColor = 'rgba(79,142,247,0.4)';
-    if (pret) App.toast('✅ CCTP + DPGF chargés — rapport et export disponibles !', 'success');
+    if (pret) {
+      ['btn-dpgf-export','btn-dpgf-rapport','btn-dpgf-devis'].forEach(id => {
+        const b = document.getElementById(id);
+        if (b) { b.disabled = false; b.style.opacity='1'; b.style.cursor='pointer'; b.removeAttribute('disabled'); }
+      });
+      const dpgfStatus2 = document.getElementById('dpgf-status');
+      if (dpgfStatus2) { dpgfStatus2.innerHTML = '✅ DPGF chargé'; dpgfStatus2.style.color = '#2DD4A0'; }
+      const cctpStatus2 = document.getElementById('cctp-status');
+      if (cctpStatus2 && cctpStatus2.innerHTML.includes('attente')) {
+        cctpStatus2.innerHTML = '✅ CCTP chargé'; cctpStatus2.style.color = '#2DD4A0';
+      }
+      App.toast('✅ CCTP + DPGF chargés — rapport et export disponibles !', 'success');
+    }
   },
 
   // ── Rapprochement CCTP ↔ DPGF ────────────────────────────
