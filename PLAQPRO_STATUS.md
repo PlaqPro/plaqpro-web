@@ -1,3 +1,18 @@
+## ⏱ CHECKPOINT 21/05/2026 06:00
+### Terminé ce matin ✅
+- Fix bouton Main d'oeuvre (apostrophe onclick)
+- Écran Base prix de marché : 6 corps de métier (68 postes)
+- Boutons filtres par corps : Placo/Elec/Plomb/Menu/Carrelage/Divers
+- Colonnes PU Vente + PU Sous-traitant
+- Sauvegarde localStorage plaqpro_prix_marche
+
+### Prochaine étape
+- TVA auto-liquidée : paramètre par chantier/client
+- Export DPGF remplie avec prix ENT dans colonnes AOS
+- Utiliser puST dans module DPGF
+
+---
+
 ## ⏱ CHECKPOINT FIN DE JOURNÉE 20/05/2026
 ### Module DPGF — État final
 - Scénario 1 ✅ : CCTP PDF + DPGF Excel séparés — 100% fonctionnel
