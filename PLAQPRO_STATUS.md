@@ -1,4 +1,18 @@
 ﻿## ⏱ CHECKPOINT 21/05/2026
+### Terminé aujourd'hui ✅
+- TVA auto-liquidée devis + factures + PDF
+- Export DPGF complétée format AOS pro
+- Workflow CCTP+DPGF obligatoires — boutons grisés jusqu'au chargement complet
+- Fix pm.forEach → Object.entries
+- Fix sélecteur boutons via IDs
+- Fix autofill fond jaune login
+
+### Prochaine étape
+1. Calcul express multi-corps
+2. Sauvegarde cloud Google Drive
+3. PlaqTetris
+
+---## ⏱ CHECKPOINT 21/05/2026
 ### TVA auto-liquidée ✅ TERMINÉE
 - Select TVA 0% dans devis
 - Ligne TVA masquée quand 0%
@@ -500,4 +514,5 @@ Footer (fixe)
 ---
 
 *DerniÃ¨re mise Ã  jour : 20/05/2026*
+
 
