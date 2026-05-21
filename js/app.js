@@ -60,6 +60,7 @@ const App = {
       thermique:     () => Pages.thermique(),
       sectionCable:  () => Pages.sectionCable(),
       tempsChantier: () => Pages.tempsChantier(),
+      linteau:       () => Pages.linteau(),
     };
 
     if (pages[page]) {
@@ -126,6 +127,7 @@ const App = {
       { page: 'thermique',     icon: '<i class="ph ph-thermometer"></i>', label: 'Thermique RE2020' },
       { page: 'sectionCable',  icon: '<i class="ph ph-lightning"></i>', label: 'Section câble' },
       { page: 'tempsChantier', icon: '<i class="ph ph-timer"></i>', label: 'Temps chantier' },
+      { page: 'linteau',       icon: '<i class="ph ph-bridge"></i>', label: 'Linteau' },
 
       { section: '⚙️ Paramètres' },
       { page: 'produits',    icon: '<i class="ph ph-tag"></i>', label: 'Base tarifaire' },
