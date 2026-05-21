@@ -46,7 +46,8 @@ var DPGF = {
   },
 
   getPrixMarche() {
-    return Object.entries(this.PRIX_MARCHE_DEFAUT).map(([k, v]) => ({ designation: k, pu: v.pu }));
+    const saved = localStorage.getItem('plaqpro_prix_marche');
+    return saved ? { ...this.PRIX_MARCHE_DEFAUT, ...JSON.parse(saved) } : { ...this.PRIX_MARCHE_DEFAUT };
   },
 
   matcherPrixMarche(designation) {
