@@ -604,6 +604,8 @@ ${dpgfSlice}` }],
     this._rawText = text;
 
     if (text === '__AOS_PARSED__') {
+      this._dpgfCharge = true;
+      this._verifierPret();
       App.toast('✅ Format AOS détecté — ' + this._lignes.length + ' lignes analysées', 'success');
     } else {
       this._showLoading(true, 'Analyse IA en cours…');
