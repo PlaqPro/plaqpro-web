@@ -159,6 +159,7 @@
   <script src="js/resistance_feu.js"></script>
   <script src="js/thermique.js"></script>
   <script src="js/section_cable.js"></script>
+  <script src="js/temps_chantier.js"></script>
 
   <script>
   // Etendre la sidebar et navigate pour inclure le calculateur
@@ -202,6 +203,7 @@
       { page: 'resistanceFeu', icon: '<i class="ph ph-fire"></i>', label: 'Résistance au feu' },
       { page: 'thermique',     icon: '<i class="ph ph-thermometer"></i>', label: 'Thermique RE2020' },
       { page: 'sectionCable',  icon: '<i class="ph ph-lightning"></i>', label: 'Section câble' },
+      { page: 'tempsChantier', icon: '<i class="ph ph-timer"></i>', label: 'Temps chantier' },
     ];
 
     const sidebar = document.getElementById('sidebar-nav');
@@ -273,6 +275,7 @@
         resistanceFeu: '🔥 Résistance au Feu — EI30 à EI120',
         thermique:     '🌡️ Déperditions Thermiques — RE2020',
         sectionCable:  '💡 Section Câble — NF C15-100',
+        tempsChantier: '⏱️ Temps Chantier — Ratios Professionnels',
         exterieur:   '🌿 Pack Extérieur & Paysagisme',
         dpgf:        "🏛 DPGF — Appels d'offres",
         aide:        '❓ Guide & Aide',
@@ -315,6 +318,7 @@
         resistanceFeu: function() { return Pages.resistanceFeu(); },
         thermique:     function() { return Pages.thermique(); },
         sectionCable:  function() { return Pages.sectionCable(); },
+        tempsChantier: function() { return Pages.tempsChantier(); },
         exterieur:   function() { return Pages.exterieur(); },
         aide:        function() { return Pages.aide(); },
         chantier_mobile: function() { return Pages.chantier_mobile(); },
