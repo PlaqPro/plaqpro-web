@@ -156,6 +156,7 @@
   <script src="js/charges.js"></script>
   <script src="js/rentabilite.js"></script>
   <script src="js/acoustique.js"></script>
+  <script src="js/resistance_feu.js"></script>
 
   <script>
   // Etendre la sidebar et navigate pour inclure le calculateur
@@ -196,6 +197,7 @@
       { page: 'charges',     icon: '<i class="ph ph-scales"></i>', label: 'Coeff. de charge' },
       { page: 'rentabilite', icon: '<i class="ph ph-chart-line-up"></i>', label: 'Rentabilité' },
       { page: 'acoustique',  icon: '<i class="ph ph-speaker-high"></i>', label: 'Acoustique Rw' },
+      { page: 'resistanceFeu', icon: '<i class="ph ph-fire"></i>', label: 'Résistance au feu' },
     ];
 
     const sidebar = document.getElementById('sidebar-nav');
@@ -264,6 +266,7 @@
         charges:     '📐 Coefficient de charge — Eurocode 1',
         rentabilite: '💰 Simulateur Marge & Rentabilité',
         acoustique:  '🔊 Calcul Acoustique Rw',
+        resistanceFeu: '🔥 Résistance au Feu — EI30 à EI120',
         exterieur:   '🌿 Pack Extérieur & Paysagisme',
         dpgf:        "🏛 DPGF — Appels d'offres",
         aide:        '❓ Guide & Aide',
@@ -303,6 +306,7 @@
         charges:     function() { return Pages.charges(); },
         rentabilite: function() { return Pages.rentabilite(); },
         acoustique:  function() { return Pages.acoustique(); },
+        resistanceFeu: function() { return Pages.resistanceFeu(); },
         exterieur:   function() { return Pages.exterieur(); },
         aide:        function() { return Pages.aide(); },
         chantier_mobile: function() { return Pages.chantier_mobile(); },

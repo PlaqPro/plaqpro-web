@@ -56,6 +56,7 @@ const App = {
       charges:     () => Pages.charges(),
       rentabilite: () => Pages.rentabilite(),
       acoustique:  () => Pages.acoustique(),
+      resistanceFeu: () => Pages.resistanceFeu(),
     };
 
     if (pages[page]) {
@@ -118,6 +119,7 @@ const App = {
       { page: 'charges',     icon: '<i class="ph ph-scales"></i>', label: 'Coeff. de charge' },
       { page: 'rentabilite', icon: '<i class="ph ph-chart-line-up"></i>', label: 'Rentabilité' },
       { page: 'acoustique',  icon: '<i class="ph ph-speaker-high"></i>', label: 'Acoustique Rw' },
+      { page: 'resistanceFeu', icon: '<i class="ph ph-fire"></i>', label: 'Résistance au feu' },
 
       { section: '⚙️ Paramètres' },
       { page: 'produits',    icon: '<i class="ph ph-tag"></i>', label: 'Base tarifaire' },
