@@ -19,6 +19,7 @@ var DPGF = {
   _isAOS:        false,
   _infosAffaire: {},
   _cctpTexte:    '',
+  _wbOriginal:   null,   // Workbook AOS original conservé pour export
 
   PRIX_MARCHE_DEFAUT: {
     // ── 🧱 Placo / Peinture ──
@@ -607,7 +608,8 @@ ${dpgfSlice}` }],
           }
 
           if (headerRow >= 0) {
-            DPGF._isAOS = true;
+            DPGF._isAOS      = true;
+            DPGF._wbOriginal = wb;          // Sauvegarder le workbook original
             DPGF._parseAOS(rows, headerRow);
             DPGF._rapprocher();
             resolve('__AOS_PARSED__');
@@ -1494,6 +1496,12 @@ Réponds en JSON strict : { "alertes": [{"ligne":"...", "probleme":"...","niveau
   _exporterExcel() {
     if (typeof XLSX === 'undefined') { App.toast('SheetJS non disponible', 'error'); return; }
 
+    // Si format AOS et workbook original disponible → remplir le fichier original
+    if (this._isAOS && this._wbOriginal) {
+      this._exporterAOSOriginal();
+      return;
+    }
+
     const profil  = DB.getProfil ? DB.getProfil() : {};
     const config  = DB.getConfig ? DB.getConfig() : {};
     const tva     = profil.tvaPro ? profil.tvaPro / 100 : 0.20;
@@ -1606,6 +1614,67 @@ Réponds en JSON strict : { "alertes": [{"ligne":"...", "probleme":"...","niveau
     XLSX.utils.book_append_sheet(wb, ws, 'DPGF complétée');
     XLSX.writeFile(wb, 'DPGF_' + (infos.ref || Date.now()) + '_' + (config.nomEntreprise || 'entreprise').replace(/\s+/g,'_') + '.xlsx');
     App.toast('📥 DPGF complétée exportée', 'success');
+  },
+
+  // ── Export DPGF AOS original complété ────────────────────
+  _exporterAOSOriginal() {
+    const wb  = this._wbOriginal;
+    const wsName = wb.SheetNames[0];
+    const ws  = wb.Sheets[wsName];
+    const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+
+    // Retrouver la ligne header
+    let headerRow = -1;
+    rows.forEach((row, i) => {
+      const r = row.map(c => String(c).toLowerCase());
+      if (r.some(c => c.includes('désignation') || c.includes('designation')) &&
+          r.some(c => c.includes('unité') || c.includes('unite')) &&
+          r.some(c => c.includes('qté') || c.includes('qte'))) {
+        headerRow = i;
+      }
+    });
+    if (headerRow < 0) { App.toast('Format AOS non reconnu', 'error'); return; }
+
+    const headers = rows[headerRow].map(c => String(c).toLowerCase().trim());
+    const iDesig  = headers.findIndex(h => h.includes('désignation') || h.includes('designation'));
+    const iQteENT = headers.findIndex(h => (h.includes('qté') || h.includes('qte')) && h.includes('ent'));
+    const iPU     = headers.findIndex(h => h === 'pu' || h.includes('prix unit'));
+
+    if (iQteENT < 0 && iPU < 0) { App.toast('Colonnes Qté ENT / PU non trouvées', 'error'); return; }
+
+    // Construire un index désignation → ligne AATB
+    const idx = {};
+    this._lignes.forEach(l => { idx[l.designation?.trim().toLowerCase()] = l; });
+
+    // Remplir les colonnes ENT et PU
+    let remplies = 0;
+    rows.forEach((row, i) => {
+      if (i <= headerRow) return;
+      const desig = String(row[iDesig] || '').trim();
+      if (!desig) return;
+      const ligne = idx[desig.toLowerCase()];
+      if (!ligne) return;
+      const puAATB = this._puFinal(ligne);
+      const qte    = ligne.quantite || 0;
+      if (iQteENT >= 0) {
+        const ref = XLSX.utils.encode_cell({ r: i, c: iQteENT });
+        ws[ref] = { t:'n', v: qte };
+        ws[ref].s = { font:{ bold:true, color:{rgb:'1F3864'} }, fill:{ patternType:'solid', fgColor:{rgb:'DCE6F1'}, bgColor:{rgb:'DCE6F1'} } };
+      }
+      if (iPU >= 0 && puAATB > 0) {
+        const ref = XLSX.utils.encode_cell({ r: i, c: iPU });
+        ws[ref] = { t:'n', v: puAATB, z:'#,##0.00' };
+        ws[ref].s = { font:{ bold:true, color:{rgb:'1F3864'} }, fill:{ patternType:'solid', fgColor:{rgb:'DCE6F1'}, bgColor:{rgb:'DCE6F1'} } };
+        remplies++;
+      }
+    });
+
+    const infos  = this._infosAffaire || {};
+    const config = DB.getConfig ? DB.getConfig() : {};
+    const nom    = (config.nomEntreprise || 'entreprise').replace(/\s+/g,'_');
+    const ref    = infos.ref || Date.now();
+    XLSX.writeFile(wb, 'DPGF_' + ref + '_' + nom + '.xlsx');
+    App.toast('📥 DPGF originale complétée — ' + remplies + ' prix renseignés', 'success');
   },
 
   // ── Générer devis PlaqPro+ ────────────────────────────────
