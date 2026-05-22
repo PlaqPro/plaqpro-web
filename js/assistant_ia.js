@@ -216,39 +216,60 @@ Tu réponds en français, de façon courte et pratique.`,
   },
 
   _promptCle() {
-    const id = 'ia-cle-' + Date.now();
-    this._addMessage('bot', `
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div>🔑 <strong>Entrez votre clé Groq gratuite :</strong></div>
-        <input id="${id}" type="password" placeholder="gsk_..."
-          style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 10px;color:#F0F2F8;font-size:12px;outline:none;width:100%;box-sizing:border-box"
-          onkeydown="if(event.key==='Enter')AssistantIA._validerCle('${id}')">
-        <button onclick="AssistantIA._validerCle('${id}')"
-          style="background:linear-gradient(135deg,#5B9BFF,#3B7DE8);border:none;border-radius:8px;padding:7px 14px;color:white;font-size:12px;cursor:pointer;align-self:flex-start">
-          Valider
-        </button>
-        <a href="https://console.groq.com" target="_blank"
-          style="color:#4F8EF7;font-size:11px;text-decoration:none">
-          Obtenez une clé gratuite sur console.groq.com →
-        </a>
+    this._addMessage('bot', `<div style="padding:20px;max-width:340px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:40px;margin-bottom:8px">🤖</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:4px">Activez l'Assistant IA</div>
+      <div style="font-size:13px;color:var(--text-secondary)">Clé Groq gratuite — 2 minutes pour l'obtenir</div>
+    </div>
+    <div style="background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.3);border-radius:8px;padding:14px;margin-bottom:16px;font-size:12px">
+      <div style="font-weight:700;margin-bottom:8px;color:var(--accent)">📋 Comment obtenir votre clé gratuite :</div>
+      <div style="line-height:1.8">
+        1️⃣ Cliquez sur le lien ci-dessous<br>
+        2️⃣ Créez un compte gratuit (email suffit)<br>
+        3️⃣ Cliquez "Create API Key"<br>
+        4️⃣ Copiez la clé et collez-la ici<br>
+        <span style="color:#10b981;font-weight:600">✅ Gratuit — 14 400 requêtes/jour</span>
       </div>
-    `);
-    setTimeout(() => document.getElementById(id)?.focus(), 100);
+    </div>
+    <a href="https://console.groq.com/keys" target="_blank"
+      style="display:block;background:var(--accent);color:#fff;text-align:center;padding:10px;border-radius:6px;font-weight:600;font-size:13px;text-decoration:none;margin-bottom:14px">
+      🔗 Obtenir ma clé gratuite sur console.groq.com →
+    </a>
+    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;font-weight:600">🔑 Collez votre clé ici :</div>
+    <input type="password" id="ia-groq-input" placeholder="gsk_xxxxxxxxxxxxxxxxxxxx"
+      style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text-primary);font-size:13px;margin-bottom:10px;box-sizing:border-box">
+    <button onclick="AssistantIA.validerCle()"
+      style="width:100%;background:var(--accent);color:#fff;border:none;padding:12px;border-radius:6px;font-weight:700;font-size:14px;cursor:pointer">
+      ✅ Activer l'Assistant IA
+    </button>
+    <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text-tertiary)">
+      🔒 Votre clé est stockée uniquement sur votre appareil
+    </div>
+  </div>`);
+    setTimeout(() => document.getElementById('ia-groq-input')?.focus(), 100);
   },
 
-  _validerCle(inputId) {
-    const input = document.getElementById(inputId);
-    if (!input) return;
-    const cle = input.value.trim();
-    if (!cle || !cle.startsWith('gsk_')) {
-      input.style.borderColor = '#F75B5B';
-      input.placeholder = 'Clé invalide — commence par gsk_';
-      input.value = '';
+  validerCle() {
+    const input = document.getElementById('ia-groq-input');
+    const cle = (input?.value || '').trim();
+    if (!cle.startsWith('gsk_') || cle.length < 20) {
+      alert('❌ Clé invalide — elle doit commencer par gsk_ et faire au moins 20 caractères');
       return;
     }
+    // Sauvegarder dans tous les emplacements utilisés par PlaqPro+
     localStorage.setItem('plaqpro_groq_key', cle);
-    this._checkGroq();
-    this._addMessage('bot', '✅ <strong>Clé enregistrée !</strong> Posez maintenant votre question.');
+    localStorage.setItem('groq_api_key', cle);
+    localStorage.setItem('plaqpro_groq', cle);
+    var config = JSON.parse(localStorage.getItem('plaqpro_config') || '{}');
+    config.groqApiKey = cle;
+    config.groqKey    = cle;
+    config.apiKeyGroq = cle;
+    localStorage.setItem('plaqpro_config', JSON.stringify(config));
+    // Rafraîchir l'assistant
+    AssistantIA._cle = cle;
+    const wrap = document.getElementById('ia-wrap');
+    if (wrap) { wrap.innerHTML = ''; AssistantIA.init(wrap); }
   },
 
   // ── Styles ────────────────────────────────────────────────

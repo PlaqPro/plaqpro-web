@@ -382,7 +382,17 @@ ${text.slice(-4000)}`;
             App.toast(`✅ PDF analysé — ${this._exigencesCCTP.length} exigences + ${lignesPDF.length} lignes DPGF`, 'success');
 
     } catch (err) {
-      if (statusEl) statusEl.textContent = '⚠️ Analyse partielle — ' + err.message;
+      if (statusEl) {
+        if (err.message === 'Clé Groq requise') {
+          statusEl.innerHTML = '<div style="background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.3);border-radius:8px;padding:16px;margin:16px 0;font-size:13px">'
+            + '<div style="font-weight:700;color:var(--accent);margin-bottom:8px">🔑 Clé Groq requise pour l\'analyse IA</div>'
+            + '<div style="margin-bottom:10px;font-size:12px;color:var(--text-secondary)">Configurez votre clé dans <b>⚙️ Configuration → Clé Groq</b> ou dans l\'Assistant IA</div>'
+            + '<button class="btn btn-primary btn-sm" onclick="App.navigate(\'config\')">⚙️ Aller à la Configuration</button>'
+            + '</div>';
+        } else {
+          statusEl.textContent = '⚠️ Analyse partielle — ' + err.message;
+        }
+      }
       App.toast('CCTP chargé sans analyse IA : ' + err.message, 'warning');
     }
   },
@@ -584,7 +594,17 @@ ${dpgfSlice}` }],
             App.toast(`✅ Analyse complète — ${nbExig} exigences CCTP + ${nbLig} lignes DPGF`, 'success');
 
     } catch(err) {
-      if (statusEl) statusEl.textContent = '⚠️ Erreur : ' + err.message;
+      if (statusEl) {
+        if (err.message === 'Clé Groq requise') {
+          statusEl.innerHTML = '<div style="background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.3);border-radius:8px;padding:16px;margin:16px 0;font-size:13px">'
+            + '<div style="font-weight:700;color:var(--accent);margin-bottom:8px">🔑 Clé Groq requise pour l\'analyse IA</div>'
+            + '<div style="margin-bottom:10px;font-size:12px;color:var(--text-secondary)">Configurez votre clé dans <b>⚙️ Configuration → Clé Groq</b> ou dans l\'Assistant IA</div>'
+            + '<button class="btn btn-primary btn-sm" onclick="App.navigate(\'config\')">⚙️ Aller à la Configuration</button>'
+            + '</div>';
+        } else {
+          statusEl.textContent = '⚠️ Erreur : ' + err.message;
+        }
+      }
       App.toast('Erreur analyse : ' + err.message, 'error');
     }
   },

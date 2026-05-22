@@ -1567,6 +1567,9 @@ const Pages = {
                 style="font-family:var(--font-mono);font-size:13px;flex:1">
               <button class="btn btn-secondary" onclick="Pages.toggleGroqKeyVisibility()" title="Afficher/masquer">👁</button>
             </div>
+            <div style="margin-top:6px;font-size:11px;color:var(--text-tertiary)">
+              🔒 Stockée sur votre appareil uniquement — <a href="https://console.groq.com/keys" target="_blank" style="color:var(--accent)">Obtenir une clé gratuite →</a>
+            </div>
           </div>
           <div id="groq-test-result" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:var(--radius-md);font-size:13px"></div>
           <div style="display:flex;gap:8px">
