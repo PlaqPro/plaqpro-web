@@ -81,6 +81,18 @@ var DevisMulti = {
       + '</div>'
       + '<div id="dm-alertes-regles" style="margin-bottom:16px">' + DevisMulti._alertesRegles() + '</div>'
       + '<div id="dm-recap-metrages" style="display:none"></div>'
+      + '<div id="dm-ia-zone" style="margin-bottom:16px">'
+      + '<div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">🤖 Assistant IA — Analyse des travaux</div>'
+      + '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">Décrivez les travaux en langage naturel — l\'IA génère le devis avec matériaux et quantités</div>'
+      + '<textarea id="dm-ia-descriptif" class="form-control" rows="3" style="font-size:13px;margin-bottom:10px" placeholder="Ex: doublage sur mur existant, 3 cloisons de 3m×2.50, mise en peinture murs et plafond, revêtement sol vinyl rouleau, 2 fenêtres 120×120 et une porte 220×90 fourniture..."></textarea>'
+      + '<div style="display:flex;gap:8px;align-items:center">'
+      + '<button class="btn btn-primary" onclick="DevisMulti._analyserIA()" id="dm-ia-btn">🤖 Analyser et générer le devis</button>'
+      + '<span id="dm-ia-status" style="font-size:12px;color:var(--text-tertiary)"></span>'
+      + '</div>'
+      + '<div id="dm-ia-resultat" style="margin-top:12px"></div>'
+      + '</div>'
+      + '</div>'
       // Barre en-tête
       + '<div class="dm-header-bar">'
       + '<div class="dm-header-row">'
@@ -448,6 +460,151 @@ var DevisMulti = {
       allCtx[k] = [...new Set(allCtx[k])];
     });
     return ReglesEngine.renderAlertes(allCtx);
+  },
+
+  _analyserIA: async function() {
+    var descriptif = (document.getElementById('dm-ia-descriptif')?.value || '').trim();
+    if (!descriptif) { App.toast('Saisissez un descriptif des travaux', 'warning'); return; }
+
+    var config = DB.getConfig();
+    var groqKey = config.groqApiKey || config.groqKey || config.apiKeyGroq || '';
+    if (!groqKey) {
+      App.toast('Clé Groq manquante — configurez-la dans ⚙️ Configuration', 'error');
+      return;
+    }
+
+    var metrages = DevisMulti._state.metrages || {};
+    var mursTotal    = metrages.totalMurs    || 0;
+    var solTotal     = metrages.totalSol     || 0;
+    var plafondTotal = metrages.totalPlafond || 0;
+    var pieces       = metrages.pieces       || [];
+
+    var btn    = document.getElementById('dm-ia-btn');
+    var status = document.getElementById('dm-ia-status');
+    if (btn) btn.disabled = true;
+    if (status) status.textContent = '⏳ Analyse en cours...';
+
+    var prompt = `Tu es un expert en chiffrage BTP pour artisans plaquistes/peintres.
+
+Métrés du chantier :
+- Surface murs totale : ${mursTotal} m²
+- Surface sol totale  : ${solTotal} m²
+- Surface plafond     : ${plafondTotal} m²
+- Pièces : ${pieces.map(function(p){ return p.nom + ' (' + p.l + 'x' + p.la + 'x' + p.h + 'm)'; }).join(', ')}
+
+Descriptif des travaux : "${descriptif}"
+
+Génère un devis structuré en JSON UNIQUEMENT (pas de texte avant ou après) avec ce format exact :
+{
+  "sections": [
+    {
+      "key": "cloisons",
+      "icon": "🧱",
+      "titre": "Cloisons",
+      "lignes": [
+        {
+          "designation": "Cloison M48 BA13 double face",
+          "qte": 22.5,
+          "unite": "m²",
+          "prix_unitaire_ht": 45,
+          "detail": "3 cloisons de 3m×2.50m"
+        }
+      ]
+    }
+  ],
+  "recommandations": [
+    "Prévoir bande armée aux angles sortants",
+    "Vérifier planéité support avant doublage"
+  ],
+  "alertes": [
+    "DTU 25.41 : hauteur > 2.5m — vérifier ossature M70"
+  ],
+  "resume": "Devis généré : cloisons 22.5m², peinture 45m², sol 24m²"
+}
+
+Règles importantes :
+- Déduire les ouvertures (fenêtres, portes) des surfaces de peinture
+- Fenêtre 120×120 = 1.44 m² à déduire par fenêtre
+- Porte 220×90 = 1.98 m² à déduire par porte
+- Pour le doublage : utiliser la surface murs totale du chantier
+- Pour la peinture murs : surface murs - ouvertures
+- Pour la peinture plafond : surface plafond du chantier
+- Pour le sol : surface sol du chantier
+- Utiliser les prix indicatifs du marché français (MO + matériaux)
+- Keys possibles : cloisons, plafond, peinture, electricite, plomberie, carrelage, sol, demolition, menuiserie, autre
+- Pour la fourniture de porte : key "menuiserie", prix indicatif selon type
+- Toujours inclure la main d'oeuvre dans le prix unitaire HT`;
+
+    try {
+      var resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: 2000,
+          temperature: 0.1,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      var data = await resp.json();
+      var text = (data.choices?.[0]?.message?.content || '').trim();
+
+      // Nettoyer le JSON
+      text = text.replace(/```json/g,'').replace(/```/g,'').trim();
+      var result = JSON.parse(text);
+
+      // Injecter les sections dans le state
+      var state = DevisMulti._state;
+      var ajoutees = 0;
+
+      (result.sections || []).forEach(function(sec) {
+        var existing = state.sections.find(function(s) { return s.key === sec.key; });
+        if (!existing) {
+          existing = { key: sec.key, icon: sec.icon || '📋', titre: sec.titre, tva: 10, lignes: [] };
+          state.sections.push(existing);
+        }
+        (sec.lignes || []).forEach(function(l) {
+          existing.lignes.push({
+            id:          DevisMulti._uid(),
+            ref:         '',
+            designation: l.designation + (l.detail ? ' (' + l.detail + ')' : ''),
+            unite:       l.unite || 'm²',
+            qte:         parseFloat(l.qte) || 0,
+            prix:        parseFloat(l.prix_unitaire_ht) || 0,
+          });
+          ajoutees++;
+        });
+      });
+
+      // Afficher le résultat
+      var resultatDiv = document.getElementById('dm-ia-resultat');
+      if (resultatDiv) {
+        var html = '';
+        if (result.resume)
+          html += '<div style="background:rgba(79,142,247,.1);border-left:3px solid var(--accent);padding:10px 14px;border-radius:0 6px 6px 0;font-size:13px;font-weight:600;margin-bottom:10px">✅ ' + result.resume + '</div>';
+        if (result.alertes && result.alertes.length)
+          html += result.alertes.map(function(a) {
+            return '<div style="background:rgba(245,158,11,.08);border-left:3px solid #f59e0b;padding:8px 12px;border-radius:0 6px 6px 0;margin-bottom:6px;font-size:12px">🟡 ' + a + '</div>';
+          }).join('');
+        if (result.recommandations && result.recommandations.length)
+          html += result.recommandations.map(function(r) {
+            return '<div style="background:rgba(16,185,129,.08);border-left:3px solid #10b981;padding:8px 12px;border-radius:0 6px 6px 0;margin-bottom:6px;font-size:12px">💡 ' + r + '</div>';
+          }).join('');
+        resultatDiv.innerHTML = html;
+      }
+
+      // Rafraîchir les sections
+      DevisMulti._renderSections();
+      if (status) status.textContent = '✅ ' + ajoutees + ' lignes générées';
+      App.toast('🤖 Devis généré — ' + ajoutees + ' lignes ajoutées !', 'success');
+
+    } catch(e) {
+      if (status) status.textContent = '❌ Erreur analyse';
+      App.toast('Erreur IA : ' + e.message, 'error');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
   },
 
   _nbLignes: function() {
