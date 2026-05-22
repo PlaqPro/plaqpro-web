@@ -1,3 +1,11 @@
+﻿/**
+ * PlaqPro+ — Logiciel de gestion pour artisans BTP
+ * Copyright (c) 2026 Gabriel A. — AATB — Saint-Priest (69)
+ * Tous droits reserves — All rights reserved
+ * Toute reproduction, copie, distribution ou modification
+ * interdite sans autorisation ecrite de l auteur.
+ * Depot APP en cours — Marque PlaqPro+ INPI en cours
+ */
 // ============================================================
 //  PLAQPRO+ — Dimensionnement Linteau
 //  Calcul portée, charge, section béton/métal
