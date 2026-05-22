@@ -80,6 +80,7 @@ var DevisMulti = {
       + '</div>'
       + '</div>'
       + '<div id="dm-alertes-regles" style="margin-bottom:16px">' + DevisMulti._alertesRegles() + '</div>'
+      + '<div id="dm-recap-metrages" style="display:none"></div>'
       // Barre en-tête
       + '<div class="dm-header-bar">'
       + '<div class="dm-header-row">'
@@ -93,7 +94,7 @@ var DevisMulti = {
       + '<div class="dm-header-field">'
       + '<label class="dm-label">Chantier</label>'
       + '<div style="display:flex;gap:6px;align-items:center">'
-      + '<select class="form-control dm-sel" id="dm-sel-chantier" onchange="DevisMulti._state.chantierId=this.value" style="flex:1">' + optCha + '</select>'
+      + '<select class="form-control dm-sel" id="dm-sel-chantier" onchange="DevisMulti._onChantierChange(this.value)" style="flex:1">' + optCha + '</select>'
       + '<button class="btn btn-secondary btn-sm" onclick="DevisMulti._nouveauChantier()" title="Nouveau chantier">+</button>'
       + '</div>'
       + '</div>'
@@ -157,6 +158,121 @@ var DevisMulti = {
     var wrap = document.getElementById('dm-wrap');
     if (wrap) { wrap.innerHTML = DevisMulti._buildHTML(); DevisMulti._bindEvents(); }
     App.toast('Chantier ' + nom + ' créé ✅', 'success');
+  },
+
+  _onChantierChange: function(chantierId) {
+    DevisMulti._state.chantierId = chantierId;
+    if (!chantierId) return;
+
+    // Récupérer les métrés du chantier
+    var metrages = DB.getMetragesByChantier(parseInt(chantierId));
+    if (!metrages || metrages.length === 0) return;
+
+    // Calculer les surfaces globales
+    var totalMurs    = 0;
+    var totalSol     = 0;
+    var totalPlafond = 0;
+    var pieces       = [];
+
+    metrages.forEach(function(m) {
+      var surfMurs    = 2 * (m.longueur + m.largeur) * m.hauteur;
+      var surfSol     = m.longueur * m.largeur;
+      var surfPlafond = m.longueur * m.largeur;
+      totalMurs    += surfMurs;
+      totalSol     += surfSol;
+      totalPlafond += surfPlafond;
+      pieces.push({
+        nom:     m.piece || 'Pièce',
+        l:       m.longueur,
+        la:      m.largeur,
+        h:       m.hauteur,
+        murs:    Math.round(surfMurs * 10) / 10,
+        sol:     Math.round(surfSol * 10) / 10,
+        plafond: Math.round(surfPlafond * 10) / 10,
+      });
+    });
+
+    totalMurs    = Math.round(totalMurs * 10) / 10;
+    totalSol     = Math.round(totalSol * 10) / 10;
+    totalPlafond = Math.round(totalPlafond * 10) / 10;
+
+    // Afficher le récap métrés
+    var recapDiv = document.getElementById('dm-recap-metrages');
+    if (recapDiv) {
+      recapDiv.style.display = 'block';
+      recapDiv.innerHTML =
+          '<div style="background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.3);border-radius:8px;padding:14px;margin-bottom:16px">'
+        + '<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px">📐 Métrés du chantier — importés automatiquement</div>'
+        + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">'
+        + '<div style="text-align:center;background:var(--bg-primary);border-radius:6px;padding:10px">'
+        + '<div style="font-size:20px;font-weight:800;color:var(--accent)">' + totalMurs + ' m²</div>'
+        + '<div style="font-size:11px;color:var(--text-tertiary)">Surface murs</div></div>'
+        + '<div style="text-align:center;background:var(--bg-primary);border-radius:6px;padding:10px">'
+        + '<div style="font-size:20px;font-weight:800;color:#10b981">' + totalSol + ' m²</div>'
+        + '<div style="font-size:11px;color:var(--text-tertiary)">Surface sol</div></div>'
+        + '<div style="text-align:center;background:var(--bg-primary);border-radius:6px;padding:10px">'
+        + '<div style="font-size:20px;font-weight:800;color:#8b5cf6">' + totalPlafond + ' m²</div>'
+        + '<div style="font-size:11px;color:var(--text-tertiary)">Surface plafond</div></div>'
+        + '</div>'
+        + '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px">'
+        + pieces.map(function(p) {
+            return '🏠 <b>' + p.nom + '</b> : ' + p.l + '×' + p.la + '×' + p.h + 'm'
+              + ' — murs ' + p.murs + 'm² / sol ' + p.sol + 'm²';
+          }).join(' &nbsp;|&nbsp; ')
+        + '</div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+        + '<button class="btn btn-secondary btn-sm" onclick="DevisMulti._importerMurs(' + totalMurs + ')">+ Import murs ' + totalMurs + ' m²</button>'
+        + '<button class="btn btn-secondary btn-sm" onclick="DevisMulti._importerSol(' + totalSol + ')">+ Import sol ' + totalSol + ' m²</button>'
+        + '<button class="btn btn-secondary btn-sm" onclick="DevisMulti._importerPlafond(' + totalPlafond + ')">+ Import plafond ' + totalPlafond + ' m²</button>'
+        + '<button class="btn btn-primary btn-sm" onclick="DevisMulti._importerTout(' + totalMurs + ',' + totalSol + ',' + totalPlafond + ')">⚡ Tout importer</button>'
+        + '</div>'
+        + '</div>';
+    }
+
+    // Stocker les métrés dans le state
+    DevisMulti._state.metrages = { totalMurs: totalMurs, totalSol: totalSol, totalPlafond: totalPlafond, pieces: pieces };
+  },
+
+  _importerMurs: function(surface) {
+    DevisMulti._ajouterSectionAvecSurface('cloisons', '🧱', 'Cloisons', surface, 'm²', 'Pose cloisons BA13');
+    App.toast('Murs ' + surface + ' m² importés ✅', 'success');
+  },
+
+  _importerSol: function(surface) {
+    DevisMulti._ajouterSectionAvecSurface('carrelage', '🏠', 'Carrelage / Sol', surface, 'm²', 'Pose carrelage sol');
+    App.toast('Sol ' + surface + ' m² importé ✅', 'success');
+  },
+
+  _importerPlafond: function(surface) {
+    DevisMulti._ajouterSectionAvecSurface('plafond', '⬜', 'Plafond', surface, 'm²', 'Pose plafond suspendu BA13');
+    App.toast('Plafond ' + surface + ' m² importé ✅', 'success');
+  },
+
+  _importerTout: function(murs, sol, plafond) {
+    DevisMulti._ajouterSectionAvecSurface('cloisons', '🧱', 'Cloisons / Murs', murs, 'm²', 'Pose cloisons BA13');
+    DevisMulti._ajouterSectionAvecSurface('peinture', '🎨', 'Peinture murs', murs, 'm²', 'Peinture 2 couches');
+    DevisMulti._ajouterSectionAvecSurface('carrelage', '🏠', 'Carrelage / Sol', sol, 'm²', 'Pose carrelage sol');
+    DevisMulti._ajouterSectionAvecSurface('plafond', '⬜', 'Plafond', plafond, 'm²', 'Pose plafond suspendu BA13');
+    DevisMulti._renderSections();
+    App.toast('⚡ Tout importé — ' + murs + ' m² murs / ' + sol + ' m² sol / ' + plafond + ' m² plafond', 'success');
+  },
+
+  _ajouterSectionAvecSurface: function(key, icon, titre, surface, unite, designation) {
+    var state = DevisMulti._state;
+    // Chercher si section existe déjà
+    var sec = state.sections.find(function(s) { return s.key === key; });
+    if (!sec) {
+      sec = { key: key, icon: icon, titre: titre, tva: 10, lignes: [] };
+      state.sections.push(sec);
+    }
+    sec.lignes.push({
+      id:          DevisMulti._uid(),
+      ref:         '',
+      designation: designation,
+      unite:       unite,
+      qte:         surface,
+      prix:        0,
+    });
   },
 
   _nouveau: function() {
