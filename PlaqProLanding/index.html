@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PlaqPro Web — ERP Plaquiste & Peinture</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Styles print */
+    @media print {
+      .sidebar, .topbar, .btn, .nav-tabs, select, .fiche-nav,
+      #btn-generer-devis, #btn-save-devis, #btn-print-devis { display: none !important; }
+      .main { margin-left: 0 !important; }
+      .card { box-shadow: none !important; border: 1px solid #ddd !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Sidebar ──────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="app-name">🏗 PlaqPro Web</div>
+      <div class="app-version">ERP Plaquiste & Peinture · v2.0</div>
+    </div>
+    <div id="sidebar-nav"></div>
+    <div class="sidebar-footer">
+      <a class="nav-item" href="#" onclick="App.navigate('config')">
+        <span class="nav-icon">⚙️</span>
+        <span>Configuration</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ── Main ─────────────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div id="topbar-title" class="topbar-title">Tableau de bord</div>
+      <div class="topbar-actions">
+        <button class="btn btn-secondary btn-sm" onclick="Pages.modalNouveauClient()">+ Client</button>
+        <button class="btn btn-secondary btn-sm" onclick="Pages.modalNouveauChantier()">+ Chantier</button>
+        <button class="btn btn-primary btn-sm" onclick="Pages.modalNouveauDevis()">+ Devis</button>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div id="content" class="content"></div>
+
+  </main>
+
+  <!-- ── Modal ────────────────────────────────────────────── -->
+  <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-title">Titre</span>
+        <button class="modal-close" onclick="App.closeModal()">✕</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer" id="modal-footer"></div>
+    </div>
+  </div>
+
+  <!-- ── Scripts ──────────────────────────────────────────── -->
+  <script src="js/db.js"></script>
+  <script src="js/calculs.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
