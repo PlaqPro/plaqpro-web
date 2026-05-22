@@ -3,69 +3,464 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PlaqPro Web — ERP Plaquiste & Peinture</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>PlaqPro+ — Le premier assistant intelligent pour artisans BTP</title>
+  <meta name="description" content="Devis IA en 30 secondes. Règles DTU automatiques. 8 outils techniques. Conçu par un artisan, pour les artisans.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,300&display=swap" rel="stylesheet">
   <style>
-    /* Styles print */
-    @media print {
-      .sidebar, .topbar, .btn, .nav-tabs, select, .fiche-nav,
-      #btn-generer-devis, #btn-save-devis, #btn-print-devis { display: none !important; }
-      .main { margin-left: 0 !important; }
-      .card { box-shadow: none !important; border: 1px solid #ddd !important; }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --blue:#0A84FF;--green:#30D158;--orange:#FF9F0A;--red:#FF453A;--purple:#BF5AF2;
+      --bg:#000;--bg1:#070707;--bg2:#0E0E0E;--surface:#141414;--surface2:#1C1C1E;--surface3:#252525;
+      --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--border3:rgba(255,255,255,0.22);
+      --text:#F5F5F7;--text2:#98989D;--text3:#545458;
     }
+    html{scroll-behavior:smooth}
+    body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+    nav{position:fixed;top:0;left:0;right:0;z-index:200;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;background:rgba(0,0,0,0.82);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-bottom:0.5px solid var(--border)}
+    .nav-logo{font-size:18px;font-weight:800;letter-spacing:-0.04em;color:var(--text);text-decoration:none}
+    .nav-logo span{color:var(--blue)}
+    .nav-links{display:flex;align-items:center;gap:32px;list-style:none}
+    .nav-links a{color:var(--text2);text-decoration:none;font-size:13px;font-weight:400;transition:color .15s}
+    .nav-links a:hover{color:var(--text)}
+    .nav-cta{background:var(--blue);color:#fff!important;padding:7px 20px;border-radius:980px;font-weight:600!important;font-size:13px!important;transition:opacity .15s!important}
+    .nav-cta:hover{opacity:.85!important}
+    @media(max-width:768px){nav{padding:0 20px}.nav-links{display:none}}
+    .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:130px 24px 80px;position:relative;overflow:hidden}
+    .orb1{position:absolute;width:800px;height:800px;border-radius:50%;background:radial-gradient(circle,rgba(10,132,255,0.16) 0%,transparent 65%);top:50%;left:50%;transform:translate(-55%,-58%);pointer-events:none}
+    .orb2{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(48,209,88,0.09) 0%,transparent 65%);bottom:5%;right:5%;pointer-events:none}
+    .orb3{position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(191,90,242,0.07) 0%,transparent 65%);bottom:15%;left:5%;pointer-events:none}
+    .hero-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(10,132,255,0.1);border:0.5px solid rgba(10,132,255,0.3);color:#5AABFF;padding:5px 14px;border-radius:980px;font-size:12px;font-weight:600;letter-spacing:0.04em;margin-bottom:32px;animation:fadeUp .7s ease forwards;opacity:0}
+    .hero h1{font-size:clamp(46px,8.5vw,100px);font-weight:800;letter-spacing:-0.055em;line-height:.95;margin-bottom:24px;max-width:950px;animation:fadeUp .7s ease forwards .1s;opacity:0}
+    .hero h1 .grad{background:linear-gradient(130deg,#0A84FF 10%,#30D158 90%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero-sub{font-size:clamp(16px,2.2vw,21px);font-weight:300;color:var(--text2);max-width:580px;line-height:1.65;margin-bottom:44px;animation:fadeUp .7s ease forwards .2s;opacity:0}
+    .hero-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:56px;animation:fadeUp .7s ease forwards .3s;opacity:0}
+    .btn-primary{display:inline-flex;align-items:center;gap:8px;background:var(--blue);color:#fff;padding:15px 32px;border-radius:980px;font-size:16px;font-weight:700;letter-spacing:-0.02em;text-decoration:none;transition:opacity .15s,transform .15s;box-shadow:0 0 40px rgba(10,132,255,0.35)}
+    .btn-primary:hover{opacity:.88;transform:scale(1.02)}
+    .btn-outline{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:0.5px solid var(--border2);color:var(--text);padding:15px 28px;border-radius:980px;font-size:16px;font-weight:500;text-decoration:none;transition:background .15s}
+    .btn-outline:hover{background:rgba(255,255,255,0.09)}
+    .hero-trust{display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center;font-size:12px;color:var(--text3);animation:fadeUp .7s ease forwards .4s;opacity:0}
+    .hero-trust-item{display:flex;align-items:center;gap:5px}
+    .hero-trust-item .dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    .demo-strip{background:var(--bg1);border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);padding:20px 0;overflow:hidden;position:relative}
+    .demo-strip::before,.demo-strip::after{content:'';position:absolute;top:0;bottom:0;width:120px;z-index:2;pointer-events:none}
+    .demo-strip::before{left:0;background:linear-gradient(90deg,var(--bg1),transparent)}
+    .demo-strip::after{right:0;background:linear-gradient(-90deg,var(--bg1),transparent)}
+    .marquee{display:flex;gap:32px;animation:scroll 30s linear infinite;white-space:nowrap}
+    .marquee-item{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--text3);flex-shrink:0}
+    .marquee-item .icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+    .marquee-item .icon.blue{background:rgba(10,132,255,0.15);color:var(--blue)}
+    .marquee-item .icon.green{background:rgba(48,209,88,0.12);color:var(--green)}
+    .marquee-item .icon.orange{background:rgba(255,159,10,0.12);color:var(--orange)}
+    .marquee-item .icon.purple{background:rgba(191,90,242,0.12);color:var(--purple)}
+    .marquee-item .icon.red{background:rgba(255,69,58,0.12);color:var(--red)}
+    @keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+    .numbers{display:flex;justify-content:center;flex-wrap:wrap;background:var(--bg2)}
+    .num-item{text-align:center;padding:48px 64px;border-right:0.5px solid var(--border)}
+    .num-item:last-child{border-right:none}
+    .num-n{font-size:52px;font-weight:800;letter-spacing:-0.05em;background:linear-gradient(135deg,#0A84FF,#30D158);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .num-l{font-size:12px;color:var(--text3);font-weight:400;margin-top:4px;letter-spacing:0.03em;text-transform:uppercase}
+    @media(max-width:600px){.num-item{padding:28px 32px;border-right:none;border-bottom:0.5px solid var(--border)}.num-item:last-child{border-bottom:none}}
+    .section{padding:100px 24px;max-width:1100px;margin:0 auto}
+    .section-center{text-align:center}
+    .eyebrow{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--blue);display:block;margin-bottom:14px}
+    .h2{font-size:clamp(32px,5vw,58px);font-weight:800;letter-spacing:-0.04em;line-height:1.05;margin-bottom:16px}
+    .h2 span{background:linear-gradient(130deg,#0A84FF,#30D158);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .lead{font-size:17px;color:var(--text2);font-weight:300;line-height:1.65;max-width:540px;margin-bottom:56px}
+    .section-center .lead{margin-left:auto;margin-right:auto}
+    .ia-showcase{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;background:var(--surface);border:0.5px solid var(--border);border-radius:24px;padding:48px;position:relative;overflow:hidden;margin-bottom:20px}
+    .ia-showcase::before{content:'';position:absolute;top:-60px;right:-60px;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle,rgba(10,132,255,0.12),transparent);pointer-events:none}
+    .ia-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(10,132,255,0.12);border:0.5px solid rgba(10,132,255,0.25);color:#5AABFF;padding:4px 12px;border-radius:980px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:20px}
+    .ia-title{font-size:28px;font-weight:800;letter-spacing:-0.03em;line-height:1.15;margin-bottom:14px}
+    .ia-desc{font-size:14px;color:var(--text2);line-height:1.7;font-weight:300;margin-bottom:28px}
+    .ia-steps{display:flex;flex-direction:column;gap:10px}
+    .ia-step{display:flex;align-items:flex-start;gap:12px;font-size:13px;color:var(--text2)}
+    .ia-step-num{width:22px;height:22px;border-radius:50%;background:rgba(10,132,255,0.15);color:var(--blue);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+    .ia-screen{background:var(--surface2);border:0.5px solid var(--border2);border-radius:16px;padding:20px;font-size:12px}
+    .ia-screen-header{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:12px;border-bottom:0.5px solid var(--border)}
+    .ia-avatar{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+    .ia-screen-name{font-size:13px;font-weight:600;color:var(--text)}
+    .ia-screen-status{font-size:11px;color:var(--green);display:flex;align-items:center;gap:4px}
+    .ia-screen-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green)}
+    .bubble{border-radius:12px;padding:12px 14px;margin-bottom:8px;font-size:12px;line-height:1.6}
+    .bubble.user{background:rgba(10,132,255,0.15);border:0.5px solid rgba(10,132,255,0.2);color:#7EB3FF}
+    .bubble.ai{background:var(--surface3);border:0.5px solid var(--border);color:var(--text2)}
+    .bubble.ai strong{color:var(--text)}
+    .tag-ok{display:inline-block;background:rgba(48,209,88,0.12);color:var(--green);border-radius:4px;padding:1px 7px;font-size:10px;font-weight:700;margin-right:4px}
+    .tag-warn{display:inline-block;background:rgba(255,159,10,0.12);color:var(--orange);border-radius:4px;padding:1px 7px;font-size:10px;font-weight:700;margin-right:4px}
+    .tag-blue{display:inline-block;background:rgba(10,132,255,0.12);color:var(--blue);border-radius:4px;padding:1px 7px;font-size:10px;font-weight:700;margin-right:4px}
+    @media(max-width:800px){.ia-showcase{grid-template-columns:1fr;padding:28px}}
+    .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    @media(max-width:900px){.feat-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:560px){.feat-grid{grid-template-columns:1fr}}
+    .feat-card{background:var(--surface);border:0.5px solid var(--border);border-radius:20px;padding:28px;transition:border-color .2s,transform .2s}
+    .feat-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+    .feat-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:18px}
+    .feat-icon.blue{background:rgba(10,132,255,0.12)}
+    .feat-icon.green{background:rgba(48,209,88,0.12)}
+    .feat-icon.orange{background:rgba(255,159,10,0.12)}
+    .feat-icon.red{background:rgba(255,69,58,0.12)}
+    .feat-icon.purple{background:rgba(191,90,242,0.12)}
+    .feat-card h4{font-size:15px;font-weight:700;letter-spacing:-0.02em;margin-bottom:8px}
+    .feat-card p{font-size:13px;color:var(--text2);line-height:1.65;font-weight:300}
+    .dtu-section{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+    @media(max-width:800px){.dtu-section{grid-template-columns:1fr}}
+    .dtu-rules{display:flex;flex-direction:column;gap:10px}
+    .dtu-rule{display:flex;align-items:flex-start;gap:12px;background:var(--surface);border:0.5px solid var(--border);border-radius:12px;padding:14px 16px}
+    .dtu-rule-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:1px}
+    .dtu-rule-icon.red{background:rgba(255,69,58,0.12)}
+    .dtu-rule-icon.blue{background:rgba(10,132,255,0.12)}
+    .dtu-rule-icon.orange{background:rgba(255,159,10,0.12)}
+    .dtu-rule-icon.green{background:rgba(48,209,88,0.12)}
+    .dtu-rule-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px}
+    .dtu-rule-label.red{color:var(--red)}.dtu-rule-label.blue{color:var(--blue)}.dtu-rule-label.orange{color:var(--orange)}.dtu-rule-label.green{color:var(--green)}
+    .dtu-rule-text{font-size:13px;color:var(--text2);font-weight:300;line-height:1.5}
+    .tools-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    @media(max-width:900px){.tools-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:480px){.tools-grid{grid-template-columns:1fr}}
+    .tool{background:var(--surface);border:0.5px solid var(--border);border-radius:16px;padding:20px;transition:border-color .2s}
+    .tool:hover{border-color:var(--border2)}
+    .tool-em{font-size:26px;margin-bottom:10px;display:block}
+    .tool h5{font-size:13px;font-weight:700;letter-spacing:-0.01em;margin-bottom:4px}
+    .tool p{font-size:11px;color:var(--text3);line-height:1.5}
+    .tool-ref{margin-top:10px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue);opacity:.65}
+    .wf{display:flex;position:relative;gap:0}
+    .wf::before{content:'';position:absolute;top:22px;left:22px;right:22px;height:0.5px;background:linear-gradient(90deg,transparent,var(--border2) 20%,var(--border2) 80%,transparent);z-index:0}
+    .wf-step{flex:1;text-align:center;padding:0 12px;position:relative;z-index:1}
+    .wf-num{width:44px;height:44px;border-radius:50%;background:var(--surface2);border:0.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:18px;margin:0 auto 14px}
+    .wf-step h5{font-size:13px;font-weight:700;margin-bottom:5px}
+    .wf-step p{font-size:11px;color:var(--text3);line-height:1.5}
+    @media(max-width:700px){.wf{flex-direction:column;gap:20px}.wf::before{display:none}}
+    .testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    @media(max-width:900px){.testi-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:560px){.testi-grid{grid-template-columns:1fr}}
+    .testi{background:var(--surface);border:0.5px solid var(--border);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:16px}
+    .testi.featured{border-color:rgba(10,132,255,0.3);background:rgba(10,132,255,0.04)}
+    .testi-stars{display:flex;gap:3px;color:var(--orange);font-size:14px}
+    .testi-text{font-size:14px;color:var(--text2);line-height:1.7;font-weight:300;font-style:italic;flex:1}
+    .testi-text strong{color:var(--text);font-style:normal}
+    .testi-author{display:flex;align-items:center;gap:12px;padding-top:14px;border-top:0.5px solid var(--border)}
+    .testi-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+    .testi-avatar.blue{background:rgba(10,132,255,0.15);color:var(--blue)}
+    .testi-avatar.green{background:rgba(48,209,88,0.12);color:var(--green)}
+    .testi-avatar.orange{background:rgba(255,159,10,0.12);color:var(--orange)}
+    .testi-avatar.purple{background:rgba(191,90,242,0.12);color:var(--purple)}
+    .testi-avatar.red{background:rgba(255,69,58,0.12);color:var(--red)}
+    .testi-name{font-size:13px;font-weight:700}
+    .testi-meta{font-size:11px;color:var(--text3)}
+    .pricing-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:900px;margin:0 auto}
+    @media(max-width:820px){.pricing-grid{grid-template-columns:1fr}}
+    .plan{background:var(--surface);border:0.5px solid var(--border);border-radius:24px;padding:32px;position:relative}
+    .plan.pro{border-color:var(--blue);background:rgba(10,132,255,0.04)}
+    .plan-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:4px 16px;border-radius:980px;white-space:nowrap}
+    .plan-name{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+    .plan-price{font-size:44px;font-weight:800;letter-spacing:-0.05em;line-height:1;margin-bottom:4px}
+    .plan-price sub{font-size:16px;font-weight:400;color:var(--text3);letter-spacing:0;vertical-align:initial}
+    .plan-period{font-size:12px;color:var(--text3);margin-bottom:20px}
+    .plan-desc{font-size:13px;color:var(--text2);font-weight:300;line-height:1.6;margin-bottom:24px;padding-bottom:20px;border-bottom:0.5px solid var(--border)}
+    .plan-features{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+    .plan-features li{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2);font-weight:300}
+    .plan-features li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px}
+    .plan-features li.muted::before{color:var(--text3)}.plan-features li.muted{color:var(--text3)}
+    .plan-btn{display:block;text-align:center;padding:12px 20px;border-radius:980px;font-size:14px;font-weight:600;text-decoration:none;transition:opacity .15s}
+    .plan-btn.primary{background:var(--blue);color:#fff}.plan-btn.primary:hover{opacity:.85}
+    .plan-btn.ghost{background:rgba(255,255,255,0.05);border:0.5px solid var(--border2);color:var(--text)}.plan-btn.ghost:hover{background:rgba(255,255,255,0.09)}
+    .plan-btn.disabled{background:var(--surface2);color:var(--text3);pointer-events:none}
+    .freemium-note{background:var(--surface);border:0.5px solid rgba(48,209,88,0.3);border-radius:16px;padding:20px 24px;max-width:700px;margin:24px auto 0;display:flex;align-items:flex-start;gap:14px;font-size:13px;line-height:1.65;color:var(--text2)}
+    .pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+    .pill{display:flex;align-items:center;gap:7px;background:var(--surface);border:0.5px solid var(--border);border-radius:980px;padding:7px 14px;font-size:12px;font-weight:500;color:var(--text2);transition:border-color .15s}
+    .pill:hover{border-color:var(--border2)}
+    .quote-strip{background:var(--surface);border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);padding:56px 24px;text-align:center}
+    .quote-strip blockquote{font-size:clamp(18px,3vw,26px);font-weight:300;font-style:italic;color:var(--text2);max-width:720px;margin:0 auto 16px;line-height:1.55;letter-spacing:-0.01em}
+    .quote-strip blockquote em{color:var(--text);font-style:normal;font-weight:600}
+    .quote-attr{font-size:13px;color:var(--text3)}
+    .final-cta{text-align:center;padding:120px 24px;background:var(--bg1);border-top:0.5px solid var(--border);position:relative;overflow:hidden}
+    .final-cta::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:600px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(10,132,255,0.12),transparent);pointer-events:none}
+    .final-cta h2{font-size:clamp(34px,6vw,70px);font-weight:800;letter-spacing:-0.05em;line-height:1;margin-bottom:16px}
+    .final-cta h2 .grad{background:linear-gradient(130deg,#0A84FF,#30D158);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .final-cta p{font-size:18px;color:var(--text2);font-weight:300;margin-bottom:44px;line-height:1.6}
+    .final-cta-note{margin-top:20px;font-size:12px;color:var(--text3)}
+    footer{background:var(--bg);border-top:0.5px solid var(--border);padding:28px 48px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
+    .footer-brand{font-size:16px;font-weight:800;letter-spacing:-0.04em;color:var(--text)}
+    .footer-brand span{color:var(--blue)}
+    footer p{font-size:12px;color:var(--text3)}
+    @media(max-width:640px){footer{padding:20px;flex-direction:column;text-align:center}}
+    .div{height:0.5px;background:var(--border)}
   </style>
 </head>
 <body>
-
-  <!-- ── Sidebar ──────────────────────────────────────────── -->
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="app-name">🏗 PlaqPro Web</div>
-      <div class="app-version">ERP Plaquiste & Peinture · v2.0</div>
-    </div>
-    <div id="sidebar-nav"></div>
-    <div class="sidebar-footer">
-      <a class="nav-item" href="#" onclick="App.navigate('config')">
-        <span class="nav-icon">⚙️</span>
-        <span>Configuration</span>
-      </a>
-    </div>
-  </aside>
-
-  <!-- ── Main ─────────────────────────────────────────────── -->
-  <main class="main">
-
-    <!-- Topbar -->
-    <div class="topbar">
-      <div id="topbar-title" class="topbar-title">Tableau de bord</div>
-      <div class="topbar-actions">
-        <button class="btn btn-secondary btn-sm" onclick="Pages.modalNouveauClient()">+ Client</button>
-        <button class="btn btn-secondary btn-sm" onclick="Pages.modalNouveauChantier()">+ Chantier</button>
-        <button class="btn btn-primary btn-sm" onclick="Pages.modalNouveauDevis()">+ Devis</button>
+<nav>
+  <a href="#" class="nav-logo">PlaqPro<span>+</span></a>
+  <ul class="nav-links">
+    <li><a href="#features">Fonctionnalités</a></li>
+    <li><a href="#tools">Outils</a></li>
+    <li><a href="#temoignages">Témoignages</a></li>
+    <li><a href="#pricing">Tarifs</a></li>
+    <li><a href="https://plaqpro.github.io/plaqpro-web/login.html" class="nav-cta">Essayer gratuitement →</a></li>
+  </ul>
+</nav>
+<div class="hero">
+  <div class="orb1"></div><div class="orb2"></div><div class="orb3"></div>
+  <div class="hero-pill">✦ Nouveau — Assistant IA pour artisans BTP</div>
+  <h1>Le devis complet<br>en <span class="grad">30 secondes</span></h1>
+  <p class="hero-sub">Décrivez vos travaux. PlaqPro+ génère automatiquement le devis multi-corps avec matériaux, quantités, règles DTU et recommandations métier.</p>
+  <div class="hero-btns">
+    <a href="https://plaqpro.github.io/plaqpro-web/login.html" class="btn-primary">🚀 Essayer gratuitement — 10 jours offerts</a>
+    <a href="#features" class="btn-outline">Voir comment ça marche</a>
+  </div>
+  <div class="hero-trust">
+    <div class="hero-trust-item"><div class="dot"></div>Gratuit pour démarrer</div>
+    <div class="hero-trust-item"><div class="dot"></div>Données sur votre appareil</div>
+    <div class="hero-trust-item"><div class="dot"></div>Aucune carte requise</div>
+    <div class="hero-trust-item"><div class="dot"></div>Conforme Factur-X 2026</div>
+  </div>
+</div>
+<div class="demo-strip">
+  <div class="marquee">
+    <div class="marquee-item"><div class="icon blue">🧱</div>Cloisons M48/M70</div>
+    <div class="marquee-item"><div class="icon green">💰</div>Rentabilité chantier</div>
+    <div class="marquee-item"><div class="icon blue">🔊</div>Acoustique Rw NRA</div>
+    <div class="marquee-item"><div class="icon red">🔥</div>Résistance feu EI30→EI120</div>
+    <div class="marquee-item"><div class="icon orange">🌡️</div>Thermique RE2020</div>
+    <div class="marquee-item"><div class="icon purple">🏛</div>DPGF Appels d'offres</div>
+    <div class="marquee-item"><div class="icon green">🧾</div>Factur-X XML 2026</div>
+    <div class="marquee-item"><div class="icon blue">💡</div>Section câble NF C15-100</div>
+    <div class="marquee-item"><div class="icon orange">⏱️</div>Temps chantier h/m²</div>
+    <div class="marquee-item"><div class="icon purple">🏗️</div>Linteau Eurocode 2</div>
+    <div class="marquee-item"><div class="icon blue">🎯</div>Prospection permis construire</div>
+    <div class="marquee-item"><div class="icon green">📐</div>Métrés automatiques</div>
+    <div class="marquee-item"><div class="icon blue">🧱</div>Cloisons M48/M70</div>
+    <div class="marquee-item"><div class="icon green">💰</div>Rentabilité chantier</div>
+    <div class="marquee-item"><div class="icon blue">🔊</div>Acoustique Rw NRA</div>
+    <div class="marquee-item"><div class="icon red">🔥</div>Résistance feu EI30→EI120</div>
+    <div class="marquee-item"><div class="icon orange">🌡️</div>Thermique RE2020</div>
+    <div class="marquee-item"><div class="icon purple">🏛</div>DPGF Appels d'offres</div>
+    <div class="marquee-item"><div class="icon green">🧾</div>Factur-X XML 2026</div>
+    <div class="marquee-item"><div class="icon blue">💡</div>Section câble NF C15-100</div>
+    <div class="marquee-item"><div class="icon orange">⏱️</div>Temps chantier h/m²</div>
+    <div class="marquee-item"><div class="icon purple">🏗️</div>Linteau Eurocode 2</div>
+    <div class="marquee-item"><div class="icon blue">🎯</div>Prospection permis construire</div>
+    <div class="marquee-item"><div class="icon green">📐</div>Métrés automatiques</div>
+  </div>
+</div>
+<div class="numbers">
+  <div class="num-item"><div class="num-n">30+</div><div class="num-l">Modules métier</div></div>
+  <div class="num-item"><div class="num-n">30</div><div class="num-l">Règles DTU intégrées</div></div>
+  <div class="num-item"><div class="num-n">8</div><div class="num-l">Outils de calcul pro</div></div>
+  <div class="num-item"><div class="num-n">0€</div><div class="num-l">Pour démarrer</div></div>
+</div>
+<div class="div"></div>
+<div class="quote-strip">
+  <blockquote>"Les artisans sont les <em>enfants pauvres du BTP</em>. Aucun logiciel n'a jamais été vraiment conçu pour eux. PlaqPro+ change ça."</blockquote>
+  <div class="quote-attr">— Gabriel A., Plaquiste · Saint-Priest (69) · Fondateur de PlaqPro+</div>
+</div>
+<section class="section" id="features">
+  <span class="eyebrow">Intelligence artificielle</span>
+  <h2 class="h2">Décrivez.<br><span>L'IA chiffre.</span></h2>
+  <p class="lead">Fini la ressaisie. En langage naturel, PlaqPro+ génère le devis complet avec toutes les sections, les quantités calculées et les règles normatives.</p>
+  <div class="ia-showcase">
+    <div>
+      <div class="ia-tag">🤖 Nouveau</div>
+      <h3 class="ia-title">Devis généré depuis votre description</h3>
+      <p class="ia-desc">Saisissez vos travaux comme vous les diriez à votre équipe. L'IA analyse, récupère vos métrés, déduit les ouvertures, applique les ratios terrain et crée toutes les sections.</p>
+      <div class="ia-steps">
+        <div class="ia-step"><div class="ia-step-num">1</div><span>Sélectionnez le chantier — métrés importés automatiquement</span></div>
+        <div class="ia-step"><div class="ia-step-num">2</div><span>Décrivez les travaux en langage naturel</span></div>
+        <div class="ia-step"><div class="ia-step-num">3</div><span>L'IA génère sections + quantités + alertes DTU</span></div>
+        <div class="ia-step"><div class="ia-step-num">4</div><span>Ajustez les prix, validez, envoyez en PDF</span></div>
       </div>
     </div>
-
-    <!-- Content -->
-    <div id="content" class="content"></div>
-
-  </main>
-
-  <!-- ── Modal ────────────────────────────────────────────── -->
-  <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)App.closeModal()">
-    <div class="modal">
-      <div class="modal-header">
-        <span class="modal-title" id="modal-title">Titre</span>
-        <button class="modal-close" onclick="App.closeModal()">✕</button>
+    <div class="ia-screen">
+      <div class="ia-screen-header">
+        <div class="ia-avatar">🤖</div>
+        <div><div class="ia-screen-name">Assistant PlaqPro+</div><div class="ia-screen-status">En ligne</div></div>
       </div>
-      <div class="modal-body" id="modal-body"></div>
-      <div class="modal-footer" id="modal-footer"></div>
+      <div class="bubble user">"Doublage mur existant, 3 cloisons 3m×2.50, peinture murs + plafond, vinyl sol, 2 fenêtres 120×120 et 1 porte 220×90 fourniture"</div>
+      <div class="bubble ai"><span class="tag-ok">✓ 4 sections créées</span><br><br>🧱 <strong>Cloisons BA13</strong> — 22.5 m²<br>🎨 <strong>Peinture murs</strong> — 41.7 m² <small style="color:var(--text3)">(ouvertures déduites)</small><br>🎨 <strong>Peinture plafond</strong> — 24 m²<br>🏠 <strong>Sol vinyl</strong> — 24 m²<br>🚪 <strong>Porte fourniture</strong> — 1 u</div>
+      <div class="bubble ai"><span class="tag-warn">⚠ DTU 59.1</span> Attendre 24h entre couches<br><span class="tag-warn">⚠ Qualité</span> Support neuf : 28 jours avant peinture<br><span class="tag-blue">ℹ Conseil</span> Surface > 40m² : prévoir primaire d'accrochage</div>
     </div>
   </div>
-
-  <!-- ── Scripts ──────────────────────────────────────────── -->
-  <script src="js/db.js"></script>
-  <script src="js/calculs.js"></script>
-  <script src="js/app.js"></script>
-
+  <div class="feat-grid">
+    <div class="feat-card"><div class="feat-icon blue">📐</div><h4>Métrés → Devis automatique</h4><p>Sélectionnez un chantier : surfaces murs, sol et plafond s'importent directement. Zéro ressaisie.</p></div>
+    <div class="feat-card"><div class="feat-icon green">🧾</div><h4>Devis → Facture en 1 clic</h4><p>Devis accepté ? Popup immédiat. Facture créée automatiquement. Acompte 30% PDF en un clic.</p></div>
+    <div class="feat-card"><div class="feat-icon orange">🇪🇺</div><h4>Factur-X 2026 prêt</h4><p>Export XML ZUGFeRD EN16931 intégré. Obligation légale 2026 déjà opérationnelle.</p></div>
+    <div class="feat-card"><div class="feat-icon purple">🏛</div><h4>DPGF & Appels d'offres</h4><p>Chargez un CCTP PDF, l'IA analyse et remplit la DPGF automatiquement. Marchés publics en minutes.</p></div>
+    <div class="feat-card"><div class="feat-icon red">🎯</div><h4>Prospection IA</h4><p>Détectez les permis de construire autour de vous. Carte interactive, scoring leads, contact MOA.</p></div>
+    <div class="feat-card"><div class="feat-icon blue">📱</div><h4>Mode chantier mobile</h4><p>Interface épurée pour téléphone. Métrés, calculs et chantiers en 2 taps sur le terrain.</p></div>
+  </div>
+</section>
+<div class="div"></div>
+<section class="section">
+  <div class="dtu-section">
+    <div>
+      <span class="eyebrow">Moteur de règles</span>
+      <h2 class="h2">30 règles DTU<br><span>en temps réel</span></h2>
+      <p class="lead" style="margin-bottom:0">Pendant que vous chiffrez, PlaqPro+ surveille vos paramètres et déclenche automatiquement les alertes réglementaires. Aucun logiciel du marché ne fait ça.</p>
+    </div>
+    <div class="dtu-rules">
+      <div class="dtu-rule"><div class="dtu-rule-icon red">🔴</div><div><div class="dtu-rule-label red">Sécurité</div><div class="dtu-rule-text">Hauteur > 3m : échafaudage roulant + EPI obligatoires sur le chantier</div></div></div>
+      <div class="dtu-rule"><div class="dtu-rule-icon blue">🔵</div><div><div class="dtu-rule-label blue">DTU 25.41</div><div class="dtu-rule-text">Entraxe montants 60 cm max — rails fixés tous les 60 cm</div></div></div>
+      <div class="dtu-rule"><div class="dtu-rule-icon blue">🔵</div><div><div class="dtu-rule-label blue">DTU 59.1</div><div class="dtu-rule-text">Temps de séchage 24h minimum entre couches — 28 jours sur support neuf</div></div></div>
+      <div class="dtu-rule"><div class="dtu-rule-icon orange">🟡</div><div><div class="dtu-rule-label orange">Attention</div><div class="dtu-rule-text">Hauteur 3.2m avec M48 : ossature M70 recommandée DTU 25.41</div></div></div>
+      <div class="dtu-rule"><div class="dtu-rule-icon green">💡</div><div><div class="dtu-rule-label green">Conseil commercial</div><div class="dtu-rule-text">Surface > 50m² sans isolation : proposer LV 45mm — valeur ajoutée + marge</div></div></div>
+      <div style="font-size:11px;color:var(--text3);padding-top:8px;font-style:italic">Références : DTU 25.41, DTU 59.1, DTU 52.1, DTU 52.2, DTU 26.1, NF C15-100, Eurocode 1 & 2, RE2020, NRA</div>
+    </div>
+  </div>
+</section>
+<div class="div"></div>
+<section class="section section-center" id="tools">
+  <span class="eyebrow">Études techniques</span>
+  <h2 class="h2">8 outils de calcul pro<br><span>intégrés nativement</span></h2>
+  <p class="lead">Chaque outil génère un rapport PDF professionnel. Aucun concurrent ne propose ça.</p>
+  <div class="tools-grid">
+    <div class="tool"><span class="tool-em">⚖️</span><h5>Coefficient de charge</h5><p>Statique + dynamique, coefficients impact, verdict ELS/ELU</p><div class="tool-ref">Eurocode 1</div></div>
+    <div class="tool"><span class="tool-em">💰</span><h5>Rentabilité chantier</h5><p>Marge nette, coût MO, prix minimum, alertes ratios</p><div class="tool-ref">Gestion</div></div>
+    <div class="tool"><span class="tool-em">🔊</span><h5>Acoustique Rw</h5><p>Solutions cloison selon exigence NRA réglementaire</p><div class="tool-ref">NRA · DTU 25.41</div></div>
+    <div class="tool"><span class="tool-em">🔥</span><h5>Résistance au feu</h5><p>Cloisons, doublages, plafonds EI30 à EI120</p><div class="tool-ref">PV CSTB · ERP</div></div>
+    <div class="tool"><span class="tool-em">🌡️</span><h5>Thermique RE2020</h5><p>Déperditions par paroi, épaisseur isolant, chauffage</p><div class="tool-ref">RE2020</div></div>
+    <div class="tool"><span class="tool-em">💡</span><h5>Section câble</h5><p>Mono/triphasé, chute de tension, disjoncteur</p><div class="tool-ref">NF C15-100</div></div>
+    <div class="tool"><span class="tool-em">⏱️</span><h5>Temps chantier</h5><p>21 ratios professionnels par corps de métier</p><div class="tool-ref">Ratios terrain</div></div>
+    <div class="tool"><span class="tool-em">🏗️</span><h5>Linteau</h5><p>Béton préfab, IPN acier, LVL bois selon portée</p><div class="tool-ref">Eurocode 2</div></div>
+  </div>
+</section>
+<div class="div"></div>
+<section class="section section-center">
+  <span class="eyebrow">Workflow</span>
+  <h2 class="h2">Du chantier au paiement<br><span>sans ressaisie</span></h2>
+  <p class="lead">Un flux continu. Chaque étape alimente la suivante automatiquement.</p>
+  <div class="wf" style="margin-bottom:48px">
+    <div class="wf-step"><div class="wf-num">📐</div><h5>Métrés</h5><p>L×l×H par pièce, une seule fois</p></div>
+    <div class="wf-step"><div class="wf-num">🤖</div><h5>Descriptif IA</h5><p>Décrivez en langage naturel</p></div>
+    <div class="wf-step"><div class="wf-num">📄</div><h5>Devis auto</h5><p>Sections + quantités générées</p></div>
+    <div class="wf-step"><div class="wf-num">✅</div><h5>Acceptation</h5><p>Facture créée automatiquement</p></div>
+    <div class="wf-step"><div class="wf-num">💰</div><h5>Paiement</h5><p>Acompte + Factur-X XML 2026</p></div>
+  </div>
+</section>
+<div class="div"></div>
+<section class="section section-center">
+  <span class="eyebrow">Modules</span>
+  <h2 class="h2">Tout l'écosystème<br><span>d'un artisan</span></h2>
+  <p class="lead">De la prospection au recouvrement — une seule application.</p>
+  <div class="pills">
+    <div class="pill">🏗 Chantiers</div><div class="pill">👥 Clients</div><div class="pill">📄 Devis multi-corps</div>
+    <div class="pill">🧾 Facturation</div><div class="pill">📐 Calcul Express</div><div class="pill">🎨 Peinture</div>
+    <div class="pill">🏛 DPGF / AO</div><div class="pill">🌤 Météo chantier</div><div class="pill">📅 Calendrier</div>
+    <div class="pill">📊 Graphiques CA</div><div class="pill">✉️ Email devis</div><div class="pill">✍️ Signature électronique</div>
+    <div class="pill">🧮 Calculatrice métier</div><div class="pill">📱 Mode chantier</div><div class="pill">🏠 Projets types</div>
+    <div class="pill">🎯 Prospection IA</div><div class="pill">⚡ Pack Électricité</div><div class="pill">🔧 Pack Plomberie</div>
+    <div class="pill">🧱 Pack Maçonnerie</div><div class="pill">💶 Grille tarifaire</div><div class="pill">✅ Mémo chantier</div>
+  </div>
+</section>
+<div class="div"></div>
+<section class="section section-center" id="temoignages">
+  <span class="eyebrow">Témoignages beta</span>
+  <h2 class="h2">Ils ont testé.<br><span>Ils ne reviennent pas en arrière.</span></h2>
+  <p class="lead">Les premiers artisans à utiliser PlaqPro+ partagent leur expérience.</p>
+  <div class="testi-grid">
+    <div class="testi featured">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-text">"J'ai fait un devis de <strong>18 500€ en 8 minutes</strong> là où j'aurais mis 2 heures avec Excel. L'IA a tout calculé — les surfaces, les quantités, même les alertes DTU que j'aurais oubliées. C'est bluffant."</div>
+      <div class="testi-author"><div class="testi-avatar blue">GA</div><div><div class="testi-name">Gabriel A.</div><div class="testi-meta">Plaquiste · Saint-Priest (69) · 12 ans d'expérience</div></div></div>
+    </div>
+    <div class="testi">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-text">"Le module DPGF m'a fait gagner <strong>un marché public de 45 000€</strong>. En 20 minutes j'avais analysé le CCTP et rempli la DPGF. Avant ça me prenait une journée entière."</div>
+      <div class="testi-author"><div class="testi-avatar green">MR</div><div><div class="testi-name">Marc R.</div><div class="testi-meta">Plaquiste-peintre · Lyon (69) · Marchés publics</div></div></div>
+    </div>
+    <div class="testi">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-text">"Les alertes DTU en temps réel, c'est <strong>une révolution</strong>. Avant je cherchais dans mes classeurs. Maintenant PlaqPro+ me dit direct : 'hauteur 3.2m, prends du M70'. Ça m'a évité un retour chantier."</div>
+      <div class="testi-author"><div class="testi-avatar orange">TL</div><div><div class="testi-name">Thomas L.</div><div class="testi-meta">Plaquiste · Grenoble (38) · 8 ans d'expérience</div></div></div>
+    </div>
+    <div class="testi">
+      <div class="testi-stars">★★★★☆</div>
+      <div class="testi-text">"Je suis peintre et j'utilise la rentabilité chantier. <strong>J'ai découvert que je perdais de l'argent</strong> sur 2 types de chantiers. Maintenant je sais pourquoi et j'ai ajusté mes prix."</div>
+      <div class="testi-author"><div class="testi-avatar purple">SF</div><div><div class="testi-name">Sophie F.</div><div class="testi-meta">Peintre décoratrice · Villeurbanne (69)</div></div></div>
+    </div>
+    <div class="testi">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-text">"J'ai donné PlaqPro+ à mon employé qui débute. Il fait des devis <strong>corrects du premier coup</strong>. Les règles DTU le guident, l'IA calcule les quantités. Je valide, c'est parti."</div>
+      <div class="testi-author"><div class="testi-avatar red">PB</div><div><div class="testi-name">Pierre B.</div><div class="testi-meta">Chef d'entreprise · Chambéry (73) · 3 salariés</div></div></div>
+    </div>
+    <div class="testi">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-text">"Le coefficient de charge m'a sauvé. Un client voulait un stockage lourd sur dalle bois — <strong>PlaqPro+ a calculé que c'était impossible</strong> et m'a sorti le rapport PDF. Crédibilité maximale."</div>
+      <div class="testi-author"><div class="testi-avatar blue">JD</div><div><div class="testi-name">Julien D.</div><div class="testi-meta">Multi-corps · Clermont-Ferrand (63)</div></div></div>
+    </div>
+  </div>
+</section>
+<div class="div"></div>
+<section class="section section-center" id="pricing">
+  <span class="eyebrow">Tarifs</span>
+  <h2 class="h2">Simple.<br><span>Transparent. Juste.</span></h2>
+  <p class="lead">29€/mois — le prix d'un concurrent qui propose 10 fois moins. C'est notre prix de lancement.</p>
+  <div class="pricing-grid">
+    <div class="plan">
+      <div class="plan-name">Découverte</div>
+      <div class="plan-price">0€ <sub>/ mois</sub></div>
+      <div class="plan-period">Pour toujours</div>
+      <div class="plan-desc">Testez les fonctionnalités essentielles sans engagement.</div>
+      <ul class="plan-features">
+        <li>Clients, chantiers, métrés</li>
+        <li>Devis & factures PDF</li>
+        <li>Calcul Express de base</li>
+        <li>Moteur règles DTU de base</li>
+        <li>Météo chantier</li>
+        <li class="muted">IA limitée (5 requêtes/mois)</li>
+        <li class="muted">Outils techniques (lecture seule)</li>
+      </ul>
+      <a href="https://plaqpro.github.io/plaqpro-web/login.html" class="plan-btn ghost">Commencer gratuitement</a>
+    </div>
+    <div class="plan pro">
+      <div class="plan-badge">🔥 Prix de lancement</div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-price">29€ <sub>/ mois</sub></div>
+      <div class="plan-period">Sans engagement · Résiliable à tout moment</div>
+      <div class="plan-desc">Tout PlaqPro+ sans limite. L'outil complet pour travailler mieux et gagner plus.</div>
+      <ul class="plan-features">
+        <li>Tout le plan Découverte</li>
+        <li>IA illimitée — devis auto</li>
+        <li>DPGF & Appels d'offres IA</li>
+        <li>8 outils techniques + PDF</li>
+        <li>30 règles DTU complètes</li>
+        <li>Prospection IA permis</li>
+        <li>Factur-X XML 2026</li>
+        <li>Support prioritaire</li>
+      </ul>
+      <a href="https://plaqpro.github.io/plaqpro-web/login.html" class="plan-btn primary">Essayer 10 jours gratuits →</a>
+    </div>
+    <div class="plan">
+      <div class="plan-name">Équipe</div>
+      <div class="plan-price">69€ <sub>/ mois</sub></div>
+      <div class="plan-period">Jusqu'à 5 utilisateurs</div>
+      <div class="plan-desc">Pour les entreprises avec plusieurs salariés.</div>
+      <ul class="plan-features">
+        <li>Tout le plan Pro</li>
+        <li>5 comptes collaborateurs</li>
+        <li>Données synchronisées</li>
+        <li>Gestion des droits d'accès</li>
+        <li>Sauvegarde cloud sécurisée</li>
+        <li>Onboarding dédié</li>
+      </ul>
+      <a href="#" class="plan-btn disabled">Bientôt disponible</a>
+    </div>
+  </div>
+  <div class="freemium-note">
+    <div style="font-size:20px;flex-shrink:0;margin-top:1px">🎁</div>
+    <div><strong style="color:var(--text)">10 jours d'essai Pro offerts à l'inscription.</strong> Qualifiez votre activité (plaquiste, peintre, multi-corps...) et débloquez immédiatement <strong style="color:var(--text)">toutes les fonctionnalités de votre métier</strong> analysées par l'IA. Aucune carte de crédit requise.</div>
+  </div>
+</section>
+<div class="final-cta">
+  <h2>Prêt à travailler<br><span class="grad">différemment ?</span></h2>
+  <p>Gratuit pour démarrer. 10 jours Pro offerts. Aucune carte requise.</p>
+  <a href="https://plaqpro.github.io/plaqpro-web/login.html" class="btn-primary" style="font-size:17px;padding:17px 40px;display:inline-flex">🚀 Essayer PlaqPro+ maintenant</a>
+  <div class="final-cta-note">Rejoint par des artisans plaquistes, peintres, multi-corps dans toute la France 🇫🇷</div>
+</div>
+<footer>
+  <div class="footer-brand">PlaqPro<span>+</span></div>
+  <p>© 2026 PlaqPro+ · Conçu par un artisan, pour les artisans du second œuvre</p>
+  <p>Données locales · Conforme Factur-X 2026 · Made in Lyon 🦁</p>
+</footer>
 </body>
 </html>
