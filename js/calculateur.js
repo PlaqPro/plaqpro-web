@@ -493,6 +493,10 @@ Pages.calculateur = function() {
             <button class="btn btn-sm btn-primary" onclick="Calc.sauvegarderDevis()">💾 Créer devis</button>
           </div>
         </div>
+        <div style="margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-tertiary);padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:10px">🧠 Assistant qualité & conformité</div>
+          <div id="calc-alertes-regles" style="font-size:12px"></div>
+        </div>
         <div id="calc-results-body">
           <!-- Rempli dynamiquement -->
           <div class="calc-empty">
@@ -1484,6 +1488,18 @@ const Calc = {
       </div>`;
 
     body.innerHTML = html;
+
+    // Alertes moteur de règles
+    const inputRegles = {
+      hauteur: parseFloat(document.getElementById('cl-hauteur')?.value) || 2.6,
+      surface: (parseFloat(document.getElementById('cl-longueur')?.value)||0) * (parseFloat(document.getElementById('cl-hauteur')?.value)||0),
+      ossature: document.querySelector('input[name="cl-type"]:checked')?.value === '48' ? 'M48' : 'M70',
+      isolation: false,
+      finition: 'Q3',
+    };
+    const ctxRegles = ReglesEngine.executer('placo', 'cloison', inputRegles);
+    const alertesDiv = document.getElementById('calc-alertes-regles');
+    if (alertesDiv) alertesDiv.innerHTML = ReglesEngine.renderAlertes(ctxRegles);
   },
 
   // ── Affichage des ratios ───────────────────────────────────
