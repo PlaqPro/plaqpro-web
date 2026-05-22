@@ -79,16 +79,23 @@ var DevisMulti = {
       + '<p class="dm-hero-sub">Structurez votre devis par corps de métier. Recherchez dans la base produits, ajoutez des articles libres, récapitulatif automatique.</p>'
       + '</div>'
       + '</div>'
+      + '<div id="dm-alertes-regles" style="margin-bottom:16px">' + DevisMulti._alertesRegles() + '</div>'
       // Barre en-tête
       + '<div class="dm-header-bar">'
       + '<div class="dm-header-row">'
       + '<div class="dm-header-field">'
       + '<label class="dm-label">Client</label>'
-      + '<select class="form-control dm-sel" id="dm-sel-client" onchange="DevisMulti._onClientChange(this.value)">' + optCli + '</select>'
+      + '<div style="display:flex;gap:6px;align-items:center">'
+      + '<select class="form-control dm-sel" id="dm-sel-client" onchange="DevisMulti._onClientChange(this.value)" style="flex:1">' + optCli + '</select>'
+      + '<button class="btn btn-secondary btn-sm" onclick="DevisMulti._nouveauClient()" title="Nouveau client">+</button>'
+      + '</div>'
       + '</div>'
       + '<div class="dm-header-field">'
       + '<label class="dm-label">Chantier</label>'
-      + '<select class="form-control dm-sel" id="dm-sel-chantier" onchange="DevisMulti._state.chantierId=this.value">' + optCha + '</select>'
+      + '<div style="display:flex;gap:6px;align-items:center">'
+      + '<select class="form-control dm-sel" id="dm-sel-chantier" onchange="DevisMulti._state.chantierId=this.value" style="flex:1">' + optCha + '</select>'
+      + '<button class="btn btn-secondary btn-sm" onclick="DevisMulti._nouveauChantier()" title="Nouveau chantier">+</button>'
+      + '</div>'
       + '</div>'
       + '<div class="dm-header-field dm-header-objet">'
       + '<label class="dm-label">Objet</label>'
@@ -122,6 +129,34 @@ var DevisMulti = {
         }).join('');
     var sel = document.getElementById('dm-sel-chantier');
     if (sel) sel.innerHTML = html;
+  },
+
+  _nouveauClient: function() {
+    var nom = prompt('Nom du client :');
+    if (!nom) return;
+    var tel  = prompt('Téléphone :') || '';
+    var email = prompt('Email :') || '';
+    var client = DB.addClient({ nom: nom, telephone: tel, email: email, statut: 'Actif' });
+    DevisMulti._state.clientId = String(client.id);
+    // Rafraîchir la page
+    var wrap = document.getElementById('dm-wrap');
+    if (wrap) { wrap.innerHTML = DevisMulti._buildHTML(); DevisMulti._bindEvents(); }
+    App.toast('Client ' + nom + ' créé ✅', 'success');
+  },
+
+  _nouveauChantier: function() {
+    if (!DevisMulti._state.clientId) { App.toast('Sélectionnez d\'abord un client', 'warning'); return; }
+    var nom = prompt('Nom du chantier :');
+    if (!nom) return;
+    var adresse = prompt('Adresse du chantier :') || '';
+    var chantier = DB.addChantier({
+      clientId: parseInt(DevisMulti._state.clientId),
+      nom: nom, adresse: adresse, statut: 'En cours'
+    });
+    DevisMulti._state.chantierId = String(chantier.id);
+    var wrap = document.getElementById('dm-wrap');
+    if (wrap) { wrap.innerHTML = DevisMulti._buildHTML(); DevisMulti._bindEvents(); }
+    App.toast('Chantier ' + nom + ' créé ✅', 'success');
   },
 
   _nouveau: function() {
@@ -272,6 +307,31 @@ var DevisMulti = {
       tva += secHT * ((parseFloat(sec.tva) || 10) / 100);
     });
     return { ht: ht, tva: tva, ttc: ht + tva };
+  },
+
+  _alertesRegles: function() {
+    if (typeof ReglesEngine === 'undefined') return '';
+    var state = DevisMulti._state;
+    var allCtx = { warnings:[], alertes:[], recommandations:[], normes:[], securite:[] };
+    state.sections.forEach(function(sec) {
+      var metier = sec.key === 'cloisons' ? 'placo'
+        : sec.key === 'peinture' ? 'peinture'
+        : sec.key === 'carrelage' ? 'carrelage'
+        : sec.key === 'electricite' ? 'electricite'
+        : sec.key === 'plomberie' ? 'plomberie'
+        : sec.key === 'maconnerie' ? 'maconnerie' : null;
+      if (!metier) return;
+      var input = { surface: 0, erp: false };
+      var ctx = ReglesEngine.executer(metier, '*', input);
+      ['warnings','alertes','recommandations','normes','securite'].forEach(function(k) {
+        allCtx[k] = allCtx[k].concat(ctx[k]);
+      });
+    });
+    // Dédoublonner
+    ['warnings','alertes','recommandations','normes','securite'].forEach(function(k) {
+      allCtx[k] = [...new Set(allCtx[k])];
+    });
+    return ReglesEngine.renderAlertes(allCtx);
   },
 
   _nbLignes: function() {
@@ -560,6 +620,11 @@ var DevisMulti = {
       return;
     }
 
+    if (!state.clientId) {
+      App.toast('⚠️ Sélectionnez un client avant de sauvegarder', 'warning');
+      return;
+    }
+
     var config   = DB.getConfig();
     var numero   = config.prefixeDevis + String(DB.nextId(DB.KEYS.devis)).padStart(4, '0');
     var today    = new Date();
@@ -598,6 +663,8 @@ var DevisMulti = {
       lignes:     lignes,
       totalHT:    totaux.ht,
       totalTTC:   totaux.ttc,
+      montantTVA: totaux.ttc - totaux.ht,
+      tva:        state.tvaAutoLiquidee ? 0 : 0.1,
       notes:      "Devis multi-corps : " + state.sections.map(function(s) { return s.titre; }).join(', ')
     });
 
