@@ -26,6 +26,7 @@ const DB = {
     ratios:     'plaqpro_ratios',
     config:     'plaqpro_config',
     prospects:  'plaqpro_prospects',
+    sousTraitants: 'plaqpro_sous_traitants',
   },
 
   // ── CRUD générique ────────────────────────────────────────
@@ -100,6 +101,11 @@ const DB = {
   // ── Métrages ──────────────────────────────────────────────
   get metrages()  { return this.getAll(this.KEYS.metrages); },
   addMetrage(m)   { return this.add(this.KEYS.metrages, m); },
+  addSousTraitant(st) { return this.add(this.KEYS.sousTraitants, st); },
+  getSousTraitants()  { return JSON.parse(localStorage.getItem(this.KEYS.sousTraitants) || '[]'); },
+  updateSousTraitant(id, data) { return this.update(this.KEYS.sousTraitants, id, data); },
+  deleteSousTraitant(id) { return this.delete(this.KEYS.sousTraitants, id); },
+  getSousTraitantById(id) { return this.getById(this.KEYS.sousTraitants, id); },
   updateMetrage(id, u) { return this.update(this.KEYS.metrages, id, u); },
   deleteMetrage(id)    { this.delete(this.KEYS.metrages, id); },
   getMetragesByChantier(chantierId) {

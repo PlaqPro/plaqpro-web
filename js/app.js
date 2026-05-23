@@ -61,6 +61,7 @@ const App = {
       maconnerie:  () => Pages.maconnerie(),
       electricite: () => Pages.electricite(),
       plomberie:   () => Pages.plomberie(),
+      sousTraitants: () => Pages.sousTraitants(),
       charges:     () => Pages.charges(),
       rentabilite: () => Pages.rentabilite(),
       acoustique:  () => Pages.acoustique(),
@@ -102,6 +103,7 @@ const App = {
       { section: '👥 Clients & Chantiers' },
       { page: 'clients',     icon: '<i class="ph ph-users"></i>', label: 'Clients' },
       { page: 'chantiers',   icon: '<i class="ph ph-hard-hat"></i>', label: 'Chantiers' },
+      { page: 'sousTraitants', icon: '<i class="ph ph-handshake"></i>', label: 'Sous-traitants' },
       { page: 'calendrier',  icon: '<i class="ph ph-calendar"></i>', label: 'Calendrier' },
       { page: 'prospection', icon: '<i class="ph ph-map-pin"></i>', label: 'Prospection IA' },
 

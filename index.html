@@ -175,6 +175,7 @@
       { section: 'Gestion' },
       { page: 'clients',     icon: '👤', label: 'Clients' },
       { page: 'chantiers',   icon: '🏗', label: 'Chantiers' },
+      { page: 'sousTraitants', icon: '<i class="ph ph-handshake"></i>', label: 'Sous-traitants' },
       { page: 'calendrier',  icon: '📅', label: 'Calendrier' },
       { page: 'prospection', icon: '🎯', label: 'Prospection IA' },
       { section: 'Travaux' },
@@ -272,6 +273,7 @@
         maconnerie:  '🧱 Pack Maçonnerie',
         electricite: '⚡ Pack Électricité — NF C 15-100',
         plomberie:   '🔧 Pack Plomberie — DTU 60.1 / DTU 60.11',
+        sousTraitants: '🤝 Sous-Traitants — Loi 75-1334',
         charges:     '📐 Coefficient de charge — Eurocode 1',
         rentabilite: '💰 Simulateur Marge & Rentabilité',
         acoustique:  '🔊 Calcul Acoustique Rw',
@@ -316,6 +318,7 @@
         maconnerie:  function() { return Pages.maconnerie(); },
         electricite: function() { return Pages.electricite(); },
         plomberie:   function() { return Pages.plomberie(); },
+        sousTraitants: function() { return Pages.sousTraitants(); },
         charges:     function() { return Pages.charges(); },
         rentabilite: function() { return Pages.rentabilite(); },
         acoustique:  function() { return Pages.acoustique(); },
@@ -356,6 +359,7 @@
   });
   </script>
 <script src="js/regles.js"></script>
+<script src="js/sous_traitants.js"></script>
 
 </body>
 </html>
