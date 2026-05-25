@@ -92,7 +92,7 @@ const App = {
       cloisons:  'Cloisons',
       peinture:  'Peinture',
       devis:     'Devis',
-      produits:  'Base tarifaire',
+      produits:  'Catalogue fournisseurs',
       config:    'Configuration',
     };
     document.getElementById('topbar-title').textContent = titles[page] || page;
@@ -124,7 +124,7 @@ const App = {
 
       { section: '🏛 Appels d\'offres' },
       { page: 'dpgf',        icon: '<i class="ph ph-bank"></i>', label: 'Appels d\'offres' },
-      { page: 'tarifs',      icon: '<i class="ph ph-coins"></i>', label: 'Grille tarifaire' },
+      { page: 'tarifs',      icon: '<i class="ph ph-coins"></i>', label: 'Mes prix de vente' },
       { page: 'memo',        icon: '<i class="ph ph-check-square"></i>', label: 'Mémo chantier' },
 
       { section: '🔧 Packs Métier' },
@@ -145,7 +145,7 @@ const App = {
       { section: '⚙️ Paramètres' },
       { page: 'monCompte',   icon: '<i class="ph ph-user-circle"></i>', label: 'Mon compte' },
       { page: 'legal',       icon: '<i class="ph ph-scales"></i>', label: 'Mentions légales' },
-      { page: 'produits',    icon: '<i class="ph ph-tag"></i>', label: 'Base tarifaire' },
+      { page: 'produits',    icon: '<i class="ph ph-storefront"></i>', label: 'Catalogue fournisseurs' },
       { page: 'config',      icon: '<i class="ph ph-gear"></i>', label: 'Configuration' },
     ];
 

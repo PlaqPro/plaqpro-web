@@ -25,6 +25,30 @@ const ENSEIGNES = [
   { id: 'WUR',  nom: 'Würth',          logo: '🟥', type: 'pro',  region: 'national' },
   { id: 'PP',   nom: 'Point P',        logo: '🟨', type: 'pro',  region: 'national' },
   { id: 'MAN',  nom: 'Manutan',        logo: '🟪', type: 'pro',  region: 'national' },
+  { id: 'BCO',  nom: 'Bricoman',               logo: '🟫', type: 'pro',  region: 'national' },
+  { id: 'PRO',  nom: 'Prolians',               logo: '🔴', type: 'pro',  region: 'national' },
+  { id: 'LEG',  nom: 'Legallais',              logo: '🟦', type: 'pro',  region: 'national' },
+  { id: 'BGM',  nom: 'BigMat',                logo: '🟧', type: 'pro',  region: 'national' },
+  { id: 'TF',   nom: 'Tout Faire',             logo: '🟩', type: 'pro',  region: 'national' },
+  { id: 'RP',   nom: 'Réseau Pro',             logo: '🟪', type: 'pro',  region: 'national' },
+  { id: 'LAR',  nom: 'Larivière',              logo: '🔵', type: 'pro',  region: 'national' },
+  { id: 'SOC',  nom: 'Socoda',                logo: '🟤', type: 'pro',  region: 'national' },
+  { id: 'QA',   nom: 'Quincaillerie Angles',   logo: '⚙️', type: 'pro',  region: 'national' },
+  { id: 'PDB',  nom: 'Plateforme du Bâtiment', logo: '🏗️', type: 'gms',  region: 'national' },
+  { id: 'DC',   nom: 'Descours & Cabaud',      logo: '🔩', type: 'pro',  region: 'national' },
+  { id: 'CDF',  nom: 'Comptoir des Fers',      logo: '🔧', type: 'pro',  region: 'national' },
+  { id: 'SGD',  nom: 'Saint-Gobain Distribution', logo: '🏛️', type: 'pro', region: 'national' },
+  { id: 'ISV',  nom: 'Isover',                logo: '🌡️', type: 'fab',  region: 'national' },
+  { id: 'KNF',  nom: 'Knauf',                logo: '🏭', type: 'fab',  region: 'national' },
+  { id: 'PLA',  nom: 'Placo',                logo: '🧱', type: 'fab',  region: 'national' },
+  { id: 'SIN',  nom: 'Siniat',               logo: '🏗️', type: 'fab',  region: 'national' },
+  { id: 'RKW',  nom: 'Rockwool',             logo: '🌿', type: 'fab',  region: 'national' },
+  { id: 'WEB',  nom: 'Weber',               logo: '🔵', type: 'fab',  region: 'national' },
+  { id: 'PAR',  nom: 'Parex',               logo: '🟡', type: 'fab',  region: 'national' },
+  { id: 'MAP',  nom: 'Mapei',              logo: '🟠', type: 'fab',  region: 'national' },
+  { id: 'SIK',  nom: 'Sika',               logo: '🔴', type: 'fab',  region: 'national' },
+  { id: 'USG',  nom: 'USG',                logo: '⬛', type: 'fab',  region: 'national' },
+  { id: 'LAF',  nom: 'Lafarge',            logo: '🏭', type: 'fab',  region: 'national' },
   { id: 'NEG',  nom: 'Tarif négocié',  logo: '🤝', type: 'nego', region: 'perso', protege: true },
   { id: 'FOUR', nom: 'Fournisseur perso', logo: '📋', type: 'perso', region: 'perso', protege: true },
 ];
@@ -185,7 +209,8 @@ Pages.tarifs = function() {
     <!-- Tableau des tarifs -->
     <div class="card">
       <div class="card-header">
-        <span class="card-title">Grille tarifaire multi-enseignes</span>
+        <span class="card-title">Mes Prix de Vente</span>
+        <span style="font-size:11px;color:var(--text-tertiary);display:block;margin-top:2px">Configurez vos prix de vente par catégorie de travaux</span>
         <span id="tarif-count" style="font-size:13px;color:var(--text-tertiary)">
           ${tousLesTarifs.length} tarif(s) enregistré(s)
         </span>

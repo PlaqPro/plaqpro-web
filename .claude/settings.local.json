@@ -63,7 +63,12 @@
       "PowerShell($d = Get-Date -Format 'yyyyMMdd_HHmm'; xcopy 'C:\\\\PlaQproWEB' \"C:\\\\PlaQproWEB_BACKUP_$d\" /E /I /Q)",
       "PowerShell($d = Get-Date -Format 'yyyyMMdd_HHmm'; xcopy 'C:\\\\PlaQproWEB' \"C:\\\\PlaQproWEB_BACKUP_$d\" /E /I /Q /Y; Write-Host \"Backup cree: PlaQproWEB_BACKUP_$d\")",
       "PowerShell($d = Get-Date -Format 'yyyyMMdd_HHmm'; xcopy \"C:\\\\PlaQproWEB\" \"C:\\\\PlaQproWEB_BACKUP_$d\" /E /I /Q; \"BACKUP OK -> C:\\\\PlaQproWEB_BACKUP_$d\")",
-      "PowerShell($d = Get-Date -Format 'yyyyMMdd_HHmm'; xcopy 'C:\\\\PlaQproWEB' \"C:\\\\PlaQproWEB_BACKUP_$d\" /E /I /Q; Write-Host \"Backup terminé : C:\\\\PlaQproWEB_BACKUP_$d\")"
+      "PowerShell($d = Get-Date -Format 'yyyyMMdd_HHmm'; xcopy 'C:\\\\PlaQproWEB' \"C:\\\\PlaQproWEB_BACKUP_$d\" /E /I /Q; Write-Host \"Backup terminé : C:\\\\PlaQproWEB_BACKUP_$d\")",
+      "PowerShell($d = Get-Date -Format 'yyyyMMdd_HHmm'; xcopy 'C:\\\\PlaQproWEB' \"C:\\\\PlaQproWEB_BACKUP_$d\" /E /I /Q 2>&1; Write-Host \"BACKUP: C:\\\\PlaQproWEB_BACKUP_$d\")",
+      "PowerShell($d = Get-Date -Format 'yyyyMMdd_HHmm'; xcopy 'C:\\\\PlaQproWEB' \"C:\\\\PlaQproWEB_BACKUP_$d\" /E /I /Q; Write-Host \"Backup: C:\\\\PlaQproWEB_BACKUP_$d\")",
+      "PowerShell(\\(Get-Item 'C:\\\\PlaQproWEB_BACKUP_20260525_0703' -ErrorAction SilentlyContinue\\) | Select-Object FullName; $size = \\(Get-ChildItem 'C:\\\\PlaQproWEB_BACKUP_20260525_0703' -Recurse -File | Measure-Object -Property Length -Sum\\).Sum; Write-Host \"Taille : $\\([math]::Round\\($size/1MB, 2\\)\\) Mo — 77 fichiers\")",
+      "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\legal.js' -Encoding UTF8; Write-Host '=== Fin du fichier legal.js \\(dernières 20 lignes\\) ==='; $lines[-20..-1] | ForEach-Object { Write-Host $_ })",
+      "PowerShell($d = Get-Date -Format 'yyyyMMdd_HHmm'; xcopy 'C:\\\\PlaQproWEB' \"C:\\\\PlaQproWEB_BACKUP_$d\" /E /I /Q; Write-Host \"Backup : C:\\\\PlaQproWEB_BACKUP_$d\")"
     ]
   }
 }

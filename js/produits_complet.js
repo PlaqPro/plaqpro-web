@@ -372,42 +372,42 @@ const FAMILLES = [...new Set(CATALOGUE.map(p => p.fam))];
 // Règle métier : montrer uniquement les distributeurs pertinents
 const ENSEIGNES_PAR_FAMILLE = {
   // Plâtrerie / plaquisterie
-  'Plaque plâtre':      ['LM','BD','BM','GED','CHAU','GIR','LPI','PP'],
-  'Carreau plâtre':     ['LM','BD','BM','GED','CHAU','GIR','LPI','PP'],
-  'Ossature métal':     ['LM','BD','BM','GED','CHAU','GIR','LPI','PP'],
-  'Jointage':           ['LM','BD','BM','GED','CHAU','GIR','LPI','PP'],
-  'Isolation':          ['LM','BD','BM','GED','CHAU','GIR','LPI','PP'],
-  'Cloison spéciale':   ['LM','BD','BM','GED','CHAU','GIR','LPI','PP'],
+  'Plaque plâtre':      ['LM','PDB','BD','BM','GED','CHAU','BCO','PRO','GIR','LPI','PP','BGM','TF','RP','SGD','PLA','KNF','SIN','ISV'],
+  'Carreau plâtre':     ['LM','PDB','BD','BM','GED','CHAU','BCO','PRO','GIR','LPI','PP','BGM','TF','SGD','PLA','KNF','SIN'],
+  'Ossature métal':     ['LM','PDB','BD','BM','GED','CHAU','BCO','PRO','GIR','LPI','PP','BGM','TF','LEG','DC','SGD'],
+  'Jointage':           ['LM','PDB','BD','BM','GED','CHAU','BCO','PRO','GIR','LPI','PP','BGM','TF','SGD','PLA','KNF','SIN','MAP','SIK'],
+  'Isolation':          ['LM','PDB','BD','BM','GED','CHAU','BCO','PRO','GIR','LPI','PP','BGM','TF','SGD','ISV','KNF','PLA','SIN','RKW'],
+  'Cloison spéciale':   ['LM','PDB','BD','BM','GED','CHAU','BCO','PRO','GIR','LPI','PP','BGM','TF','SGD','PLA','KNF','SIN'],
   // Électricité
-  'Électricité':        ['REX','SON','WUR','LM','BD'],
+  'Électricité':        ['REX','SON','WUR','LM','BD','LEG','DC','SOC'],
   // Plomberie / sanitaire / chauffage
-  'Sanitaire':          ['PP','CHAU','REX','SON','LM','BD'],
+  'Sanitaire':          ['PP','CHAU','BCO','REX','SON','LM','BD','LAR','SOC'],
   // Peinture / enduit
-  'Peinture':           ['LM','BD','BM','PP','GED','GIR'],
-  'Accessoire peinture':['LM','BD','BM','PP','GED','GIR'],
+  'Peinture':           ['LM','BD','BM','PP','GED','GIR','BCO','BGM','WEB','PAR','MAP','SIK'],
+  'Accessoire peinture':['LM','BD','BM','PP','GED','GIR','BCO','BGM','WEB'],
   // Revêtements sol / carrelage
-  'Revêtement sol':     ['LM','BD','BM','GED','PP'],
-  'Carrelage':          ['LM','BD','BM','GED','PP'],
+  'Revêtement sol':     ['LM','PDB','BD','BM','GED','PP','BCO','BGM','MAP','SIK'],
+  'Carrelage':          ['LM','PDB','BD','BM','GED','PP','BCO','BGM','MAP','SIK','LAF'],
   // Outillage / fixation / visserie
-  'Fixation':           ['LM','BD','WUR','MAN','BM'],
+  'Fixation':           ['LM','BD','WUR','MAN','BM','QA','LEG','DC','CDF'],
   // Extérieur / paysagisme
-  'Extérieur':          ['LM','BD','BM','PP','GED'],
-  'Matériaux spéciaux': ['LM','BD','BM','PP','GED'],
+  'Extérieur':          ['LM','BD','BM','PP','GED','BCO','BGM','TF'],
+  'Matériaux spéciaux': ['LM','PDB','BD','BM','PP','GED','BCO','PRO','BGM','SGD','KNF','PLA','SIN','ISV','RKW','WEB','PAR','MAP','SIK','USG','LAF'],
   // Cuisine / sanitaire / meuble / menuiserie
-  'Porte intérieure':   ['LM','BD','BM'],
-  'Menuiserie ext.':    ['LM','BD','BM'],
+  'Porte intérieure':   ['LM','BD','BM','BCO','BGM'],
+  'Menuiserie ext.':    ['LM','BD','BM','BCO','BGM'],
   // Main d'œuvre : pas d'enseigne fournisseur
   "Main d'oeuvre":      [],
   // Prestations (même logique que la famille matériaux correspondante)
-  'Prestations Plaquisterie': ['LM','BD','BM','GED','CHAU','GIR','LPI','PP'],
-  'Prestations Peinture':     ['LM','BD','BM','PP','GED','GIR'],
-  'Prestations Électricité':  ['REX','SON','WUR','LM','BD'],
-  'Prestations Plomberie':    ['PP','CHAU','REX','SON','LM','BD'],
-  'Prestations Maçonnerie':   ['LM','BD','BM','GED','CHAU'],
-  'Prestations Carrelage':    ['LM','BD','BM','GED','PP'],
-  'Prestations Sol':          ['LM','BD','BM','GED','PP'],
-  'Prestations Extérieur':    ['LM','BD','BM','PP','GED'],
-  'Prestations Démolition':   ['LM','BD','BM'],
+  'Prestations Plaquisterie': ['LM','PDB','BD','BM','GED','CHAU','BCO','PRO','GIR','LPI','PP','BGM','TF','SGD'],
+  'Prestations Peinture':     ['LM','BD','BM','PP','GED','GIR','BCO','BGM'],
+  'Prestations Électricité':  ['REX','SON','WUR','LM','BD','LEG','DC'],
+  'Prestations Plomberie':    ['PP','CHAU','BCO','REX','SON','LM','BD','LAR'],
+  'Prestations Maçonnerie':   ['LM','PDB','BD','BM','GED','CHAU','BCO','BGM','LAF'],
+  'Prestations Carrelage':    ['LM','PDB','BD','BM','GED','PP','BCO','BGM'],
+  'Prestations Sol':          ['LM','PDB','BD','BM','GED','PP','BCO','BGM'],
+  'Prestations Extérieur':    ['LM','BD','BM','PP','GED','BCO','BGM'],
+  'Prestations Démolition':   ['LM','BD','BM','BCO'],
 };
 
 // ── Initialiser la base produits depuis le catalogue ──────────
@@ -439,6 +439,11 @@ Pages.produits = function() {
 
   const div = document.createElement('div');
   div.innerHTML = `
+    <!-- En-tête Catalogue -->
+    <div style="margin-bottom:12px;padding:12px 0 8px">
+      <h2 style="margin:0;font-size:18px;font-weight:700">🏪 Catalogue Fournisseurs</h2>
+      <p style="margin:4px 0 0;font-size:12px;color:var(--text-tertiary)">Prix d'achat — Bricoman · Point.P · Prolians · Legallais · BigMat · Autres</p>
+    </div>
     <!-- Barre de recherche principale -->
     <div class="prod-search-bar">
       <div class="prod-search-wrap">
