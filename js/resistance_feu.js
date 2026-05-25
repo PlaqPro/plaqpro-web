@@ -159,7 +159,7 @@ Pages.resistanceFeu = function() {
     </div>
   `;
 
-  window.RF._solutions = SOLUTIONS;
+  if (window.RF) window.RF._solutions = SOLUTIONS;
   setTimeout(() => RF.compute(), 50);
   return div;
 };

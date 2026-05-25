@@ -194,8 +194,7 @@ Pages.thermique = function() {
     </div>
   `;
 
-  window.Therm._isolants = ISOLANTS;
-  window.Therm._parois = PAROIS_DEFAUT.map(p => ({...p}));
+  if (window.Therm) { window.Therm._isolants = ISOLANTS; window.Therm._parois = PAROIS_DEFAUT.map(p => ({...p})); }
 
   setTimeout(() => {
     Therm.renderParois();

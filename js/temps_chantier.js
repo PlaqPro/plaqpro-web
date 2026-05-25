@@ -190,12 +190,14 @@ Pages.tempsChantier = function() {
     </div>
   `;
 
-  window.TC._ratios = RATIOS;
-  window.TC._corpsColors = CORPS_COLORS;
-  window.TC._taches = [
-    { label:'Cloison M48 1×BA13', corps:'Plaquiste', qte:50, unite:'m²', ratio:0.35 },
-    { label:'Peinture 2 couches',  corps:'Peintre',   qte:80, unite:'m²', ratio:0.15 },
-  ];
+  if (window.TC) {
+    window.TC._ratios = RATIOS;
+    window.TC._corpsColors = CORPS_COLORS;
+    window.TC._taches = [
+      { label:'Cloison M48 1×BA13', corps:'Plaquiste', qte:50, unite:'m²', ratio:0.35 },
+      { label:'Peinture 2 couches',  corps:'Peintre',   qte:80, unite:'m²', ratio:0.15 },
+    ];
+  }
 
   setTimeout(() => { TC.renderTaches(); TC.compute(); }, 50);
   return div;

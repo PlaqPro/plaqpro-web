@@ -160,8 +160,7 @@ Pages.acoustique = function() {
   `;
 
   // Stocker la base dans l'objet
-  window.Acou._cloisons  = CLOISONS;
-  window.Acou._exigences = EXIGENCES;
+  if (window.Acou) { window.Acou._cloisons = CLOISONS; window.Acou._exigences = EXIGENCES; }
 
   setTimeout(() => Acou.compute(), 50);
   return div;

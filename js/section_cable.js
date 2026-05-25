@@ -197,7 +197,7 @@ Pages.sectionCable = function() {
     </div>
   `;
 
-  window.Cable._sections = SECTIONS;
+  if (window.Cable) window.Cable._sections = SECTIONS;
   setTimeout(() => Cable.compute(), 50);
   return div;
 };
