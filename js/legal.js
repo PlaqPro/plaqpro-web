@@ -277,7 +277,7 @@ Pages.legal = function(section) {
     <div class="legal-tabs">
       ${SECTIONS.map(s => `
         <button class="legal-tab ${s.key === section ? 'active' : ''}"
-          onclick="Pages.legal('${s.key}')">
+          onclick="LEGAL.navigate('${s.key}')">
           ${s.label}
         </button>
       `).join('')}
@@ -289,6 +289,17 @@ Pages.legal = function(section) {
       PlaqPro+ · © 2026 Gabriel Khamassi · Saint-Priest (69) · Droit français · Tribunal de Lyon
     </div>
   `;
+
+  window.LEGAL = {
+    navigate(sec) {
+      const tabs = document.querySelectorAll('.legal-tab');
+      tabs.forEach(t => t.classList.remove('active'));
+      const active = document.querySelector('.legal-tab[onclick*="' + sec + '"]');
+      if (active) active.classList.add('active');
+      const content = document.querySelector('.legal-content');
+      if (content) content.innerHTML = CONTENT[sec] || '<p>Section non trouvée.</p>';
+    }
+  };
 
   return div;
 };
