@@ -974,6 +974,10 @@ tbody tr:hover {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  #quick-actions { grid-template-columns: 1fr !important; }
+  .feat-grid { grid-template-columns: 1fr !important; }
+  .ia-showcase { grid-template-columns: 1fr !important; }
 }
 
 @media (max-width: 520px) {

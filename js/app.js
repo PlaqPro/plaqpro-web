@@ -120,7 +120,7 @@ const App = {
       { page: 'liste_achat', icon: '<i class="ph ph-shopping-cart"></i>', label: 'Liste d\'achat' },
 
       { section: '🏛 Appels d\'offres' },
-      { page: 'dpgf',        icon: '<i class="ph ph-bank"></i>', label: 'DPGF / AO' },
+      { page: 'dpgf',        icon: '<i class="ph ph-bank"></i>', label: 'Appels d\'offres' },
       { page: 'tarifs',      icon: '<i class="ph ph-coins"></i>', label: 'Grille tarifaire' },
       { page: 'memo',        icon: '<i class="ph ph-check-square"></i>', label: 'Mémo chantier' },
 
@@ -130,13 +130,13 @@ const App = {
       { page: 'plomberie',   icon: '<i class="ph ph-pipe"></i>', label: 'Plomberie' },
 
       { section: '📐 Études techniques' },
-      { page: 'charges',     icon: '<i class="ph ph-scales"></i>', label: 'Coeff. de charge' },
+      { page: 'charges',     icon: '<i class="ph ph-scales"></i>', label: 'Charge plancher' },
       { page: 'rentabilite', icon: '<i class="ph ph-chart-line-up"></i>', label: 'Rentabilité' },
-      { page: 'acoustique',  icon: '<i class="ph ph-speaker-high"></i>', label: 'Acoustique Rw' },
+      { page: 'acoustique',  icon: '<i class="ph ph-speaker-high"></i>', label: 'Isolation acoustique' },
       { page: 'resistanceFeu', icon: '<i class="ph ph-fire"></i>', label: 'Résistance au feu' },
-      { page: 'thermique',     icon: '<i class="ph ph-thermometer"></i>', label: 'Thermique RE2020' },
-      { page: 'sectionCable',  icon: '<i class="ph ph-lightning"></i>', label: 'Section câble' },
-      { page: 'tempsChantier', icon: '<i class="ph ph-timer"></i>', label: 'Temps chantier' },
+      { page: 'thermique',     icon: '<i class="ph ph-thermometer"></i>', label: 'Isolation thermique' },
+      { page: 'sectionCable',  icon: '<i class="ph ph-lightning"></i>', label: 'Câblage électrique' },
+      { page: 'tempsChantier', icon: '<i class="ph ph-timer"></i>', label: 'Durée chantier' },
       { page: 'linteau',       icon: '<i class="ph ph-bridge"></i>', label: 'Linteau' },
 
       { section: '⚙️ Paramètres' },
@@ -254,6 +254,27 @@ const Pages = {
 
     const div = document.createElement('div');
     div.innerHTML = `
+      <div style="background:linear-gradient(135deg,rgba(10,132,255,0.08) 0%,rgba(48,209,88,0.05) 100%);border:0.5px solid rgba(10,132,255,0.15);border-radius:20px;padding:28px;margin-bottom:24px">
+  <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:6px;letter-spacing:0.04em;text-transform:uppercase">Que voulez-vous faire ?</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px" id="quick-actions">
+    <button onclick="App.navigate('devis_multi')" style="background:var(--bg-primary);border:0.5px solid var(--border);border-radius:14px;padding:20px 16px;cursor:pointer;text-align:center;transition:border-color .2s" onmouseover="this.style.borderColor='#0A84FF'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'">
+      <div style="font-size:28px;margin-bottom:8px">📄</div>
+      <div style="font-size:13px;font-weight:700;color:var(--text)">Nouveau devis</div>
+      <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px">Créer un devis multi-corps</div>
+    </button>
+    <button onclick="App.navigate('chantiers')" style="background:var(--bg-primary);border:0.5px solid var(--border);border-radius:14px;padding:20px 16px;cursor:pointer;text-align:center;transition:border-color .2s" onmouseover="this.style.borderColor='#30D158'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'">
+      <div style="font-size:28px;margin-bottom:8px">🏗</div>
+      <div style="font-size:13px;font-weight:700;color:var(--text)">Mes chantiers</div>
+      <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px">Voir les chantiers en cours</div>
+    </button>
+    <button onclick="App.navigate('prospection')" style="background:var(--bg-primary);border:0.5px solid var(--border);border-radius:14px;padding:20px 16px;cursor:pointer;text-align:center;transition:border-color .2s" onmouseover="this.style.borderColor='#FF9F0A'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'">
+      <div style="font-size:28px;margin-bottom:8px">🎯</div>
+      <div style="font-size:13px;font-weight:700;color:var(--text)">Trouver des chantiers</div>
+      <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px">Permis de construire près de vous</div>
+    </button>
+  </div>
+</div>
+
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-icon">👤</div>
@@ -1652,6 +1673,22 @@ const Pages = {
           </div>
         </div>
       </div>` : ''}
+
+      <div style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border);max-width:860px">
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary);margin-bottom:16px">⚖️ Mentions légales & CGV</div>
+  <div style="background:var(--bg-primary);border:0.5px solid var(--border);border-radius:12px;padding:16px;font-size:12px;color:var(--text-secondary);line-height:1.8">
+    <div style="font-weight:700;color:var(--text);margin-bottom:8px">PlaqPro+ — Logiciel de gestion pour artisans BTP</div>
+    <div>Éditeur : Gabriel Khamassi — Saint-Priest (69) — France</div>
+    <div>Copyright © 2026 Gabriel Khamassi — Tous droits réservés</div>
+    <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border);font-weight:600;color:var(--text)">Conditions Générales d'Utilisation</div>
+    <div style="margin-top:6px">PlaqPro+ est un <strong>outil d'aide à la décision</strong>. Les calculs, suggestions, alertes DTU et analyses IA sont fournis à titre indicatif et ne constituent en aucun cas un avis technique, juridique ou réglementaire certifié.</div>
+    <div style="margin-top:6px">L'utilisateur reste seul responsable des décisions prises sur la base des informations fournies par l'application. Gabriel Khamassi ne saurait être tenu responsable des préjudices directs ou indirects résultant de l'utilisation de PlaqPro+.</div>
+    <div style="margin-top:6px">Les données saisies dans PlaqPro+ sont stockées localement sur l'appareil de l'utilisateur. Aucune donnée n'est transmise à des tiers sans consentement explicite.</div>
+    <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border);font-size:11px;color:var(--text-tertiary)">
+      Dépôt APP en cours — Marque PlaqPro+ INPI en cours — Version 2.0 — Mai 2026
+    </div>
+  </div>
+</div>
     `;
     return div;
   },
