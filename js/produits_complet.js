@@ -363,6 +363,114 @@ const CATALOGUE = [
   { ref:'MO_GRAV',      fam:'Prestations Démolition', sfam:'Évacuation', nom:'Évacuation gravats (au m³)',            unite:'m3',   prix:45.00,  rend:null, tags:['prestation','gravats','evacuation','demolition','chantier'] },
   { ref:'MO_BENNE',     fam:'Prestations Démolition', sfam:'Location',   nom:'Location benne 7m³ (j)',               unite:'j',    prix:180.00, rend:null, tags:['prestation','benne','location','gravats','chantier'] },
   { ref:'MO_PROTECT',   fam:'Prestations Démolition', sfam:'Protection', nom:'Protection chantier (forfait)',         unite:'forfait',prix:150.00,rend:null, tags:['prestation','protection','chantier','plastique','bache'] },
+
+  // ══════════════════════════════════════════════════════════
+  //  PEINTURE & APPRÊTS (20/80 Peintre)
+  // ══════════════════════════════════════════════════════════
+  { ref:'PEINBL10', fam:'Peinture', sfam:'Blanc mat', nom:'Peinture acrylique blanc mat 10L', unite:'seau', prix:42.00, rend:10, tags:['peinture','blanc','mat','interieur'] },
+  { ref:'PEINBL5',  fam:'Peinture', sfam:'Blanc mat', nom:'Peinture acrylique blanc mat 5L',  unite:'seau', prix:24.00, rend:5,  tags:['peinture','blanc','mat'] },
+  { ref:'PEINSAT10',fam:'Peinture', sfam:'Satinée',   nom:'Peinture satinée blanc 10L',       unite:'seau', prix:52.00, rend:10, tags:['peinture','satin','lessivable'] },
+  { ref:'APPRMUR',  fam:'Peinture', sfam:'Apprêt',    nom:'Apprêt fixateur murs 10L',         unite:'seau', prix:28.00, rend:10, tags:['appret','fixateur','mur'] },
+  { ref:'SOUSCOUCHE',fam:'Peinture',sfam:'Apprêt',    nom:'Sous-couche universelle 5L',       unite:'seau', prix:22.00, rend:6,  tags:['sous-couche','appret'] },
+  { ref:'TOILVERRE',fam:'Peinture', sfam:'Toile',     nom:'Toile de verre 25m² rouleau',      unite:'roul', prix:18.50, rend:25, tags:['toile','verre','renfort'] },
+  { ref:'ENDUPRO',  fam:'Peinture', sfam:'Enduit',    nom:'Enduit de lissage pâte 15kg',      unite:'seau', prix:14.50, rend:15, tags:['enduit','lissage','finition'] },
+  { ref:'ENDUFIB',  fam:'Peinture', sfam:'Enduit',    nom:'Enduit fibre 25kg',                unite:'sac',  prix:12.80, rend:20, tags:['enduit','fibre','plafond'] },
+  { ref:'PEINEXT5', fam:'Peinture', sfam:'Façade',    nom:'Peinture façade acrylique 5L',     unite:'seau', prix:38.00, rend:6,  tags:['facade','exterieur','peinture'] },
+  { ref:'BCHROULE', fam:'Peinture', sfam:'Outil',     nom:'Rouleau laine 180mm + cage',       unite:'u',    prix:4.20,  rend:null, tags:['rouleau','outil','peinture'] },
+
+  // ══════════════════════════════════════════════════════════
+  //  MAÇONNERIE (20/80 Maçon)
+  // ══════════════════════════════════════════════════════════
+  { ref:'PARPA20',  fam:'Maçonnerie', sfam:'Parpaing', nom:'Parpaing creux 20×20×50cm',       unite:'u',    prix:1.85,  rend:null, tags:['parpaing','20cm','mur'] },
+  { ref:'PARPA15',  fam:'Maçonnerie', sfam:'Parpaing', nom:'Parpaing creux 15×20×50cm',       unite:'u',    prix:1.45,  rend:null, tags:['parpaing','15cm'] },
+  { ref:'MORTJOINT',fam:'Maçonnerie', sfam:'Mortier',  nom:'Mortier joint parpaing 35kg',     unite:'sac',  prix:8.50,  rend:null, tags:['mortier','joint','maconnerie'] },
+  { ref:'BETPRET',  fam:'Maçonnerie', sfam:'Béton',    nom:'Béton prêt à l\'emploi 35kg',     unite:'sac',  prix:6.80,  rend:null, tags:['beton','dalle','fondation'] },
+  { ref:'CIMENT',   fam:'Maçonnerie', sfam:'Liant',    nom:'Ciment gris CEM II 35kg',         unite:'sac',  prix:7.20,  rend:null, tags:['ciment','liant'] },
+  { ref:'CHAUX',    fam:'Maçonnerie', sfam:'Liant',    nom:'Chaux hydraulique NHL3.5 35kg',   unite:'sac',  prix:12.40, rend:null, tags:['chaux','enduit','facade'] },
+  { ref:'GRAVELON', fam:'Maçonnerie', sfam:'Granulat', nom:'Gravillons 6/14 big bag 1T',      unite:'bb',   prix:85.00, rend:null, tags:['gravillon','granulat','drainage'] },
+  { ref:'SABLE',    fam:'Maçonnerie', sfam:'Granulat', nom:'Sable de rivière big bag 1T',     unite:'bb',   prix:65.00, rend:null, tags:['sable','granulat'] },
+  { ref:'BRIQUE22', fam:'Maçonnerie', sfam:'Brique',   nom:'Brique monomur 22cm Porotherm',   unite:'u',    prix:2.80,  rend:null, tags:['brique','monomur','isolation'] },
+  { ref:'ENDUFAC',  fam:'Maçonnerie', sfam:'Enduit',   nom:'Enduit de façade gris 25kg',      unite:'sac',  prix:14.20, rend:null, tags:['enduit','facade','gros-oeuvre'] },
+  { ref:'RAGREA',   fam:'Maçonnerie', sfam:'Sol',      nom:'Ragréage autonivelant 25kg',      unite:'sac',  prix:18.50, rend:null, tags:['ragreage','sol','nivelage'] },
+
+  // ══════════════════════════════════════════════════════════
+  //  ÉLECTRICITÉ (20/80 Électricien) NF C15-100
+  // ══════════════════════════════════════════════════════════
+  { ref:'CAB15100', fam:'Électricité', sfam:'Câble',   nom:'Câble R2V 3G1.5mm² 100m',        unite:'roul', prix:48.00, rend:null, tags:['cable','1.5mm','eclairage','nf c15-100'] },
+  { ref:'CAB25100', fam:'Électricité', sfam:'Câble',   nom:'Câble R2V 3G2.5mm² 100m',        unite:'roul', prix:72.00, rend:null, tags:['cable','2.5mm','prise','nf c15-100'] },
+  { ref:'CAB6100',  fam:'Électricité', sfam:'Câble',   nom:'Câble R2V 3G6mm² 100m',          unite:'roul', prix:145.00,rend:null, tags:['cable','6mm','four','machine'] },
+  { ref:'GAINGRAY', fam:'Électricité', sfam:'Gaine',   nom:'Gaine ICT grise D20 100m',       unite:'roul', prix:28.00, rend:null, tags:['gaine','ict','d20','encastre'] },
+  { ref:'GAINFILM', fam:'Électricité', sfam:'Gaine',   nom:'Film renforcé ICD gris D20 50m',  unite:'roul', prix:18.00, rend:null, tags:['gaine','icd','film','cloison'] },
+  { ref:'BOITAPP',  fam:'Électricité', sfam:'Boîte',   nom:'Boîte d\'appareillage D67 x10',  unite:'lot',  prix:8.50,  rend:null, tags:['boite','appareillage','cloison'] },
+  { ref:'BOITDER',  fam:'Électricité', sfam:'Boîte',   nom:'Boîte de dérivation 80×80 x10',  unite:'lot',  prix:12.80, rend:null, tags:['boite','derivation'] },
+  { ref:'DISJ16',   fam:'Électricité', sfam:'Tableau', nom:'Disjoncteur 16A courbe C',        unite:'u',    prix:8.20,  rend:null, tags:['disjoncteur','16a','tableau'] },
+  { ref:'DISJ20',   fam:'Électricité', sfam:'Tableau', nom:'Disjoncteur 20A courbe C',        unite:'u',    prix:8.80,  rend:null, tags:['disjoncteur','20a','tableau'] },
+  { ref:'TABLMOD',  fam:'Électricité', sfam:'Tableau', nom:'Tableau électrique 13 modules',   unite:'u',    prix:28.00, rend:null, tags:['tableau','13modules','encastre'] },
+
+  // ══════════════════════════════════════════════════════════
+  //  PLOMBERIE (20/80 Plombier) DTU 60.1
+  // ══════════════════════════════════════════════════════════
+  { ref:'TUBCUIV12',fam:'Plomberie', sfam:'Tube',      nom:'Tube cuivre écroui D12 barre 4m', unite:'ml',   prix:6.80,  rend:null, tags:['cuivre','d12','eau','dtu60'] },
+  { ref:'TUBCUIV16',fam:'Plomberie', sfam:'Tube',      nom:'Tube cuivre écroui D16 barre 4m', unite:'ml',   prix:9.20,  rend:null, tags:['cuivre','d16','eau'] },
+  { ref:'TUBPEX16', fam:'Plomberie', sfam:'Tube',      nom:'Tube PER/PEX D16 couronne 50m',   unite:'roul', prix:38.00, rend:null, tags:['pex','per','d16','plancher'] },
+  { ref:'TUBPVC100',fam:'Plomberie', sfam:'Évacuation',nom:'Tube PVC évac D100 barre 4m',     unite:'u',    prix:18.50, rend:null, tags:['pvc','d100','evacuation','dtu64'] },
+  { ref:'TUBPVC50', fam:'Plomberie', sfam:'Évacuation',nom:'Tube PVC évac D50 barre 4m',      unite:'u',    prix:8.20,  rend:null, tags:['pvc','d50','evacuation'] },
+  { ref:'COUPLAGE', fam:'Plomberie', sfam:'Raccord',   nom:'Coude cuivre 90° D16 x10',        unite:'lot',  prix:12.50, rend:null, tags:['coude','raccord','cuivre'] },
+  { ref:'ROBINET',  fam:'Plomberie', sfam:'Robinetterie',nom:'Robinet d\'arrêt quart de tour D16',unite:'u',prix:8.80, rend:null, tags:['robinet','arret','d16'] },
+  { ref:'WC',       fam:'Plomberie', sfam:'Sanitaire', nom:'WC suspendu complet avec bâti',   unite:'u',    prix:185.00,rend:null, tags:['wc','suspendu','sanitaire'] },
+  { ref:'LAVABO',   fam:'Plomberie', sfam:'Sanitaire', nom:'Lavabo céramique 60cm + robinet',  unite:'u',    prix:95.00, rend:null, tags:['lavabo','ceramique','sdb'] },
+
+  // ══════════════════════════════════════════════════════════
+  //  CARRELAGE (20/80 Carreleur)
+  // ══════════════════════════════════════════════════════════
+  { ref:'CARRE60',  fam:'Carrelage', sfam:'Sol',       nom:'Carrelage grès cérame 60×60cm gris',unite:'m²', prix:18.50, rend:1,    tags:['carrelage','60x60','sol','gres'] },
+  { ref:'CARRE30',  fam:'Carrelage', sfam:'Mur',       nom:'Carrelage faïence mur 30×60cm blanc',unite:'m²',prix:12.80, rend:1,   tags:['faience','30x60','mur','sdb'] },
+  { ref:'COLLEMAN', fam:'Carrelage', sfam:'Colle',     nom:'Colle carrelage C2TE Mapei 25kg',  unite:'sac', prix:18.50, rend:5,    tags:['colle','c2te','mapei','carrelage'] },
+  { ref:'JOINTCAR', fam:'Carrelage', sfam:'Joint',     nom:'Joint carrelage Mapei Ultracolor 5kg',unite:'sac',prix:14.80,rend:null,tags:['joint','carrelage','mapei'] },
+  { ref:'RAGRECAR', fam:'Carrelage', sfam:'Préparation',nom:'Ragréage fibré 25kg',             unite:'sac', prix:16.80, rend:6,    tags:['ragreage','sol','preparation'] },
+  { ref:'CROIXESC', fam:'Carrelage', sfam:'Outil',     nom:'Croix d\'espacement 3mm x500',    unite:'lot',  prix:3.20,  rend:null, tags:['croix','espacement','pose'] },
+  { ref:'IMPERCAR', fam:'Carrelage', sfam:'Étanchéité',nom:'Étanchéité sous carrelage 15kg',  unite:'seau', prix:28.00, rend:8,    tags:['etancheite','dtu52','sdb','douche'] },
+
+  // ══════════════════════════════════════════════════════════
+  //  MENUISERIE (20/80 Menuisier)
+  // ══════════════════════════════════════════════════════════
+  { ref:'PORTINT',  fam:'Menuiserie', sfam:'Porte',    nom:'Bloc porte intérieur 83×204cm isoplane',unite:'u',prix:85.00,rend:null,tags:['porte','interieur','isoplane'] },
+  { ref:'PORTBLOC', fam:'Menuiserie', sfam:'Porte',    nom:'Bloc porte huisserie 83×204cm prépeint',unite:'u',prix:145.00,rend:null,tags:['porte','huisserie','prepeint'] },
+  { ref:'RODAPIED', fam:'Menuiserie', sfam:'Plinthe',  nom:'Plinthe MDF peinte blanche 70mm 2.4m',unite:'ml',prix:4.20,rend:null,tags:['plinthe','mdf','blanc'] },
+  { ref:'PARQUET',  fam:'Menuiserie', sfam:'Sol',      nom:'Parquet stratifié 8mm AC4 1.2m²/paq',unite:'m²',prix:14.50,rend:1,   tags:['parquet','stratifie','sol','ac4'] },
+  { ref:'MOULURE',  fam:'Menuiserie', sfam:'Finition', nom:'Moulure cache-fil MDF 25×15mm 2.4m',unite:'ml', prix:2.80,  rend:null, tags:['moulure','cache-fil','finition'] },
+  { ref:'CHEVRON',  fam:'Menuiserie', sfam:'Bois',     nom:'Chevron sapin 63×75mm 5m',          unite:'u',  prix:12.50, rend:null, tags:['chevron','charpente','sapin'] },
+
+  // ══════════════════════════════════════════════════════════
+  //  ISOLATION THERMIQUE & ACOUSTIQUE
+  // ══════════════════════════════════════════════════════════
+  { ref:'LV45',     fam:'Isolation', sfam:'Laine verre',nom:'Laine de verre Isover 45mm 14.4m²', unite:'roul',prix:28.50,rend:14.4,tags:['laine','verre','45mm','acoustique'] },
+  { ref:'LV100',    fam:'Isolation', sfam:'Laine verre',nom:'Laine de verre Isover 100mm 6m²',  unite:'roul', prix:24.00, rend:6,   tags:['laine','verre','100mm','thermique'] },
+  { ref:'LR60',     fam:'Isolation', sfam:'Laine roche',nom:'Laine de roche Rockwool 60mm 4m²', unite:'paq',  prix:22.50, rend:4,   tags:['laine','roche','60mm','feu'] },
+  { ref:'PANRIG',   fam:'Isolation', sfam:'Rigide',     nom:'Panneau polystyrène expansé 100mm 1.2×0.6m',unite:'u',prix:8.80,rend:0.72,tags:['polystyrene','eps','thermique'] },
+  { ref:'ITEXI',    fam:'Isolation', sfam:'Extérieur',  nom:'Panneau ITE laine roche façade 100mm',unite:'m²',prix:28.00,rend:1,   tags:['ite','facade','isolation','exterieur'] },
+  { ref:'VAPEBARR', fam:'Isolation', sfam:'Pare-vapeur',nom:'Pare-vapeur polyéthylène 50m²',    unite:'roul', prix:42.00, rend:50,  tags:['pare-vapeur','etancheite','air'] },
+
+  // ══════════════════════════════════════════════════════════
+  //  FIXATIONS & VISSERIE (universel)
+  // ══════════════════════════════════════════════════════════
+  { ref:'VISPLAQ',  fam:'Fixation', sfam:'Vis plaque',  nom:'Vis plaque TF 3.5×35mm boite 1000',unite:'bte', prix:8.50,  rend:null, tags:['vis','plaque','tf','35mm'] },
+  { ref:'VISPLAQ55',fam:'Fixation', sfam:'Vis plaque',  nom:'Vis plaque TF 3.5×55mm boite 500', unite:'bte', prix:7.20,  rend:null, tags:['vis','plaque','tf','55mm','double'] },
+  { ref:'CHEVBETON',fam:'Fixation', sfam:'Cheville',    nom:'Cheville béton Fischer 8×50 x100',  unite:'bte', prix:18.50, rend:null, tags:['cheville','beton','fischer','8mm'] },
+  { ref:'CHEVMOL',  fam:'Fixation', sfam:'Cheville',    nom:'Cheville molly M5×65 x50',          unite:'bte', prix:12.80, rend:null, tags:['cheville','molly','plaque','creux'] },
+  { ref:'BOULONHM', fam:'Fixation', sfam:'Boulon',      nom:'Boulon HM M8×50 + écrou x25',       unite:'bte', prix:8.90,  rend:null, tags:['boulon','hm','m8','metal'] },
+  { ref:'RONDELLE', fam:'Fixation', sfam:'Rondelle',    nom:'Rondelle large M8 zinguée x100',    unite:'bte', prix:4.20,  rend:null, tags:['rondelle','m8','zingue'] },
+  { ref:'AGRAFES',  fam:'Fixation', sfam:'Agrafes',     nom:'Agrafes galvanisées 6mm boite 1000',unite:'bte', prix:6.80,  rend:null, tags:['agrafes','isolant','fixation'] },
+
+  // ══════════════════════════════════════════════════════════
+  //  PAYSAGISME / EXTÉRIEUR (20/80 Paysagiste)
+  // ══════════════════════════════════════════════════════════
+  { ref:'DALLBETO', fam:'Paysagisme', sfam:'Dalle',     nom:'Dalle béton grise 40×40×4cm',      unite:'u',   prix:3.20,  rend:0.16, tags:['dalle','beton','terrasse','exterieur'] },
+  { ref:'GRAVIER',  fam:'Paysagisme', sfam:'Minéral',   nom:'Gravier décoratif blanc 20kg',     unite:'sac', prix:6.50,  rend:null, tags:['gravier','decoratif','blanc'] },
+  { ref:'BORD_ALU', fam:'Paysagisme', sfam:'Bordure',   nom:'Bordure aluminium flexible 3m',    unite:'u',   prix:12.80, rend:null, tags:['bordure','alu','flexible','jardin'] },
+  { ref:'GEOTEXTIL',fam:'Paysagisme', sfam:'Géotextile',nom:'Géotextile 100g/m² 2×25m',        unite:'roul',prix:28.00, rend:50,   tags:['geotextile','desherbage','drainage'] },
+  { ref:'TERRASSE', fam:'Paysagisme', sfam:'Terrasse',  nom:'Lame terrasse composite 145×21mm 4m',unite:'ml',prix:18.50,rend:null, tags:['lame','composite','terrasse','bois'] },
+  { ref:'GAZON_SEM',fam:'Paysagisme', sfam:'Végétal',   nom:'Semence gazon résistant 1kg 50m²', unite:'sac', prix:14.50, rend:50,   tags:['gazon','semence','pelouse'] },
 ];
 
 // ── Familles pour les filtres ──────────────────────────────────
@@ -789,6 +897,8 @@ const ProdMoteur = {
           <div class="prod-card-header">
             <span class="prod-card-ref">${ref}</span>
             <span class="prod-card-prix">${new Intl.NumberFormat('fr-FR',{minimumFractionDigits:2}).format(p.prixHT || 0)} €/${p.unite}</span>
+            <button onclick="event.stopPropagation();PROD.majPrix(${JSON.stringify(p.reference)})" style="background:none;border:none;color:var(--accent);font-size:11px;cursor:pointer;padding:2px 6px" title="Mettre à jour le prix">✏️</button>
+            <button onclick="event.stopPropagation();PROD.chercherFournisseur(${JSON.stringify(p.reference)}, ${JSON.stringify(p.designation)})" style="background:none;border:none;color:#0d9488;font-size:11px;cursor:pointer;padding:2px 6px" title="Chercher chez un fournisseur">🔍</button>
           </div>
           <div class="prod-card-nom">${nom}</div>
           <div class="prod-card-meta">
@@ -810,4 +920,71 @@ const ProdMoteur = {
 // Initialiser le catalogue au chargement
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(initCatalogue, 500);
+});
+
+window.PROD = window.PROD || {};
+Object.assign(window.PROD, {
+  majPrix(ref) {
+    const overrides = JSON.parse(localStorage.getItem('plaqpro_prix_overrides') || '{}');
+    const current = overrides[ref]?.prix || CATALOGUE.find(p => p.ref === ref)?.prix || 0;
+    App.openModal('Mettre à jour le prix — ' + ref,
+      `<div style="padding:16px">
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">
+          Prix actuel : <strong>${current} €</strong>
+        </div>
+        <label style="font-size:12px;color:var(--text-secondary)">Nouveau prix HT (€)</label>
+        <input type="number" class="form-control" id="prod-new-prix" value="${current}" step="0.01" style="margin-top:4px;margin-bottom:8px">
+        <label style="font-size:12px;color:var(--text-secondary)">Source (fournisseur)</label>
+        <input class="form-control" id="prod-new-source" placeholder="Point.P, Bricoman..." style="margin-top:4px">
+      </div>`,
+      `<button class="btn btn-primary" onclick="PROD._savePrix('${ref}')">💾 Sauvegarder</button>
+       <button class="btn btn-secondary" onclick="App.closeModal()">Annuler</button>`
+    );
+  },
+  _savePrix(ref) {
+    const newPrix = parseFloat(document.getElementById('prod-new-prix')?.value);
+    const source = document.getElementById('prod-new-source')?.value.trim();
+    if (!newPrix || newPrix <= 0) { App.toast('Prix invalide', 'error'); return; }
+    const overrides = JSON.parse(localStorage.getItem('plaqpro_prix_overrides') || '{}');
+    overrides[ref] = { prix: newPrix, source, date: new Date().toLocaleDateString('fr-FR') };
+    localStorage.setItem('plaqpro_prix_overrides', JSON.stringify(overrides));
+    App.closeModal();
+    App.toast('Prix mis à jour ✅', 'success');
+    App.navigate('produits');
+  },
+  chercherFournisseur(ref, nom) {
+    const q = encodeURIComponent(nom);
+    App.openModal('Chercher ce produit chez un fournisseur',
+      `<div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">${nom}</div>
+        <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">Cliquez sur un fournisseur pour rechercher ce produit sur son site :</div>
+        ${[
+          { nom:'Point.P', url:'https://www.pointp.fr/recherche?q=', color:'#e63946' },
+          { nom:'Bricoman', url:'https://www.bricoman.fr/catalogsearch/result/?q=', color:'#0077b6' },
+          { nom:'Leroy Merlin Pro', url:'https://www.leroymerlin.fr/recherche=', color:'#67a617' },
+          { nom:'Würth', url:'https://www.wurth.fr/recherche?searchTerm=', color:'#cc0000' },
+          { nom:'Legallais', url:'https://www.legallais.com/recherche?q=', color:'#003366' },
+          { nom:'Knauf', url:'https://www.knauf.fr/recherche?q=', color:'#ffcc00' },
+          { nom:'Placo', url:'https://www.placo.fr/recherche?q=', color:'#0072ce' },
+          { nom:'Plateforme BTP', url:'https://www.laplateformebatiment.fr/search?q=', color:'#e63946' },
+        ].map(f => `
+          <a href="${f.url}${q}" target="_blank"
+            style="display:flex;align-items:center;gap:10px;padding:10px 14px;
+            background:var(--bg-primary);border:1px solid var(--border);
+            border-radius:var(--radius-sm);text-decoration:none;color:var(--text-primary);
+            font-size:13px;font-weight:500;transition:border-color .15s"
+            onmouseover="this.style.borderColor='${f.color}'"
+            onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'">
+            <span style="width:10px;height:10px;border-radius:50%;background:${f.color};flex-shrink:0"></span>
+            ${f.nom}
+            <span style="margin-left:auto;font-size:11px;color:var(--text-tertiary)">→ Rechercher</span>
+          </a>
+        `).join('')}
+        <div style="margin-top:8px;padding:10px;background:rgba(13,148,136,0.08);border-radius:var(--radius-sm);font-size:11px;color:#0d9488">
+          💡 Après avoir trouvé le prix, revenez mettre à jour avec le bouton ✏️
+        </div>
+      </div>`,
+      `<button class="btn btn-secondary" onclick="App.closeModal()">Fermer</button>`
+    );
+  }
 });
