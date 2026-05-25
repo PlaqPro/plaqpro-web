@@ -194,6 +194,7 @@
         { page: 'memo',   icon: '✅', label: 'Mémo chantier' },
       { section: 'Params' },
       { page: 'monCompte',   icon: '<i class="ph ph-user-circle"></i>', label: 'Mon compte' },
+      { page: 'legal',       icon: '<i class="ph ph-scales"></i>', label: 'Mentions légales' },
       { page: 'produits',    icon: '💰', label: 'Base tarifaire' },
       { section: 'Packs Métier' },
       { page: 'maconnerie',  icon: '🧱', label: 'Pack Maçonnerie' },
@@ -290,6 +291,7 @@
         chantier_mobile: '🏗 Mode Chantier',
         monCompte:       '👤 Mon Compte',
         inscription:     '🚀 Inscription — Qualification métier',
+        legal:           '⚖️ Documents Légaux',
       };
       document.getElementById('topbar-title').textContent = titles[page] || page;
 
@@ -336,6 +338,7 @@
         chantier_mobile: function() { return Pages.chantier_mobile(); },
         monCompte:       function() { return Pages.monCompte(); },
         inscription:     function() { return Pages.inscription(); },
+        legal:           function() { return Pages.legal(); },
       };
 
       if (pageMap[page]) {
@@ -368,6 +371,7 @@
 <script src="js/sous_traitants.js"></script>
 <script src="js/mon_compte.js"></script>
 <script src="js/inscription.js"></script>
+<script src="js/legal.js"></script>
 
 </body>
 </html>

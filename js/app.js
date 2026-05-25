@@ -72,6 +72,7 @@ const App = {
       linteau:       () => Pages.linteau(),
       monCompte:     () => Pages.monCompte(),
       inscription:   () => Pages.inscription(),
+      legal:         (params) => Pages.legal(params && params.section),
     };
 
     if (pages[page]) {
@@ -143,6 +144,7 @@ const App = {
 
       { section: '⚙️ Paramètres' },
       { page: 'monCompte',   icon: '<i class="ph ph-user-circle"></i>', label: 'Mon compte' },
+      { page: 'legal',       icon: '<i class="ph ph-scales"></i>', label: 'Mentions légales' },
       { page: 'produits',    icon: '<i class="ph ph-tag"></i>', label: 'Base tarifaire' },
       { page: 'config',      icon: '<i class="ph ph-gear"></i>', label: 'Configuration' },
     ];
