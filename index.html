@@ -195,7 +195,8 @@
       { section: 'Params' },
       { page: 'monCompte',   icon: '<i class="ph ph-user-circle"></i>', label: 'Mon compte' },
       { page: 'legal',       icon: '<i class="ph ph-scales"></i>', label: 'Mentions légales' },
-      { page: 'produits',    icon: '🏪', label: 'Catalogue fournisseurs' },
+      { page: 'catalogueFournisseurs', icon: '<i class="ph ph-storefront"></i>', label: 'Catalogue fournisseurs' },
+      { page: 'produits', icon: '💰', label: 'Base tarifaire' },
       { section: 'Packs Métier' },
       { page: 'maconnerie',  icon: '🧱', label: 'Pack Maçonnerie' },
       { page: 'electricite', icon: '⚡', label: 'Électricité' },
@@ -266,6 +267,7 @@
         tarifs:      '💶 Mes Prix de Vente — Grille tarifaire',
         memo:        '✅ Mémo chantier',
         produits:    '🏪 Catalogue Fournisseurs — Prix d\'achat',
+        catalogueFournisseurs: '🏪 Catalogue Fournisseurs BTP',
         config:      'Configuration',
         quiz:        '🎮 Quiz Plaquiste',
         plaqtetris:  '🎲 PlaqTetris',
@@ -316,6 +318,7 @@
         tarifs:      function() { return Pages.tarifs(params); },
         memo:        function() { return Pages.memo(params); },
         produits:    function() { return Pages.produits(); },
+        catalogueFournisseurs: function() { return Pages.catalogueFournisseurs(); },
         config:      function() { return Pages.config(); },
         quiz:        function() { return Pages.quiz(); },
         plaqtetris:  function() { return Pages.plaqtetris(); },
@@ -372,6 +375,7 @@
 <script src="js/mon_compte.js"></script>
 <script src="js/inscription.js"></script>
 <script src="js/legal.js"></script>
+<script src="js/catalogue_fournisseurs.js"></script>
 
 </body>
 </html>

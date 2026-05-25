@@ -47,6 +47,7 @@ const App = {
       peinture:   () => Pages.peinture(params),
       devis:      () => Pages.devis(params),
       produits:   () => Pages.produits(),
+      catalogueFournisseurs: () => Pages.catalogueFournisseurs(),
       config:     () => Pages.config(),
       calcul:      () => Pages.calculateur(),
       calculateur: () => Pages.calculateur(),
@@ -145,7 +146,7 @@ const App = {
       { section: '⚙️ Paramètres' },
       { page: 'monCompte',   icon: '<i class="ph ph-user-circle"></i>', label: 'Mon compte' },
       { page: 'legal',       icon: '<i class="ph ph-scales"></i>', label: 'Mentions légales' },
-      { page: 'produits',    icon: '<i class="ph ph-storefront"></i>', label: 'Catalogue fournisseurs' },
+      { page: 'catalogueFournisseurs', icon: '<i class="ph ph-storefront"></i>', label: 'Catalogue fournisseurs' },
       { page: 'config',      icon: '<i class="ph ph-gear"></i>', label: 'Configuration' },
     ];
 
