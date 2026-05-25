@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function () {
+﻿document.addEventListener("DOMContentLoaded", function () {
   const header = document.querySelector(".header");
   const dashboard = document.querySelector(".dashboard-window");
 

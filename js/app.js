@@ -1,6 +1,6 @@
 ﻿/**
  * PlaqPro+ — Logiciel de gestion pour artisans BTP
- * Copyright (c) 2026 Gabriel A. — AATB — Saint-Priest (69)
+ * Copyright (c) 2026 Gabriel Khamassi — Saint-Priest (69)
  * Tous droits reserves — All rights reserved
  * Toute reproduction, copie, distribution ou modification
  * interdite sans autorisation ecrite de l auteur.
@@ -413,6 +413,69 @@ const Pages = {
         </div>
       </div>
     `;
+
+    // Onboarding wizard — affiché uniquement si aucun client
+    const clients = DB.clients || [];
+    const chantiers = DB.chantiers || [];
+    const config = DB.getConfig();
+    const onboardingFait = localStorage.getItem('plaqpro_onboarding_done');
+
+    if (!onboardingFait && clients.length === 0) {
+      const onb = document.createElement('div');
+      onb.id = 'onboarding-wizard';
+      onb.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
+      onb.innerHTML = `
+    <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:20px;padding:40px;max-width:520px;width:100%;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">👋</div>
+      <h2 style="font-size:24px;font-weight:800;letter-spacing:-0.03em;margin-bottom:8px">Bienvenue sur PlaqPro+</h2>
+      <p style="font-size:14px;color:var(--text-secondary);font-weight:300;line-height:1.65;margin-bottom:32px">
+        Le premier assistant intelligent pour artisans BTP.<br>
+        Suivez ces 4 étapes pour démarrer en 3 minutes.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:32px;text-align:left">
+        <div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(10,132,255,0.15);color:#0A84FF;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+          <div><div style="font-weight:600;font-size:14px">Configurez votre entreprise</div>
+          <div style="font-size:12px;color:var(--text-tertiary)">Nom, SIRET, adresse — pour vos devis et factures</div></div>
+          <div style="margin-left:auto;font-size:18px">⚙️</div>
+        </div>
+        <div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(48,209,88,0.12);color:#30D158;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+          <div><div style="font-weight:600;font-size:14px">Ajoutez votre premier client</div>
+          <div style="font-size:12px;color:var(--text-tertiary)">Nom, téléphone, email — en 30 secondes</div></div>
+          <div style="margin-left:auto;font-size:18px">👤</div>
+        </div>
+        <div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,159,10,0.12);color:#FF9F0A;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
+          <div><div style="font-weight:600;font-size:14px">Créez votre premier chantier</div>
+          <div style="font-size:12px;color:var(--text-tertiary)">Associez-le à votre client et ajoutez les métrés</div></div>
+          <div style="margin-left:auto;font-size:18px">🏗</div>
+        </div>
+        <div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(191,90,242,0.12);color:#BF5AF2;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">4</div>
+          <div><div style="font-weight:600;font-size:14px">Générez votre premier devis IA</div>
+          <div style="font-size:12px;color:var(--text-tertiary)">Décrivez les travaux — l'IA fait le reste</div></div>
+          <div style="margin-left:auto;font-size:18px">🤖</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button onclick="document.getElementById('onboarding-wizard').remove();localStorage.setItem('plaqpro_onboarding_done','1');App.navigate('config')"
+          style="background:#0A84FF;color:#fff;border:none;padding:14px 28px;border-radius:980px;font-size:15px;font-weight:700;cursor:pointer">
+          ⚙️ Commencer la configuration →
+        </button>
+        <button onclick="document.getElementById('onboarding-wizard').remove();localStorage.setItem('plaqpro_onboarding_done','1')"
+          style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.15);color:var(--text-secondary);padding:14px 20px;border-radius:980px;font-size:14px;font-weight:500;cursor:pointer">
+          Passer
+        </button>
+      </div>
+      <div style="margin-top:16px;font-size:11px;color:var(--text-tertiary)">
+        Cet assistant s'affiche uniquement à la première connexion
+      </div>
+    </div>
+  `;
+      document.body.appendChild(onb);
+    }
+
     return div;
   },
 

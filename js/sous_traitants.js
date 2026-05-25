@@ -1,6 +1,6 @@
-/**
+﻿/**
  * PlaqPro+ — Module Sous-Traitants
- * Copyright (c) 2026 Gabriel A. — AATB — Saint-Priest (69)
+ * Copyright (c) 2026 Gabriel Khamassi — Saint-Priest (69)
  * Tous droits réservés
  */
 

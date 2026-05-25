@@ -1,6 +1,6 @@
 ﻿/**
  * PlaqPro+ — Logiciel de gestion pour artisans BTP
- * Copyright (c) 2026 Gabriel A. — AATB — Saint-Priest (69)
+ * Copyright (c) 2026 Gabriel Khamassi — Saint-Priest (69)
  * Tous droits reserves — All rights reserved
  * Toute reproduction, copie, distribution ou modification
  * interdite sans autorisation ecrite de l auteur.
@@ -86,6 +86,9 @@ Tu réponds en français, de façon courte et pratique.`,
           <div class="ia-bubble">
             Bonjour ! Je suis votre assistant conseil en plaquisterie.<br>
             Posez-moi vos questions sur les matériaux, normes DTU ou techniques de pose. 💬
+            <div style="background:rgba(245,158,11,0.08);border:0.5px solid rgba(245,158,11,0.3);border-radius:8px;padding:10px 14px;font-size:11px;color:#f59e0b;margin-top:8px;line-height:1.6">
+⚠️ <strong>Assistant d'aide à la décision</strong> — Les suggestions fournies sont indicatives et doivent être vérifiées par un professionnel qualifié. PlaqPro+ ne saurait être tenu responsable des décisions prises sur la base de ces informations.
+</div>
           </div>
         </div>
       </div>

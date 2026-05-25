@@ -1,6 +1,6 @@
 ﻿/**
  * PlaqPro+ — Logiciel de gestion pour artisans BTP
- * Copyright (c) 2026 Gabriel A. — AATB — Saint-Priest (69)
+ * Copyright (c) 2026 Gabriel Khamassi — Saint-Priest (69)
  * Tous droits reserves — All rights reserved
  * Toute reproduction, copie, distribution ou modification
  * interdite sans autorisation ecrite de l auteur.

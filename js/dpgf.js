@@ -1,6 +1,6 @@
 ﻿/**
  * PlaqPro+ — Logiciel de gestion pour artisans BTP
- * Copyright (c) 2026 Gabriel A. — AATB — Saint-Priest (69)
+ * Copyright (c) 2026 Gabriel Khamassi — Saint-Priest (69)
  * Tous droits reserves — All rights reserved
  * Toute reproduction, copie, distribution ou modification
  * interdite sans autorisation ecrite de l auteur.
@@ -123,6 +123,11 @@ var DPGF = {
   _buildPage() {
     return `
       <div style="max-width:1100px;margin:0 auto;padding:0 4px">
+
+        <!-- Disclaimer IA -->
+        <div style="background:rgba(245,158,11,0.08);border:0.5px solid rgba(245,158,11,0.3);border-radius:8px;padding:10px 14px;font-size:11px;color:#f59e0b;margin-bottom:16px;line-height:1.6">
+⚠️ <strong>Outil d'aide à l'analyse</strong> — L'analyse IA est fournie à titre indicatif. Vérifiez toujours les exigences du CCTP avant de répondre à un appel d'offres. PlaqPro+ ne garantit pas l'exhaustivité de l'analyse.
+</div>
 
         <!-- Hero -->
         <div style="background:linear-gradient(135deg,rgba(79,142,247,0.12),rgba(45,212,160,0.08));border:1px solid rgba(79,142,247,0.2);border-radius:16px;padding:28px 32px;margin-bottom:20px;display:flex;align-items:center;gap:20px">
