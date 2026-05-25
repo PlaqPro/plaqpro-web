@@ -485,4 +485,108 @@ Object.assign(Pages, {
     App.navigate('factures');
     App.closeModal();
   },
+
+  rapportMensuel() {
+    const aujourd_hui = new Date();
+    const moisCourant = aujourd_hui.getMonth();
+    const anneeCourante = aujourd_hui.getFullYear();
+    const nomMois = aujourd_hui.toLocaleString('fr-FR', { month: 'long', year: 'numeric' });
+
+    const factures = DB.factures || [];
+    const devis = DB.devis || [];
+
+    const factureMois = factures.filter(f => {
+      if (!f.date) return false;
+      const d = new Date(f.date);
+      return d.getMonth() === moisCourant && d.getFullYear() === anneeCourante;
+    });
+    const devisMois = devis.filter(d => {
+      if (!d.date) return false;
+      const dd = new Date(d.date);
+      return dd.getMonth() === moisCourant && dd.getFullYear() === anneeCourante;
+    });
+
+    const caMois = factureMois.reduce((s, f) => s + (parseFloat(f.totalHT) || 0), 0);
+    const caDevisMois = devisMois.reduce((s, d) => s + (parseFloat(d.totalHT) || 0), 0);
+    const facPayees = factureMois.filter(f => f.statut === 'Payée');
+    const facImpayes = factures.filter(f => {
+      if (f.statut === 'Payée' || f.statut === 'Annulée') return false;
+      return new Date(f.dateEcheance) < aujourd_hui;
+    });
+    const montantImpayes = facImpayes.reduce((s, f) => s + (parseFloat(f.totalHT) || 0), 0);
+    const relances = devis.filter(d => {
+      if (d.statut !== 'Envoyé') return false;
+      const diff = (aujourd_hui - new Date(d.date)) / (1000 * 60 * 60 * 24);
+      return diff >= 7;
+    });
+
+    const lignesFactures = factureMois.map(f => {
+      const client = (DB.clients || []).find(c => c.id === f.clientId);
+      const nomClient = client ? client.nom : f.clientId || '—';
+      return `<tr>
+        <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb">${f.numero || f.id}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb">${nomClient}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;text-align:right">${(parseFloat(f.totalHT) || 0).toFixed(2)} €</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;text-align:center">
+          <span style="padding:2px 8px;border-radius:99px;font-size:11px;background:${f.statut === 'Payée' ? '#d1fae5;color:#065f46' : f.statut === 'En attente' ? '#fef3c7;color:#92400e' : '#fee2e2;color:#991b1b'}">${f.statut || '—'}</span>
+        </td>
+      </tr>`;
+    }).join('');
+
+    const lignesDevis = devisMois.map(d => {
+      const client = (DB.clients || []).find(c => c.id === d.clientId);
+      const nomClient = client ? client.nom : d.clientId || '—';
+      return `<tr>
+        <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb">${d.numero || d.id}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb">${nomClient}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;text-align:right">${(parseFloat(d.totalHT) || 0).toFixed(2)} €</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb;text-align:center">
+          <span style="padding:2px 8px;border-radius:99px;font-size:11px;background:${d.statut === 'Accepté' ? '#d1fae5;color:#065f46' : d.statut === 'Envoyé' ? '#dbeafe;color:#1e40af' : '#f3f4f6;color:#374151'}">${d.statut || '—'}</span>
+        </td>
+      </tr>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+    <title>Rapport mensuel — ${nomMois}</title>
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 13px; color: #111; margin: 0; padding: 24px; }
+      h1 { font-size: 20px; margin-bottom: 4px; }
+      .subtitle { color: #6b7280; font-size: 12px; margin-bottom: 24px; }
+      .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
+      .kpi { background: #f9fafb; border-radius: 8px; padding: 14px 18px; border-left: 4px solid #6366f1; }
+      .kpi .val { font-size: 22px; font-weight: 700; }
+      .kpi .lbl { font-size: 11px; color: #6b7280; margin-top: 2px; }
+      .kpi.red { border-left-color: #ef4444; }
+      .kpi.green { border-left-color: #10b981; }
+      .kpi.amber { border-left-color: #f59e0b; }
+      h2 { font-size: 14px; margin: 24px 0 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
+      table { width: 100%; border-collapse: collapse; }
+      th { padding: 8px 10px; background: #f3f4f6; text-align: left; font-size: 12px; color: #374151; }
+      .footer { margin-top: 32px; font-size: 10px; color: #9ca3af; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 10px; }
+      @media print { body { padding: 0; } }
+    </style></head><body>
+    <h1>Rapport mensuel — ${nomMois}</h1>
+    <div class="subtitle">Généré le ${aujourd_hui.toLocaleDateString('fr-FR')} · PlaqPro+</div>
+
+    <div class="kpi-grid">
+      <div class="kpi green"><div class="val">${caMois.toFixed(0)} €</div><div class="lbl">CA facturé HT</div></div>
+      <div class="kpi"><div class="val">${caDevisMois.toFixed(0)} €</div><div class="lbl">Devis émis HT</div></div>
+      <div class="kpi red"><div class="val">${montantImpayes.toFixed(0)} €</div><div class="lbl">Impayés en cours</div></div>
+      <div class="kpi amber"><div class="val">${relances.length}</div><div class="lbl">Devis à relancer</div></div>
+    </div>
+
+    <h2>Factures du mois (${factureMois.length}) — ${facPayees.length} payée(s)</h2>
+    ${factureMois.length ? `<table><thead><tr><th>N°</th><th>Client</th><th style="text-align:right">Total HT</th><th style="text-align:center">Statut</th></tr></thead><tbody>${lignesFactures}</tbody></table>` : '<p style="color:#9ca3af;font-style:italic">Aucune facture ce mois.</p>'}
+
+    <h2>Devis du mois (${devisMois.length})</h2>
+    ${devisMois.length ? `<table><thead><tr><th>N°</th><th>Client</th><th style="text-align:right">Total HT</th><th style="text-align:center">Statut</th></tr></thead><tbody>${lignesDevis}</tbody></table>` : '<p style="color:#9ca3af;font-style:italic">Aucun devis ce mois.</p>'}
+
+    <div class="footer">PlaqPro+ · © 2026 Gabriel Khamassi — Rapport généré automatiquement · Ne constitue pas un document comptable officiel.</div>
+    </body></html>`;
+
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => win.print(), 500);
+  },
 });

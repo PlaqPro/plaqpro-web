@@ -252,6 +252,40 @@ const Pages = {
     const chantiers = DB.chantiers.filter(c => c.statut === 'En cours');
     const devisRecents = DB.devis.slice(-5).reverse();
 
+    // ── WIDGET RELANCES ──
+    const devis = DB.devis || [];
+    const aujourd_hui = new Date();
+    const relances = devis.filter(d => {
+      if (d.statut !== 'Envoyé') return false;
+      const envoi = new Date(d.date);
+      const diff = (aujourd_hui - envoi) / (1000*60*60*24);
+      return diff >= 7;
+    });
+
+    // ── WIDGET IMPAYÉS ──
+    const factures = DB.factures || [];
+    const impayes = factures.filter(f => {
+      if (f.statut === 'Payée' || f.statut === 'Annulée') return false;
+      const echeance = new Date(f.dateEcheance);
+      return echeance < aujourd_hui;
+    });
+
+    // ── CA MENSUEL ──
+    const moisCourant = aujourd_hui.getMonth();
+    const anneeCourante = aujourd_hui.getFullYear();
+    const factureMois = factures.filter(f => {
+      if (!f.date) return false;
+      const d = new Date(f.date);
+      return d.getMonth() === moisCourant && d.getFullYear() === anneeCourante;
+    });
+    const caMois = factureMois.reduce((s,f) => s + (parseFloat(f.totalHT)||0), 0);
+    const devisMois = devis.filter(d => {
+      if (!d.date) return false;
+      const dd = new Date(d.date);
+      return dd.getMonth() === moisCourant && dd.getFullYear() === anneeCourante;
+    });
+    const caDevisMois = devisMois.reduce((s,d) => s + (parseFloat(d.totalHT)||0), 0);
+
     const div = document.createElement('div');
     div.innerHTML = `
       <div style="background:linear-gradient(135deg,rgba(10,132,255,0.08) 0%,rgba(48,209,88,0.05) 100%);border:0.5px solid rgba(10,132,255,0.15);border-radius:20px;padding:28px;margin-bottom:24px">
@@ -273,6 +307,56 @@ const Pages = {
       <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px">Permis de construire près de vous</div>
     </button>
   </div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px" id="dashboard-widgets">
+
+  <!-- RELANCES -->
+  <div style="background:${relances.length > 0 ? 'rgba(255,159,10,0.08)' : 'var(--bg-secondary)'};border:1px solid ${relances.length > 0 ? 'rgba(255,159,10,0.3)' : 'var(--border)'};border-radius:var(--radius-lg);padding:18px;cursor:pointer" onclick="App.navigate('devis')">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary)">📬 Relances à faire</div>
+      ${relances.length > 0 ? `<span style="background:#f59e0b;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">${relances.length}</span>` : ''}
+    </div>
+    <div style="font-size:28px;font-weight:800;color:${relances.length > 0 ? '#f59e0b' : 'var(--text-primary)'}">
+      ${relances.length > 0 ? relances.length + ' devis' : '✅ OK'}
+    </div>
+    <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">
+      ${relances.length > 0 ? 'Envoyés il y a plus de 7 jours sans réponse' : 'Tous les devis ont une réponse récente'}
+    </div>
+    ${relances.length > 0 ? `<div style="margin-top:10px;font-size:11px;color:#f59e0b;font-weight:600">→ Voir les devis à relancer</div>` : ''}
+  </div>
+
+  <!-- IMPAYÉS -->
+  <div style="background:${impayes.length > 0 ? 'rgba(239,68,68,0.08)' : 'var(--bg-secondary)'};border:1px solid ${impayes.length > 0 ? 'rgba(239,68,68,0.3)' : 'var(--border)'};border-radius:var(--radius-lg);padding:18px;cursor:pointer" onclick="App.navigate('factures')">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary)">🔴 Factures impayées</div>
+      ${impayes.length > 0 ? `<span style="background:#ef4444;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">${impayes.length}</span>` : ''}
+    </div>
+    <div style="font-size:28px;font-weight:800;color:${impayes.length > 0 ? '#ef4444' : 'var(--text-primary)'}">
+      ${impayes.length > 0 ? impayes.length + ' facture' + (impayes.length > 1 ? 's' : '') : '✅ OK'}
+    </div>
+    <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">
+      ${impayes.length > 0 ? 'Échéance dépassée — ' + new Intl.NumberFormat('fr-FR').format(impayes.reduce((s,f)=>s+(parseFloat(f.totalTTC)||0),0)) + ' € TTC en attente' : 'Aucune facture en retard'}
+    </div>
+    ${impayes.length > 0 ? `<div style="margin-top:10px;font-size:11px;color:#ef4444;font-weight:600">→ Voir les factures impayées</div>` : ''}
+  </div>
+
+  <!-- CA MENSUEL -->
+  <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary);margin-bottom:12px">📊 Ce mois-ci</div>
+    <div style="font-size:22px;font-weight:800;color:#10b981;margin-bottom:4px">
+      ${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(caMois)} €
+    </div>
+    <div style="font-size:11px;color:var(--text-tertiary)">CA facturé HT</div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:18px;font-weight:700;color:var(--accent)">${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(caDevisMois)} €</div>
+      <div style="font-size:11px;color:var(--text-tertiary)">Devis émis HT</div>
+    </div>
+    <div style="margin-top:8px">
+      <button onclick="Pages.rapportMensuel()" style="background:none;border:none;color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;padding:0">→ Rapport mensuel PDF</button>
+    </div>
+  </div>
+
 </div>
 
       <div class="stats-grid">
