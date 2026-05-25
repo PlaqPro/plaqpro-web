@@ -294,8 +294,11 @@ Pages.legal = function(section) {
     navigate(sec) {
       const tabs = document.querySelectorAll('.legal-tab');
       tabs.forEach(t => t.classList.remove('active'));
-      const active = document.querySelector('.legal-tab[onclick*="' + sec + '"]');
-      if (active) active.classList.add('active');
+      tabs.forEach(t => {
+        if (t.getAttribute('onclick') === "LEGAL.navigate('" + sec + "')") {
+          t.classList.add('active');
+        }
+      });
       const content = document.querySelector('.legal-content');
       if (content) content.innerHTML = CONTENT[sec] || '<p>Section non trouvée.</p>';
     }
