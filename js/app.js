@@ -526,12 +526,12 @@ ${htmlWidgets}
     `;
 
     // Onboarding wizard — affiché uniquement si aucun client
-    const clients = DB.clients || [];
-    const chantiers = DB.chantiers || [];
+    const allClients = DB.clients || [];
+    const allChantiers = DB.chantiers || [];
     const config = DB.getConfig();
     const onboardingFait = localStorage.getItem('plaqpro_onboarding_done');
 
-    if (!onboardingFait && clients.length === 0) {
+    if (!onboardingFait && allClients.length === 0) {
       const onb = document.createElement('div');
       onb.id = 'onboarding-wizard';
       onb.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
