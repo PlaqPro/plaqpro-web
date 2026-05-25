@@ -289,6 +289,7 @@
         aide:        '❓ Guide & Aide',
         chantier_mobile: '🏗 Mode Chantier',
         monCompte:       '👤 Mon Compte',
+        inscription:     '🚀 Inscription — Qualification métier',
       };
       document.getElementById('topbar-title').textContent = titles[page] || page;
 
@@ -334,6 +335,7 @@
         aide:        function() { return Pages.aide(); },
         chantier_mobile: function() { return Pages.chantier_mobile(); },
         monCompte:       function() { return Pages.monCompte(); },
+        inscription:     function() { return Pages.inscription(); },
       };
 
       if (pageMap[page]) {
@@ -365,6 +367,7 @@
 <script src="js/regles.js"></script>
 <script src="js/sous_traitants.js"></script>
 <script src="js/mon_compte.js"></script>
+<script src="js/inscription.js"></script>
 
 </body>
 </html>
