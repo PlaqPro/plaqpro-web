@@ -83,6 +83,7 @@
       </button>
       <div id="topbar-title" class="topbar-title">Tableau de bord</div>
       <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" onclick="App.navigate('monCompte')" style="font-size:12px">👤 Mon compte</button>
         <button class="btn btn-secondary btn-sm topbar-btn-hide" onclick="Pages.modalNouveauClient()">+ Client</button>
         <button class="btn btn-secondary btn-sm topbar-btn-hide" onclick="Pages.modalNouveauChantier()">+ Chantier</button>
         <button class="btn btn-primary btn-sm" onclick="App.navigate('calculateur')">⚡ Calcul</button>
@@ -192,6 +193,7 @@
         { page: 'tarifs', icon: '💶', label: 'Grille tarifaire' },
         { page: 'memo',   icon: '✅', label: 'Mémo chantier' },
       { section: 'Params' },
+      { page: 'monCompte',   icon: '<i class="ph ph-user-circle"></i>', label: 'Mon compte' },
       { page: 'produits',    icon: '💰', label: 'Base tarifaire' },
       { section: 'Packs Métier' },
       { page: 'maconnerie',  icon: '🧱', label: 'Pack Maçonnerie' },
@@ -286,6 +288,7 @@
         dpgf:        "🏛 Appels d'offres — Analyse IA",
         aide:        '❓ Guide & Aide',
         chantier_mobile: '🏗 Mode Chantier',
+        monCompte:       '👤 Mon Compte',
       };
       document.getElementById('topbar-title').textContent = titles[page] || page;
 
@@ -330,6 +333,7 @@
         exterieur:   function() { return Pages.exterieur(); },
         aide:        function() { return Pages.aide(); },
         chantier_mobile: function() { return Pages.chantier_mobile(); },
+        monCompte:       function() { return Pages.monCompte(); },
       };
 
       if (pageMap[page]) {
@@ -360,6 +364,7 @@
   </script>
 <script src="js/regles.js"></script>
 <script src="js/sous_traitants.js"></script>
+<script src="js/mon_compte.js"></script>
 
 </body>
 </html>

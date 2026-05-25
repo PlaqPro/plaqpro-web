@@ -70,6 +70,7 @@ const App = {
       sectionCable:  () => Pages.sectionCable(),
       tempsChantier: () => Pages.tempsChantier(),
       linteau:       () => Pages.linteau(),
+      monCompte:     () => Pages.monCompte(),
     };
 
     if (pages[page]) {
@@ -140,6 +141,7 @@ const App = {
       { page: 'linteau',       icon: '<i class="ph ph-bridge"></i>', label: 'Linteau' },
 
       { section: '⚙️ Paramètres' },
+      { page: 'monCompte',   icon: '<i class="ph ph-user-circle"></i>', label: 'Mon compte' },
       { page: 'produits',    icon: '<i class="ph ph-tag"></i>', label: 'Base tarifaire' },
       { page: 'config',      icon: '<i class="ph ph-gear"></i>', label: 'Configuration' },
     ];
