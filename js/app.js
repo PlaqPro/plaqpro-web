@@ -288,6 +288,58 @@ const Pages = {
     });
     const caDevisMois = devisMois.reduce((s,d) => s + (parseFloat(d.totalHT)||0), 0);
 
+    // ── Construction widgets dashboard ──
+    const widgetRelancesColor = relances.length > 0 ? 'rgba(255,159,10,0.08)' : 'var(--bg-secondary)';
+    const widgetRelancesBorder = relances.length > 0 ? 'rgba(255,159,10,0.3)' : 'var(--border)';
+    const widgetRelancesVal = relances.length > 0 ? relances.length + ' devis' : '✅ OK';
+    const widgetRelancesColor2 = relances.length > 0 ? '#f59e0b' : 'var(--text-primary)';
+    const widgetRelancesMsg = relances.length > 0 ? 'Envoyés il y a plus de 7 jours sans réponse' : 'Tous les devis ont une réponse récente';
+    const widgetRelancesBadge = relances.length > 0 ? '<span style="background:#f59e0b;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">' + relances.length + '</span>' : '';
+    const widgetRelancesLink = relances.length > 0 ? '<div style="margin-top:10px;font-size:11px;color:#f59e0b;font-weight:600">→ Voir les devis à relancer</div>' : '';
+
+    const widgetImpayesColor = impayes.length > 0 ? 'rgba(239,68,68,0.08)' : 'var(--bg-secondary)';
+    const widgetImpayesBorder = impayes.length > 0 ? 'rgba(239,68,68,0.3)' : 'var(--border)';
+    const widgetImpayesVal = impayes.length > 0 ? impayes.length + ' facture' + (impayes.length > 1 ? 's' : '') : '✅ OK';
+    const widgetImpayesColor2 = impayes.length > 0 ? '#ef4444' : 'var(--text-primary)';
+    const montantImpayes = impayes.reduce((s,f) => s + (parseFloat(f.totalTTC)||0), 0);
+    const widgetImpayesMsg = impayes.length > 0 ? 'Échéance dépassée — ' + new Intl.NumberFormat('fr-FR').format(montantImpayes) + ' € TTC en attente' : 'Aucune facture en retard';
+    const widgetImpayesBadge = impayes.length > 0 ? '<span style="background:#ef4444;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">' + impayes.length + '</span>' : '';
+    const widgetImpayesLink = impayes.length > 0 ? '<div style="margin-top:10px;font-size:11px;color:#ef4444;font-weight:600">→ Voir les factures impayées</div>' : '';
+
+    const widgetCA = new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(caMois);
+    const widgetDevisCA = new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(caDevisMois);
+
+    const htmlWidgets = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px" id="dashboard-widgets">'
+      + '<div style="background:' + widgetRelancesColor + ';border:1px solid ' + widgetRelancesBorder + ';border-radius:var(--radius-lg);padding:18px;cursor:pointer" onclick="App.navigate(\'devis\')">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">'
+      + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary)">📬 Relances à faire</div>'
+      + widgetRelancesBadge
+      + '</div>'
+      + '<div style="font-size:28px;font-weight:800;color:' + widgetRelancesColor2 + '">' + widgetRelancesVal + '</div>'
+      + '<div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">' + widgetRelancesMsg + '</div>'
+      + widgetRelancesLink
+      + '</div>'
+      + '<div style="background:' + widgetImpayesColor + ';border:1px solid ' + widgetImpayesBorder + ';border-radius:var(--radius-lg);padding:18px;cursor:pointer" onclick="App.navigate(\'factures\')">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">'
+      + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary)">🔴 Factures impayées</div>'
+      + widgetImpayesBadge
+      + '</div>'
+      + '<div style="font-size:28px;font-weight:800;color:' + widgetImpayesColor2 + '">' + widgetImpayesVal + '</div>'
+      + '<div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">' + widgetImpayesMsg + '</div>'
+      + widgetImpayesLink
+      + '</div>'
+      + '<div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px">'
+      + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary);margin-bottom:12px">📊 Ce mois-ci</div>'
+      + '<div style="font-size:22px;font-weight:800;color:#10b981;margin-bottom:4px">' + widgetCA + ' €</div>'
+      + '<div style="font-size:11px;color:var(--text-tertiary)">CA facturé HT</div>'
+      + '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">'
+      + '<div style="font-size:18px;font-weight:700;color:var(--accent)">' + widgetDevisCA + ' €</div>'
+      + '<div style="font-size:11px;color:var(--text-tertiary)">Devis émis HT</div>'
+      + '</div>'
+      + '<div style="margin-top:8px"><button onclick="Pages.rapportMensuel()" style="background:none;border:none;color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;padding:0">→ Rapport mensuel PDF</button></div>'
+      + '</div>'
+      + '</div>';
+
     const div = document.createElement('div');
     div.innerHTML = `
       <div style="background:linear-gradient(135deg,rgba(10,132,255,0.08) 0%,rgba(48,209,88,0.05) 100%);border:0.5px solid rgba(10,132,255,0.15);border-radius:20px;padding:28px;margin-bottom:24px">
@@ -311,55 +363,7 @@ const Pages = {
   </div>
 </div>
 
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px" id="dashboard-widgets">
-
-  <!-- RELANCES -->
-  <div style="background:${relances.length > 0 ? 'rgba(255,159,10,0.08)' : 'var(--bg-secondary)'};border:1px solid ${relances.length > 0 ? 'rgba(255,159,10,0.3)' : 'var(--border)'};border-radius:var(--radius-lg);padding:18px;cursor:pointer" onclick="App.navigate('devis')">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary)">📬 Relances à faire</div>
-      ${relances.length > 0 ? `<span style="background:#f59e0b;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">${relances.length}</span>` : ''}
-    </div>
-    <div style="font-size:28px;font-weight:800;color:${relances.length > 0 ? '#f59e0b' : 'var(--text-primary)'}">
-      ${relances.length > 0 ? relances.length + ' devis' : '✅ OK'}
-    </div>
-    <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">
-      ${relances.length > 0 ? 'Envoyés il y a plus de 7 jours sans réponse' : 'Tous les devis ont une réponse récente'}
-    </div>
-    ${relances.length > 0 ? `<div style="margin-top:10px;font-size:11px;color:#f59e0b;font-weight:600">→ Voir les devis à relancer</div>` : ''}
-  </div>
-
-  <!-- IMPAYÉS -->
-  <div style="background:${impayes.length > 0 ? 'rgba(239,68,68,0.08)' : 'var(--bg-secondary)'};border:1px solid ${impayes.length > 0 ? 'rgba(239,68,68,0.3)' : 'var(--border)'};border-radius:var(--radius-lg);padding:18px;cursor:pointer" onclick="App.navigate('factures')">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary)">🔴 Factures impayées</div>
-      ${impayes.length > 0 ? `<span style="background:#ef4444;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">${impayes.length}</span>` : ''}
-    </div>
-    <div style="font-size:28px;font-weight:800;color:${impayes.length > 0 ? '#ef4444' : 'var(--text-primary)'}">
-      ${impayes.length > 0 ? impayes.length + ' facture' + (impayes.length > 1 ? 's' : '') : '✅ OK'}
-    </div>
-    <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">
-      ${impayes.length > 0 ? 'Échéance dépassée — ' + new Intl.NumberFormat('fr-FR').format(impayes.reduce((s,f)=>s+(parseFloat(f.totalTTC)||0),0)) + ' € TTC en attente' : 'Aucune facture en retard'}
-    </div>
-    ${impayes.length > 0 ? `<div style="margin-top:10px;font-size:11px;color:#ef4444;font-weight:600">→ Voir les factures impayées</div>` : ''}
-  </div>
-
-  <!-- CA MENSUEL -->
-  <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px">
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary);margin-bottom:12px">📊 Ce mois-ci</div>
-    <div style="font-size:22px;font-weight:800;color:#10b981;margin-bottom:4px">
-      ${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(caMois)} €
-    </div>
-    <div style="font-size:11px;color:var(--text-tertiary)">CA facturé HT</div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-size:18px;font-weight:700;color:var(--accent)">${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(caDevisMois)} €</div>
-      <div style="font-size:11px;color:var(--text-tertiary)">Devis émis HT</div>
-    </div>
-    <div style="margin-top:8px">
-      <button onclick="Pages.rapportMensuel()" style="background:none;border:none;color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;padding:0">→ Rapport mensuel PDF</button>
-    </div>
-  </div>
-
-</div>
+${htmlWidgets}
 
       <div class="stats-grid">
         <div class="stat-card">
