@@ -480,14 +480,15 @@ Pages.chargesCouts = function() {
   const nb    = data.nb    || 1;
   const marge = data.marge || 35;
 
-  function calcul(ca, rn, nb, marge) {
+  function calcul(ca, rn, nb, marge, nbST, coutJourST, joursAnST) {
+    const coutST       = (nbST || 0) * (coutJourST || 0) * (joursAnST || 0);
     const charges      = ca - rn;
     const heures       = nb * 1600;
     const coutH        = heures > 0 ? charges / heures : 0;
     const tarifH       = coutH * (1 + marge / 100);
     const tauxCharges  = ca > 0 ? charges / ca * 100 : 0;
     const seuilJournee = tarifH * 8;
-    return { charges, heures, coutH, tarifH, tauxCharges, seuilJournee };
+    return { charges, heures, coutH, tarifH, tauxCharges, seuilJournee, coutST };
   }
 
   function fmt(n, dec = 0) {
@@ -497,11 +498,20 @@ Pages.chargesCouts = function() {
   function renderResultat() {
     const el = document.getElementById('cc-resultats');
     if (!el) return;
-    const caV    = parseFloat(document.getElementById('cc-ca')?.value)    || 0;
-    const rnV    = parseFloat(document.getElementById('cc-rn')?.value)    || 0;
-    const nbV    = parseInt(document.getElementById('cc-nb')?.value)      || 1;
-    const margeV = parseFloat(document.getElementById('cc-marge')?.value) || 35;
-    const r = calcul(caV, rnV, nbV, margeV);
+    const caV       = parseFloat(document.getElementById('cc-ca')?.value)       || 0;
+    const rnV       = parseFloat(document.getElementById('cc-rn')?.value)       || 0;
+    const nbV       = parseInt(document.getElementById('cc-nb')?.value)         || 1;
+    const margeV    = parseFloat(document.getElementById('cc-marge')?.value)    || 35;
+    const nbSTv     = parseInt(document.getElementById('cc-nb-st')?.value)      || 0;
+    const coutSTv   = parseFloat(document.getElementById('cc-cout-st')?.value)  || 0;
+    const joursSTv  = parseFloat(document.getElementById('cc-jours-st')?.value) || 0;
+    const r = calcul(caV, rnV, nbV, margeV, nbSTv, coutSTv, joursSTv);
+    const elST = document.getElementById('cc-st-total');
+    if (elST) {
+      elST.textContent = nbSTv > 0
+        ? `Coût ST annuel estimé : ${new Intl.NumberFormat('fr-FR').format(r.coutST)} € (${nbSTv} ST × ${coutSTv} €/j × ${joursSTv} j)`
+        : 'Coût ST annuel : aucun sous-traitant renseigné';
+    }
     let alertClass = 'ok', alertMsg = '';
     if (r.tauxCharges > 80) {
       alertClass = 'danger';
@@ -666,6 +676,40 @@ Pages.chargesCouts = function() {
           <input type="number" class="cc-input" id="cc-marge" value="${marge}" min="0" max="100" oninput="CC.maj()">
           <span class="cc-unit">%</span>
         </div>
+        <div style="margin-bottom:16px">
+          <label style="font-size:12px;color:var(--text-tertiary);display:block;margin-bottom:8px;font-weight:700">
+            🤝 Sous-traitants permanents
+          </label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div>
+              <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px">Nombre de ST</div>
+              <input type="number" id="cc-nb-st" value="${data.nbST||0}" min="0" max="20"
+                style="width:100%;padding:8px 12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:14px;font-weight:600"
+                oninput="CC.maj()">
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px">Coût/jour moyen</div>
+              <div style="display:flex;align-items:center;gap:4px">
+                <input type="number" id="cc-cout-st" value="${data.coutJourST||400}" min="0"
+                  style="flex:1;padding:8px 12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:14px;font-weight:600"
+                  oninput="CC.maj()">
+                <span style="font-size:12px;color:var(--text-tertiary)">€/j</span>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:6px">
+            <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px">Jours travaillés/an (estimé)</div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <input type="number" id="cc-jours-st" value="${data.joursAnST||150}" min="0" max="300"
+                style="width:120px;padding:8px 12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:14px;font-weight:600"
+                oninput="CC.maj()">
+              <span style="font-size:12px;color:var(--text-tertiary)">jours/an</span>
+            </div>
+          </div>
+          <div id="cc-st-total" style="margin-top:8px;padding:8px 12px;background:rgba(239,68,68,0.06);border-radius:var(--radius-sm);font-size:12px;color:var(--text-tertiary)">
+            Coût ST annuel : calcul en cours...
+          </div>
+        </div>
         <div style="margin-top:16px;display:flex;gap:8px">
           <button class="btn btn-primary" onclick="CC.sauvegarder()" style="flex:1">💾 Sauvegarder</button>
           <button class="btn btn-secondary" onclick="CC.reinitialiser()">🔄 Réinitialiser</button>
@@ -689,21 +733,27 @@ Pages.chargesCouts = function() {
       document.getElementById('cc-warning-bilan').style.display = 'block';
       document.getElementById('cc-formulaire').style.display = 'grid';
       localStorage.setItem('plaqpro_bilan_mode', 'moyenne');
-      const moyennes = { ca: 150000, rn: 28000, nb: 1, marge: 35 };
+      const moyennes = { ca: 150000, rn: 28000, nb: 1, marge: 35, nbST: 0, coutJourST: 400, joursAnST: 150 };
       document.getElementById('cc-ca').value = moyennes.ca;
       document.getElementById('cc-rn').value = moyennes.rn;
       document.getElementById('cc-nb').value = moyennes.nb;
       document.getElementById('cc-marge').value = moyennes.marge;
+      document.getElementById('cc-nb-st').value = moyennes.nbST;
+      document.getElementById('cc-cout-st').value = moyennes.coutJourST;
+      document.getElementById('cc-jours-st').value = moyennes.joursAnST;
       this.maj();
       App.toast('📊 Moyennes BTP appliquées — à ajuster selon votre activité', 'success');
     },
     maj() { renderResultat(); },
     sauvegarder() {
       const d = {
-        ca:    parseFloat(document.getElementById('cc-ca')?.value)    || 0,
-        rn:    parseFloat(document.getElementById('cc-rn')?.value)    || 0,
-        nb:    parseInt(document.getElementById('cc-nb')?.value)      || 1,
-        marge: parseFloat(document.getElementById('cc-marge')?.value) || 35,
+        ca:         parseFloat(document.getElementById('cc-ca')?.value)        || 0,
+        rn:         parseFloat(document.getElementById('cc-rn')?.value)        || 0,
+        nb:         parseInt(document.getElementById('cc-nb')?.value)          || 1,
+        marge:      parseFloat(document.getElementById('cc-marge')?.value)     || 35,
+        nbST:       parseInt(document.getElementById('cc-nb-st')?.value)       || 0,
+        coutJourST: parseFloat(document.getElementById('cc-cout-st')?.value)   || 0,
+        joursAnST:  parseFloat(document.getElementById('cc-jours-st')?.value)  || 0,
       };
       localStorage.setItem('plaqpro_charges_simple', JSON.stringify(d));
       renderResultat();
