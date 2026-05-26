@@ -1004,7 +1004,8 @@ Object.assign(window.PROD, {
       ref: p.ref, nom: p.nom, unite: p.unite, prixActuel: overrides[p.ref]?.prix || p.prix
     }));
 
-    App.openModal('🔄 Actualisation des prix IA', `
+    const modalDiv = document.createElement('div');
+    modalDiv.innerHTML = `
       <div style="padding:20px;text-align:center">
         <div style="font-size:48px;margin-bottom:16px">🤖</div>
         <div style="font-size:15px;font-weight:700;margin-bottom:8px">Analyse des prix en cours...</div>
@@ -1015,7 +1016,8 @@ Object.assign(window.PROD, {
           Connexion à l'assistant IA...
         </div>
       </div>
-    `, '');
+    `;
+    App.openModal('🔄 Actualisation des prix IA', modalDiv, '');
 
     const prompt = `Tu es un expert en pricing matériaux BTP France 2026.
 Voici une liste de produits avec leurs prix actuels dans une base PlaqPro+.
@@ -1060,7 +1062,8 @@ Règles :
       const baisse = updates.filter(u => u.variation === 'baisse');
       const stable = updates.filter(u => u.variation === 'stable');
 
-      App.openModal('🔄 Suggestions de mise à jour prix', `
+      const modalDiv2 = document.createElement('div');
+      modalDiv2.innerHTML = `
         <div style="padding:16px">
           <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
             <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px 16px;text-align:center;flex:1">
@@ -1101,7 +1104,8 @@ Règles :
             ⚠️ Prix estimés par IA — à titre indicatif. Vérifiez auprès de vos fournisseurs avant de valider.
           </div>
         </div>
-      `, `
+      `;
+      App.openModal('🔄 Suggestions de mise à jour prix', modalDiv2, `
         <button class="btn btn-primary" onclick="PROD._appliquerUpdates(${JSON.stringify(JSON.stringify(updates))})">✅ Appliquer toutes les mises à jour</button>
         <button class="btn btn-secondary" onclick="App.closeModal()">Annuler</button>
       `);
