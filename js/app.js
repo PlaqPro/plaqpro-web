@@ -130,8 +130,10 @@ const App = {
       { page: 'tarifs',      icon: '<i class="ph ph-coins"></i>', label: 'Mes prix de vente' },
       { page: 'memo',        icon: '<i class="ph ph-check-square"></i>', label: 'Mémo chantier' },
 
-      { section: '🔧 Packs Métier' },
+      { section: '🎮 Jeux & Formation' },
       { page: 'quizMetiers', icon: '<i class="ph ph-game-controller"></i>', label: 'Quiz Métiers BTP' },
+
+      { section: '🔧 Packs Métier' },
       { page: 'maconnerie',  icon: '<i class="ph ph-bricks"></i>', label: 'Maçonnerie' },
       { page: 'electricite', icon: '<i class="ph ph-plug"></i>', label: 'Électricité' },
       { page: 'plomberie',   icon: '<i class="ph ph-pipe"></i>', label: 'Plomberie' },

@@ -75,7 +75,10 @@
       "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\quiz_metiers.js' -Encoding UTF8; $lines[-10..-1] | ForEach-Object { Write-Host $_ })",
       "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\quiz_metiers.js' -Encoding UTF8; Write-Host '=== Lignes 289-320 ==='; $lines[288..319] | ForEach-Object { Write-Host $_ })",
       "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\quiz_metiers.js' -Encoding UTF8; $lines[348..362] | ForEach-Object -Begin { $i = 349 } -Process { Write-Host \"$i`: $_\"; $i++ })",
-      "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\quiz_metiers.js' -Encoding UTF8; $lines[318..360] | ForEach-Object -Begin { $i = 319 } -Process { Write-Host \"$i`: $_\"; $i++ })"
+      "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\quiz_metiers.js' -Encoding UTF8; $lines[318..360] | ForEach-Object -Begin { $i = 319 } -Process { Write-Host \"$i`: $_\"; $i++ })",
+      "PowerShell($content = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Raw -Encoding UTF8; $idx = $content.IndexOf\\('Packs'\\); Write-Host $content.Substring\\($idx, 600\\))",
+      "PowerShell($content = Get-Content 'C:\\\\PlaQproWEB\\\\index.html' -Raw -Encoding UTF8; $idx = $content.IndexOf\\('Packs'\\); Write-Host $content.Substring\\($idx, 600\\))",
+      "PowerShell($content = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Raw -Encoding UTF8; $idx = $content.IndexOf\\('Jeux'\\); Write-Host '=== app.js section Jeux ==='; if \\($idx -ge 0\\) { Write-Host $content.Substring\\($idx, 300\\) } else { Write-Host 'NON TROUVÉ' }; $content2 = Get-Content 'C:\\\\PlaQproWEB\\\\index.html' -Raw -Encoding UTF8; $idx2 = $content2.IndexOf\\('Jeux'\\); Write-Host '=== index.html section Jeux ==='; if \\($idx2 -ge 0\\) { Write-Host $content2.Substring\\($idx2, 300\\) } else { Write-Host 'NON TROUVÉ' })"
     ]
   }
 }
