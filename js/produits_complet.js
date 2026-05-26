@@ -1105,10 +1105,15 @@ Règles :
           </div>
         </div>
       `;
-      App.openModal('🔄 Suggestions de mise à jour prix', modalDiv2, `
-        <button class="btn btn-primary" onclick="PROD._appliquerUpdates(${JSON.stringify(JSON.stringify(updates))})">✅ Appliquer toutes les mises à jour</button>
+      window._pendingPrixUpdates = updates;
+      const footerDiv = document.createElement('div');
+      footerDiv.style.display = 'flex';
+      footerDiv.style.gap = '10px';
+      footerDiv.innerHTML = `
+        <button class="btn btn-primary" onclick="PROD._appliquerUpdates()">✅ Appliquer toutes les mises à jour</button>
         <button class="btn btn-secondary" onclick="App.closeModal()">Annuler</button>
-      `);
+      `;
+      App.openModal('🔄 Suggestions de mise à jour prix', modalDiv2, footerDiv);
     })
     .catch(err => {
       App.closeModal();
@@ -1116,8 +1121,8 @@ Règles :
     });
   },
 
-  _appliquerUpdates(updatesStr) {
-    const updates = JSON.parse(updatesStr);
+  _appliquerUpdates() {
+    const updates = window._pendingPrixUpdates || [];
     const overrides = JSON.parse(localStorage.getItem('plaqpro_prix_overrides') || '{}');
     const date = new Date().toLocaleDateString('fr-FR');
     updates.forEach(u => {
