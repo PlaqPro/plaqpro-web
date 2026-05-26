@@ -290,11 +290,12 @@ const QM_DATA = {
 // ── Rendu ─────────────────────────────────────────────────────────────────────
 Pages.quizMetiers = function() {
   const state = JSON.parse(localStorage.getItem('plaqpro_quiz_metiers') || '{}');
-  return `
+  const div = document.createElement('div');
+  div.innerHTML = `
 <div style="max-width:900px;margin:0 auto;padding:16px">
   <div style="text-align:center;margin-bottom:24px">
     <h1 style="font-size:2rem;font-weight:800;background:linear-gradient(135deg,#e74c3c,#8e44ad);-webkit-background-clip:text;-webkit-text-fill-color:transparent">
-      🏗 Quiz Métiers BTP
+      🎮 Quiz Métiers BTP
     </h1>
     <p style="color:var(--text-tertiary);margin-top:4px">Formation professionnelle — 8 corps de métier · 4 niveaux · IA illimitée</p>
   </div>
@@ -323,6 +324,7 @@ Pages.quizMetiers = function() {
   <div id="qm-screen-quiz" style="display:none"></div>
   <div id="qm-screen-result" style="display:none"></div>
 </div>`;
+  return div;
 };
 
 function _qmBadges(state) {
