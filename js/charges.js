@@ -604,38 +604,100 @@ Pages.chargesCouts = function() {
       <p>Rétro-calcul depuis votre réel — pour des devis rentables</p>
     </div>
 
-    <div class="cc-panel">
-      <div class="cc-row">
-        <span class="cc-label">💼 CA annuel HT</span>
-        <input type="number" class="cc-input" id="cc-ca" value="${ca}" placeholder="180000" oninput="CC.recalculer()">
-        <span class="cc-unit">€/an</span>
+    <!-- QUESTION BILAN -->
+    <div id="cc-question-bilan" style="max-width:800px;margin:0 auto 24px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;text-align:center">
+      <div style="font-size:36px;margin-bottom:12px">📋</div>
+      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:8px">
+        Disposez-vous de votre dernier bilan comptable ?
       </div>
-      <div class="cc-row">
-        <span class="cc-label">✅ Résultat net</span>
-        <input type="number" class="cc-input" id="cc-rn" value="${rn}" placeholder="35000" oninput="CC.recalculer()">
-        <span class="cc-unit">€/an</span>
+      <div style="font-size:13px;color:var(--text-tertiary);margin-bottom:24px;line-height:1.6">
+        Votre bilan contient le CA annuel et le résultat net.<br>
+        Votre comptable peut vous le fournir en quelques secondes.
       </div>
-      <div class="cc-row">
-        <span class="cc-label">👥 Nombre de personnes</span>
-        <input type="number" class="cc-input" id="cc-nb" value="${nb}" min="1" max="50" oninput="CC.recalculer()">
-        <span class="cc-unit">pers.</span>
-      </div>
-      <div class="cc-row">
-        <span class="cc-label">📈 Marge souhaitée</span>
-        <input type="number" class="cc-input" id="cc-marge" value="${marge}" min="0" max="100" oninput="CC.recalculer()">
-        <span class="cc-unit">%</span>
-      </div>
-      <div style="margin-top:16px;display:flex;gap:8px">
-        <button class="btn btn-primary" onclick="CC.sauvegarder()" style="flex:1">💾 Sauvegarder</button>
-        <button class="btn btn-secondary" onclick="CC.reinitialiser()">🔄 Réinitialiser</button>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button onclick="CC.avecBilan()" class="btn btn-primary" style="padding:14px 32px;font-size:15px">
+          ✅ Oui, j'ai mon bilan
+        </button>
+        <button onclick="CC.sansBilan()" class="btn btn-secondary" style="padding:14px 32px;font-size:15px">
+          📊 Non, utiliser les moyennes
+        </button>
       </div>
     </div>
+
+    <!-- AVERTISSEMENT SANS BILAN -->
+    <div id="cc-warning-bilan" style="display:none;max-width:800px;margin:0 auto 20px">
+      <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius-lg);padding:20px;display:flex;align-items:flex-start;gap:14px">
+        <div style="font-size:24px;flex-shrink:0">⚠️</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#f59e0b;margin-bottom:6px">Calculs basés sur des moyennes sectorielles</div>
+          <div style="font-size:13px;color:var(--text-secondary);line-height:1.65">
+            Les prix et calculs générés dans PlaqPro+ sont au plus juste, mais sans données réelles de votre entreprise,
+            ils restent des <strong style="color:var(--text-primary)">estimations basées sur des moyennes BTP françaises</strong>.
+            Les résultats sont soumis à votre contrôle et ne remplacent pas l'avis de votre comptable.
+          </div>
+          <button onclick="CC.avecBilan()" style="margin-top:10px;background:none;border:none;color:#f59e0b;font-size:12px;font-weight:600;cursor:pointer;padding:0">
+            → J'ai retrouvé mon bilan, saisir mes vraies données
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="cc-formulaire" style="display:none;grid-template-columns:1fr 1fr;gap:20px;max-width:800px;margin:0 auto">
+
+      <!-- SAISIE -->
+      <div class="cc-panel">
+        <div class="cc-row">
+          <span class="cc-label">💼 CA annuel HT</span>
+          <input type="number" class="cc-input" id="cc-ca" value="${ca}" placeholder="180000" oninput="CC.maj()">
+          <span class="cc-unit">€/an</span>
+        </div>
+        <div class="cc-row">
+          <span class="cc-label">✅ Résultat net</span>
+          <input type="number" class="cc-input" id="cc-rn" value="${rn}" placeholder="35000" oninput="CC.maj()">
+          <span class="cc-unit">€/an</span>
+        </div>
+        <div class="cc-row">
+          <span class="cc-label">👥 Nombre de personnes</span>
+          <input type="number" class="cc-input" id="cc-nb" value="${nb}" min="1" max="50" oninput="CC.maj()">
+          <span class="cc-unit">pers.</span>
+        </div>
+        <div class="cc-row">
+          <span class="cc-label">📈 Marge souhaitée</span>
+          <input type="number" class="cc-input" id="cc-marge" value="${marge}" min="0" max="100" oninput="CC.maj()">
+          <span class="cc-unit">%</span>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="CC.sauvegarder()" style="flex:1">💾 Sauvegarder</button>
+          <button class="btn btn-secondary" onclick="CC.reinitialiser()">🔄 Réinitialiser</button>
+        </div>
+      </div>
+
+    </div><!-- fin cc-formulaire -->
 
     <div id="cc-resultats"></div>
   `;
 
   window.CC = {
-    recalculer() { renderResultat(); },
+    avecBilan() {
+      document.getElementById('cc-question-bilan').style.display = 'none';
+      document.getElementById('cc-warning-bilan').style.display = 'none';
+      document.getElementById('cc-formulaire').style.display = 'grid';
+      localStorage.setItem('plaqpro_bilan_mode', 'reel');
+    },
+    sansBilan() {
+      document.getElementById('cc-question-bilan').style.display = 'none';
+      document.getElementById('cc-warning-bilan').style.display = 'block';
+      document.getElementById('cc-formulaire').style.display = 'grid';
+      localStorage.setItem('plaqpro_bilan_mode', 'moyenne');
+      const moyennes = { ca: 150000, rn: 28000, nb: 1, marge: 35 };
+      document.getElementById('cc-ca').value = moyennes.ca;
+      document.getElementById('cc-rn').value = moyennes.rn;
+      document.getElementById('cc-nb').value = moyennes.nb;
+      document.getElementById('cc-marge').value = moyennes.marge;
+      this.maj();
+      App.toast('📊 Moyennes BTP appliquées — à ajuster selon votre activité', 'success');
+    },
+    maj() { renderResultat(); },
     sauvegarder() {
       const d = {
         ca:    parseFloat(document.getElementById('cc-ca')?.value)    || 0,
@@ -655,6 +717,16 @@ Pages.chargesCouts = function() {
     },
   };
 
-  setTimeout(() => renderResultat(), 50);
+  setTimeout(() => {
+    const mode = localStorage.getItem('plaqpro_bilan_mode');
+    const hasDonnees = document.getElementById('cc-ca')?.value > 0;
+    if (mode && hasDonnees) {
+      CC.avecBilan();
+      if (mode === 'moyenne') {
+        document.getElementById('cc-warning-bilan').style.display = 'block';
+      }
+      CC.maj();
+    }
+  }, 50);
   return div;
 };
