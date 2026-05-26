@@ -1,34 +1,49 @@
-## ⏱ CHECKPOINT 21/05/2026 — FIN DE JOURNÉE
-### Terminé aujourd'hui ✅
-- Sidebar restructurée icônes Phosphor style Apple
-- pageMap complet — toutes pages branchées
-- Fichiers contexte Claude retirés du repo (.gitignore)
-- Section 📐 Études techniques — 8 modules pro :
-  1. ⚖️ Coefficient de charge (Eurocode 1) — js/charges.js
-  2. 💰 Rentabilité chantier — js/rentabilite.js
-  3. 🔊 Acoustique Rw (NRA/DTU 25.41) — js/acoustique.js
-  4. 🔥 Résistance au feu EI30→EI120 — js/resistance_feu.js
-  5. 🌡️ Thermique RE2020 + isolant — js/thermique.js
-  6. 💡 Section câble NF C15-100 — js/section_cable.js
-  7. ⏱️ Temps chantier h/m² — js/temps_chantier.js
-  8. 🏗️ Dimensionnement linteau Eurocode 2 — js/linteau.js
-- Workflow devis→facture automatique (popup acceptation)
-- Badge ✅ Facturée dans liste devis
-- Acompte 30% PDF en 1 clic
-- Factur-X XML 2026 déjà opérationnel 🇪🇺
+﻿# PLAQPRO_STATUS.md — Mis à jour le 26/05/2026 04:10
 
-### Prochaine session — Priorités
-1. Relance devis automatique (alerte X jours sans réponse)
-2. Tableau règlements — factures impayées en rouge
-3. Rapport mensuel CA en 1 clic
-4. Calcul Express multi-corps — refonte onglet Chantier complet
-5. Métrés enrichis — calculs automatiques tous corps
-
-### Infos projet
+## PROJET
 - Repo : https://github.com/PlaqPro/plaqpro-web
 - URL prod : https://plaqpro.github.io/plaqpro-web/login.html
-- Login : gabriel / PlaqPro2026!
-- Stack : HTML5/CSS3/JS ES6+ vanilla, localStorage, Groq IA
-- Répertoire local : C:\PlaQproWEB\
-- Déploiement : git push master → sync main → GitHub Pages auto
-- Derniers commits : 5897b80 (devis→facture auto), b5e18db (linteau), 823837a (temps chantier), 83a3bfd (section câble), 8cf9f14 (thermique), b941f68 (résistance feu), b7a46f3 (acoustique)
+- Landing : https://plaqpro.github.io/plaqpro-web/PlaqProLanding/index.html
+- Stack : HTML5/CSS3/JS ES6+ vanilla, localStorage, Groq IA (llama-3.3-70b)
+- Auth : gabriel/PlaqPro2026! — testeur1/Test2026!
+- Copyright : 2026 Gabriel Khamassi — Saint-Priest (69)
+
+## DERNIERS COMMITS
+- 6bddd67 Fix syntax quiz_metiers.js
+- ad91033 Fix sidebar Quiz Métiers
+- 06d48a5 Fix quiz métiers div DOM
+- 4eb516f Quiz Métiers BTP 8 corps 4 niveaux
+- f6b2866 Actualisation prix IA automatique
+- 257a8ce Base produits multi-corps 80 références
+- 9769053 Catalogue fournisseurs 32 enseignes
+- ef9723e Module légal CGV CGU RGPD
+- 816a8b6 Inscription qualification métier
+- 07e31fb Dashboard widgets relances impayés CA
+
+## MODULES LIVRES
+- Dashboard : 3 actions + 3 widgets (relances, impayes, CA mensuel)
+- Rapport mensuel PDF
+- Module Mon Compte (stats, cle Groq, abonnement, export)
+- Module Inscription (3 etapes, qualification metier, 10j Pro)
+- Module Legal (CGV, CGU, confidentialite, mentions, cookies, IA, RGPD)
+- Catalogue Fournisseurs (32 enseignes, favoris, recherche, ajout perso)
+- Base produits multi-corps (80+ references, 9 corps de metier)
+- Actualisation prix IA automatique
+- Quiz Metiers BTP (8 metiers, 4 niveaux, 50+ questions, IA illimitee)
+- Module Sous-traitants (loi 75-1334, contrat PDF, alertes assurances)
+- Landing v3 glassmorphism Inter
+- Onboarding wizard
+- Disclaimers IA partout
+- Copyright Gabriel Khamassi 50 fichiers
+- Documents legaux DOCX + PDF
+
+## BACKUPS
+- Garder uniquement les 2 derniers backups
+- Script nettoyage automatique integre
+
+## ACTIONS PENDANTES
+- Stripe Payment Link (29 euros/mois)
+- Depot INPI marque PlaqPro+
+- Depot APP code source
+- Avocat CGV validation
+- 5 beta testeurs artisans terrain
