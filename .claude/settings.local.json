@@ -90,7 +90,19 @@
       "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\produits_complet.js' -Encoding UTF8; $idx = 0; for \\($i=0; $i -lt $lines.Count; $i++\\) { if \\($lines[$i] -match '_appliquerUpdates\\\\\\(updatesStr'\\) { $idx = $i; break } }; Write-Host \\('Trouve ligne ' + \\($idx+1\\)\\); $lines[\\($idx-2\\)..\\($idx+20\\)] | ForEach-Object { Write-Host $_ })",
       "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; for \\($i=0; $i -lt $lines.Count; $i++\\) { if \\($lines[$i] -match 'openModal'\\) { $lines[$i..\\($i+25\\)] | ForEach-Object { Write-Host $_ }; break } })",
       "PowerShell(Select-String -Path 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Pattern 'monCompte|charges|quiz_metiers' | ForEach-Object { Write-Host $_.LineNumber ': ' $_.Line.Trim\\(\\) })",
-      "PowerShell(Select-String -Path 'C:\\\\PlaQproWEB\\\\index.html' -Pattern 'monCompte|quiz_metiers' | ForEach-Object { Write-Host $_.LineNumber ': ' $_.Line.Trim\\(\\) })"
+      "PowerShell(Select-String -Path 'C:\\\\PlaQproWEB\\\\index.html' -Pattern 'monCompte|quiz_metiers' | ForEach-Object { Write-Host $_.LineNumber ': ' $_.Line.Trim\\(\\) })",
+      "PowerShell(Select-String -Path 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Pattern 'metrages|métrage|Métrage|onglet|tab' | Select-Object -First 20 | ForEach-Object { Write-Host $_.LineNumber ': ' $_.Line.Trim\\(\\) })",
+      "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; for \\($i=0; $i -lt $lines.Count; $i++\\) { if \\($lines[$i] -match 'Pages.metrages'\\) { Write-Host \\('Ligne ' + \\($i+1\\)\\); $lines[$i..\\($i+5\\)] | ForEach-Object { Write-Host $_ }; break } })",
+      "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; $results = @\\(\\); for \\($i=0; $i -lt $lines.Count; $i++\\) { if \\($lines[$i] -match 'ntérieur|Extérieur|interieur|exterieur'\\) { $results += \\(\\($i+1\\).ToString\\(\\) + ' : ' + $lines[$i].Trim\\(\\)\\) } }; $results | Select-Object -First 30 | ForEach-Object { Write-Host $_ })",
+      "PowerShell(Select-String -Path 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Pattern 'setTypeChantier' | ForEach-Object { Write-Host $_.LineNumber ': ' $_.Line.Trim\\(\\) })",
+      "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; $lines[2402..2430] | ForEach-Object { Write-Host $_ })",
+      "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; $lines[2360..2380] | ForEach-Object { Write-Host $_ })",
+      "PowerShell(Select-String -Path 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Pattern 'metrages-interieur|metrages-exterieur' | ForEach-Object { Write-Host $_.LineNumber ': ' $_.Line.Trim\\(\\) })",
+      "PowerShell(Select-String -Path 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Pattern 'Pages\\\\.metrages' | ForEach-Object { Write-Host $_.LineNumber ': ' $_.Line.Trim\\(\\) })",
+      "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; $lines[681..780] | ForEach-Object { Write-Host $_ })",
+      "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; for \\($i=0; $i -lt $lines.Count; $i++\\) { if \\($lines[$i] -match 'modalNouveauMetrage'\\) { Write-Host \\('Ligne ' + \\($i+1\\) + ' : ' + $lines[$i].Trim\\(\\)\\) } })",
+      "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; $lines[2449..2510] | ForEach-Object { Write-Host $_ })",
+      "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; $lines[754..790] | ForEach-Object { Write-Host $_ })"
     ]
   }
 }
