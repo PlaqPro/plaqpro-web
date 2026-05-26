@@ -102,7 +102,11 @@
       "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; $lines[681..780] | ForEach-Object { Write-Host $_ })",
       "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; for \\($i=0; $i -lt $lines.Count; $i++\\) { if \\($lines[$i] -match 'modalNouveauMetrage'\\) { Write-Host \\('Ligne ' + \\($i+1\\) + ' : ' + $lines[$i].Trim\\(\\)\\) } })",
       "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; $lines[2449..2510] | ForEach-Object { Write-Host $_ })",
-      "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; $lines[754..790] | ForEach-Object { Write-Host $_ })"
+      "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; $lines[754..790] | ForEach-Object { Write-Host $_ })",
+      "PowerShell(Select-String -Path 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Pattern 'modalChantier|formChantier|nouveauChantier|editerChantier' | Select-Object -First 15 | ForEach-Object { Write-Host $_.LineNumber ': ' $_.Line.Trim\\(\\) })",
+      "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; $lines[2380..2440] | ForEach-Object { Write-Host $_ })",
+      "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; $lines[2428..2445] | ForEach-Object { Write-Host $_ })",
+      "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; $lines[2447..2470] | ForEach-Object { Write-Host $_ })"
     ]
   }
 }
