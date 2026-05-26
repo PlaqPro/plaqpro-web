@@ -548,9 +548,14 @@ Pages.produits = function() {
   const div = document.createElement('div');
   div.innerHTML = `
     <!-- En-tête Catalogue -->
-    <div style="margin-bottom:12px;padding:12px 0 8px">
-      <h2 style="margin:0;font-size:18px;font-weight:700">🏪 Catalogue Fournisseurs</h2>
-      <p style="margin:4px 0 0;font-size:12px;color:var(--text-tertiary)">Prix d'achat — Bricoman · Point.P · Prolians · Legallais · BigMat · Autres</p>
+    <div style="margin-bottom:12px;padding:12px 0 8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div>
+        <h2 style="margin:0;font-size:18px;font-weight:700">🏪 Catalogue Fournisseurs</h2>
+        <p style="margin:4px 0 0;font-size:12px;color:var(--text-tertiary)">Prix d'achat — Bricoman · Point.P · Prolians · Legallais · BigMat · Autres</p>
+      </div>
+      <button onclick="PROD.actualiserPrix()" style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;border:none;border-radius:var(--radius-md);font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        🔄 Actualiser les prix IA
+      </button>
     </div>
     <!-- Barre de recherche principale -->
     <div class="prod-search-bar">
@@ -986,5 +991,143 @@ Object.assign(window.PROD, {
       </div>`,
       `<button class="btn btn-secondary" onclick="App.closeModal()">Fermer</button>`
     );
+  },
+
+  actualiserPrix() {
+    const groqKey = localStorage.getItem('plaqpro_groq_key') || localStorage.getItem('groq_api_key') || '';
+    if (!groqKey || !groqKey.startsWith('gsk_')) {
+      App.toast('Clé IA manquante — configurez-la dans Mon Compte', 'error');
+      return;
+    }
+    const overrides = JSON.parse(localStorage.getItem('plaqpro_prix_overrides') || '{}');
+    const echantillon = CATALOGUE.slice(0, 20).map(p => ({
+      ref: p.ref, nom: p.nom, unite: p.unite, prixActuel: overrides[p.ref]?.prix || p.prix
+    }));
+
+    App.openModal('🔄 Actualisation des prix IA', `
+      <div style="padding:20px;text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">🤖</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:8px">Analyse des prix en cours...</div>
+        <div style="font-size:13px;color:var(--text-tertiary);margin-bottom:20px">
+          L'IA analyse les prix du marché BTP français pour ${echantillon.length} produits
+        </div>
+        <div id="prix-progress" style="background:var(--bg-primary);border-radius:var(--radius-md);padding:14px;font-size:12px;color:var(--text-tertiary);text-align:left;max-height:200px;overflow-y:auto">
+          Connexion à l'assistant IA...
+        </div>
+      </div>
+    `, '');
+
+    const prompt = `Tu es un expert en pricing matériaux BTP France 2026.
+Voici une liste de produits avec leurs prix actuels dans une base PlaqPro+.
+Donne une estimation réaliste des prix du marché français en 2026 pour chaque produit.
+Réponds UNIQUEMENT en JSON valide, sans texte avant ou après, sans backticks.
+Format exact : {"updates":[{"ref":"REF","prixSuggere":X.XX,"variation":"hausse/baisse/stable","note":"courte note"}]}
+
+Produits à analyser :
+${JSON.stringify(echantillon, null, 2)}
+
+Règles :
+- Prix HT en euros, réalistes pour un artisan achetant en négoce BTP
+- Variation = "hausse" si +5% ou plus, "baisse" si -5% ou moins, "stable" sinon
+- Note courte (max 8 mots) expliquant la variation
+- Intègre l'inflation matériaux BTP 2024-2026`;
+
+    fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.2,
+        max_tokens: 2000
+      })
+    })
+    .then(r => r.json())
+    .then(data => {
+      const txt = data.choices?.[0]?.message?.content || '';
+      let updates;
+      try {
+        const clean = txt.replace(/```json|```/g, '').trim();
+        updates = JSON.parse(clean).updates;
+      } catch(e) {
+        document.getElementById('prix-progress').innerHTML = '❌ Erreur parsing IA — ' + txt.substring(0,100);
+        return;
+      }
+
+      App.closeModal();
+
+      const hausse = updates.filter(u => u.variation === 'hausse');
+      const baisse = updates.filter(u => u.variation === 'baisse');
+      const stable = updates.filter(u => u.variation === 'stable');
+
+      App.openModal('🔄 Suggestions de mise à jour prix', `
+        <div style="padding:16px">
+          <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+            <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px 16px;text-align:center;flex:1">
+              <div style="font-size:22px;font-weight:800;color:#ef4444">${hausse.length}</div>
+              <div style="font-size:11px;color:var(--text-tertiary)">Hausses détectées</div>
+            </div>
+            <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:10px 16px;text-align:center;flex:1">
+              <div style="font-size:22px;font-weight:800;color:#10b981">${baisse.length}</div>
+              <div style="font-size:11px;color:var(--text-tertiary)">Baisses détectées</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:10px 16px;text-align:center;flex:1">
+              <div style="font-size:22px;font-weight:800">${stable.length}</div>
+              <div style="font-size:11px;color:var(--text-tertiary)">Stables</div>
+            </div>
+          </div>
+          <div style="max-height:350px;overflow-y:auto;display:flex;flex-direction:column;gap:8px">
+            ${updates.map(u => {
+              const prod = echantillon.find(p => p.ref === u.ref);
+              const diff = prod ? ((u.prixSuggere - prod.prixActuel) / prod.prixActuel * 100).toFixed(1) : 0;
+              const color = u.variation === 'hausse' ? '#ef4444' : u.variation === 'baisse' ? '#10b981' : 'var(--text-tertiary)';
+              const icon = u.variation === 'hausse' ? '📈' : u.variation === 'baisse' ? '📉' : '➡️';
+              return `
+                <div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;align-items:center;gap:12px">
+                  <div style="font-size:20px">${icon}</div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:12px;font-weight:600;color:var(--text-primary)">${prod?.nom || u.ref}</div>
+                    <div style="font-size:11px;color:var(--text-tertiary)">${u.note}</div>
+                  </div>
+                  <div style="text-align:right;flex-shrink:0">
+                    <div style="font-size:13px;font-weight:700;color:${color}">${u.prixSuggere} €</div>
+                    <div style="font-size:10px;color:${color}">${diff > 0 ? '+' : ''}${diff}%</div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+          <div style="margin-top:12px;padding:10px;background:rgba(245,158,11,0.08);border-radius:8px;font-size:11px;color:#f59e0b;font-style:italic">
+            ⚠️ Prix estimés par IA — à titre indicatif. Vérifiez auprès de vos fournisseurs avant de valider.
+          </div>
+        </div>
+      `, `
+        <button class="btn btn-primary" onclick="PROD._appliquerUpdates(${JSON.stringify(JSON.stringify(updates))})">✅ Appliquer toutes les mises à jour</button>
+        <button class="btn btn-secondary" onclick="App.closeModal()">Annuler</button>
+      `);
+    })
+    .catch(err => {
+      App.closeModal();
+      App.toast('Erreur connexion IA : ' + err.message, 'error');
+    });
+  },
+
+  _appliquerUpdates(updatesStr) {
+    const updates = JSON.parse(updatesStr);
+    const overrides = JSON.parse(localStorage.getItem('plaqpro_prix_overrides') || '{}');
+    const date = new Date().toLocaleDateString('fr-FR');
+    updates.forEach(u => {
+      overrides[u.ref] = {
+        prix: u.prixSuggere,
+        source: 'IA PlaqPro+ — Estimation marché BTP 2026',
+        date,
+        variation: u.variation,
+        note: u.note
+      };
+    });
+    localStorage.setItem('plaqpro_prix_overrides', JSON.stringify(overrides));
+    App.closeModal();
+    App.toast('✅ ' + updates.length + ' prix mis à jour !', 'success');
+    App.navigate('produits');
   }
 });
