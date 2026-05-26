@@ -193,8 +193,9 @@
         { page: 'tarifs', icon: '💶', label: 'Mes prix de vente' },
         { page: 'memo',   icon: '✅', label: 'Mémo chantier' },
       { section: 'Params' },
-      { page: 'monCompte',   icon: '<i class="ph ph-user-circle"></i>', label: 'Mon compte' },
-      { page: 'legal',       icon: '<i class="ph ph-scales"></i>', label: 'Mentions légales' },
+      { page: 'monCompte',    icon: '<i class="ph ph-user-circle"></i>', label: 'Mon compte' },
+      { page: 'chargesCouts', icon: '💰', label: 'Mes charges & coûts' },
+      { page: 'legal',        icon: '<i class="ph ph-scales"></i>', label: 'Mentions légales' },
       { page: 'catalogueFournisseurs', icon: '<i class="ph ph-storefront"></i>', label: 'Catalogue fournisseurs' },
       { page: 'produits', icon: '💰', label: 'Base tarifaire' },
       { section: 'Packs Métier' },
@@ -293,6 +294,7 @@
         aide:        '❓ Guide & Aide',
         chantier_mobile: '🏗 Mode Chantier',
         monCompte:       '👤 Mon Compte',
+        chargesCouts:    '💰 Mes Charges & Coûts — Rétro-calcul',
         inscription:     '🚀 Inscription — Qualification métier',
         legal:           '⚖️ Documents Légaux',
       };
@@ -342,6 +344,7 @@
         aide:        function() { return Pages.aide(); },
         chantier_mobile: function() { return Pages.chantier_mobile(); },
         monCompte:       function() { return Pages.monCompte(); },
+        chargesCouts:    function() { return Pages.chargesCouts(); },
         inscription:     function() { return Pages.inscription(); },
         legal:           function() { return Pages.legal(); },
       };
@@ -379,6 +382,7 @@
 <script src="js/legal.js"></script>
 <script src="js/catalogue_fournisseurs.js"></script>
 <script src="js/quiz_metiers.js"></script>
+<script src="js/charges.js"></script>
 
 </body>
 </html>

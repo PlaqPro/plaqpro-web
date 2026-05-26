@@ -72,6 +72,7 @@ const App = {
       tempsChantier: () => Pages.tempsChantier(),
       linteau:       () => Pages.linteau(),
       monCompte:     () => Pages.monCompte(),
+      chargesCouts:  () => Pages.chargesCouts(),
       inscription:   () => Pages.inscription(),
       legal:         (params) => Pages.legal(params && params.section),
       quizMetiers:   () => Pages.quizMetiers(),
@@ -150,6 +151,7 @@ const App = {
 
       { section: '⚙️ Paramètres' },
       { page: 'monCompte',   icon: '<i class="ph ph-user-circle"></i>', label: 'Mon compte' },
+      { page: 'chargesCouts', icon: '<i class="ph ph-calculator"></i>', label: 'Mes charges & coûts' },
       { page: 'legal',       icon: '<i class="ph ph-scales"></i>', label: 'Mentions légales' },
       { page: 'catalogueFournisseurs', icon: '<i class="ph ph-storefront"></i>', label: 'Catalogue fournisseurs' },
       { page: 'config',      icon: '<i class="ph ph-gear"></i>', label: 'Configuration' },

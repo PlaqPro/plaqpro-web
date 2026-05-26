@@ -470,3 +470,278 @@ const Charges = {
     document.getElementById('ch-stats').style.display = 'none';
   }
 };
+
+// ── Module Charges & Coûts — Rétro-calcul ─────────────────────────────────────
+Pages.chargesCouts = function() {
+  const div = document.createElement('div');
+  const charges = JSON.parse(localStorage.getItem('plaqpro_charges') || '{}');
+
+  if (!document.getElementById('style-chargescouts')) {
+    const s = document.createElement('style');
+    s.id = 'style-chargescouts';
+    s.textContent = `
+      .cc-hero { background: linear-gradient(135deg,#059669 0%,#10b981 100%);
+        border-radius:var(--radius-lg);padding:28px;margin-bottom:24px;color:#fff; }
+      .cc-hero h1 { font-size:22px;font-weight:800;margin-bottom:4px; }
+      .cc-hero p  { font-size:13px;opacity:.85; }
+      .cc-grid { display:grid;grid-template-columns:1fr 1fr;gap:20px; }
+      @media(max-width:768px){ .cc-grid { grid-template-columns:1fr; } }
+      .cc-panel { background:var(--bg-secondary);border:1px solid var(--border);
+        border-radius:var(--radius-lg);padding:22px; }
+      .cc-section { font-size:11px;font-weight:700;text-transform:uppercase;
+        letter-spacing:.08em;color:var(--text-tertiary);padding-bottom:8px;
+        border-bottom:1px solid var(--border);margin:16px 0 12px; }
+      .cc-section:first-child { margin-top:0; }
+      .cc-row { display:flex;align-items:center;justify-content:space-between;
+        padding:8px 0;border-bottom:1px solid var(--border);gap:12px; }
+      .cc-row:last-child { border:none; }
+      .cc-label { font-size:13px;color:var(--text-secondary);flex:1; }
+      .cc-input { width:120px;padding:6px 10px;background:var(--bg-primary);
+        border:1px solid var(--border);border-radius:var(--radius-sm);
+        color:var(--text-primary);font-size:13px;text-align:right; }
+      .cc-input:focus { outline:none;border-color:#10b981; }
+      .cc-unit { font-size:12px;color:var(--text-tertiary);width:40px;text-align:left; }
+      .cc-result { background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);
+        border-radius:var(--radius-lg);padding:22px;margin-top:20px; }
+      .cc-result-title { font-size:14px;font-weight:700;color:#10b981;margin-bottom:16px; }
+      .cc-kpi-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:12px; }
+      @media(max-width:600px){ .cc-kpi-grid { grid-template-columns:1fr; } }
+      .cc-kpi { background:var(--bg-secondary);border:1px solid var(--border);
+        border-radius:var(--radius-md);padding:16px;text-align:center; }
+      .cc-kpi-val { font-size:28px;font-weight:900;letter-spacing:-0.03em;
+        color:#10b981;margin-bottom:4px; }
+      .cc-kpi-val.warn { color:#f59e0b; }
+      .cc-kpi-val.danger { color:#ef4444; }
+      .cc-kpi-label { font-size:11px;color:var(--text-tertiary);text-transform:uppercase;
+        letter-spacing:0.06em; }
+      .cc-alert { border-radius:var(--radius-md);padding:12px 16px;font-size:12px;
+        margin-top:12px;line-height:1.6; }
+      .cc-alert.ok     { background:rgba(16,185,129,0.08);border-left:3px solid #10b981; }
+      .cc-alert.warn   { background:rgba(245,158,11,0.08);border-left:3px solid #f59e0b; }
+      .cc-alert.danger { background:rgba(239,68,68,0.08);border-left:3px solid #ef4444; }
+      .cc-retroalc { background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.2);
+        border-radius:var(--radius-lg);padding:22px;margin-bottom:20px; }
+      .cc-retroalc-title { font-size:15px;font-weight:700;color:var(--accent);margin-bottom:16px; }
+    `;
+    document.head.appendChild(s);
+  }
+
+  const d = {
+    caAnnuel:       charges.caAnnuel       || 0,
+    resultatNet:    charges.resultatNet     || 0,
+    nbSalaries:     charges.nbSalaries      || 1,
+    heuresAn:       charges.heuresAn        || 1600,
+    vehicule:       charges.vehicule        || 0,
+    outillage:      charges.outillage       || 0,
+    local:          charges.local           || 0,
+    assurances:     charges.assurances      || 0,
+    telephone:      charges.telephone       || 0,
+    comptable:      charges.comptable       || 0,
+    autresCharges:  charges.autresCharges   || 0,
+    margePercent:   charges.margePercent    || 35,
+    coeffMateriaux: charges.coeffMateriaux  || 1.20,
+  };
+
+  function _calcul(data) {
+    const charges_totales = data.caAnnuel - data.resultatNet;
+    const heures_totales  = data.nbSalaries * data.heuresAn;
+    const cout_horaire    = heures_totales > 0 ? charges_totales / heures_totales : 0;
+    const prix_vente_min  = cout_horaire * (1 + data.margePercent / 100);
+    const taux_charges    = data.caAnnuel > 0 ? (charges_totales / data.caAnnuel * 100) : 0;
+    const productivite    = heures_totales > 0 ? data.caAnnuel / heures_totales : 0;
+    return { charges_totales, heures_totales, cout_horaire, prix_vente_min, taux_charges, productivite };
+  }
+
+  function _fmt(n)  { return new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(n); }
+  function _fmtE(n) { return _fmt(n) + ' €'; }
+
+  function _renderResultat(data) {
+    const el = document.getElementById('cc-resultats');
+    if (!el) return;
+    const r = _calcul(data);
+    let alertClass = 'ok', alertMsg = '';
+    if (r.taux_charges > 80) {
+      alertClass = 'danger';
+      alertMsg = '🔴 Taux de charges > 80% — rentabilité très faible. Revoir les prix de vente.';
+    } else if (r.taux_charges > 65) {
+      alertClass = 'warn';
+      alertMsg = '⚠️ Taux de charges élevé (' + _fmt(r.taux_charges) + '%). Marge insuffisante.';
+    } else if (r.taux_charges > 0) {
+      alertMsg = '✅ Taux de charges correct (' + _fmt(r.taux_charges) + '%). Structure financière saine.';
+    }
+    el.innerHTML = `
+      <div class="cc-result">
+        <div class="cc-result-title">📊 Résultats du rétro-calcul</div>
+        <div class="cc-kpi-grid">
+          <div class="cc-kpi">
+            <div class="cc-kpi-val ${r.cout_horaire > 60 ? 'warn' : ''}">${_fmt(r.cout_horaire)} €</div>
+            <div class="cc-kpi-label">Coût horaire réel</div>
+          </div>
+          <div class="cc-kpi">
+            <div class="cc-kpi-val">${_fmt(r.prix_vente_min)} €</div>
+            <div class="cc-kpi-label">Tarif horaire min.</div>
+          </div>
+          <div class="cc-kpi">
+            <div class="cc-kpi-val ${r.taux_charges > 70 ? 'danger' : r.taux_charges > 55 ? 'warn' : ''}">${_fmt(r.taux_charges)} %</div>
+            <div class="cc-kpi-label">Taux de charges</div>
+          </div>
+          <div class="cc-kpi">
+            <div class="cc-kpi-val">${_fmtE(r.charges_totales)}</div>
+            <div class="cc-kpi-label">Charges totales/an</div>
+          </div>
+          <div class="cc-kpi">
+            <div class="cc-kpi-val">${_fmt(r.heures_totales)} h</div>
+            <div class="cc-kpi-label">Heures facturables/an</div>
+          </div>
+          <div class="cc-kpi">
+            <div class="cc-kpi-val">${_fmt(r.productivite)} €</div>
+            <div class="cc-kpi-label">CA/heure produite</div>
+          </div>
+        </div>
+        ${alertMsg ? `<div class="cc-alert ${alertClass}" style="margin-top:16px">${alertMsg}</div>` : ''}
+        <div style="margin-top:16px;padding:14px;background:var(--bg-primary);border-radius:var(--radius-md);font-size:13px;line-height:1.8">
+          <strong>💡 Pour vos devis :</strong><br>
+          • Main d'œuvre : <strong>${_fmt(r.prix_vente_min)} €/h minimum</strong><br>
+          • Matériaux : prix achat × <strong>${_fmt(data.coeffMateriaux)}</strong> (coeff. ${_fmt((data.coeffMateriaux-1)*100)}% marge)<br>
+          • Seuil rentabilité journée 8h : <strong>${_fmtE(r.prix_vente_min * 8)}</strong>
+        </div>
+      </div>
+    `;
+    if (typeof DB !== 'undefined') {
+      const cfg = DB.getConfig();
+      cfg.coutHoraire      = r.cout_horaire;
+      cfg.prixVenteHoraire = r.prix_vente_min;
+      cfg.coeffMateriaux   = data.coeffMateriaux;
+      DB.saveConfig(cfg);
+    }
+  }
+
+  div.innerHTML = `
+    <div class="cc-hero">
+      <h1>💰 Mes Charges & Coûts</h1>
+      <p>Rétro-calcul depuis votre réel — pour des devis rentables</p>
+    </div>
+
+    <div class="cc-retroalc">
+      <div class="cc-retroalc-title">📈 Rétro-calcul depuis votre activité réelle</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px">
+        <div>
+          <div class="cc-row">
+            <span class="cc-label">💼 CA annuel HT</span>
+            <input type="number" class="cc-input" id="cc-ca" value="${d.caAnnuel}" placeholder="180000" oninput="CHG.recalculer()">
+            <span class="cc-unit">€/an</span>
+          </div>
+          <div class="cc-row">
+            <span class="cc-label">✅ Résultat net</span>
+            <input type="number" class="cc-input" id="cc-rn" value="${d.resultatNet}" placeholder="35000" oninput="CHG.recalculer()">
+            <span class="cc-unit">€/an</span>
+          </div>
+        </div>
+        <div>
+          <div class="cc-row">
+            <span class="cc-label">👥 Nombre de salariés</span>
+            <input type="number" class="cc-input" id="cc-sal" value="${d.nbSalaries}" min="1" max="50" oninput="CHG.recalculer()">
+            <span class="cc-unit">pers.</span>
+          </div>
+          <div class="cc-row">
+            <span class="cc-label">⏱️ Heures travaillées/an/pers.</span>
+            <input type="number" class="cc-input" id="cc-h" value="${d.heuresAn}" placeholder="1600" oninput="CHG.recalculer()">
+            <span class="cc-unit">h</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cc-grid">
+      <div class="cc-panel">
+        <div class="cc-section">🚗 Charges fixes mensuelles</div>
+        <div class="cc-row"><span class="cc-label">Véhicule (leasing + assurance + carburant)</span>
+          <input type="number" class="cc-input" id="cc-veh" value="${d.vehicule}" oninput="CHG.recalculer()">
+          <span class="cc-unit">€/mois</span></div>
+        <div class="cc-row"><span class="cc-label">Outillage & amortissement</span>
+          <input type="number" class="cc-input" id="cc-out" value="${d.outillage}" oninput="CHG.recalculer()">
+          <span class="cc-unit">€/mois</span></div>
+        <div class="cc-row"><span class="cc-label">Local / stockage / entrepôt</span>
+          <input type="number" class="cc-input" id="cc-loc" value="${d.local}" oninput="CHG.recalculer()">
+          <span class="cc-unit">€/mois</span></div>
+        <div class="cc-row"><span class="cc-label">Assurances (RC Pro + décennale)</span>
+          <input type="number" class="cc-input" id="cc-ass" value="${d.assurances}" oninput="CHG.recalculer()">
+          <span class="cc-unit">€/mois</span></div>
+        <div class="cc-row"><span class="cc-label">Téléphone + internet</span>
+          <input type="number" class="cc-input" id="cc-tel" value="${d.telephone}" oninput="CHG.recalculer()">
+          <span class="cc-unit">€/mois</span></div>
+        <div class="cc-row"><span class="cc-label">Expert-comptable</span>
+          <input type="number" class="cc-input" id="cc-cpt" value="${d.comptable}" oninput="CHG.recalculer()">
+          <span class="cc-unit">€/mois</span></div>
+        <div class="cc-row"><span class="cc-label">Autres charges fixes</span>
+          <input type="number" class="cc-input" id="cc-aut" value="${d.autresCharges}" oninput="CHG.recalculer()">
+          <span class="cc-unit">€/mois</span></div>
+      </div>
+
+      <div class="cc-panel">
+        <div class="cc-section">⚙️ Paramètres devis</div>
+        <div class="cc-row"><span class="cc-label">Marge bénéficiaire souhaitée</span>
+          <input type="number" class="cc-input" id="cc-marge" value="${d.margePercent}" min="0" max="100" oninput="CHG.recalculer()">
+          <span class="cc-unit">%</span></div>
+        <div class="cc-row"><span class="cc-label">Coefficient matériaux</span>
+          <input type="number" class="cc-input" id="cc-coeff" value="${d.coeffMateriaux}" min="1" max="3" step="0.05" oninput="CHG.recalculer()">
+          <span class="cc-unit">×</span></div>
+        <div style="margin-top:12px;padding:12px;background:var(--bg-primary);border-radius:var(--radius-md);font-size:12px;color:var(--text-tertiary);line-height:1.7">
+          <strong style="color:var(--text-primary)">ℹ️ Coefficient matériaux</strong><br>
+          1.20 = vous vendez les matériaux 20% plus cher que votre prix d'achat.<br>
+          Couvre : transport, stockage, pertes, marge commerciale.
+        </div>
+        <div class="cc-section" style="margin-top:20px">📅 Référence heures</div>
+        <div style="font-size:12px;color:var(--text-tertiary);line-height:1.8;padding:10px;background:var(--bg-primary);border-radius:var(--radius-md)">
+          Référence France artisan :<br>
+          • 218 jours travaillés/an (hors congés, jours fériés)<br>
+          • ~7.3h productives/jour = <strong>1600h/an</strong><br>
+          • Auto-entrepreneur : souvent 1400-1800h selon activité
+        </div>
+        <div class="cc-section" style="margin-top:20px">💾 Actions</div>
+        <div style="display:flex;gap:8px;flex-direction:column">
+          <button class="btn btn-primary" onclick="CHG.sauvegarder()" style="width:100%">💾 Sauvegarder mes paramètres</button>
+          <button class="btn btn-secondary" onclick="CHG.reinitialiser()" style="width:100%">🔄 Réinitialiser</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="cc-resultats"></div>
+  `;
+
+  window.CHG = {
+    getData() {
+      return {
+        caAnnuel:       parseFloat(document.getElementById('cc-ca')?.value)    || 0,
+        resultatNet:    parseFloat(document.getElementById('cc-rn')?.value)    || 0,
+        nbSalaries:     parseInt(document.getElementById('cc-sal')?.value)     || 1,
+        heuresAn:       parseFloat(document.getElementById('cc-h')?.value)     || 1600,
+        vehicule:       parseFloat(document.getElementById('cc-veh')?.value)   || 0,
+        outillage:      parseFloat(document.getElementById('cc-out')?.value)   || 0,
+        local:          parseFloat(document.getElementById('cc-loc')?.value)   || 0,
+        assurances:     parseFloat(document.getElementById('cc-ass')?.value)   || 0,
+        telephone:      parseFloat(document.getElementById('cc-tel')?.value)   || 0,
+        comptable:      parseFloat(document.getElementById('cc-cpt')?.value)   || 0,
+        autresCharges:  parseFloat(document.getElementById('cc-aut')?.value)   || 0,
+        margePercent:   parseFloat(document.getElementById('cc-marge')?.value) || 35,
+        coeffMateriaux: parseFloat(document.getElementById('cc-coeff')?.value) || 1.20,
+      };
+    },
+    recalculer() { _renderResultat(this.getData()); },
+    sauvegarder() {
+      const data = this.getData();
+      localStorage.setItem('plaqpro_charges', JSON.stringify(data));
+      this.recalculer();
+      App.toast('✅ Paramètres sauvegardés !', 'success');
+    },
+    reinitialiser() {
+      if (!confirm('Réinitialiser tous les paramètres ?')) return;
+      localStorage.removeItem('plaqpro_charges');
+      App.navigate('chargesCouts');
+      App.toast('Paramètres réinitialisés', 'success');
+    },
+  };
+
+  setTimeout(() => _renderResultat(d), 50);
+  return div;
+};
