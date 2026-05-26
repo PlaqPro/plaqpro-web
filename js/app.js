@@ -2399,6 +2399,12 @@ ${htmlWidgets}
           </button>
         </div>
         <input type="hidden" id="f-type-chantier" value="${c.typeChantier || 'interieur'}">
+        <div id="type-chantier-confirm">
+          ${isExt
+            ? '<div style="margin-top:8px;padding:8px 12px;background:rgba(16,185,129,0.08);border-left:3px solid #10b981;border-radius:0 6px 6px 0;font-size:12px;color:#10b981">✅ Chantier extérieur — métrés adaptés (surface, linéaire, muret...)</div>'
+            : '<div style="margin-top:8px;padding:8px 12px;background:rgba(79,142,247,0.08);border-left:3px solid #4F8EF7;border-radius:0 6px 6px 0;font-size:12px;color:#4F8EF7">✅ Chantier intérieur — métrés L×l×H par pièce</div>'
+          }
+        </div>
       </div>
       <div class="form-group"><label class="form-label">Client *</label>
         <select class="form-control" id="f-client">
@@ -2440,10 +2446,12 @@ ${htmlWidgets}
         btnExt.className = btnExt.className.replace('btn-primary','btn-secondary');
       }
     }
-    const secInt = document.getElementById('metrages-interieur');
-    const secExt = document.getElementById('metrages-exterieur');
-    if (secInt) secInt.style.display = type === 'interieur' ? 'block' : 'none';
-    if (secExt) secExt.style.display = type === 'exterieur' ? 'block' : 'none';
+    const confirm = document.getElementById('type-chantier-confirm');
+    if (confirm) {
+      confirm.innerHTML = type === 'exterieur'
+        ? '<div style="margin-top:8px;padding:8px 12px;background:rgba(16,185,129,0.08);border-left:3px solid #10b981;border-radius:0 6px 6px 0;font-size:12px;color:#10b981">✅ Chantier extérieur — métrés adaptés (surface, linéaire, muret...)</div>'
+        : '<div style="margin-top:8px;padding:8px 12px;background:rgba(79,142,247,0.08);border-left:3px solid #4F8EF7;border-radius:0 6px 6px 0;font-size:12px;color:#4F8EF7">✅ Chantier intérieur — métrés L×l×H par pièce</div>';
+    }
   },
 
   sauvegarderChantier(id) {
