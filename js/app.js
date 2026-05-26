@@ -2401,18 +2401,24 @@ ${htmlWidgets}
   },
 
   setTypeChantier(type) {
-    const inp = document.getElementById('f-type-chantier');
+    const inp    = document.getElementById('f-type-chantier');
     const btnInt = document.getElementById('type-btn-int');
     const btnExt = document.getElementById('type-btn-ext');
-    if (!inp || !btnInt || !btnExt) return;
+    if (!inp) return;
     inp.value = type;
-    if (type === 'exterieur') {
-      btnExt.className = btnExt.className.replace('btn-secondary','btn-primary');
-      btnInt.className = btnInt.className.replace('btn-primary','btn-secondary');
-    } else {
-      btnInt.className = btnInt.className.replace('btn-secondary','btn-primary');
-      btnExt.className = btnExt.className.replace('btn-primary','btn-secondary');
+    if (btnInt && btnExt) {
+      if (type === 'exterieur') {
+        btnExt.className = btnExt.className.replace('btn-secondary','btn-primary');
+        btnInt.className = btnInt.className.replace('btn-primary','btn-secondary');
+      } else {
+        btnInt.className = btnInt.className.replace('btn-secondary','btn-primary');
+        btnExt.className = btnExt.className.replace('btn-primary','btn-secondary');
+      }
     }
+    const secInt = document.getElementById('metrages-interieur');
+    const secExt = document.getElementById('metrages-exterieur');
+    if (secInt) secInt.style.display = type === 'interieur' ? 'block' : 'none';
+    if (secExt) secExt.style.display = type === 'exterieur' ? 'block' : 'none';
   },
 
   sauvegarderChantier(id) {
@@ -2442,35 +2448,93 @@ ${htmlWidgets}
   },
 
   modalNouveauMetrage(chantierId) {
+    const chantier = chantierId ? DB.getChantier(parseInt(chantierId)) : null;
+    const isExt = chantier?.typeChantier === 'exterieur';
     const d = document.createElement('div');
-    d.innerHTML = `
-      ${!chantierId ? `<div class="form-group"><label class="form-label">Chantier *</label>
-        <select class="form-control" id="f-ch-metrage">
-          <option value="">— Sélectionner —</option>
-          ${DB.chantiers.map(c => `<option value="${c.id}">${c.nom}</option>`).join('')}
-        </select></div>` : `<input type="hidden" id="f-ch-metrage" value="${chantierId}">`}
-      <div class="form-group"><label class="form-label">Nom de la pièce *</label>
-        <input class="form-control" id="f-piece" placeholder="Séjour, Chambre 1..."></div>
-      <div class="form-row-3">
-        <div class="form-group"><label class="form-label">Longueur (m)</label>
-          <input class="form-control" id="f-long" type="number" step="0.01" placeholder="0.00" oninput="Pages.calcMetragePreview()"></div>
-        <div class="form-group"><label class="form-label">Largeur (m)</label>
-          <input class="form-control" id="f-larg" type="number" step="0.01" placeholder="0.00" oninput="Pages.calcMetragePreview()"></div>
-        <div class="form-group"><label class="form-label">Hauteur (m)</label>
-          <input class="form-control" id="f-haut" type="number" step="0.01" value="2.6" oninput="Pages.calcMetragePreview()"></div>
-      </div>
-      <div id="metrage-preview" style="display:none;background:var(--bg-tertiary);border-radius:var(--radius-md);padding:12px;margin-top:4px">
-        <div class="flex gap-16" style="font-size:13px">
-          <div><span class="text-tertiary">Périmètre : </span><strong id="prev-perim">—</strong></div>
-          <div><span class="text-tertiary">Murs : </span><strong id="prev-murs">—</strong></div>
-          <div><span class="text-tertiary">Plafond : </span><strong id="prev-plaf">—</strong></div>
+    if (isExt) {
+      d.innerHTML = `
+        ${!chantierId ? `<div class="form-group"><label class="form-label">Chantier *</label>
+          <select class="form-control" id="f-ch-metrage">
+            <option value="">— Sélectionner —</option>
+            ${DB.chantiers.map(c => '<option value="' + c.id + '">' + c.nom + '</option>').join('')}
+          </select></div>` : '<input type="hidden" id="f-ch-metrage" value="' + chantierId + '">'}
+        <div class="form-group"><label class="form-label">Désignation *</label>
+          <input class="form-control" id="f-piece" placeholder="Muret, Terrasse, Allée, Clôture, Escalier..."></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group"><label class="form-label">Surface (m²)</label>
+            <input class="form-control" id="f-surface-ext" type="number" step="0.01" placeholder="0.00" oninput="Pages.calcMetrageExtPreview()">
+            <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px">ou longueur × largeur ci-dessous</div>
+          </div>
+          <div class="form-group"><label class="form-label">Linéaire (ml)</label>
+            <input class="form-control" id="f-lineaire-ext" type="number" step="0.01" placeholder="0.00">
+            <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px">clôtures, bordures, caniveaux...</div>
+          </div>
         </div>
-      </div>
-    `;
-    App.openModal('Nouveau métré', d, `
-      <button class="btn btn-secondary" onclick="App.closeModal()">Annuler</button>
-      <button class="btn btn-primary" onclick="Pages.sauvegarderMetrage()">Ajouter la pièce</button>
-    `);
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div class="form-group"><label class="form-label">Longueur (m)</label>
+            <input class="form-control" id="f-long" type="number" step="0.01" placeholder="0.00" oninput="Pages.calcMetrageExtPreview()"></div>
+          <div class="form-group"><label class="form-label">Largeur (m)</label>
+            <input class="form-control" id="f-larg" type="number" step="0.01" placeholder="0.00" oninput="Pages.calcMetrageExtPreview()"></div>
+          <div class="form-group"><label class="form-label">Hauteur (m)</label>
+            <input class="form-control" id="f-haut" type="number" step="0.01" placeholder="0.00">
+            <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px">muret, mur...</div>
+          </div>
+        </div>
+        <div id="metrage-preview" style="display:none;background:var(--bg-tertiary);border-radius:var(--radius-md);padding:10px;margin-top:4px;font-size:13px">
+          Surface calculée : <strong id="prev-surface-ext">—</strong>
+        </div>
+      `;
+      App.openModal('🌿 Nouveau métré extérieur', d,
+        '<button class="btn btn-secondary" onclick="App.closeModal()">Annuler</button>' +
+        '<button class="btn btn-primary" onclick="Pages.sauvegarderMetrage(true)">Ajouter</button>'
+      );
+    } else {
+      d.innerHTML = `
+        ${!chantierId ? `<div class="form-group"><label class="form-label">Chantier *</label>
+          <select class="form-control" id="f-ch-metrage">
+            <option value="">— Sélectionner —</option>
+            ${DB.chantiers.map(c => '<option value="' + c.id + '">' + c.nom + '</option>').join('')}
+          </select></div>` : '<input type="hidden" id="f-ch-metrage" value="' + chantierId + '">'}
+        <div class="form-group"><label class="form-label">Nom de la pièce *</label>
+          <input class="form-control" id="f-piece" placeholder="Séjour, Chambre 1, Cuisine..."></div>
+        <div class="form-row-3">
+          <div class="form-group"><label class="form-label">Longueur (m)</label>
+            <input class="form-control" id="f-long" type="number" step="0.01" placeholder="0.00" oninput="Pages.calcMetragePreview()"></div>
+          <div class="form-group"><label class="form-label">Largeur (m)</label>
+            <input class="form-control" id="f-larg" type="number" step="0.01" placeholder="0.00" oninput="Pages.calcMetragePreview()"></div>
+          <div class="form-group"><label class="form-label">Hauteur (m)</label>
+            <input class="form-control" id="f-haut" type="number" step="0.01" value="2.6" oninput="Pages.calcMetragePreview()"></div>
+        </div>
+        <div id="metrage-preview" style="display:none;background:var(--bg-tertiary);border-radius:var(--radius-md);padding:12px;margin-top:4px">
+          <div class="flex gap-16" style="font-size:13px">
+            <div><span class="text-tertiary">Périmètre : </span><strong id="prev-perim">—</strong></div>
+            <div><span class="text-tertiary">Murs : </span><strong id="prev-murs">—</strong></div>
+            <div><span class="text-tertiary">Plafond : </span><strong id="prev-plaf">—</strong></div>
+          </div>
+        </div>
+      `;
+      App.openModal('🏠 Nouveau métré intérieur', d,
+        '<button class="btn btn-secondary" onclick="App.closeModal()">Annuler</button>' +
+        '<button class="btn btn-primary" onclick="Pages.sauvegarderMetrage(false)">Ajouter la pièce</button>'
+      );
+    }
+  },
+
+  calcMetrageExtPreview() {
+    const L = parseFloat(document.getElementById('f-long')?.value) || 0;
+    const l = parseFloat(document.getElementById('f-larg')?.value) || 0;
+    let surf = parseFloat(document.getElementById('f-surface-ext')?.value) || 0;
+    if (!surf && L > 0 && l > 0) {
+      surf = L * l;
+      const el = document.getElementById('f-surface-ext');
+      if (el) el.value = surf.toFixed(2);
+    }
+    const prev  = document.getElementById('metrage-preview');
+    const prevEl = document.getElementById('prev-surface-ext');
+    if (surf > 0 && prev && prevEl) {
+      prevEl.textContent = surf.toFixed(2) + ' m²';
+      prev.style.display = 'block';
+    }
   },
 
   calcMetragePreview() {
@@ -2486,17 +2550,27 @@ ${htmlWidgets}
     }
   },
 
-  sauvegarderMetrage() {
+  sauvegarderMetrage(isExt) {
     const chantierId = parseInt(document.getElementById('f-ch-metrage')?.value);
     const piece = document.getElementById('f-piece')?.value.trim();
-    const L = parseFloat(document.getElementById('f-long')?.value);
-    const l = parseFloat(document.getElementById('f-larg')?.value);
-    const H = parseFloat(document.getElementById('f-haut')?.value);
-    if (!chantierId || !piece || !L || !l || !H) {
-      App.toast('Tous les champs sont obligatoires', 'error');
-      return;
+    if (!chantierId || !piece) { App.toast('Désignation et chantier obligatoires', 'error'); return; }
+    if (isExt) {
+      const surf = parseFloat(document.getElementById('f-surface-ext')?.value) || 0;
+      const lin  = parseFloat(document.getElementById('f-lineaire-ext')?.value) || 0;
+      const L    = parseFloat(document.getElementById('f-long')?.value) || 0;
+      const l    = parseFloat(document.getElementById('f-larg')?.value) || 0;
+      const H    = parseFloat(document.getElementById('f-haut')?.value) || 0;
+      const surfFinale = surf || (L > 0 && l > 0 ? L * l : 0);
+      if (!surfFinale && !lin) { App.toast('Saisissez une surface ou un linéaire', 'error'); return; }
+      DB.addMetrage({ chantierId, piece, longueur: L || surfFinale, largeur: l || 1, hauteur: H || 1,
+        surfaceExt: surfFinale, lineaire: lin, typeMetrage: 'exterieur' });
+    } else {
+      const L = parseFloat(document.getElementById('f-long')?.value);
+      const l = parseFloat(document.getElementById('f-larg')?.value);
+      const H = parseFloat(document.getElementById('f-haut')?.value);
+      if (!L || !l || !H) { App.toast('Longueur, largeur et hauteur obligatoires', 'error'); return; }
+      DB.addMetrage({ chantierId, piece, longueur: L, largeur: l, hauteur: H, typeMetrage: 'interieur' });
     }
-    DB.addMetrage({ chantierId, piece, longueur: L, largeur: l, hauteur: H });
     App.closeModal();
     Pages.chargerMetrages(chantierId);
     App.toast('Métré ajouté !');
