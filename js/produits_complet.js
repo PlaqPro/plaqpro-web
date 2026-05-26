@@ -1106,14 +1106,10 @@ Règles :
         </div>
       `;
       window._pendingPrixUpdates = updates;
-      const footerDiv = document.createElement('div');
-      footerDiv.style.display = 'flex';
-      footerDiv.style.gap = '10px';
-      footerDiv.innerHTML = `
-        <button class="btn btn-primary" onclick="PROD._appliquerUpdates()">✅ Appliquer toutes les mises à jour</button>
-        <button class="btn btn-secondary" onclick="App.closeModal()">Annuler</button>
-      `;
-      App.openModal('🔄 Suggestions de mise à jour prix', modalDiv2, footerDiv);
+      App.openModal('🔄 Suggestions de mise à jour prix', modalDiv2,
+        '<button class="btn btn-primary" onclick="PROD._appliquerUpdates()">✅ Appliquer toutes les mises à jour</button>' +
+        '<button class="btn btn-secondary" onclick="App.closeModal()">Annuler</button>'
+      );
     })
     .catch(err => {
       App.closeModal();
