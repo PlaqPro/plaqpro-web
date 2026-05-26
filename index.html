@@ -198,6 +198,7 @@
       { page: 'catalogueFournisseurs', icon: '<i class="ph ph-storefront"></i>', label: 'Catalogue fournisseurs' },
       { page: 'produits', icon: '💰', label: 'Base tarifaire' },
       { section: 'Packs Métier' },
+      { page: 'quizMetiers', icon: '🏗', label: 'Quiz Métiers BTP' },
       { page: 'maconnerie',  icon: '🧱', label: 'Pack Maçonnerie' },
       { page: 'electricite', icon: '⚡', label: 'Électricité' },
       { page: 'plomberie',   icon: '🔧', label: 'Plomberie' },
@@ -270,6 +271,7 @@
         catalogueFournisseurs: '🏪 Catalogue Fournisseurs BTP',
         config:      'Configuration',
         quiz:        '🎮 Quiz Plaquiste',
+        quizMetiers: '🏗 Quiz Métiers BTP — Formation professionnelle',
         plaqtetris:  '🎲 PlaqTetris',
         calendrier:  '📅 Calendrier',
         devis_complet: '📋 Devis Complet — Multi-corps',
@@ -321,6 +323,7 @@
         catalogueFournisseurs: function() { return Pages.catalogueFournisseurs(); },
         config:      function() { return Pages.config(); },
         quiz:        function() { return Pages.quiz(); },
+        quizMetiers: function() { return Pages.quizMetiers(); },
         plaqtetris:  function() { return Pages.plaqtetris(); },
         calendrier:  function() { return Pages.calendrier(); },
         prospection: function() { return Pages.prospection(); },
@@ -376,6 +379,7 @@
 <script src="js/inscription.js"></script>
 <script src="js/legal.js"></script>
 <script src="js/catalogue_fournisseurs.js"></script>
+<script src="js/quiz_metiers.js"></script>
 
 </body>
 </html>

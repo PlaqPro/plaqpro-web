@@ -74,6 +74,7 @@ const App = {
       monCompte:     () => Pages.monCompte(),
       inscription:   () => Pages.inscription(),
       legal:         (params) => Pages.legal(params && params.section),
+      quizMetiers:   () => Pages.quizMetiers(),
     };
 
     if (pages[page]) {
