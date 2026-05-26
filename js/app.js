@@ -756,20 +756,44 @@ ${htmlWidgets}
       </div>
       <div class="table-wrap">
         <table>
+          ${isExt ? `
+          <thead><tr><th>Désignation</th><th>Dimensions</th><th>Surface</th><th>Linéaire</th><th></th></tr></thead>
+          <tbody>
+            ${metrages.map(m => {
+              const surf = m.surfaceExt || (m.longueur * m.largeur) || 0;
+              const lin  = m.lineaire || 0;
+              totalMurs += surf;
+              return '<tr>' +
+                '<td><strong>' + m.piece + '</strong></td>' +
+                '<td class="font-mono">' + (m.longueur > 0 ? m.longueur + ' × ' + m.largeur + (m.hauteur > 1 ? ' × ' + m.hauteur : '') + ' m' : '—') + '</td>' +
+                '<td>' + (surf > 0 ? Calculs.fmtN(surf, 1) + ' m²' : '—') + '</td>' +
+                '<td>' + (lin > 0 ? Calculs.fmtN(lin, 1) + ' ml' : '—') + '</td>' +
+                '<td><button class="btn btn-danger btn-sm" onclick="Pages.supprimerMetrage(' + m.id + ', ' + chantierId + ')">✕</button></td>' +
+                '</tr>';
+            }).join('')}
+          </tbody>
+          <tfoot>
+            <tr style="background:var(--bg-tertiary)">
+              <td colspan="2"><strong>TOTAUX</strong></td>
+              <td><strong>${Calculs.fmtN(totalMurs, 1)} m²</strong></td>
+              <td></td><td></td>
+            </tr>
+          </tfoot>
+          ` : `
           <thead><tr><th>Pièce</th><th>L × l × H</th><th>Périmètre</th><th>Surface murs</th><th>Surface plafond</th><th></th></tr></thead>
           <tbody>
             ${metrages.map(m => {
               const c = Calculs.metrage(m.longueur, m.largeur, m.hauteur);
               totalMurs += c.surfMurs;
               totalPlaf += c.surfPlafond;
-              return `<tr>
-                <td><strong>${m.piece}</strong></td>
-                <td class="font-mono">${m.longueur} × ${m.largeur} × ${m.hauteur} m</td>
-                <td>${Calculs.fmtN(c.perimetre, 1)} m</td>
-                <td>${Calculs.fmtN(c.surfMurs, 1)} m²</td>
-                <td>${Calculs.fmtN(c.surfPlafond, 1)} m²</td>
-                <td><button class="btn btn-danger btn-sm" onclick="Pages.supprimerMetrage(${m.id}, ${chantierId})">✕</button></td>
-              </tr>`;
+              return '<tr>' +
+                '<td><strong>' + m.piece + '</strong></td>' +
+                '<td class="font-mono">' + m.longueur + ' × ' + m.largeur + ' × ' + m.hauteur + ' m</td>' +
+                '<td>' + Calculs.fmtN(c.perimetre, 1) + ' m</td>' +
+                '<td>' + Calculs.fmtN(c.surfMurs, 1) + ' m²</td>' +
+                '<td>' + Calculs.fmtN(c.surfPlafond, 1) + ' m²</td>' +
+                '<td><button class="btn btn-danger btn-sm" onclick="Pages.supprimerMetrage(' + m.id + ', ' + chantierId + ')">✕</button></td>' +
+                '</tr>';
             }).join('')}
           </tbody>
           <tfoot>
@@ -780,6 +804,7 @@ ${htmlWidgets}
               <td></td>
             </tr>
           </tfoot>
+          `}
         </table>
       </div>
     </div>`;
