@@ -95,7 +95,8 @@ const App = {
       peinture:  'Peinture',
       devis:     'Devis',
       produits:  'Catalogue fournisseurs',
-      config:    'Configuration',
+      config:      'Configuration',
+      quizMetiers: '🎮 Quiz Métiers BTP',
     };
     document.getElementById('topbar-title').textContent = titles[page] || page;
   },
@@ -130,6 +131,7 @@ const App = {
       { page: 'memo',        icon: '<i class="ph ph-check-square"></i>', label: 'Mémo chantier' },
 
       { section: '🔧 Packs Métier' },
+      { page: 'quizMetiers', icon: '<i class="ph ph-game-controller"></i>', label: 'Quiz Métiers BTP' },
       { page: 'maconnerie',  icon: '<i class="ph ph-bricks"></i>', label: 'Maçonnerie' },
       { page: 'electricite', icon: '<i class="ph ph-plug"></i>', label: 'Électricité' },
       { page: 'plomberie',   icon: '<i class="ph ph-pipe"></i>', label: 'Plomberie' },
