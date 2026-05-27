@@ -124,7 +124,43 @@ window.CartePremium = {
     const carte = document.getElementById('carte-premium-render');
     if (!carte) return;
     const win = window.open('', '_blank');
-    win.document.write('<!DOCTYPE html><html><head><title>Carte PlaqPro+</title><style>*{margin:0;padding:0}body{background:#1a1a2e;display:flex;justify-content:center;padding:20px}@media print{.np{display:none}}</style></head><body>' + carte.outerHTML + '<div class="np" style="margin-top:16px;text-align:center"><button onclick="window.print()" style="padding:10px 24px;background:#4F8EF7;color:#fff;border:none;border-radius:8px;cursor:pointer">🖨 Imprimer</button></div></body></html>');
+    win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>Carte PlaqPro+ Premium</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0d0f14;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    @media print {
+      body { background: #0d0f14 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  ${carte.outerHTML}
+  <div class="no-print" style="margin-top:24px;display:flex;gap:12px">
+    <button onclick="window.print()" style="padding:12px 28px;background:#4F8EF7;color:#fff;border:none;border-radius:8px;font-size:15px;cursor:pointer;font-weight:600">
+      🖨 Imprimer / Enregistrer PDF
+    </button>
+    <button onclick="window.close()" style="padding:12px 28px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;font-size:15px;cursor:pointer">
+      ✕ Fermer
+    </button>
+  </div>
+  <div class="no-print" style="margin-top:16px;font-size:11px;color:rgba(255,255,255,0.3);text-align:center">
+    Pour enregistrer en PDF : Imprimer → Destination → Enregistrer au format PDF
+  </div>
+</body>
+</html>`);
     win.document.close();
   },
 
