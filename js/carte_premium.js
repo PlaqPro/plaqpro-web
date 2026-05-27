@@ -60,7 +60,7 @@ window.CartePremium = {
       + '<div style="background:rgba(255,255,255,0.06);border-radius:8px;padding:10px"><div style="font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:.1em;margin-bottom:4px">ID MEMBRE</div><div style="font-size:11px;font-weight:700;color:#f59e0b">' + id + '</div></div>'
       + '</div>'
       + '<div style="display:flex;justify-content:space-between;align-items:flex-end">'
-      + '<div style="background:rgba(255,255,255,0.95);border-radius:8px;padding:6px;text-align:center">'
+      + '<div id="carte-qr-container" style="background:rgba(255,255,255,0.95);border-radius:8px;padding:6px;text-align:center;min-width:84px;min-height:84px">'
       + '<canvas id="carte-qr-canvas" width="72" height="72"></canvas>'
       + '<div style="font-size:8px;color:#333;margin-top:2px">Scanner pour verifier</div>'
       + '</div>'
@@ -84,12 +84,13 @@ window.CartePremium = {
   },
 
   async _genererQR(url) {
+    const container = document.getElementById('carte-qr-container');
     const canvas = document.getElementById('carte-qr-canvas');
-    if (!canvas) return;
+    if (!container) return;
     if (typeof QRCode === 'undefined') {
       await new Promise((resolve) => {
         const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
         s.crossOrigin = 'anonymous';
         s.onload = resolve;
         s.onerror = resolve;
@@ -98,11 +99,24 @@ window.CartePremium = {
     }
     try {
       if (typeof QRCode !== 'undefined') {
-        await QRCode.toCanvas(canvas, url, { width: 72, margin: 0, color: { dark: '#000000', light: '#ffffff' } });
+        if (canvas) canvas.style.display = 'none';
+        const qrDiv = document.createElement('div');
+        qrDiv.id = 'carte-qr-div';
+        container.insertBefore(qrDiv, canvas);
+        new QRCode(qrDiv, {
+          text: url,
+          width: 72,
+          height: 72,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
       }
     } catch(e) {
-      const ctx = canvas.getContext('2d');
-      if (ctx) { ctx.fillStyle = '#333'; ctx.fillRect(0,0,72,72); ctx.fillStyle = '#fff'; ctx.font = '10px sans-serif'; ctx.fillText('QR', 28, 40); }
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) { ctx.fillStyle = '#1a1a2e'; ctx.fillRect(0,0,72,72); ctx.fillStyle = '#f59e0b'; ctx.font = '8px sans-serif'; ctx.fillText('QR', 28, 40); }
+      }
     }
   },
 
