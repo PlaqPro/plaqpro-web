@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 //  PLAQPRO+ — Service Worker
 //  sw.js — Cache pour fonctionnement hors ligne
 // ============================================================
@@ -7,25 +7,25 @@ const CACHE_NAME = 'plaqpro-v4';
 
 const FICHIERS_CACHE = [
   '/',
-  '/login.html',
-  '/index.html',
-  '/css/style.css',
-  '/js/auth.js',
-  '/js/db.js',
-  '/js/calculs.js',
-  '/js/app.js',
-  '/js/calculateur.js',
-  '/js/liste_achat.js',
-  '/js/page_cloison.js',
-  '/js/page_peinture.js',
-  '/js/produits_complet.js',
-  '/js/tarifs.js',
-  '/js/pdf_export.js',
-  '/js/memo_oublis.js',
-  '/js/alertes.js',
+  '/plaqpro-web/login.html',
+  '/plaqpro-web/index.html',
+  '/plaqpro-web/css/style.css',
+  '/plaqpro-web/js/auth.js',
+  '/plaqpro-web/js/db.js',
+  '/plaqpro-web/js/calculs.js',
+  '/plaqpro-web/js/app.js',
+  '/plaqpro-web/js/calculateur.js',
+  '/plaqpro-web/js/liste_achat.js',
+  '/plaqpro-web/js/page_cloisons.js',
+  '/plaqpro-web/js/page_peinture.js',
+  '/plaqpro-web/js/produits_complet.js',
+  '/plaqpro-web/js/tarifs.js',
+  '/plaqpro-web/js/pdf_export.js',
+  '/plaqpro-web/js/memo_oublis.js',
+  '/plaqpro-web/js/alertes.js',
   '/signature.html',
-  '/js/signature.js',
-  '/js/email_devis.js',
+  '/plaqpro-web/js/signature.js',
+  '/plaqpro-web/js/email_devis.js',
   '/assets/logo_plaqpro.png',
   '/assets/icon-192.png',
   '/assets/icon-512.png',
@@ -65,3 +65,4 @@ self.addEventListener('fetch', e => {
     })
   );
 });
+

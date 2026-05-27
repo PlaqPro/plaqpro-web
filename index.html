@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <script src="js/config.local.js"></script>
+  <!-- config.local.js chargé uniquement en local — ignoré en production -->
+  <script>if(typeof GROQ_API_KEY === 'undefined') window.GROQ_API_KEY = '';</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -155,7 +156,6 @@
   <script src="js/email_devis.js"></script>
   <script src="js/signature.js"></script>
 
-  <script src="js/charges.js"></script>
   <script src="js/rentabilite.js"></script>
   <script src="js/acoustique.js"></script>
   <script src="js/resistance_feu.js"></script>
