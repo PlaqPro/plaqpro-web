@@ -1000,9 +1000,13 @@ Object.assign(window.PROD, {
       return;
     }
     const overrides = JSON.parse(localStorage.getItem('plaqpro_prix_overrides') || '{}');
-    const echantillon = CATALOGUE.slice(0, 20).map(p => ({
+    const lastIdx = parseInt(localStorage.getItem('plaqpro_prix_last_idx') || '0');
+    const nextIdx = (lastIdx + 20) >= CATALOGUE.length ? 0 : lastIdx + 20;
+    localStorage.setItem('plaqpro_prix_last_idx', nextIdx);
+    const echantillon = CATALOGUE.slice(nextIdx, nextIdx + 20).map(p => ({
       ref: p.ref, nom: p.nom, unite: p.unite, prixActuel: overrides[p.ref]?.prix || p.prix
     }));
+    const batchInfo = (nextIdx + 1) + '-' + Math.min(nextIdx + 20, CATALOGUE.length) + ' / ' + CATALOGUE.length;
 
     const modalDiv = document.createElement('div');
     modalDiv.innerHTML = `
@@ -1010,7 +1014,7 @@ Object.assign(window.PROD, {
         <div style="font-size:48px;margin-bottom:16px">🤖</div>
         <div style="font-size:15px;font-weight:700;margin-bottom:8px">Analyse des prix en cours...</div>
         <div style="font-size:13px;color:var(--text-tertiary);margin-bottom:20px">
-          L'IA analyse les prix du marché BTP français pour ${echantillon.length} produits
+          L'IA analyse les prix du marché BTP français — produits ${batchInfo}
         </div>
         <div id="prix-progress" style="background:var(--bg-primary);border-radius:var(--radius-md);padding:14px;font-size:12px;color:var(--text-tertiary);text-align:left;max-height:200px;overflow-y:auto">
           Connexion à l'assistant IA...
