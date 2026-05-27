@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PlaqPro+ — Carte Premium Adherent avec QR Code
  * Copyright (c) 2026 Gabriel Khamassi — Saint-Priest (69)
  */
@@ -139,3 +139,4 @@ window.CartePremium = {
 
   _carteData: null
 };
+
