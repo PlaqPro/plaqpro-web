@@ -74,6 +74,9 @@ Pages.monCompte = function() {
       </div>
     </div>
 
+    <!-- CARTE PREMIUM -->
+    <div id="carte-premium-container" style="margin-bottom:20px"></div>
+
     <div class="mc-grid">
 
       <!-- COLONNE GAUCHE -->
@@ -181,6 +184,14 @@ Pages.monCompte = function() {
   `;
 
   setTimeout(() => {}, 50);
+
+  // Afficher la carte premium
+  setTimeout(() => {
+    if (typeof CartePremium !== 'undefined') {
+      CartePremium.afficherDansMonCompte('carte-premium-container');
+    }
+  }, 100);
+
   return div;
 };
 

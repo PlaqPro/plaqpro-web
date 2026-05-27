@@ -206,8 +206,68 @@ Pages.inscription = function() {
         cfg.ville = formData.ville;
         localStorage.setItem('plaqpro_config', JSON.stringify(cfg));
       }
+      // Générer l'ID membre unique
+      if (typeof CartePremium !== 'undefined') CartePremium.genererIdMembre();
+
+      // Message de bienvenue avec info carte
       App.toast('🎉 Bienvenue ' + formData.prenom + ' ! Vos 10 jours Pro sont activés !', 'success');
-      setTimeout(() => App.navigate('dashboard'), 1500);
+
+      // Modale de bienvenue avec info carte
+      setTimeout(() => {
+        const d = document.createElement('div');
+        d.innerHTML = `
+          <div style="padding:24px;text-align:center">
+            <div style="font-size:56px;margin-bottom:16px">🎉</div>
+            <div style="font-size:20px;font-weight:800;margin-bottom:8px">
+              Bienvenue ${formData.prenom} !
+            </div>
+            <div style="font-size:14px;color:var(--text-secondary);margin-bottom:20px;line-height:1.6">
+              Vos <strong>10 jours Pro offerts</strong> sont activés.<br>
+              Profitez de toutes les fonctionnalités PlaqPro+ !
+            </div>
+            <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:16px;
+              padding:20px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.1)">
+              <div style="font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px;letter-spacing:.05em">
+                🎫 VOTRE CARTE ADHÉRENT
+              </div>
+              <div style="font-size:22px;font-weight:900;margin-bottom:4px">
+                <span style="color:#fff">Pla</span><span style="color:#4F8EF7">Q</span><span style="color:#fff">Pro</span><span style="color:#ef4444">+</span>
+                <span style="color:#f59e0b;font-size:14px;margin-left:8px">PRO</span>
+              </div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">
+                Avantages négociés • Tarifs partenaires BTP
+              </div>
+              <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:12px;
+                display:flex;justify-content:space-between;align-items:center">
+                <div style="text-align:left">
+                  <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:2px">ADHÉRENT</div>
+                  <div style="font-size:13px;font-weight:700;color:#fff">${formData.nom || formData.prenom}</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:2px">STATUT</div>
+                  <div style="font-size:13px;font-weight:700;color:#10b981">Actif ${new Date().getFullYear()}</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:2px">ID MEMBRE</div>
+                  <div style="font-size:13px;font-weight:700;color:#f59e0b">${typeof CartePremium !== 'undefined' ? CartePremium.genererIdMembre() : 'PP+????'}</div>
+                </div>
+              </div>
+            </div>
+            <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);
+              border-radius:12px;padding:16px;margin-bottom:16px;font-size:13px;
+              color:var(--text-secondary);line-height:1.7">
+              📬 <strong style="color:#f59e0b">Vous recevrez votre carte par courrier sous quinzaine.</strong><br>
+              Elle vous permettra d'obtenir des tarifs négociés chez nos partenaires fournisseurs BTP.
+            </div>
+            <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:16px">
+              Contact partenariat : <a href="mailto:partenaire@aa-tb.fr" style="color:var(--accent)">partenaire@aa-tb.fr</a>
+            </div>
+          </div>
+        `;
+        App.openModal('🎉 Inscription réussie !', d,
+          '<button class="btn btn-primary" onclick="App.closeModal();App.navigate(\'dashboard\')">🚀 Commencer PlaqPro+</button>'
+        );
+      }, 800);
     }
   };
 
