@@ -2388,12 +2388,107 @@ ${htmlWidgets}
           </button>
         </div>
         <input type="hidden" id="f-type-chantier" value="${c.typeChantier || 'interieur'}">
-        <div id="type-chantier-confirm">
+        <div id="type-chantier-confirm" style="margin-bottom:8px">
           ${isExt
-            ? '<div style="margin-top:8px;padding:8px 12px;background:rgba(16,185,129,0.08);border-left:3px solid #10b981;border-radius:0 6px 6px 0;font-size:12px;color:#10b981">✅ Chantier extérieur — métrés adaptés (surface, linéaire, muret...)</div>'
-            : '<div style="margin-top:8px;padding:8px 12px;background:rgba(79,142,247,0.08);border-left:3px solid #4F8EF7;border-radius:0 6px 6px 0;font-size:12px;color:#4F8EF7">✅ Chantier intérieur — métrés L×l×H par pièce</div>'
+            ? '<div style="padding:8px 12px;background:rgba(16,185,129,0.08);border-left:3px solid #10b981;border-radius:0 6px 6px 0;font-size:12px;color:#10b981">🌿 Chantier extérieur — renseignez les détails ci-dessous</div>'
+            : '<div style="padding:8px 12px;background:rgba(79,142,247,0.08);border-left:3px solid #4F8EF7;border-radius:0 6px 6px 0;font-size:12px;color:#4F8EF7">🏠 Chantier intérieur — renseignez les détails ci-dessous</div>'
           }
         </div>
+
+        ${isExt ? `
+        <!-- CHAMPS SPÉCIFIQUES EXTÉRIEUR -->
+        <div style="background:rgba(16,185,129,0.04);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius-md);padding:16px;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">
+            🌿 Détails chantier extérieur
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Nature des travaux</label>
+              <select class="form-control" id="f-nature-ext">
+                <option value="">— Sélectionner —</option>
+                <option value="terrasse" ${c.natureExt==='terrasse'?'selected':''}>🪨 Terrasse</option>
+                <option value="muret" ${c.natureExt==='muret'?'selected':''}>🧱 Muret / Mur de clôture</option>
+                <option value="allee" ${c.natureExt==='allee'?'selected':''}>🛤 Allée / Chemin</option>
+                <option value="cloture" ${c.natureExt==='cloture'?'selected':''}>🚧 Clôture</option>
+                <option value="piscine" ${c.natureExt==='piscine'?'selected':''}>🏊 Piscine / Plage piscine</option>
+                <option value="drainage" ${c.natureExt==='drainage'?'selected':''}>💧 Drainage / Assainissement</option>
+                <option value="jardinage" ${c.natureExt==='jardinage'?'selected':''}>🌿 Aménagement paysager</option>
+                <option value="facade" ${c.natureExt==='facade'?'selected':''}>🏗 Ravalement façade</option>
+                <option value="autre" ${c.natureExt==='autre'?'selected':''}>🔧 Autre</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Type de sol existant</label>
+              <select class="form-control" id="f-sol-ext">
+                <option value="">— Sélectionner —</option>
+                <option value="beton" ${c.solExt==='beton'?'selected':''}>Béton existant</option>
+                <option value="terre" ${c.solExt==='terre'?'selected':''}>Terre / pelouse</option>
+                <option value="gravier" ${c.solExt==='gravier'?'selected':''}>Gravier</option>
+                <option value="dallage" ${c.solExt==='dallage'?'selected':''}>Dallage existant</option>
+                <option value="autre" ${c.solExt==='autre'?'selected':''}>Autre</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Surface estimée (m²)</label>
+              <input class="form-control" type="number" id="f-surface-est" step="0.5"
+                value="${c.surfaceEstimee||''}" placeholder="ex: 45">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Accès chantier</label>
+              <select class="form-control" id="f-acces-ext">
+                <option value="facile" ${c.accesExt==='facile'?'selected':''}>✅ Facile</option>
+                <option value="moyen" ${c.accesExt==='moyen'?'selected':''}>⚠️ Moyen</option>
+                <option value="difficile" ${c.accesExt==='difficile'?'selected':''}>🔴 Difficile (majoration)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        ` : `
+        <!-- CHAMPS SPÉCIFIQUES INTÉRIEUR -->
+        <div style="background:rgba(79,142,247,0.04);border:1px solid rgba(79,142,247,0.2);border-radius:var(--radius-md);padding:16px;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:700;color:#4F8EF7;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">
+            🏠 Détails chantier intérieur
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Type de travaux</label>
+              <select class="form-control" id="f-type-travaux">
+                <option value="">— Sélectionner —</option>
+                <option value="cloisons" ${c.typeTravaux==='cloisons'?'selected':''}>🧱 Cloisons / Plâtrerie</option>
+                <option value="peinture" ${c.typeTravaux==='peinture'?'selected':''}>🎨 Peinture</option>
+                <option value="electricite" ${c.typeTravaux==='electricite'?'selected':''}>⚡ Électricité</option>
+                <option value="plomberie" ${c.typeTravaux==='plomberie'?'selected':''}>🔧 Plomberie</option>
+                <option value="carrelage" ${c.typeTravaux==='carrelage'?'selected':''}>🔲 Carrelage</option>
+                <option value="menuiserie" ${c.typeTravaux==='menuiserie'?'selected':''}>🪵 Menuiserie</option>
+                <option value="renovation" ${c.typeTravaux==='renovation'?'selected':''}>🏗 Rénovation complète</option>
+                <option value="autre" ${c.typeTravaux==='autre'?'selected':''}>🔧 Autre</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nombre de pièces estimé</label>
+              <input class="form-control" type="number" id="f-nb-pieces" min="1" max="50"
+                value="${c.nbPieces||''}" placeholder="ex: 5">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Surface totale estimée (m²)</label>
+              <input class="form-control" type="number" id="f-surface-est" step="0.5"
+                value="${c.surfaceEstimee||''}" placeholder="ex: 85">
+            </div>
+            <div class="form-group">
+              <label class="form-label">État du logement</label>
+              <select class="form-control" id="f-etat-logement">
+                <option value="neuf" ${c.etatLogement==='neuf'?'selected':''}>🆕 Neuf / Première mise en œuvre</option>
+                <option value="renovation" ${c.etatLogement==='renovation'?'selected':''}>🔄 Rénovation</option>
+                <option value="demolition" ${c.etatLogement==='demolition'?'selected':''}>🏗 Après démolition</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        `}
       </div>
       <div class="form-group"><label class="form-label">Client *</label>
         <select class="form-control" id="f-client">
@@ -2449,6 +2544,13 @@ ${htmlWidgets}
       statut:    document.getElementById('f-statut').value,
       notes:     document.getElementById('f-notes').value,
       typeChantier: document.getElementById('f-type-chantier')?.value || 'interieur',
+      natureExt:      document.getElementById('f-nature-ext')?.value || '',
+      solExt:         document.getElementById('f-sol-ext')?.value || '',
+      surfaceEstimee: parseFloat(document.getElementById('f-surface-est')?.value) || 0,
+      accesExt:       document.getElementById('f-acces-ext')?.value || 'facile',
+      typeTravaux:    document.getElementById('f-type-travaux')?.value || '',
+      nbPieces:       parseInt(document.getElementById('f-nb-pieces')?.value) || 0,
+      etatLogement:   document.getElementById('f-etat-logement')?.value || 'neuf',
     };
     if (id) { DB.updateChantier(id, data); App.toast('Chantier mis à jour'); }
     else     { DB.addChantier(data);        App.toast('Chantier créé !'); }
