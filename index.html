@@ -179,7 +179,7 @@
       { page: 'calendrier',  icon: '<i class="ph ph-calendar"></i>', label: 'Calendrier' },
 
       { section: '📄 Commercial' },
-      { page: 'devis',       icon: '<i class="ph ph-file-text"></i>', label: 'Devis' },
+      { page: 'devisIntelligent', icon: '📄', label: 'Devis' },
       { page: 'factures',    icon: '<i class="ph ph-receipt"></i>', label: 'Factures' },
       { page: 'dpgf',        icon: '<i class="ph ph-bank"></i>', label: 'Appels d\'offres' },
       { page: 'prospection', icon: '<i class="ph ph-map-pin"></i>', label: 'Prospection IA' },
@@ -255,6 +255,7 @@
         metrages:    'Métrés',
         cloisons:    '🧱 Cloisons',
         peinture:    '🎨 Peinture',
+        devisIntelligent: '📄 Nouveau Devis',
         devis:       'Devis',
         factures:    '🧾 Factures',
         liste_achat: '🛒 Liste d\'achat',
@@ -306,6 +307,7 @@
         cloisons:    function() { return Pages.cloisons(params); },
         peinture:    function() { return Pages.peinture(params); },
         dpgf:          function() { return Pages.dpgf(); },
+        devisIntelligent: function() { return Pages.devisIntelligent(params); },
         devis:         function() { return Pages.devis(params); },
         devis_complet: function() { return Pages.devisComplet(); },
         factures:      function() { return Pages.factures(); },
@@ -377,5 +379,6 @@
 <script src="js/quiz_metiers.js"></script>
 <script src="js/charges.js"></script>
 
+<script src="js/devis_intelligent.js"></script>
 </body>
 </html>
