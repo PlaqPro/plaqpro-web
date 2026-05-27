@@ -553,9 +553,14 @@ Pages.produits = function() {
         <h2 style="margin:0;font-size:18px;font-weight:700">🏪 Catalogue Fournisseurs</h2>
         <p style="margin:4px 0 0;font-size:12px;color:var(--text-tertiary)">Prix d'achat — Bricoman · Point.P · Prolians · Legallais · BigMat · Autres</p>
       </div>
-      <button onclick="PROD.actualiserPrix()" style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;border:none;border-radius:var(--radius-md);font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-        🔄 Actualiser les prix IA
-      </button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="ImportCatalogue.ouvrirModal()" style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:var(--radius-md);font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+          📥 Importer catalogue
+        </button>
+        <button onclick="PROD.actualiserPrix()" style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;border:none;border-radius:var(--radius-md);font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+          🔄 Actualiser les prix IA
+        </button>
+      </div>
     </div>
     <!-- Barre de recherche principale -->
     <div class="prod-search-bar">
