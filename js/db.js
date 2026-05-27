@@ -270,7 +270,6 @@ const DB = {
     ];
     produits.forEach(p => this.addProduit(p));
 
-    console.log('PlaqPro Web — données de démo initialisées');
   },
 
   // ── Export / Import ───────────────────────────────────────

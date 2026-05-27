@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PlaqPro+ — Module import catalogue fournisseur
  * Supporte : CSV, Excel (XLSX), texte libre avec séparateurs auto-détectés
  * Colonnes détectées : nom/désignation, prix, unité, référence
@@ -376,7 +376,8 @@ window.ImportCatalogue = (() => {
       }
     } else {
       document.getElementById('ic-overlay')?.remove();
-      alert(msg);
+      if (typeof App !== 'undefined') App.toast(msg, 'success');
+      else document.title = msg;
     }
   }
 

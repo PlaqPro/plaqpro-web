@@ -537,7 +537,7 @@ function initCatalogue() {
       ajouts++;
     }
   });
-  if (ajouts > 0) console.log(`PlaqPro — ${ajouts} produits ajoutés au catalogue`);
+  if (ajouts > 0 && typeof App !== 'undefined') App.toast(`${ajouts} produit(s) ajouté(s) au catalogue`, 'success');
 }
 
 // ── Page Base Produits enrichie avec moteur de recherche ──────

@@ -693,7 +693,6 @@ function initTarifsDepuisBase() {
     });
   });
 
-  console.log('PlaqPro — ' + count + ' tarifs initialisés depuis la base');
 }
 
 // Appeler à l'init
