@@ -71,8 +71,13 @@ window.ImportCatalogue = (() => {
         <div id="ic-preview"></div>
       </div>
     `;
+    const d = document.createElement('div');
+    d.innerHTML = html;
     if (typeof App !== 'undefined' && App.openModal) {
-      App.openModal('📥 Import Catalogue', html, null, null, { width: '760px' });
+      App.openModal('📥 Importer un catalogue fournisseur', d,
+        '<button class="btn btn-primary" id="ic-btn-import" onclick="ImportCatalogue._importer()" style="display:none">✅ Importer dans la base</button>' +
+        '<button class="btn btn-secondary" onclick="App.closeModal()">Annuler</button>'
+      );
     } else {
       _showFallbackModal(html);
     }

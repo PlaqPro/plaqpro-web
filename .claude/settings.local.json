@@ -108,7 +108,9 @@
       "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; $lines[2428..2445] | ForEach-Object { Write-Host $_ })",
       "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; $lines[2447..2470] | ForEach-Object { Write-Host $_ })",
       "PowerShell($lines = Get-Content 'C:\\\\PlaQproWEB\\\\js\\\\app.js' -Encoding UTF8; $start = 274; $depth = 0; $end = $start; for \\($i = $start; $i -lt $lines.Count; $i++\\) { $depth += \\([regex]::Matches\\($lines[$i], '\\\\{'\\)\\).Count; $depth -= \\([regex]::Matches\\($lines[$i], '\\\\}'\\)\\).Count; if \\($i -gt $start -and $depth -le 0\\) { $end = $i; break } }; Write-Host \\(\"dashboard\\(\\) : lignes \" + \\($start+1\\) + \" à \" + \\($end+1\\)\\); Write-Host \\(\"Taille : \" + \\($end - $start + 1\\) + \" lignes\"\\); $lines[\\($end-3\\)..\\($end+2\\)] | ForEach-Object { Write-Host $_ })",
-      "Bash(git check-ignore *)"
+      "Bash(git check-ignore *)",
+      "PowerShell(Select-String -Path 'C:\\\\PlaQproWEB\\\\js\\\\import_catalogue.js' -Pattern 'ouvrirModal|const ImportCatalogue|window\\\\.ImportCatalogue|export' | ForEach-Object { Write-Host $_.LineNumber ': ' $_.Line.Trim\\(\\) })",
+      "PowerShell(Select-String -Path 'C:\\\\PlaQproWEB\\\\js\\\\import_catalogue.js' -Pattern 'ImportCatalogue' | Select-Object -First 3 | ForEach-Object { Write-Host $_.LineNumber ': ' $_.Line.Trim\\(\\) })"
     ]
   }
 }

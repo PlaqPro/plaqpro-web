@@ -353,8 +353,8 @@ if (typeof PageCloison !== 'undefined') {
 }
 
 // Patch PagePeinture
-const _origPeinturePreview = PagePeinture?.previewCalc;
 if (typeof PagePeinture !== 'undefined') {
+  const _origPeinturePreview = PagePeinture?.previewCalc;
   PagePeinture.previewCalcAvecAlertes = function() {
     if (_origPeinturePreview) _origPeinturePreview.call(this);
 
