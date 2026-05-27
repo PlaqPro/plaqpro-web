@@ -620,7 +620,7 @@ var ProjetsTypes = {
 
   _saveProduit: function(id, i) {
     var a = (ProjetsTypes._lignesLibres[id] || [])[i];
-    if (!a || !a.designation) { alert('Renseignez au moins la désignation.'); return; }
+    if (!a || !a.designation) { App.toast('Renseignez au moins la désignation.', 'error'); return; }
     var produit = {
       reference: a.ref || ('LIB_' + Date.now()),
       designation: a.designation,
@@ -1014,3 +1014,4 @@ var ProjetsTypes = {
 Pages.projetsTypes = function() {
   return ProjetsTypes.render();
 };
+

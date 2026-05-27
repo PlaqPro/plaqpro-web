@@ -897,7 +897,7 @@ Règles importantes :
     }
     var nbLignes = DevisMulti._nbLignes();
     if (!nbLignes) {
-      alert('Le devis est vide — ajoutez des lignes.');
+      App.toast('Le devis est vide — ajoutez des lignes.', 'error');
       return;
     }
 
@@ -961,7 +961,7 @@ Règles importantes :
     var today  = new Date();
 
     if (!state.sections.length) {
-      alert('Aucune section à imprimer.');
+      App.toast('Aucune section à imprimer.', 'error');
       return;
     }
 
@@ -1087,7 +1087,7 @@ Règles importantes :
       + '</body></html>';
 
     var win = window.open('', '_blank', 'width=900,height=750');
-    if (!win) { alert('Autorisez les popups pour imprimer.'); return; }
+    if (!win) { App.toast('Autorisez les popups pour imprimer.', 'error'); return; }
     win.document.write(html);
     win.document.close();
     win.focus();
@@ -1411,3 +1411,4 @@ Règles importantes :
 Pages.devisComplet = function() {
   return DevisMulti.render();
 };
+

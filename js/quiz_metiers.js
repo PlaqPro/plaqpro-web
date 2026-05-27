@@ -1,4 +1,4 @@
-// Quiz Métiers BTP — 8 corps de métier, 4 niveaux, 50+ questions, IA illimitée
+﻿// Quiz Métiers BTP — 8 corps de métier, 4 niveaux, 50+ questions, IA illimitée
 'use strict';
 
 const QM_DATA = {
@@ -417,7 +417,7 @@ window.QM = {
       : (QM_DATA.questions[this._metier.id]?.[this._niveau?.id] || []);
 
     if (!pool.length) {
-      alert('Aucune question disponible pour cette combinaison.');
+      App.toast('Aucune question disponible pour cette combinaison.', 'error');
       return;
     }
 
@@ -567,7 +567,7 @@ window.QM = {
     if (!apiKey.startsWith('gsk_')) {
       const saisie = prompt('Clé API Groq (gsk_...) pour les questions IA illimitées :');
       if (!saisie || !saisie.startsWith('gsk_')) {
-        alert('Clé Groq invalide. Les questions IA ne sont pas disponibles.');
+        App.toast('Clé Groq invalide. Les questions IA ne sont pas disponibles.', 'error');
         return;
       }
       localStorage.setItem('plaqpro_groq_key', saisie);
@@ -614,3 +614,4 @@ Format JSON strict (tableau) :
     }
   },
 };
+

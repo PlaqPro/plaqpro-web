@@ -296,8 +296,8 @@ const Alertes = {
 
 // ── Intégration dans les modales existantes ───────────────────
 // Patch PageCloison pour afficher les alertes en temps réel
-const _origCloisonPreview = PageCloison?.previewCalc;
 if (typeof PageCloison !== 'undefined') {
+  const _origCloisonPreview = PageCloison?.previewCalc;
   PageCloison.previewCalcAvecAlertes = function() {
     if (_origCloisonPreview) _origCloisonPreview.call(this);
 

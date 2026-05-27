@@ -3,7 +3,7 @@
 //  sw.js — Cache pour fonctionnement hors ligne
 // ============================================================
 
-const CACHE_NAME = 'plaqpro-v4';
+const CACHE_NAME = 'plaqpro-v20260527';
 
 const FICHIERS_CACHE = [
   '/',
@@ -65,4 +65,5 @@ self.addEventListener('fetch', e => {
     })
   );
 });
+
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <!-- config.local.js chargé uniquement en local — ignoré en production -->
@@ -134,7 +134,7 @@
   <script src="js/quiz_plaquiste.js"></script>
   <script src="js/calculatrice.js"></script>
   <script src="js/meteo.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="js/graphiques.js"></script>
   <script src="js/calendrier.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -362,7 +362,7 @@
     // Lancer la page initiale (support ?page=xxx depuis login mobile)
     var _initPage = new URLSearchParams(window.location.search).get('page');
     var _forceDesktop = sessionStorage.getItem('plaqpro_force_desktop');
-    if (_initPage && !_forceDesktop && pageMap[_initPage]) {
+    if (_initPage && !_forceDesktop && typeof pageMap !== 'undefined' && pageMap[_initPage]) {
       navigateTo(_initPage);
     } else {
       sessionStorage.removeItem('plaqpro_force_desktop');
@@ -382,3 +382,4 @@
 <script src="js/devis_intelligent.js"></script>
 </body>
 </html>
+

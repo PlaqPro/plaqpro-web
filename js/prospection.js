@@ -129,13 +129,11 @@ var Prospection = {
       const geoD  = await geoR.json();
       const dep   = geoD.features?.[0]?.properties?.citycode?.slice(0, 2) || '69';
       const url1  = `https://apidf-preprod.cerema.fr/sitadel/logements/departements/${dep}/?ordering=-date_reelle_autorisation&limit=30`;
-      console.log('[Prospection] Tentative APIDF:', url1);
       const r1    = await fetch(url1, { signal: AbortSignal.timeout(6000) });
       if (!r1.ok) throw new Error('HTTP ' + r1.status);
       const d1    = await r1.json();
       const items = d1.results || d1.features || [];
       if (items.length) {
-        console.log('[Prospection] APIDF OK :', items.length, 'permis');
         this._sourceLabel = 'SITADEL CEREMA';
         return items.map(x => this._normaliserAPIDF(x));
       }
@@ -147,12 +145,10 @@ var Prospection = {
     try {
       const where = encodeURIComponent(`commune_nom like '${ville}'`);
       const url2  = `https://data.statistiques.developpement-durable.gouv.fr/api/explore/v2.1/catalog/datasets/sit_portatif/records?where=${where}&limit=30&order_by=date_reelle_autorisation%20desc`;
-      console.log('[Prospection] Tentative ODS:', url2);
       const r2 = await fetch(url2, { signal: AbortSignal.timeout(6000) });
       if (!r2.ok) throw new Error('HTTP ' + r2.status);
       const d2 = await r2.json();
       if (d2.results?.length) {
-        console.log('[Prospection] ODS OK :', d2.results.length, 'permis');
         this._sourceLabel = 'SITADEL ODS';
         return d2.results.map(x => this._normaliserRecord(x));
       }
@@ -432,7 +428,6 @@ var Prospection = {
       this._map.setView([this._lat, this._lng], 11);
     }
 
-    console.log('[Prospection] Marqueurs rendus :', this._markers.length, '/', this._filtered.length);
   },
 
   _highlightCard(id) {
