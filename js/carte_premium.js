@@ -34,7 +34,7 @@ window.CartePremium = {
     if (!container) return;
     const config = (typeof DB !== 'undefined') ? DB.getConfig() : {};
     const user = JSON.parse(sessionStorage.getItem('plaqpro_session') || '{}');
-    const nom = config.nomEntreprise || config.nom || user.username || 'Adherent';
+    const nom = config.nomEntreprise || config.nom || config.prenom || user.username || user.nom || 'Mon Entreprise';
     const annee = new Date().getFullYear();
     const id = this.genererIdMembre();
     const plan = localStorage.getItem('plaqpro_plan') || 'Pro';

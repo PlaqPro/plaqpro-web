@@ -116,7 +116,8 @@
       "PowerShell(Get-ChildItem 'C:\\\\PlaQproWEB\\\\assets\\\\' | ForEach-Object { Write-Host $_.Name })",
       "PowerShell(Get-ChildItem 'C:\\\\PlaQproWEB\\\\assets\\\\' | ForEach-Object { Write-Host \\($_.Name + ' — ' + $_.Length + ' bytes'\\) })",
       "PowerShell(Select-String -Path 'C:\\\\PlaQproWEB\\\\login.html' -Pattern 'logo|img|brand|ERP|Plaquiste|Peinture|assets|src=' | ForEach-Object { Write-Host $_.LineNumber ': ' $_.Line.Trim\\(\\) })",
-      "PowerShell(Select-String -Path 'C:\\\\PlaQproWEB\\\\login.html' -Pattern 'Logo Plaqpro|Gestion BTP|Plaquiste' | ForEach-Object { Write-Host $_.LineNumber ': ' $_.Line.Trim\\(\\) })"
+      "PowerShell(Select-String -Path 'C:\\\\PlaQproWEB\\\\login.html' -Pattern 'Logo Plaqpro|Gestion BTP|Plaquiste' | ForEach-Object { Write-Host $_.LineNumber ': ' $_.Line.Trim\\(\\) })",
+      "PowerShell(Select-String -Path 'C:\\\\PlaQproWEB\\\\js\\\\mon_compte.js' -Pattern 'CartePremium|carte_premium|carte-premium' | ForEach-Object { Write-Host $_.LineNumber ': ' $_.Line.Trim\\(\\) })"
     ]
   }
 }
