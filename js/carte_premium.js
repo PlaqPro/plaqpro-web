@@ -44,7 +44,7 @@ window.CartePremium = {
 
     container.innerHTML = '<div style="margin-bottom:20px">'
       + '<div style="font-size:13px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">🎫 Ma Carte Adherent PlaqPro+</div>'
-      + '<div id="carte-premium-render" style="width:380px;max-width:100%;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);border-radius:16px;padding:24px;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);font-family:system-ui,-apple-system,sans-serif;border:1px solid rgba(255,255,255,0.1)">'
+      + '<div id="carte-premium-render" style="width:380px;height:240px;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);border-radius:12px;padding:20px 24px;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);font-family:system-ui,-apple-system,sans-serif;border:1px solid rgba(255,255,255,0.1);display:flex;flex-direction:column;justify-content:space-between">'
       + '<div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(79,142,247,0.15);pointer-events:none"></div>'
       + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">'
       + '<img src="assets/Logo Plaqpro+.png" alt="PlaqPro+" style="height:40px;object-fit:contain" onerror="this.style.display=\'none\'">'
