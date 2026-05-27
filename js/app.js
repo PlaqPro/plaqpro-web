@@ -2421,26 +2421,21 @@ ${htmlWidgets}
   },
 
   setTypeChantier(type) {
-    const inp    = document.getElementById('f-type-chantier');
-    const btnInt = document.getElementById('type-btn-int');
-    const btnExt = document.getElementById('type-btn-ext');
-    if (!inp) return;
-    inp.value = type;
-    if (btnInt && btnExt) {
-      if (type === 'exterieur') {
-        btnExt.className = btnExt.className.replace('btn-secondary','btn-primary');
-        btnInt.className = btnInt.className.replace('btn-primary','btn-secondary');
-      } else {
-        btnInt.className = btnInt.className.replace('btn-secondary','btn-primary');
-        btnExt.className = btnExt.className.replace('btn-primary','btn-secondary');
-      }
-    }
-    const confirm = document.getElementById('type-chantier-confirm');
-    if (confirm) {
-      confirm.innerHTML = type === 'exterieur'
-        ? '<div style="margin-top:8px;padding:8px 12px;background:rgba(16,185,129,0.08);border-left:3px solid #10b981;border-radius:0 6px 6px 0;font-size:12px;color:#10b981">✅ Chantier extérieur — métrés adaptés (surface, linéaire, muret...)</div>'
-        : '<div style="margin-top:8px;padding:8px 12px;background:rgba(79,142,247,0.08);border-left:3px solid #4F8EF7;border-radius:0 6px 6px 0;font-size:12px;color:#4F8EF7">✅ Chantier intérieur — métrés L×l×H par pièce</div>';
-    }
+    // Sauvegarder les valeurs actuelles du formulaire
+    const nom     = document.getElementById('f-nom-ch')?.value || '';
+    const client  = document.getElementById('f-client')?.value || '';
+    const adr     = document.getElementById('f-adr-ch')?.value || '';
+    const debut   = document.getElementById('f-debut')?.value || '';
+    const fin     = document.getElementById('f-fin')?.value || '';
+    const statut  = document.getElementById('f-statut')?.value || '';
+    const notes   = document.getElementById('f-notes')?.value || '';
+
+    // Recréer le formulaire avec le bon type
+    const chantierPartiel = { typeChantier: type, nom, clientId: parseInt(client), adresse: adr, dateDebut: debut, dateFin: fin, statut, notes };
+    const modalBody = document.getElementById('modal-body');
+    if (!modalBody) return;
+    modalBody.innerHTML = '';
+    modalBody.appendChild(Pages._formChantier(chantierPartiel));
   },
 
   sauvegarderChantier(id) {
