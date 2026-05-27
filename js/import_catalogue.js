@@ -4,7 +4,7 @@
  * Colonnes détectées : nom/désignation, prix, unité, référence
  */
 
-const ImportCatalogue = (() => {
+window.ImportCatalogue = (() => {
 
   let _produitsParsés = [];
   let _fournisseurActif = '';
