@@ -273,291 +273,290 @@ const Pages = {
 
   // ── Dashboard ─────────────────────────────────────────────
   dashboard() {
-    const stats = DB.getDashboardStats();
-    const chantiers = DB.chantiers.filter(c => c.statut === 'En cours');
-    const devisRecents = DB.devis.slice(-5).reverse();
-
-    // ── WIDGET RELANCES ──
-    const devis = DB.devis || [];
+    const div = document.createElement('div');
+    const config = DB.getConfig();
     const aujourd_hui = new Date();
+    const jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+    const mois = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    const dateStr = jours[aujourd_hui.getDay()] + ' ' + aujourd_hui.getDate() + ' ' + mois[aujourd_hui.getMonth()] + ' ' + aujourd_hui.getFullYear();
+    const prenom = (config.nomEntreprise || 'Gabriel').split(' ')[0];
+    const modeSimple = localStorage.getItem('plaqpro_mode') !== 'expert';
+
+    // Calcul widgets
+    const devis = DB.devis || [];
+    const factures = DB.factures || [];
+    const chantiers = DB.chantiers || [];
     const relances = devis.filter(d => {
       if (d.statut !== 'Envoyé') return false;
-      const envoi = new Date(d.date);
-      const diff = (aujourd_hui - envoi) / (1000*60*60*24);
-      return diff >= 7;
+      return (aujourd_hui - new Date(d.date)) / 86400000 >= 7;
     });
-
-    // ── WIDGET IMPAYÉS ──
-    const factures = DB.factures || [];
     const impayes = factures.filter(f => {
       if (f.statut === 'Payée' || f.statut === 'Annulée') return false;
-      const echeance = new Date(f.dateEcheance);
-      return echeance < aujourd_hui;
+      return f.dateEcheance && new Date(f.dateEcheance) < aujourd_hui;
     });
-
-    // ── CA MENSUEL ──
+    const chantiersEnCours = chantiers.filter(c => c.statut === 'En cours');
     const moisCourant = aujourd_hui.getMonth();
     const anneeCourante = aujourd_hui.getFullYear();
-    const factureMois = factures.filter(f => {
+    const caMois = factures.filter(f => {
       if (!f.date) return false;
       const d = new Date(f.date);
       return d.getMonth() === moisCourant && d.getFullYear() === anneeCourante;
-    });
-    const caMois = factureMois.reduce((s,f) => s + (parseFloat(f.totalHT)||0), 0);
-    const devisMois = devis.filter(d => {
-      if (!d.date) return false;
-      const dd = new Date(d.date);
-      return dd.getMonth() === moisCourant && dd.getFullYear() === anneeCourante;
-    });
-    const caDevisMois = devisMois.reduce((s,d) => s + (parseFloat(d.totalHT)||0), 0);
+    }).reduce((s,f) => s + (parseFloat(f.totalHT)||0), 0);
+    const fmt = n => new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(n);
 
-    // ── Construction widgets dashboard ──
-    const widgetRelancesColor = relances.length > 0 ? 'rgba(255,159,10,0.08)' : 'var(--bg-secondary)';
-    const widgetRelancesBorder = relances.length > 0 ? 'rgba(255,159,10,0.3)' : 'var(--border)';
-    const widgetRelancesVal = relances.length > 0 ? relances.length + ' devis' : '✅ OK';
-    const widgetRelancesColor2 = relances.length > 0 ? '#f59e0b' : 'var(--text-primary)';
-    const widgetRelancesMsg = relances.length > 0 ? 'Envoyés il y a plus de 7 jours sans réponse' : 'Tous les devis ont une réponse récente';
-    const widgetRelancesBadge = relances.length > 0 ? '<span style="background:#f59e0b;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">' + relances.length + '</span>' : '';
-    const widgetRelancesLink = relances.length > 0 ? '<div style="margin-top:10px;font-size:11px;color:#f59e0b;font-weight:600">→ Voir les devis à relancer</div>' : '';
+    // Recherche globale
+    const MODULES_RECHERCHE = [
+      { label:'Faire un devis', keys:['devis','chiffrage','prix'], page:'devisIntelligent', icon:'📄' },
+      { label:'Nouveau chantier', keys:['chantier','travaux','projet'], page:'chantiers', icon:'🏗' },
+      { label:'Mes factures', keys:['facture','paiement','encaissement'], page:'factures', icon:'🧾' },
+      { label:'Mes clients', keys:['client','contact','particulier'], page:'clients', icon:'👤' },
+      { label:'Métrés', keys:['métré','mesure','surface','m2'], page:'metrages', icon:'📐' },
+      { label:'Base produits — prix et matériaux', keys:['produit','matériau','prix achat','catalogue'], page:'produits', icon:'📦' },
+      { label:'Catalogue fournisseurs', keys:['fournisseur','point.p','bricoman','commander'], page:'catalogueFournisseurs', icon:'🏪' },
+      { label:'Mes prix de vente', keys:['tarif','prix vente','grille'], page:'tarifs', icon:'💶' },
+      { label:'Appels d\'offres — importer un DPGF', keys:['dpgf','appel offres','marché public'], page:'dpgf', icon:'🏛' },
+      { label:'Sous-traitants', keys:['sous-traitant','st','contrat'], page:'sousTraitants', icon:'🤝' },
+      { label:'Acoustique', keys:['acoustique','son','décibel','db'], page:'acoustique', icon:'🔊' },
+      { label:'Résistance au feu', keys:['feu','coupe-feu','ei','ef'], page:'resistanceFeu', icon:'🔥' },
+      { label:'Isolation thermique', keys:['thermique','isolation','r value'], page:'thermique', icon:'🌡️' },
+      { label:'Câblage électrique — section câble', keys:['câble','électrique','section','mm2'], page:'sectionCable', icon:'⚡' },
+      { label:'Charge plancher — Eurocode', keys:['charge','plancher','eurocode','structure'], page:'charges', icon:'⚖️' },
+      { label:'Linteau', keys:['linteau','portée','poutre'], page:'linteau', icon:'🌉' },
+      { label:'Quiz Métiers BTP', keys:['quiz','formation','question','apprendre'], page:'quizMetiers', icon:'🎮' },
+      { label:'Mes charges & coûts — prix horaire', keys:['charges','coûts','horaire','rentabilité'], page:'chargesCouts', icon:'💰' },
+      { label:'Mon compte', keys:['compte','profil','clé groq','ia'], page:'monCompte', icon:'👤' },
+      { label:'Prospection IA — permis de construire', keys:['prospection','permis','construire','client'], page:'prospection', icon:'🎯' },
+      { label:'Calcul Express', keys:['calcul','rapide','express','quantité'], page:'calcul', icon:'⚡' },
+    ];
 
-    const widgetImpayesColor = impayes.length > 0 ? 'rgba(239,68,68,0.08)' : 'var(--bg-secondary)';
-    const widgetImpayesBorder = impayes.length > 0 ? 'rgba(239,68,68,0.3)' : 'var(--border)';
-    const widgetImpayesVal = impayes.length > 0 ? impayes.length + ' facture' + (impayes.length > 1 ? 's' : '') : '✅ OK';
-    const widgetImpayesColor2 = impayes.length > 0 ? '#ef4444' : 'var(--text-primary)';
-    const montantImpayes = impayes.reduce((s,f) => s + (parseFloat(f.totalTTC)||0), 0);
-    const widgetImpayesMsg = impayes.length > 0 ? 'Échéance dépassée — ' + new Intl.NumberFormat('fr-FR').format(montantImpayes) + ' € TTC en attente' : 'Aucune facture en retard';
-    const widgetImpayesBadge = impayes.length > 0 ? '<span style="background:#ef4444;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">' + impayes.length + '</span>' : '';
-    const widgetImpayesLink = impayes.length > 0 ? '<div style="margin-top:10px;font-size:11px;color:#ef4444;font-weight:600">→ Voir les factures impayées</div>' : '';
+    div.innerHTML = '';
 
-    const widgetCA = new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(caMois);
-    const widgetDevisCA = new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(caDevisMois);
+    // ── CSS DASHBOARD ──
+    if (!document.getElementById('style-dashboard-v2')) {
+      const s = document.createElement('style');
+      s.id = 'style-dashboard-v2';
+      s.textContent = `
+        .db-header { margin-bottom: 24px; }
+        .db-greeting { font-size: 22px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 2px; }
+        .db-date { font-size: 13px; color: var(--text-tertiary); }
+        .db-actions { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
+        @media(max-width:700px){ .db-actions { grid-template-columns: 1fr 1fr; } }
+        .db-action { background: var(--bg-secondary); border: 1px solid var(--border);
+          border-radius: var(--radius-lg); padding: 20px 16px; cursor: pointer;
+          text-align: center; transition: all .2s; display: flex; flex-direction: column;
+          align-items: center; gap: 10px; }
+        .db-action:hover { transform: translateY(-3px); border-color: var(--accent); }
+        .db-action.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .db-action.primary:hover { opacity: .9; }
+        .db-action-icon { font-size: 32px; line-height: 1; }
+        .db-action-label { font-size: 13px; font-weight: 700; }
+        .db-action-desc { font-size: 11px; opacity: .7; }
+        .db-widgets { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 24px; }
+        @media(max-width:700px){ .db-widgets { grid-template-columns: 1fr; } }
+        .db-widget { background: var(--bg-secondary); border: 1px solid var(--border);
+          border-radius: var(--radius-lg); padding: 18px; cursor: pointer; transition: all .15s; }
+        .db-widget:hover { border-color: var(--accent); }
+        .db-widget-label { font-size: 11px; font-weight: 700; text-transform: uppercase;
+          letter-spacing: .07em; color: var(--text-tertiary); margin-bottom: 8px; }
+        .db-widget-val { font-size: 28px; font-weight: 900; letter-spacing: -.03em; margin-bottom: 4px; }
+        .db-widget-desc { font-size: 12px; color: var(--text-tertiary); }
+        .db-search { position: relative; margin-bottom: 24px; }
+        .db-search input { width: 100%; padding: 14px 16px 14px 44px;
+          background: var(--bg-secondary); border: 1px solid var(--border);
+          border-radius: var(--radius-lg); color: var(--text-primary); font-size: 15px;
+          transition: border-color .15s; box-sizing: border-box; }
+        .db-search input:focus { outline: none; border-color: var(--accent); }
+        .db-search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+          font-size: 18px; color: var(--text-tertiary); pointer-events: none; }
+        .db-search-results { position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+          background: var(--bg-secondary); border: 1px solid var(--border);
+          border-radius: var(--radius-lg); z-index: 100; overflow: hidden;
+          box-shadow: 0 8px 32px rgba(0,0,0,.3); }
+        .db-search-item { padding: 12px 16px; cursor: pointer; display: flex;
+          align-items: center; gap: 12px; font-size: 14px; transition: background .1s; }
+        .db-search-item:hover { background: rgba(79,142,247,0.08); }
+        .db-mode-toggle { display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+          font-size: 12px; color: var(--text-tertiary); }
+        .db-mode-btn { padding: 4px 12px; border-radius: 980px; border: 1px solid var(--border);
+          background: var(--bg-secondary); color: var(--text-secondary); font-size: 12px;
+          font-weight: 600; cursor: pointer; transition: all .15s; }
+        .db-mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .db-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase;
+          letter-spacing: .08em; color: var(--text-tertiary); margin-bottom: 12px;
+          padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+        .db-chantiers { display: flex; flex-direction: column; gap: 8px; }
+        .db-chantier-item { background: var(--bg-secondary); border: 1px solid var(--border);
+          border-radius: var(--radius-md); padding: 12px 16px; display: flex;
+          align-items: center; justify-content: space-between; cursor: pointer;
+          transition: border-color .15s; font-size: 13px; }
+        .db-chantier-item:hover { border-color: var(--accent); }
+        .db-save-indicator { font-size: 11px; color: #10b981; text-align: right;
+          margin-bottom: 8px; }
+      `;
+      document.head.appendChild(s);
+    }
 
-    const htmlWidgets = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px" id="dashboard-widgets">'
-      + '<div style="background:' + widgetRelancesColor + ';border:1px solid ' + widgetRelancesBorder + ';border-radius:var(--radius-lg);padding:18px;cursor:pointer" onclick="App.navigate(\'devis\')">'
-      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">'
-      + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary)">📬 Relances à faire</div>'
-      + widgetRelancesBadge
-      + '</div>'
-      + '<div style="font-size:28px;font-weight:800;color:' + widgetRelancesColor2 + '">' + widgetRelancesVal + '</div>'
-      + '<div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">' + widgetRelancesMsg + '</div>'
-      + widgetRelancesLink
-      + '</div>'
-      + '<div style="background:' + widgetImpayesColor + ';border:1px solid ' + widgetImpayesBorder + ';border-radius:var(--radius-lg);padding:18px;cursor:pointer" onclick="App.navigate(\'factures\')">'
-      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">'
-      + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary)">🔴 Factures impayées</div>'
-      + widgetImpayesBadge
-      + '</div>'
-      + '<div style="font-size:28px;font-weight:800;color:' + widgetImpayesColor2 + '">' + widgetImpayesVal + '</div>'
-      + '<div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">' + widgetImpayesMsg + '</div>'
-      + widgetImpayesLink
-      + '</div>'
-      + '<div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px">'
-      + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary);margin-bottom:12px">📊 Ce mois-ci</div>'
-      + '<div style="font-size:22px;font-weight:800;color:#10b981;margin-bottom:4px">' + widgetCA + ' €</div>'
-      + '<div style="font-size:11px;color:var(--text-tertiary)">CA facturé HT</div>'
-      + '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">'
-      + '<div style="font-size:18px;font-weight:700;color:var(--accent)">' + widgetDevisCA + ' €</div>'
-      + '<div style="font-size:11px;color:var(--text-tertiary)">Devis émis HT</div>'
-      + '</div>'
-      + '<div style="margin-top:8px"><button onclick="Pages.rapportMensuel()" style="background:none;border:none;color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;padding:0">→ Rapport mensuel PDF</button></div>'
-      + '</div>'
-      + '</div>';
+    // ── RENDER ──
+    const searchId = 'db-search-' + Date.now();
 
-    const div = document.createElement('div');
     div.innerHTML = `
-      <div style="background:linear-gradient(135deg,rgba(10,132,255,0.08) 0%,rgba(48,209,88,0.05) 100%);border:0.5px solid rgba(10,132,255,0.15);border-radius:20px;padding:28px;margin-bottom:24px">
-  <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:6px;letter-spacing:0.04em;text-transform:uppercase">Que voulez-vous faire ?</div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px" id="quick-actions">
-    <button onclick="App.navigate('devis_multi')" style="background:var(--bg-primary);border:0.5px solid var(--border);border-radius:14px;padding:20px 16px;cursor:pointer;text-align:center;transition:border-color .2s" onmouseover="this.style.borderColor='#0A84FF'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'">
-      <div style="font-size:28px;margin-bottom:8px">📄</div>
-      <div style="font-size:13px;font-weight:700;color:var(--text)">Nouveau devis</div>
-      <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px">Créer un devis multi-corps</div>
-    </button>
-    <button onclick="App.navigate('chantiers')" style="background:var(--bg-primary);border:0.5px solid var(--border);border-radius:14px;padding:20px 16px;cursor:pointer;text-align:center;transition:border-color .2s" onmouseover="this.style.borderColor='#30D158'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'">
-      <div style="font-size:28px;margin-bottom:8px">🏗</div>
-      <div style="font-size:13px;font-weight:700;color:var(--text)">Mes chantiers</div>
-      <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px">Voir les chantiers en cours</div>
-    </button>
-    <button onclick="App.navigate('prospection')" style="background:var(--bg-primary);border:0.5px solid var(--border);border-radius:14px;padding:20px 16px;cursor:pointer;text-align:center;transition:border-color .2s" onmouseover="this.style.borderColor='#FF9F0A'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'">
-      <div style="font-size:28px;margin-bottom:8px">🎯</div>
-      <div style="font-size:13px;font-weight:700;color:var(--text)">Trouver des chantiers</div>
-      <div style="font-size:11px;color:var(--text-tertiary);margin-top:3px">Permis de construire près de vous</div>
-    </button>
-  </div>
-</div>
+      <div class="db-save-indicator">💾 Sauvegarde automatique — ${aujourd_hui.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}</div>
 
-${htmlWidgets}
+      <div class="db-header">
+        <div class="db-greeting">Bonjour ${prenom} 👋</div>
+        <div class="db-date">${dateStr}</div>
+      </div>
 
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon">👤</div>
-          <div class="stat-label">Clients actifs</div>
-          <div class="stat-value">${stats.nbClients}</div>
+      <!-- MODE SIMPLE / EXPERT -->
+      <div class="db-mode-toggle">
+        <span>Mode :</span>
+        <button class="db-mode-btn ${modeSimple ? 'active' : ''}" onclick="DB_UX.setMode('simple')">Simple</button>
+        <button class="db-mode-btn ${!modeSimple ? 'active' : ''}" onclick="DB_UX.setMode('expert')">Expert</button>
+        ${!modeSimple ? '<span style="color:var(--accent);font-size:11px">— Tous les modules visibles</span>' : '<span>— Fonctions essentielles</span>'}
+      </div>
+
+      <!-- RECHERCHE GLOBALE -->
+      <div class="db-search">
+        <span class="db-search-icon">🔍</span>
+        <input type="text" id="${searchId}" placeholder="Que voulez-vous faire ? (devis, facture, cloison...)"
+          oninput="DB_UX.rechercher(this.value, '${searchId}')"
+          onblur="setTimeout(()=>DB_UX.clearSearch('${searchId}'),200)">
+        <div id="${searchId}-results" class="db-search-results" style="display:none"></div>
+      </div>
+
+      <!-- 4 GRANDES ACTIONS -->
+      <div class="db-section-title">Actions rapides</div>
+      <div class="db-actions">
+        <button class="db-action primary" onclick="App.navigate('devisIntelligent')">
+          <span class="db-action-icon">📄</span>
+          <span class="db-action-label">Faire un devis</span>
+          <span class="db-action-desc">Depuis un chantier</span>
+        </button>
+        <button class="db-action" onclick="Pages.modalNouveauChantier()">
+          <span class="db-action-icon">🏗</span>
+          <span class="db-action-label">Nouveau chantier</span>
+          <span class="db-action-desc">Intérieur ou extérieur</span>
+        </button>
+        <button class="db-action" onclick="App.navigate('calcul')">
+          <span class="db-action-icon">📐</span>
+          <span class="db-action-label">Calculer</span>
+          <span class="db-action-desc">Quantités & matériaux</span>
+        </button>
+        <button class="db-action ${relances.length > 0 ? 'primary' : ''}" onclick="App.navigate('devis')">
+          <span class="db-action-icon">${relances.length > 0 ? '🔔' : '✅'}</span>
+          <span class="db-action-label">Relances${relances.length > 0 ? ' (' + relances.length + ')' : ''}</span>
+          <span class="db-action-desc">${relances.length > 0 ? 'Devis sans réponse' : 'Tout est à jour'}</span>
+        </button>
+      </div>
+
+      <!-- WIDGETS KPI -->
+      <div class="db-section-title">Vue d'ensemble</div>
+      <div class="db-widgets">
+        <div class="db-widget" onclick="App.navigate('factures')"
+          style="${impayes.length > 0 ? 'border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.04)' : ''}">
+          <div class="db-widget-label">💸 Impayés</div>
+          <div class="db-widget-val" style="color:${impayes.length > 0 ? '#ef4444' : '#10b981'}">
+            ${impayes.length > 0 ? impayes.length + ' fact.' : '✅ OK'}
+          </div>
+          <div class="db-widget-desc">${impayes.length > 0 ? fmt(impayes.reduce((s,f)=>s+(parseFloat(f.totalTTC)||0),0)) + ' € TTC en attente' : 'Aucune facture en retard'}</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon">🏗</div>
-          <div class="stat-label">Chantiers</div>
-          <div class="stat-value">${stats.nbChantiers}</div>
-          <div class="stat-sub">${stats.nbEnCours} en cours</div>
+        <div class="db-widget" onclick="App.navigate('factures')">
+          <div class="db-widget-label">📈 CA ce mois</div>
+          <div class="db-widget-val" style="color:var(--accent)">${fmt(caMois)} €</div>
+          <div class="db-widget-desc">Facturé en ${mois[moisCourant]} ${anneeCourante}</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon">📄</div>
-          <div class="stat-label">Devis émis</div>
-          <div class="stat-value">${stats.nbDevis}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">💶</div>
-          <div class="stat-label">CA devis HT</div>
-          <div class="stat-value">${Calculs.fmtN(stats.totalDevisHT, 0)}</div>
-          <div class="stat-sub">€ hors taxes</div>
+        <div class="db-widget" onclick="App.navigate('chantiers')">
+          <div class="db-widget-label">🏗 Chantiers</div>
+          <div class="db-widget-val">${chantiersEnCours.length}</div>
+          <div class="db-widget-desc">En cours · ${chantiers.length} au total</div>
         </div>
       </div>
 
-      <!-- Widget Dépenses du mois / Marge brute -->
-      ${Pages._buildWidgetMarge()}
-
-      <div class="dashboard-grid">
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">🏗 Chantiers en cours</span>
-            <button class="btn btn-ghost btn-sm" onclick="App.navigate('chantiers')">Voir tout →</button>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr>
-                <th>Chantier</th><th>Client</th><th>Fin</th><th>Statut</th>
-              </tr></thead>
-              <tbody>
-                ${chantiers.length ? chantiers.map(c => {
-                  const client = DB.getClient(c.clientId);
-                  return `<tr onclick="App.navigate('chantiers', {id: ${c.id}})">
-                    <td><strong>${c.nom}</strong></td>
-                    <td>${client?.nom || '—'}</td>
-                    <td>${App.formatDate(c.dateFin)}</td>
-                    <td>${App.statut(c.statut)}</td>
-                  </tr>`;
-                }).join('') : '<tr><td colspan="4" class="text-secondary" style="text-align:center;padding:24px">Aucun chantier en cours</td></tr>'}
-              </tbody>
-            </table>
+      <!-- CHANTIERS EN COURS -->
+      ${chantiersEnCours.length > 0 ? `
+        <div class="db-section-title" style="margin-top:8px">Chantiers en cours</div>
+        <div class="db-chantiers">
+          ${chantiersEnCours.slice(0,3).map(c => {
+            const cl = DB.getClient(c.clientId);
+            return '<div class="db-chantier-item" onclick="App.navigate(\'metrages\',{chantierId:' + c.id + '})">' +
+              '<div>' +
+                '<div style="font-weight:700">' + c.nom + '</div>' +
+                '<div style="font-size:11px;color:var(--text-tertiary)">' + (cl?.nom||'—') + ' · ' + (c.adresse||'—') + '</div>' +
+              '</div>' +
+              '<div style="display:flex;gap:8px;align-items:center">' +
+                '<span style="font-size:11px;color:var(--text-tertiary)">' + (c.typeChantier==='exterieur'?'🌿 Ext.':'🏠 Int.') + '</span>' +
+                '<button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();App.navigate(\'devisIntelligent\',{chantierId:' + c.id + '})">📄 Devis</button>' +
+              '</div>' +
+            '</div>';
+          }).join('')}
+          ${chantiersEnCours.length > 3 ? '<div style="text-align:center;font-size:12px;color:var(--accent);padding:8px;cursor:pointer" onclick="App.navigate(\'chantiers\')">Voir tous les chantiers (' + chantiersEnCours.length + ') →</div>' : ''}
+        </div>
+      ` : `
+        <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;text-align:center;margin-top:8px">
+          <div style="font-size:32px;margin-bottom:10px">🏗</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px">Aucun chantier en cours</div>
+          <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:16px">Commencez par créer un client, puis un chantier</div>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn-secondary" onclick="App.navigate('clients')">👤 Ajouter un client</button>
+            <button class="btn btn-primary" onclick="Pages.modalNouveauChantier()">🏗 Créer un chantier</button>
           </div>
         </div>
+      `}
 
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">📄 Devis récents</span>
-            <button class="btn btn-ghost btn-sm" onclick="App.navigate('devis')">Voir tout →</button>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr>
-                <th>N°</th><th>Chantier</th><th>TTC</th><th>Statut</th>
-              </tr></thead>
-              <tbody>
-                ${devisRecents.length ? devisRecents.map(d => {
-                  const ch = DB.getChantier(d.chantierId);
-                  return `<tr onclick="App.navigate('devis', {id: ${d.id}})">
-                    <td class="font-mono" style="font-size:12px">${d.numero}</td>
-                    <td>${ch?.nom || '—'}</td>
-                    <td><strong>${Calculs.fmt(d.totalTTC)}</strong></td>
-                    <td>${App.statut(d.statut)}</td>
-                  </tr>`;
-                }).join('') : '<tr><td colspan="4" class="text-secondary" style="text-align:center;padding:24px">Aucun devis</td></tr>'}
-              </tbody>
-            </table>
-          </div>
+      <!-- MODE EXPERT : modules avancés -->
+      ${!modeSimple ? `
+        <div class="db-section-title" style="margin-top:24px">Outils avancés</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
+          ${[
+            {icon:'🏪',label:'Catalogue fournisseurs',page:'catalogueFournisseurs'},
+            {icon:'📦',label:'Base produits',page:'produits'},
+            {icon:'🤖',label:'Prospection IA',page:'prospection'},
+            {icon:'🏛',label:'Appels d\'offres',page:'dpgf'},
+            {icon:'🔊',label:'Acoustique',page:'acoustique'},
+            {icon:'🌡️',label:'Thermique',page:'thermique'},
+            {icon:'🔥',label:'Résistance feu',page:'resistanceFeu'},
+            {icon:'⚡',label:'Câblage',page:'sectionCable'},
+            {icon:'⚖️',label:'Charge plancher',page:'charges'},
+            {icon:'🎮',label:'Quiz Métiers',page:'quizMetiers'},
+          ].map(m =>
+            '<button onclick="App.navigate(\'' + m.page + '\')" style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 10px;cursor:pointer;text-align:center;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:6px" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--border)\'">' +
+              '<span style="font-size:24px">' + m.icon + '</span>' +
+              '<span style="font-size:11px;font-weight:600;color:var(--text-secondary)">' + m.label + '</span>' +
+            '</button>'
+          ).join('')}
         </div>
-      </div>
-
-      <!-- Outils & Goodies -->
-      <div class="card mt-16" id="card-outils">
-        <div class="card-header" style="cursor:pointer" onclick="Pages.toggleAccordion('acc-root')">
-          <span class="card-title">🧰 Outils &amp; Goodies</span>
-          <span id="acc-root-ico" style="font-size:18px;color:var(--text-tertiary)">▸</span>
-        </div>
-        <div id="acc-root" style="display:none">
-
-          <!-- ⚡ Actions rapides -->
-          <div style="border-top:1px solid var(--border)">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;cursor:pointer;background:var(--bg-secondary)"
-                 onclick="Pages.toggleAccordion('acc-actions')">
-              <span style="font-weight:600;font-size:14px">⚡ Actions rapides</span>
-              <span id="acc-actions-ico" style="color:var(--text-tertiary)">▸</span>
-            </div>
-            <div id="acc-actions" style="display:none;padding:14px 20px">
-              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-                <button class="btn btn-primary"   onclick="Pages.modalNouveauClient()">👤 + Client</button>
-                <button class="btn btn-secondary" onclick="Pages.modalNouveauChantier()">🏗 + Chantier</button>
-                <button class="btn btn-secondary" onclick="Pages.modalNouveauDevis()">📄 + Devis</button>
-                <button class="btn btn-secondary" onclick="App.navigate('calculateur')">⚡ Calcul Express</button>
-                <button class="btn btn-secondary" onclick="App.navigate('prospection')">🔭 Prospection IA</button>
-              </div>
-              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
-                <button onclick="if(typeof AnalysePhoto !== 'undefined') AnalysePhoto.showModal()"
-                  style="background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-md);
-                         padding:14px 10px;cursor:pointer;transition:all .15s;text-align:center;display:flex;
-                         flex-direction:column;align-items:center;gap:6px;color:var(--text-primary)"
-                  onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)'">
-                  <span style="font-size:26px">📸</span>
-                  <span style="font-size:12px;font-weight:600">Analyser une photo</span>
-                </button>
-                <button onclick="if(typeof AnalysePhoto !== 'undefined') AnalysePhoto.showModalFournisseur()"
-                  style="background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-md);
-                         padding:14px 10px;cursor:pointer;transition:all .15s;text-align:center;display:flex;
-                         flex-direction:column;align-items:center;gap:6px;color:var(--text-primary)"
-                  onmouseenter="this.style.borderColor='#F7A64F'" onmouseleave="this.style.borderColor='var(--border)'">
-                  <span style="font-size:26px">🧾</span>
-                  <span style="font-size:12px;font-weight:600">Scanner une facture</span>
-                </button>
-                <button onclick="if(typeof Calculatrice !== 'undefined') Calculatrice.toggle()"
-                  style="background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-md);
-                         padding:14px 10px;cursor:pointer;transition:all .15s;text-align:center;display:flex;
-                         flex-direction:column;align-items:center;gap:6px;color:var(--text-primary)"
-                  onmouseenter="this.style.borderColor='#2DD4A0'" onmouseleave="this.style.borderColor='var(--border)'">
-                  <span style="font-size:26px">🧮</span>
-                  <span style="font-size:12px;font-weight:600">Calculatrice</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- ⛅ Météo -->
-          <div style="border-top:1px solid var(--border)">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;cursor:pointer;background:var(--bg-secondary)"
-                 onclick="Pages.toggleAccordion('acc-meteo');Pages._initMeteoAccordion()">
-              <span style="font-weight:600;font-size:14px">⛅ Météo chantier</span>
-              <span id="acc-meteo-ico" style="color:var(--text-tertiary)">▸</span>
-            </div>
-            <div id="acc-meteo" style="display:none">
-              <div id="meteo-accordion-slot" style="padding:0 20px 14px"></div>
-            </div>
-          </div>
-
-          <!-- 📊 Graphiques CA -->
-          <div style="border-top:1px solid var(--border)">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;cursor:pointer;background:var(--bg-secondary)"
-                 onclick="Pages.toggleAccordion('acc-graphs');Pages._initGraphsAccordion()">
-              <span style="font-weight:600;font-size:14px">📊 Graphiques CA</span>
-              <span id="acc-graphs-ico" style="color:var(--text-tertiary)">▸</span>
-            </div>
-            <div id="acc-graphs" style="display:none">
-              <div id="db-graphs-container" style="padding:14px 20px"></div>
-            </div>
-          </div>
-
-        </div>
-      </div>
+      ` : ''}
     `;
 
-    // Onboarding wizard — affiché uniquement si aucun client
-    const allClients = DB.clients || [];
-    const allChantiers = DB.chantiers || [];
-    const config = DB.getConfig();
-    const onboardingFait = localStorage.getItem('plaqpro_onboarding_done');
-
-    if (!onboardingFait && allClients.length === 0 && !DB.getConfig().nom) {
-      localStorage.setItem('plaqpro_onboarding_done', '1');
-      setTimeout(() => App.navigate('inscription'), 100);
-    }
+    // ── Contrôleur Dashboard ──
+    window.DB_UX = {
+      setMode(mode) {
+        localStorage.setItem('plaqpro_mode', mode);
+        App.navigate('dashboard');
+      },
+      rechercher(q, id) {
+        const res = document.getElementById(id + '-results');
+        if (!res) return;
+        if (!q || q.length < 2) { res.style.display = 'none'; return; }
+        const ql = q.toLowerCase();
+        const matches = MODULES_RECHERCHE.filter(m =>
+          m.label.toLowerCase().includes(ql) ||
+          m.keys.some(k => k.includes(ql))
+        ).slice(0, 6);
+        if (!matches.length) { res.style.display = 'none'; return; }
+        res.style.display = 'block';
+        res.innerHTML = matches.map(m =>
+          '<div class="db-search-item" onclick="App.navigate(\'' + m.page + '\')">' +
+            '<span style="font-size:20px">' + m.icon + '</span>' +
+            '<span>' + m.label + '</span>' +
+          '</div>'
+        ).join('');
+      },
+      clearSearch(id) {
+        const res = document.getElementById(id + '-results');
+        if (res) res.style.display = 'none';
+      }
+    };
 
     return div;
   },
