@@ -107,54 +107,40 @@ const App = {
     const nav = [
       { page: 'dashboard',   icon: '<i class="ph ph-squares-four"></i>', label: 'Tableau de bord' },
 
-      { section: '👥 Clients & Chantiers' },
+      { section: '👥 Gestion' },
       { page: 'clients',     icon: '<i class="ph ph-users"></i>', label: 'Clients' },
-      { page: 'chantiers',   icon: '<i class="ph ph-hard-hat"></i>', label: 'Chantiers' },
+      { page: 'chantiers',   icon: '<i class="ph ph-hard-hat"></i>', label: 'Chantiers & Métrés' },
       { page: 'sousTraitants', icon: '<i class="ph ph-handshake"></i>', label: 'Sous-traitants' },
       { page: 'calendrier',  icon: '<i class="ph ph-calendar"></i>', label: 'Calendrier' },
-      { page: 'prospection', icon: '<i class="ph ph-map-pin"></i>', label: 'Prospection IA' },
-
-      { section: '📐 Chiffrage' },
-      { page: 'metrages',    icon: '<i class="ph ph-ruler"></i>', label: 'Métrés' },
-      { page: 'cloisons',    icon: '<i class="ph ph-wall"></i>', label: 'Cloisons' },
-      { page: 'peinture',    icon: '<i class="ph ph-paint-roller"></i>', label: 'Peinture' },
-      { page: 'calcul',      icon: '<i class="ph ph-lightning"></i>', label: 'Calcul Express' },
 
       { section: '📄 Commercial' },
       { page: 'devis',       icon: '<i class="ph ph-file-text"></i>', label: 'Devis' },
       { page: 'factures',    icon: '<i class="ph ph-receipt"></i>', label: 'Factures' },
-      { page: 'projets',     icon: '<i class="ph ph-package"></i>', label: 'Projets types' },
-      { page: 'liste_achat', icon: '<i class="ph ph-shopping-cart"></i>', label: 'Liste d\'achat' },
-
-      { section: '🏛 Appels d\'offres' },
       { page: 'dpgf',        icon: '<i class="ph ph-bank"></i>', label: 'Appels d\'offres' },
+      { page: 'prospection', icon: '<i class="ph ph-map-pin"></i>', label: 'Prospection IA' },
+
+      { section: '🔧 Outils' },
+      { page: 'produits',    icon: '<i class="ph ph-package"></i>', label: 'Base produits' },
+      { page: 'catalogueFournisseurs', icon: '<i class="ph ph-storefront"></i>', label: 'Catalogue fournisseurs' },
       { page: 'tarifs',      icon: '<i class="ph ph-coins"></i>', label: 'Mes prix de vente' },
-      { page: 'memo',        icon: '<i class="ph ph-check-square"></i>', label: 'Mémo chantier' },
+      { page: 'calcul',      icon: '<i class="ph ph-lightning"></i>', label: 'Calcul Express' },
 
-      { section: '🎮 Jeux & Formation' },
-      { page: 'quizMetiers', icon: '<i class="ph ph-game-controller"></i>', label: 'Quiz Métiers BTP' },
-
-      { section: '🔧 Packs Métier' },
-      { page: 'maconnerie',  icon: '<i class="ph ph-bricks"></i>', label: 'Maçonnerie' },
-      { page: 'electricite', icon: '<i class="ph ph-plug"></i>', label: 'Électricité' },
-      { page: 'plomberie',   icon: '<i class="ph ph-pipe"></i>', label: 'Plomberie' },
-
-      { section: '📐 Études techniques' },
-      { page: 'charges',     icon: '<i class="ph ph-scales"></i>', label: 'Charge plancher' },
-      { page: 'rentabilite', icon: '<i class="ph ph-chart-line-up"></i>', label: 'Rentabilité' },
-      { page: 'acoustique',  icon: '<i class="ph ph-speaker-high"></i>', label: 'Isolation acoustique' },
+      { section: '📐 Techniques' },
+      { page: 'acoustique',  icon: '<i class="ph ph-speaker-high"></i>', label: 'Acoustique' },
       { page: 'resistanceFeu', icon: '<i class="ph ph-fire"></i>', label: 'Résistance au feu' },
-      { page: 'thermique',     icon: '<i class="ph ph-thermometer"></i>', label: 'Isolation thermique' },
-      { page: 'sectionCable',  icon: '<i class="ph ph-lightning"></i>', label: 'Câblage électrique' },
-      { page: 'tempsChantier', icon: '<i class="ph ph-timer"></i>', label: 'Durée chantier' },
-      { page: 'linteau',       icon: '<i class="ph ph-bridge"></i>', label: 'Linteau' },
+      { page: 'thermique',   icon: '<i class="ph ph-thermometer"></i>', label: 'Thermique' },
+      { page: 'sectionCable', icon: '<i class="ph ph-lightning"></i>', label: 'Câblage' },
+      { page: 'charges',     icon: '<i class="ph ph-scales"></i>', label: 'Charge plancher' },
+      { page: 'linteau',     icon: '<i class="ph ph-bridge"></i>', label: 'Linteau' },
 
       { section: '⚙️ Paramètres' },
       { page: 'monCompte',   icon: '<i class="ph ph-user-circle"></i>', label: 'Mon compte' },
       { page: 'chargesCouts', icon: '<i class="ph ph-calculator"></i>', label: 'Mes charges & coûts' },
-      { page: 'legal',       icon: '<i class="ph ph-scales"></i>', label: 'Mentions légales' },
-      { page: 'catalogueFournisseurs', icon: '<i class="ph ph-storefront"></i>', label: 'Catalogue fournisseurs' },
       { page: 'config',      icon: '<i class="ph ph-gear"></i>', label: 'Configuration' },
+      { page: 'legal',       icon: '<i class="ph ph-scales"></i>', label: 'Mentions légales' },
+
+      { section: '🎮 Formation' },
+      { page: 'quizMetiers', icon: '<i class="ph ph-game-controller"></i>', label: 'Quiz Métiers BTP' },
     ];
 
     const sidebar = document.getElementById('sidebar-nav');
