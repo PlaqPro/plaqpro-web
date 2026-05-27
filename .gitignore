@@ -1,9 +1,17 @@
-node_modules/
-.netlify/
-*.log
+# Clés API et config locale — NE JAMAIS committer
+js/config.local.js
+config.local.js
+*.local.js
+.env
+.env.local
+.env*.local
+
+# OS
 .DS_Store
 Thumbs.db
-PlaqProLanding/
-PLAQPRO_STATUS.md
-CLAUDE_PROFILE_GABRIEL.md
-js/config.local.js
+desktop.ini
+
+# Backups
+*_BACKUP_*/
+*.bak
+*.tmp
