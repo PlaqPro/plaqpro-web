@@ -265,7 +265,7 @@ Tu réponds en français, de façon courte et pratique.`,
     const input = document.getElementById('ia-groq-input');
     const cle = (input?.value || '').trim();
     if (!cle.startsWith('gsk_') || cle.length < 20) {
-      alert('❌ Clé invalide — elle doit commencer par gsk_ et faire au moins 20 caractères');
+      App.toast('❌ Clé invalide — elle doit commencer par gsk_ et faire au moins 20 caractères', 'error');
       return;
     }
     // Sauvegarder dans tous les emplacements utilisés par PlaqPro+

@@ -632,7 +632,7 @@ var ProjetsTypes = {
     };
     if (typeof DB !== 'undefined' && DB.add) {
       DB.add('produits', produit);
-      alert('✅ Produit "' + a.designation + '" sauvegardé dans la base tarifaire.');
+      App.toast('✅ Produit "' + a.designation + '" sauvegardé dans la base tarifaire.', 'success');
     }
   },
 

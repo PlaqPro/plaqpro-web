@@ -892,7 +892,7 @@ Règles importantes :
   enregistrer: function() {
     var state = DevisMulti._state;
     if (!state.sections.length) {
-      alert('Ajoutez au moins une section avant d\'enregistrer.');
+      App.toast('Ajoutez au moins une section avant d\'enregistrer.', 'error');
       return;
     }
     var nbLignes = DevisMulti._nbLignes();
