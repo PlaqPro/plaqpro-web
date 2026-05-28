@@ -87,7 +87,7 @@ Object.assign(Pages, {
           <td class="text-secondary text-sm">${chantier?.nom || '—'}</td>
           <td>${App.formatDate(f.date)}</td>
           <td class="${enRetard ? 'text-danger' : ''}">${App.formatDate(f.dateEcheance)}${enRetard ? ' ⚠' : ''}</td>
-          <td><strong class="font-mono">${Calculs.fmt(f.totalTTC)}</strong></td>
+          <td><strong class="font-mono" ${f.type === 'avoir' ? 'style="color:#ef4444"' : ''}>${f.type === 'avoir' ? '−' : ''}${Calculs.fmt(Math.abs(f.totalTTC))}</strong></td>
           <td>${Pages._badgeFacture(f.statut)}</td>
           <td>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -110,7 +110,7 @@ Object.assign(Pages, {
       'Envoyée':   'badge-blue',
       'Payée':     'badge-green',
       'Annulée':   'badge-red',
-      'Avoir':     'badge-orange',
+      'Avoir':     'badge-red',
     };
     return `<span class="badge ${map[statut] || 'badge-gray'}">${statut}</span>`;
   },
@@ -177,8 +177,10 @@ Object.assign(Pages, {
           ${['Brouillon','Envoyée','Payée','Annulée','Avoir']
             .map(s => `<option ${facture.statut === s ? 'selected' : ''}>${s}</option>`).join('')}
         </select>
-        ${facture.statut !== 'Payée' && facture.statut !== 'Annulée'
+        ${facture.statut !== 'Payée' && facture.statut !== 'Annulée' && facture.statut !== 'Avoir'
           ? `<button class="btn btn-primary" onclick="Pages.marquerPayee(${factureId})">✅ Marquer payée</button>` : ''}
+        ${facture.statut === 'Avoir'
+          ? `<button class="btn btn-secondary" style="color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="Pages.genererAvoir(${factureId})">📄 Générer l'avoir</button>` : ''}
         <button class="btn btn-primary" onclick="EmailDevis.envoyerFacture(${factureId})">📧 Envoyer au client</button>
         <button class="btn btn-secondary" onclick="DocPrint.apercu('facture',${factureId})">🖨 Imprimer / PDF</button>
         <button class="btn btn-secondary" onclick="ExcelExport.exporterFacture(${factureId})">📊 Excel</button>
@@ -484,6 +486,131 @@ Object.assign(Pages, {
     App.toast('Facture marquée comme payée !');
     App.navigate('factures');
     App.closeModal();
+  },
+
+  genererAvoir(factureId) {
+    const facture = DB.getById(DB.KEYS.factures, factureId);
+    if (!facture) { App.toast('Facture introuvable', 'error'); return; }
+    const chantier = DB.getChantier(facture.chantierId);
+    const client   = chantier ? DB.getClient(chantier.clientId) : null;
+    const config   = DB.getConfig();
+
+    const date       = new Date().toISOString().split('T')[0];
+    const numeroAvoir = 'AV-' + facture.numero;
+    const totalHT    = -(Math.abs(parseFloat(facture.totalHT    || 0)));
+    const montantTVA = -(Math.abs(parseFloat(facture.montantTVA || 0)));
+    const totalTTC   = -(Math.abs(parseFloat(facture.totalTTC   || 0)));
+
+    const lignesAvoir = (facture.lignes || []).map(l => ({
+      ...l,
+      baseHT:      -(Math.abs(parseFloat(l.baseHT      || 0))),
+      totalClient: -(Math.abs(parseFloat(l.totalClient  || 0))),
+    }));
+
+    const existing = DB.factures.find(f => f.type === 'avoir' && f.factureOriginId === factureId);
+    if (existing) {
+      App.toast('Un avoir existe déjà pour cette facture (' + existing.numero + ')', 'warning');
+      this._imprimerAvoir(facture, chantier, client, config, numeroAvoir, totalHT, montantTVA, totalTTC, date, lignesAvoir);
+      return;
+    }
+
+    const avoir = DB.addFacture({
+      devisId:          facture.devisId,
+      devisNumero:      facture.devisNumero,
+      chantierId:       facture.chantierId,
+      date,
+      dateEcheance:     date,
+      statut:           'Avoir',
+      type:             'avoir',
+      factureOriginId:  factureId,
+      factureOriginNum: facture.numero,
+      mention:          'Avoir sur facture N° ' + facture.numero,
+      lignes:           lignesAvoir,
+      totalHT, montantTVA, totalTTC,
+      tva: facture.tva || 0.1,
+      datePaiement: null,
+    });
+    DB.updateFacture(avoir.id, { numero: numeroAvoir });
+
+    this._imprimerAvoir(facture, chantier, client, config, numeroAvoir, totalHT, montantTVA, totalTTC, date, lignesAvoir);
+    App.toast('Avoir ' + numeroAvoir + ' créé ✅', 'success');
+    App.closeModal();
+    App.navigate('factures');
+  },
+
+  _imprimerAvoir(facture, chantier, client, config, numeroAvoir, totalHT, montantTVA, totalTTC, date, lignes) {
+    const tva = facture.tva || 0.1;
+    const dateFmt = d => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+<title>Avoir — ${numeroAvoir}</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:Arial,sans-serif;font-size:13px;background:#0d0f14;color:#f0f2f8;padding:30px}
+  @media print{body{background:#0d0f14!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none!important}}
+  .header{display:flex;justify-content:space-between;padding-bottom:20px;border-bottom:3px solid #ef4444;margin-bottom:20px}
+  .header-title{font-size:22px;font-weight:800;color:#ef4444}
+  .mention{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:#ef4444;margin-bottom:18px;font-weight:600}
+  .parties{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+  .partie{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px}
+  .partie-title{font-size:10px;font-weight:700;text-transform:uppercase;color:#8892AA;margin-bottom:6px;letter-spacing:.06em}
+  table{width:100%;border-collapse:collapse;margin-bottom:16px}
+  th{background:rgba(239,68,68,.12);color:#ef4444;padding:8px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+  td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;color:#f0f2f8}
+  .totaux{max-width:360px;margin-left:auto}
+  .t-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px;color:#8892AA}
+  .t-final{display:flex;justify-content:space-between;padding:12px 0;font-size:18px;font-weight:800;color:#ef4444}
+  .footer-doc{margin-top:28px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);font-size:10px;color:#4E5770;text-align:center}
+  .no-print{margin-top:24px;display:flex;gap:12px}
+  .btn-print{padding:12px 24px;background:#ef4444;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700}
+  .btn-close{padding:12px 24px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;font-size:14px;cursor:pointer}
+</style></head><body>
+<div class="header">
+  <div><div class="header-title">📄 AVOIR</div><div style="font-size:11px;color:#8892AA;margin-top:4px">N° ${numeroAvoir}</div></div>
+  <div style="text-align:right;font-size:11px;color:#8892AA">
+    <b style="color:#f0f2f8">${config.nomEntreprise || ''}</b><br>${config.adresse || ''}<br>
+    SIRET : ${config.siret || ''}<br>Date : ${dateFmt(date)}
+  </div>
+</div>
+<div class="mention">📌 Avoir sur facture N° ${facture.numero} du ${dateFmt(facture.date)}</div>
+<div class="parties">
+  <div class="partie"><div class="partie-title">Émetteur</div>
+    <b style="color:#f0f2f8">${config.nomEntreprise || ''}</b><br>
+    <span style="color:#8892AA">${config.adresse || ''}</span><br>
+    ${config.email || ''} · ${config.telephone || ''}</div>
+  <div class="partie"><div class="partie-title">Client</div>
+    <b style="color:#f0f2f8">${client?.nom || '—'}</b><br>
+    <span style="color:#8892AA">${(client?.adresse || '') + ' ' + (client?.cp || '') + ' ' + (client?.ville || '')}</span><br>
+    ${client?.email || ''}</div>
+</div>
+<table>
+  <thead><tr><th>Prestation</th><th style="text-align:right">Base HT</th><th style="text-align:right">Marge</th><th style="text-align:right">Montant HT</th></tr></thead>
+  <tbody>
+    ${(lignes || []).map(l => `<tr>
+      <td>${l.poste || l.designation || '—'}</td>
+      <td style="text-align:right;font-family:monospace;color:#ef4444">−${Math.abs(l.baseHT || 0).toFixed(2)} €</td>
+      <td style="text-align:right;font-family:monospace">${Math.round((l.marge||0)*100)} %</td>
+      <td style="text-align:right;font-family:monospace;color:#ef4444;font-weight:700">−${Math.abs(l.totalClient || 0).toFixed(2)} €</td>
+    </tr>`).join('')}
+  </tbody>
+</table>
+<div class="totaux">
+  <div class="t-row"><span>Total HT</span><span style="color:#ef4444">−${Math.abs(totalHT).toFixed(2)} €</span></div>
+  ${tva > 0 ? `<div class="t-row"><span>TVA ${Math.round(tva*100)}%</span><span style="color:#ef4444">−${Math.abs(montantTVA).toFixed(2)} €</span></div>` : ''}
+  <div class="t-final"><span>TOTAL AVOIR TTC</span><span>−${Math.abs(totalTTC).toFixed(2)} €</span></div>
+</div>
+<div class="footer-doc">
+  ${config.nomEntreprise||''} — SIRET ${config.siret||''} — ${config.rcs||''}<br>
+  ${config.piedPageFacture||'Avoir émis conformément à la facturation — PlaqPro+ 2026'}
+</div>
+<div class="no-print">
+  <button class="btn-print" onclick="window.print()">🖨 Imprimer / Enregistrer PDF</button>
+  <button class="btn-close" onclick="window.close()">✕ Fermer</button>
+</div>
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    if (win) { win.document.write(html); win.document.close(); }
   },
 
   rapportMensuel() {
