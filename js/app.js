@@ -2359,6 +2359,27 @@ const Pages = {
     const c = DB.getChantier(id);
     if (!c) return;
     const body = Pages._formChantier(c);
+
+    const affectations = c.sousTraitants || [];
+    const stRows = affectations.map(aff => {
+      const st = DB.getSousTraitantById(aff.stId);
+      const col = aff.statut === 'Terminé' ? '#10b981' : aff.statut === 'Annulé' ? '#ef4444' : '#f59e0b';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;font-size:13px;flex-wrap:wrap">'
+        + '<span style="font-weight:700;flex:1;min-width:100px">' + (st ? st.nom + (st.prenom ? ' ' + st.prenom : '') : '—') + '</span>'
+        + '<span style="color:var(--text-secondary);flex:2;min-width:120px">' + (aff.travaux || '—') + '</span>'
+        + '<span style="font-family:var(--font-mono)">' + (aff.montant ? aff.montant.toFixed(2) + ' € HT' : '—') + '</span>'
+        + '<span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:' + col + '20;color:' + col + '">' + (aff.statut || 'En cours') + '</span>'
+        + '</div>';
+    }).join('');
+
+    const stSection = document.createElement('div');
+    stSection.innerHTML = '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">'
+      + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-tertiary);margin-bottom:10px">🤝 Sous-traitants affectés</div>'
+      + (affectations.length === 0 ? '<div style="font-size:13px;color:var(--text-tertiary);margin-bottom:10px">Aucun sous-traitant affecté</div>' : stRows)
+      + '<button class="btn btn-secondary btn-sm" style="margin-top:6px" onclick="App.closeModal();setTimeout(function(){if(typeof ST!==\'undefined\')ST.affecter(' + id + ')},150)">➕ Affecter un ST</button>'
+      + '</div>';
+    body.appendChild(stSection);
+
     App.openModal('Modifier — ' + c.nom, body, `
       <button class="btn btn-danger" onclick="Pages.supprimerChantier(${id})">Supprimer</button>
       <button class="btn btn-secondary" onclick="App.closeModal()">Annuler</button>

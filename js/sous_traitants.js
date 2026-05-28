@@ -289,6 +289,23 @@ const ST = {
     const card = document.querySelector(`.st-card[onclick="ST.voirDetail(${id})"]`);
     if (card) card.classList.add('selected');
 
+    const chantiersAvecST = DB.chantiers.filter(ch => (ch.sousTraitants || []).some(a => a.stId == id));
+    const chantiersSTHtml = chantiersAvecST.length === 0
+      ? '<div style="font-size:13px;color:var(--text-tertiary)">Aucune affectation enregistrée</div>'
+      : chantiersAvecST.map(ch => {
+          const aff = (ch.sousTraitants || []).find(a => a.stId == id);
+          const col = aff && aff.statut === 'Terminé' ? '#10b981' : aff && aff.statut === 'Annulé' ? '#ef4444' : '#f59e0b';
+          return '<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;'
+            + 'background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-sm);'
+            + 'margin-bottom:6px;font-size:12px;flex-wrap:wrap">'
+            + '<span style="font-weight:700;flex:1">' + ch.nom + '</span>'
+            + '<span style="color:var(--text-secondary);flex:2">' + (aff && aff.travaux ? aff.travaux : '—') + '</span>'
+            + '<span style="font-family:var(--font-mono)">' + (aff && aff.montant ? aff.montant.toFixed(2) + ' € HT' : '—') + '</span>'
+            + '<span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;'
+            + 'background:' + col + '20;color:' + col + '">' + (aff && aff.statut ? aff.statut : 'En cours') + '</span>'
+            + '</div>';
+        }).join('');
+
     detail.innerHTML = `
       <div class="st-panel">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
@@ -354,6 +371,9 @@ const ST = {
 
         ${st.notes ? `<div class="st-section">📋 Notes</div>
         <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px">${st.notes}</div>` : ''}
+
+        <div class="st-section">🏗 Chantiers affectés</div>
+        <div style="margin-bottom:16px">${chantiersSTHtml}</div>
 
         <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:16px;border-top:1px solid var(--border)">
           <button class="btn btn-primary" onclick="ST.genererContrat(${id})">📄 Générer contrat ST</button>
