@@ -380,33 +380,79 @@
     .prem-av-text { font-size: 14px; font-weight: 600; color: var(--text); }
     .prem-av-sub  { font-size: 12px; color: var(--muted); margin-top: 2px; }
     .premium-card-mock {
-      background: linear-gradient(135deg, #1a1a2e, #0f3460);
-      border-radius: 20px;
-      padding: 28px;
-      border: 1px solid rgba(255,255,255,0.08);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      width: 380px; height: 240px;
+      background: linear-gradient(135deg, #0d0f14 0%, #0f1629 50%, #0d1b40 100%);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(79,142,247,0.1);
       animation: float 5s ease-in-out infinite;
-    }
-    .pcm-logo { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
-    .pcm-logo span:nth-child(1) { color: #fff; }
-    .pcm-logo span:nth-child(2) { color: var(--accent); }
-    .pcm-logo span:nth-child(3) { color: #fff; }
-    .pcm-logo span:nth-child(4) { color: #ef4444; }
-    .pcm-pro { font-size: 11px; font-weight: 700; color: var(--orange); letter-spacing: .08em; margin-bottom: 20px; }
-    .pcm-line { height: 1px; background: rgba(255,255,255,0.08); margin: 16px 0; }
-    .pcm-row { display: flex; justify-content: space-between; font-size: 11px; }
-    .pcm-label { color: rgba(255,255,255,0.4); }
-    .pcm-val { font-weight: 700; color: #fff; }
-    .pcm-qr {
-      width: 52px; height: 52px;
-      background: rgba(255,255,255,0.9);
-      border-radius: 6px;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 32px;
-      margin-top: 12px;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: stretch;
+      position: relative;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, sans-serif;
+      flex-shrink: 0;
     }
+    @media (max-width: 480px) {
+      .premium-card-mock { width: 100%; max-width: 380px; height: auto; min-height: 200px; }
+    }
+    .pcm-deco1 {
+      position: absolute; top: -50px; left: -40px;
+      width: 180px; height: 180px; border-radius: 50%;
+      background: rgba(79,142,247,0.08); pointer-events: none;
+    }
+    .pcm-deco2 {
+      position: absolute; bottom: -40px; left: 80px;
+      width: 140px; height: 140px; border-radius: 50%;
+      background: rgba(79,142,247,0.04); pointer-events: none;
+    }
+    .pcm-left {
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+      flex: 1; min-width: 0; margin-right: 16px; position: relative;
+    }
+    .pcm-top-logo { height: 30px; object-fit: contain; display: block; }
+    .pcm-pro {
+      font-size: 8px; font-weight: 700; color: var(--orange);
+      letter-spacing: .12em; text-transform: uppercase; margin-top: 5px;
+    }
+    .pcm-bar {
+      width: 24px; height: 2px;
+      background: linear-gradient(90deg, #4F8EF7, transparent);
+      border-radius: 1px; margin-top: 5px;
+    }
+    .pcm-name {
+      font-size: 14px; font-weight: 800; color: #fff;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      padding: 8px 0;
+    }
+    .pcm-info-row { display: flex; gap: 10px; align-items: flex-end; }
+    .pcm-info-block .pcm-label {
+      font-size: 7px; color: rgba(255,255,255,0.4);
+      letter-spacing: .09em; text-transform: uppercase; margin-bottom: 3px;
+    }
+    .pcm-info-block .pcm-val { font-size: 10px; font-weight: 700; color: #fff; }
+    .pcm-sep { width: 1px; background: rgba(255,255,255,0.12); height: 26px; flex-shrink: 0; }
+    .pcm-right {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .pcm-qr {
+      background: rgba(255,255,255,0.95);
+      border-radius: 8px; padding: 6px;
+      text-align: center; width: 92px;
+    }
+    .pcm-qr-inner {
+      width: 80px; height: 80px;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 48px; line-height: 1;
+    }
+    .pcm-qr-label { font-size: 7px; color: #333; margin-top: 3px; }
+    .pcm-valid { font-size: 8px; color: rgba(255,255,255,0.3); margin-top: 6px; text-align: center; }
 
     /* ── SECTION 5 — POURQUOI ── */
     #pourquoi { background: var(--bg); }
@@ -705,25 +751,44 @@
         </div>
         <div style="display:flex;justify-content:center;align-items:center">
           <div class="premium-card-mock">
-            <div class="pcm-logo">
-              <span>Pla</span><span>Q</span><span>Pro</span><span>+</span>
-            </div>
-            <div class="pcm-pro">PRO MEMBER</div>
-            <div class="pcm-line"></div>
-            <div class="pcm-row" style="margin-bottom:8px">
-              <span class="pcm-label">ADHÉRENT</span>
-              <span class="pcm-label">STATUT</span>
-            </div>
-            <div class="pcm-row">
-              <span class="pcm-val">Votre Nom</span>
-              <span style="color:#10b981;font-weight:700;font-size:12px">Actif 2026</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px">
+            <div class="pcm-deco1"></div>
+            <div class="pcm-deco2"></div>
+
+            <!-- GAUCHE -->
+            <div class="pcm-left">
               <div>
-                <div class="pcm-label" style="font-size:10px;margin-bottom:4px">ID MEMBRE</div>
-                <div style="font-size:13px;font-weight:700;color:var(--orange)">PP+·XXXX</div>
+                <img src="assets/Logo Plaqpro+.png" alt="PlaqPro+" class="pcm-top-logo"
+                  onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+                <div style="display:none;font-size:16px;font-weight:900;background:linear-gradient(135deg,#4F8EF7,#2DD4A0);-webkit-background-clip:text;-webkit-text-fill-color:transparent">PlaQPro+</div>
+                <div class="pcm-pro">Pro Member</div>
+                <div class="pcm-bar"></div>
               </div>
-              <div class="pcm-qr">🔲</div>
+              <div class="pcm-name">Votre Nom</div>
+              <div class="pcm-info-row">
+                <div class="pcm-info-block">
+                  <div class="pcm-label">Adhérent</div>
+                  <div class="pcm-val" style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Votre Nom</div>
+                </div>
+                <div class="pcm-sep"></div>
+                <div class="pcm-info-block">
+                  <div class="pcm-label">Statut</div>
+                  <div class="pcm-val" style="color:#10b981">Actif 2026</div>
+                </div>
+                <div class="pcm-sep"></div>
+                <div class="pcm-info-block">
+                  <div class="pcm-label">ID Membre</div>
+                  <div class="pcm-val" style="color:var(--orange)">PP+XXXX</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- DROITE : QR -->
+            <div class="pcm-right">
+              <div class="pcm-qr">
+                <div class="pcm-qr-inner">🔲</div>
+                <div class="pcm-qr-label">Scanner pour vérifier</div>
+              </div>
+              <div class="pcm-valid">Valide 31/12/2026</div>
             </div>
           </div>
         </div>
