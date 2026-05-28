@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <script>if(typeof GROQ_API_KEY === 'undefined') window.GROQ_API_KEY = '';</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>PlaqPro+ — Vérification</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:   #4F8EF7;
+      --green:    #2DD4A0;
+      --orange:   #FF6B00;
+      --red:      #F75B5B;
+      --bg:       #0D0F14;
+      --surface:  #13161E;
+      --elevated: #1A1E2A;
+      --glass:    rgba(255,255,255,0.05);
+      --border:   rgba(255,255,255,0.09);
+      --text:     #F0F2F8;
+      --muted:    #8892AA;
+      --font:     'Outfit', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 15% 0%, rgba(79,142,247,0.10) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 85% 100%, rgba(45,212,160,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 90% 5%, rgba(255,107,0,0.06) 0%, transparent 50%);
+      padding: 20px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(19,22,30,0.92);
+      backdrop-filter: blur(32px) saturate(160%);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 4px 20px rgba(0,0,0,0.5);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    }
+
+    .login-logo {
+      padding: 32px 32px 24px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .login-logo img {
+      width: 200px;
+      height: auto;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+    }
+
+    .login-logo-text {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 8px;
+      letter-spacing: 0.05em;
+    }
+
+    .login-body {
+      padding: 36px 32px 32px;
+      text-align: center;
+    }
+
+    .verify-icon {
+      font-size: 56px;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .verify-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 12px;
+      letter-spacing: -0.3px;
+    }
+
+    .verify-message {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    .verify-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 28px;
+    }
+
+    .verify-badge.email {
+      background: rgba(79,142,247,0.12);
+      border: 1px solid rgba(79,142,247,0.25);
+      color: var(--accent);
+    }
+
+    .verify-badge.premium {
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.25);
+      color: #f59e0b;
+    }
+
+    .btn-verify {
+      width: 100%;
+      height: 50px;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      letter-spacing: 0.02em;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-verify.email {
+      background: linear-gradient(135deg, #5B9BFF, #3B7DE8);
+      box-shadow: 0 4px 16px rgba(79,142,247,0.4);
+    }
+
+    .btn-verify.email:hover {
+      background: linear-gradient(135deg, #6BABFF, #4F8EF7);
+      box-shadow: 0 6px 25px rgba(79,142,247,0.55);
+      transform: translateY(-1px);
+    }
+
+    .btn-verify.premium {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      box-shadow: 0 4px 16px rgba(245,158,11,0.4);
+    }
+
+    .btn-verify.premium:hover {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      box-shadow: 0 6px 25px rgba(245,158,11,0.55);
+      transform: translateY(-1px);
+    }
+
+    .btn-verify:active { transform: translateY(0); }
+
+    .login-footer {
+      padding: 16px 32px 24px;
+      text-align: center;
+      font-size: 11px;
+      color: rgba(136,146,170,0.4);
+      border-top: 1px solid var(--border);
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0D0F14">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PlaqPro+">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+</head>
+<body>
+
+  <div class="login-card">
+
+    <div class="login-logo">
+      <img src="assets/Logo Plaqpro+.png" alt="PlaqPro+" onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='block'">
+      <div id="logo-fallback" style="display:none;font-size:28px;font-weight:900;background:linear-gradient(135deg,#4F8EF7,#2DD4A0);-webkit-background-clip:text;-webkit-text-fill-color:transparent">
+        PlaQPro+
+      </div>
+      <div class="login-logo-text">Gestion BTP — Tous corps de métier</div>
+    </div>
+
+    <div class="login-body">
+      <span class="verify-icon" id="verify-icon"></span>
+      <div class="verify-title" id="verify-title"></div>
+      <div class="verify-badge" id="verify-badge"></div>
+      <div class="verify-message" id="verify-message"></div>
+      <a class="btn-verify" id="verify-btn" href="#"></a>
+    </div>
+
+    <div class="login-footer">
+      PlaqPro+ · By aatb · v2.0 · © 2026
+    </div>
+  </div>
+
+  <script>
+    const mode = new URLSearchParams(window.location.search).get('mode');
+
+    const config = mode === 'premium'
+      ? {
+          icon:    '⭐',
+          title:   'Compte Premium activé !',
+          badge:   '✓ Premium actif',
+          badgeCls:'premium',
+          message: 'Votre abonnement Premium est actif. Profitez de toutes les fonctionnalités PlaqPro+.',
+          btnText: 'Accéder à l\'application →',
+          btnHref: 'index.html',
+          btnCls:  'premium',
+        }
+      : {
+          icon:    '✉️',
+          title:   'Vérification de votre email',
+          badge:   '✓ Compte créé',
+          badgeCls:'email',
+          message: 'Votre compte a bien été créé. Un email de confirmation vous a été envoyé.',
+          btnText: 'Retour à la connexion →',
+          btnHref: 'login.html',
+          btnCls:  'email',
+        };
+
+    document.getElementById('verify-icon').textContent    = config.icon;
+    document.getElementById('verify-title').textContent   = config.title;
+    document.getElementById('verify-message').textContent = config.message;
+
+    const badge = document.getElementById('verify-badge');
+    badge.textContent = config.badge;
+    badge.classList.add(config.badgeCls);
+
+    const btn = document.getElementById('verify-btn');
+    btn.textContent = config.btnText;
+    btn.href        = config.btnHref;
+    btn.classList.add(config.btnCls);
+
+    document.title = 'PlaqPro+ — ' + config.title;
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>
