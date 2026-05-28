@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PlaqPro+ — Le quotidien du bâtiment mérite mieux.</title>
-  <meta name="description" content="PlaqPro+ : l'outil de gestion pour artisans BTP. Devis, factures, chantiers, sous-traitants. Simple, rapide, professionnel.">
+  <title>PlaqPro+ — La plateforme 100% dédiée aux professionnels du bâtiment.</title>
+  <meta name="description" content="PlaqPro+ : la plateforme tout-en-un pour les pros du bâtiment. Produits, fournisseurs, devis, chantiers. Conçu par un plaquiste, pour les pros du BTP.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
@@ -20,6 +20,7 @@
       --accent-h: #6BA3FF;
       --accent-d: rgba(79,142,247,0.15);
       --orange:   #F59E0B;
+      --gold:     #C9A84C;
       --green:    #10B981;
       --text:     #F0F2F8;
       --muted:    #8892AA;
@@ -603,6 +604,78 @@
       margin: 0 auto 48px;
     }
     .divider-left { margin: 0 0 48px; }
+
+    /* ── SOLUTION 4 blocs ── */
+    .solution-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    @media (max-width: 640px) { .solution-grid-4 { grid-template-columns: 1fr; } }
+    .sol4-card {
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px 32px;
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+      transition: border-color .2s, transform .2s;
+    }
+    .sol4-card:hover { border-color: rgba(201,168,76,0.35); transform: translateY(-3px); }
+    .sol4-icon { font-size: 26px; flex-shrink: 0; margin-top: 2px; color: var(--gold); }
+    .sol4-title { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+    .sol4-desc { font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+    /* ── FONCTIONNALITÉS ── */
+    #fonctionnalites { background: var(--bg); }
+    .fonc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 768px) { .fonc-grid { grid-template-columns: 1fr; } }
+    .fonc-col { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 28px; }
+    .fonc-col-title {
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--gold); margin-bottom: 18px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .fonc-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+      font-size: 14px; color: var(--muted);
+    }
+    .fonc-item:last-child { border-bottom: none; }
+    .fonc-item::before { content: '✅'; font-size: 13px; flex-shrink: 0; }
+
+    /* ── MOBILITÉ ── */
+    #mobilite { background: var(--surface); }
+    .mob-badges { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 36px; }
+    .mob-badge {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 28px; background: var(--elevated);
+      border: 1px solid var(--border); border-radius: 99px;
+      font-size: 15px; font-weight: 700; transition: all .2s;
+    }
+    .mob-badge:hover { border-color: rgba(79,142,247,0.4); transform: translateY(-2px); }
+
+    /* ── COMMUNAUTÉ ── */
+    #communaute { background: var(--bg); }
+    .comm-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-bottom: 32px; }
+    @media (max-width: 768px) { .comm-grid { grid-template-columns: 1fr; } }
+    .comm-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 32px 24px; text-align: center;
+      transition: transform .2s, border-color .2s;
+    }
+    .comm-card:hover { transform: translateY(-4px); border-color: rgba(79,142,247,0.3); }
+    .comm-icon { font-size: 40px; margin-bottom: 14px; display: block; }
+    .comm-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .comm-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .comm-security {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 22px 32px;
+      display: flex; align-items: center; justify-content: center;
+      gap: 32px; flex-wrap: wrap;
+    }
+    .comm-sec-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); font-weight: 500; }
   </style>
 </head>
 <body>
@@ -623,18 +696,18 @@
     <div class="grid-bg"></div>
 
     <div class="hero-badge reveal">
-      <span>🚀</span> Bêta — Accès Premium offert
+      <span>🏗</span> Conçu par un plaquiste, pour les pros du bâtiment
     </div>
 
     <h1 class="hero-h1 reveal reveal-delay-1">
-      Le quotidien du bâtiment<br><em>mérite mieux.</em>
+      La plateforme <em>100% dédiée</em><br>aux professionnels du bâtiment.
     </h1>
 
-    <p class="hero-sub reveal reveal-delay-2">Simple. Rapide. Professionnel.</p>
+    <p class="hero-sub reveal reveal-delay-2">Gagnez du temps &bull; Trouvez les bons produits &bull; Comparez &bull; Gérez &bull; Progressez</p>
 
     <div class="hero-ctas reveal reveal-delay-3">
-      <a href="index.html" class="btn-primary-lg">Tester gratuitement →</a>
-      <a href="#beta" class="btn-secondary-lg">Rejoindre la bêta</a>
+      <a href="index.html" class="btn-primary-lg">Essayez gratuitement →</a>
+      <a href="#beta" class="btn-secondary-lg">Rejoindre la communauté</a>
     </div>
 
     <div class="hero-scroll">
@@ -648,21 +721,21 @@
     <div class="container">
       <div style="text-align:center;margin-bottom:52px">
         <span class="section-tag reveal">Le problème</span>
-        <h2 class="section-title reveal reveal-delay-1">Trop de temps perdu<br>sur l'administratif.</h2>
+        <h2 class="section-title reveal reveal-delay-1">Plus assez de temps<br>sur le chantier.</h2>
         <div class="divider reveal reveal-delay-2"></div>
       </div>
       <div class="probleme-grid">
         <div class="pb-card reveal reveal-delay-1">
-          <span class="pb-icon">📋</span>
-          <p class="pb-text">Devis faits à la main, calculs approximatifs, erreurs de chiffrage</p>
+          <span class="pb-icon">🔍</span>
+          <p class="pb-text">Trop de recherches, trop d'appels pour trouver les bons produits et fournisseurs</p>
         </div>
         <div class="pb-card reveal reveal-delay-2">
           <span class="pb-icon">⏱</span>
-          <p class="pb-text">Des heures perdues sur la facturation au lieu d'être sur le chantier</p>
+          <p class="pb-text">Trop de temps perdu sur l'administratif au lieu d'être sur le chantier</p>
         </div>
         <div class="pb-card reveal reveal-delay-3">
           <span class="pb-icon">😤</span>
-          <p class="pb-text">Outils trop complexes, trop chers, pas adaptés au terrain</p>
+          <p class="pb-text">Pas d'outil adapté au terrain, pensé pour les vrais pros du bâtiment</p>
         </div>
       </div>
     </div>
@@ -673,43 +746,71 @@
     <div class="container">
       <div style="text-align:center;margin-bottom:52px">
         <span class="section-tag reveal">La solution</span>
-        <h2 class="section-title reveal reveal-delay-1">Tout ce dont vous avez besoin,<br>dans un seul outil.</h2>
-        <p class="section-sub reveal reveal-delay-2" style="margin:0 auto 0">
-          Conçu par et pour les artisans BTP. Zéro superflu, 100% terrain.
-        </p>
-        <div class="divider reveal reveal-delay-3" style="margin-top:32px"></div>
+        <h2 class="section-title reveal reveal-delay-1">La solution tout-en-un<br>pour les pros du bâtiment.</h2>
+        <div class="divider reveal reveal-delay-2" style="margin-top:28px"></div>
       </div>
-      <div class="solution-grid">
-        <div class="sol-card reveal reveal-delay-1">
-          <span class="sol-icon">📄</span>
-          <div class="sol-title">Devis &amp; Factures</div>
-          <div class="sol-desc">Générez des documents professionnels en 2 minutes. PDF, email, signature électronique.</div>
+      <div class="solution-grid-4">
+        <div class="sol4-card reveal reveal-delay-1">
+          <span class="sol4-icon">✅</span>
+          <div><div class="sol4-title">Tous vos produits</div><div class="sol4-desc">Plaques, isolants, ossatures, enduits et accessoires en un clic. Catalogue complet et filtrable.</div></div>
         </div>
-        <div class="sol-card reveal reveal-delay-2">
-          <span class="sol-icon">🏗</span>
-          <div class="sol-title">Gestion chantiers</div>
-          <div class="sol-desc">Suivez l'avancement de tous vos chantiers, métrés, planning et budget en temps réel.</div>
+        <div class="sol4-card reveal reveal-delay-2">
+          <span class="sol4-icon">✅</span>
+          <div><div class="sol4-title">Tous vos fournisseurs</div><div class="sol4-desc">Trouvez, comparez et contactez vos partenaires rapidement. Annuaires vérifiés, localisés.</div></div>
         </div>
-        <div class="sol-card reveal reveal-delay-3">
-          <span class="sol-icon">📊</span>
-          <div class="sol-title">Export DPGF</div>
-          <div class="sol-desc">Format professionnel AOS prêt à envoyer aux maîtres d'ouvrage. Conforme marchés publics.</div>
+        <div class="sol4-card reveal reveal-delay-3">
+          <span class="sol4-icon">✅</span>
+          <div><div class="sol4-title">Outils intelligents</div><div class="sol4-desc">Devis, factures, suivi de chantiers, comparateurs et plus encore. Tout au même endroit.</div></div>
         </div>
-        <div class="sol-card reveal reveal-delay-4">
-          <span class="sol-icon">🤝</span>
-          <div class="sol-title">Sous-traitants</div>
-          <div class="sol-desc">Gérez vos ST, contrats loi 75-1334, conformité assurances et affectations chantier.</div>
+        <div class="sol4-card reveal reveal-delay-4">
+          <span class="sol4-icon">✅</span>
+          <div><div class="sol4-title">100% Pro. 100% Terrain.</div><div class="sol4-desc">Conçu par un plaquiste, pour les plaquistes. Zéro superflu, 100% adapté au métier.</div></div>
         </div>
-        <div class="sol-card reveal reveal-delay-5">
-          <span class="sol-icon">💰</span>
-          <div class="sol-title">Base de prix</div>
-          <div class="sol-desc">68 postes, 6 corps de métier intégrés. Vos tarifs réels, toujours à jour.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════ FONCTIONNALITÉS ════════════════════ -->
+  <section id="fonctionnalites">
+    <div class="container">
+      <div style="text-align:center;margin-bottom:52px">
+        <span class="section-tag reveal">Fonctionnalités</span>
+        <h2 class="section-title reveal reveal-delay-1">Tout ce qu'il vous faut,<br>au même endroit.</h2>
+        <div class="divider reveal reveal-delay-2"></div>
+      </div>
+      <div class="fonc-grid">
+        <div class="fonc-col reveal reveal-delay-1">
+          <div class="fonc-col-title">📦 Produits &amp; Fournisseurs</div>
+          <div class="fonc-item">Catalogue complet filtrable par métier</div>
+          <div class="fonc-item">Annuaires fournisseurs vérifiés</div>
+          <div class="fonc-item">Localisation &amp; contact direct</div>
+          <div class="fonc-item">Comparaison de prix en temps réel</div>
+          <div class="fonc-item">Avis &amp; notes communauté</div>
         </div>
-        <div class="sol-card reveal reveal-delay-6">
-          <span class="sol-icon">📦</span>
-          <div class="sol-title">Catalogue fournisseurs</div>
-          <div class="sol-desc">Importez vos tarifs Saint-Gobain, Knauf, Sonepar en un clic. CSV, Excel ou texte libre.</div>
+        <div class="fonc-col reveal reveal-delay-2">
+          <div class="fonc-col-title">🛠 Outils &amp; Gestion</div>
+          <div class="fonc-item">Comparateurs métier intégrés</div>
+          <div class="fonc-item">Devis &amp; demandes de prix automatisés</div>
+          <div class="fonc-item">Suivi de chantiers &amp; planning</div>
+          <div class="fonc-item">Listes d'achats &amp; favoris</div>
+          <div class="fonc-item">Actualités métier &amp; réglementation</div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════ MOBILITÉ ════════════════════════════ -->
+  <section id="mobilite">
+    <div class="container" style="text-align:center">
+      <span class="section-tag reveal">Disponibilité</span>
+      <h2 class="section-title reveal reveal-delay-1" style="margin-top:12px">Sur le chantier, au bureau,<br>en déplacement.</h2>
+      <p class="section-sub reveal reveal-delay-2" style="margin:0 auto">
+        PlaqPro+ vous suit partout. Web &amp; Mobile. Disponible 24/7.
+      </p>
+      <div class="mob-badges reveal reveal-delay-3">
+        <div class="mob-badge">🌐 Web</div>
+        <div class="mob-badge">📱 Mobile</div>
+        <div class="mob-badge">💻 Desktop</div>
       </div>
     </div>
   </section>
@@ -796,30 +897,35 @@
     </div>
   </section>
 
-  <!-- ════════════════════════════════ POURQUOI ════════════════════════════ -->
-  <section id="pourquoi">
+  <!-- ════════════════════════════════ COMMUNAUTÉ ═════════════════════════ -->
+  <section id="communaute">
     <div class="container">
       <div style="text-align:center;margin-bottom:52px">
-        <span class="section-tag reveal">Pourquoi PlaqPro+</span>
-        <h2 class="section-title reveal reveal-delay-1">Différent par design.</h2>
+        <span class="section-tag reveal">Communauté</span>
+        <h2 class="section-title reveal reveal-delay-1">Un réseau de pros,<br>pour des pros.</h2>
         <div class="divider reveal reveal-delay-2"></div>
       </div>
-      <div class="pourquoi-grid">
-        <div class="pq-card reveal reveal-delay-1">
-          <div class="pq-num">0€</div>
-          <div class="pq-title">Zéro abonnement</div>
-          <div class="pq-desc">Payez une fois, utilisez à vie. Pas de surprise en fin de mois.</div>
+      <div class="comm-grid">
+        <div class="comm-card reveal reveal-delay-1">
+          <span class="comm-icon">💬</span>
+          <div class="comm-title">Échangez</div>
+          <div class="comm-desc">Partagez vos expériences, bonnes adresses et conseils avec d'autres professionnels du bâtiment.</div>
         </div>
-        <div class="pq-card reveal reveal-delay-2">
-          <div class="pq-num">0s</div>
-          <div class="pq-title">Zéro installation</div>
-          <div class="pq-desc">Fonctionne directement dans votre navigateur. Mobile, tablette, PC.</div>
+        <div class="comm-card reveal reveal-delay-2">
+          <span class="comm-icon">🤝</span>
+          <div class="comm-title">Collaborez</div>
+          <div class="comm-desc">Trouvez des sous-traitants fiables, des partenaires et des opportunités de chantier près de chez vous.</div>
         </div>
-        <div class="pq-card reveal reveal-delay-3">
-          <div class="pq-num">0</div>
-          <div class="pq-title">Zéro serveur</div>
-          <div class="pq-desc">Vos données restent sur votre appareil. Personne n'y a accès sauf vous.</div>
+        <div class="comm-card reveal reveal-delay-3">
+          <span class="comm-icon">📈</span>
+          <div class="comm-title">Progressez</div>
+          <div class="comm-desc">Accédez aux dernières réglementations, formations et actualités métier pour rester au top.</div>
         </div>
+      </div>
+      <div class="comm-security reveal reveal-delay-4">
+        <div class="comm-sec-item">Données sécurisées</div>
+        <div class="comm-sec-item">Partenaires vérifiés</div>
+        <div class="comm-sec-item">Plateforme fiable et évolutive</div>
       </div>
     </div>
   </section>
@@ -828,11 +934,11 @@
   <section id="beta">
     <div class="grid-bg"></div>
     <div class="beta-inner">
-      <div class="beta-spots reveal">🎯 5 places disponibles</div>
-      <h2 class="section-title reveal reveal-delay-1">Devenez bêta testeur</h2>
+      <div class="beta-spots reveal">🏗 La plateforme des pros du bâtiment</div>
+      <h2 class="section-title reveal reveal-delay-1">Rejoignez la plateforme<br>des pros du bâtiment.</h2>
       <p style="font-size:18px;color:var(--muted);line-height:1.7;margin-top:12px" class="reveal reveal-delay-2">
-        Je cherche <strong style="color:var(--text)">5 artisans BTP</strong> pour tester PlaqPro+
-        en conditions réelles.<br>En échange : accès Premium <strong style="color:var(--accent)">gratuit à vie.</strong>
+        Rejoignez dès maintenant la communauté des professionnels.<br>
+        <strong style="color:var(--text)">PlaqPro+</strong> — Votre métier. Notre plateforme. <strong style="color:var(--accent)">Votre succès.</strong>
       </p>
       <ul class="beta-list reveal reveal-delay-3">
         <li>Accès immédiat à toutes les fonctionnalités</li>
@@ -840,9 +946,9 @@
         <li>Votre avis façonne directement le produit</li>
       </ul>
       <a href="index.html" class="btn-primary-lg reveal reveal-delay-4" style="margin:0 auto;display:inline-flex">
-        Tester maintenant →
+        Essayez gratuitement →
       </a>
-      <p class="beta-note reveal reveal-delay-5">Déjà accessible sur mobile et desktop · Aucune installation requise</p>
+      <p class="beta-note reveal reveal-delay-5">www.plaqproplus.fr — Web &amp; Mobile — Disponible 24/7</p>
     </div>
   </section>
 
@@ -855,7 +961,8 @@
         PlaQPro+
       </div>
     </div>
-    <div class="footer-tagline">Gestion BTP — Tous corps de métier</div>
+    <div class="footer-tagline">Votre métier. Notre plateforme. Votre succès.</div>
+    <div style="font-size:13px;color:var(--dim);margin-bottom:20px">Plus de temps sur le chantier, moins devant l'écran.</div>
     <a href="index.html" class="footer-link">Accéder à l'application →</a>
     <div class="footer-credit">Créé par un artisan plaquiste, pour les pros du bâtiment.</div>
     <div class="footer-copy">© 2026 PlaqPro+ · By AATB · Saint-Priest (69)</div>
