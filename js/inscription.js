@@ -64,6 +64,47 @@ Pages.inscription = function() {
   let metierSelectionne = null;
   let formData = {};
 
+  function attachCpAutocomplete() {
+    const cpInput = document.getElementById('insc-cp');
+    const villeInput = document.getElementById('insc-ville');
+    const selectContainer = document.getElementById('insc-cp-select');
+    if (!cpInput || !villeInput || !selectContainer) return;
+
+    cpInput.addEventListener('keyup', function() {
+      const cp = this.value.replace(/\D/g, '');
+      if (cp.length !== 5) {
+        selectContainer.innerHTML = '';
+        return;
+      }
+      fetch(`https://geo.api.gouv.fr/communes?codePostal=${cp}&fields=nom&format=json`)
+        .then(r => r.json())
+        .then(communes => {
+          selectContainer.innerHTML = '';
+          if (!communes || communes.length === 0) return;
+          if (communes.length === 1) {
+            villeInput.value = communes[0].nom;
+            villeInput.readOnly = true;
+          } else {
+            const sel = document.createElement('select');
+            sel.className = 'insc-input';
+            sel.style.marginBottom = '8px';
+            sel.innerHTML = '<option value="">— Choisir la commune —</option>' +
+              communes.map(c => `<option value="${c.nom}">${c.nom}</option>`).join('');
+            sel.addEventListener('change', function() {
+              if (this.value) {
+                villeInput.value = this.value;
+                villeInput.readOnly = true;
+              }
+            });
+            selectContainer.appendChild(sel);
+          }
+        })
+        .catch(() => {
+          villeInput.readOnly = false;
+        });
+    });
+  }
+
   function render() {
     div.innerHTML = `
       <div class="insc-hero">
@@ -80,6 +121,7 @@ Pages.inscription = function() {
         ${etape === 1 ? renderEtape1() : etape === 2 ? renderEtape2() : renderEtape3()}
       </div>
     `;
+    if (etape === 1) attachCpAutocomplete();
   }
 
   function renderEtape1() {
@@ -95,8 +137,11 @@ Pages.inscription = function() {
       <input class="insc-input" id="insc-email" type="email" placeholder="contact@entreprise.fr" value="${formData.email||''}">
       <div class="insc-label">Téléphone</div>
       <input class="insc-input" id="insc-tel" placeholder="06 12 34 56 78" value="${formData.tel||''}">
+      <div class="insc-label">Code postal</div>
+      <input class="insc-input" id="insc-cp" placeholder="69000" maxlength="5" inputmode="numeric" value="${formData.cp||''}">
+      <div id="insc-cp-select"></div>
       <div class="insc-label">Ville</div>
-      <input class="insc-input" id="insc-ville" placeholder="Lyon" value="${formData.ville||''}">
+      <input class="insc-input" id="insc-ville" placeholder="Lyon" value="${formData.ville||''}" ${formData.ville ? '' : 'readonly'}>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
         <button class="btn btn-primary" onclick="INSC.etape1Suivant()">Suivant →</button>
       </div>
@@ -170,6 +215,7 @@ Pages.inscription = function() {
         nom, prenom,
         email: document.getElementById('insc-email')?.value.trim(),
         tel:   document.getElementById('insc-tel')?.value.trim(),
+        cp:    document.getElementById('insc-cp')?.value.trim(),
         ville: document.getElementById('insc-ville')?.value.trim(),
       };
       etape = 2;
@@ -194,6 +240,7 @@ Pages.inscription = function() {
       config.prenom = formData.prenom;
       config.email  = formData.email;
       config.tel    = formData.tel;
+      config.cp     = formData.cp;
       config.ville  = formData.ville;
       config.metier = metierSelectionne;
       config.proExpire = new Date(Date.now() + 10*24*60*60*1000).toISOString();
