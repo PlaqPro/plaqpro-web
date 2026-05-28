@@ -784,6 +784,22 @@
       transition: all .2s; text-decoration: none;
     }
     .social-link:hover { border-color: rgba(79,142,247,0.4); color: var(--accent); }
+
+    /* ── FOURNISSEURS ── */
+    --r-xl: 28px;
+    .fourn-grid { display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center; }
+    @media (max-width:768px) { .fourn-grid { grid-template-columns:1fr; } }
+    .fourn-arg-item { display:flex; gap:16px; padding:20px; background:var(--elevated); border:1px solid var(--border); border-radius:var(--r-lg); margin-bottom:12px; transition:border-color .2s,transform .2s; }
+    .fourn-arg-item:hover { border-color:rgba(201,168,76,0.3); transform:translateX(4px); }
+    .fourn-arg-icon { font-size:32px; flex-shrink:0; }
+    .fourn-arg-title { font-size:15px; font-weight:700; color:var(--text); margin-bottom:4px; }
+    .fourn-arg-desc { font-size:13px; color:var(--muted); line-height:1.6; }
+    .fourn-card { background:var(--surface); border:1px solid rgba(201,168,76,0.25); border-radius:28px; padding:36px; text-align:center; }
+    .fourn-badge { display:inline-block; padding:6px 16px; background:rgba(201,168,76,0.12); border:1px solid rgba(201,168,76,0.3); border-radius:99px; font-size:11px; font-weight:700; color:var(--gold); letter-spacing:.08em; text-transform:uppercase; margin-bottom:20px; }
+    .fourn-cta { display:inline-flex; align-items:center; gap:10px; padding:16px 36px; background:linear-gradient(135deg,#C9A84C,#F59E0B); color:#0d0f14; font-weight:800; border-radius:99px; font-size:16px; text-decoration:none; transition:opacity .2s,transform .2s; margin-top:24px; }
+    .fourn-cta:hover { opacity:.9; transform:translateY(-2px); }
+    .fourn-avantage { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); font-size:14px; color:var(--muted); text-align:left; }
+    .fourn-avantage:last-of-type { border-bottom:none; }
   </style>
 </head>
 <body>
@@ -795,7 +811,10 @@
         onerror="this.style.display='none';document.getElementById('nav-logo-txt').style.display='block'">
       <span id="nav-logo-txt" style="display:none" class="nav-logo-text">PlaQPro+</span>
     </div>
-    <a href="index.html" class="nav-cta">Tester →</a>
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#fournisseurs" style="font-size:14px;font-weight:600;color:var(--gold);opacity:.85;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity='.85'">Fournisseurs</a>
+      <a href="index.html" class="nav-cta">Tester →</a>
+    </div>
   </nav>
 
   <!-- ════════════════════════════════ HERO ════════════════════════════════ -->
@@ -1120,6 +1139,49 @@
             <div class="process-label">Recevez</div>
             <div style="font-size:12px;color:var(--muted)">vos réponses rapidement</div>
           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════ FOURNISSEURS ═══════════════════════ -->
+  <section id="fournisseurs" style="background:linear-gradient(135deg,#0f1629 0%,#0d0f14 100%);border-top:1px solid rgba(201,168,76,0.2)">
+    <div class="container">
+      <div style="text-align:center;margin-bottom:52px">
+        <span class="section-tag reveal">🤝 Espace Fournisseurs</span>
+        <h2 class="section-title reveal reveal-delay-1">Fournisseurs, rejoignez<br><em>l'écosystème PlaqPro+</em></h2>
+        <div class="divider reveal reveal-delay-2"></div>
+      </div>
+      <div class="fourn-grid">
+        <div>
+          <div class="fourn-arg-item reveal reveal-delay-1">
+            <span class="fourn-arg-icon">👁</span>
+            <div><div class="fourn-arg-title">Gagnez en visibilité</div><div class="fourn-arg-desc">Accédez à une communauté d'artisans qualifiés et engagés, tous corps de métier.</div></div>
+          </div>
+          <div class="fourn-arg-item reveal reveal-delay-2">
+            <span class="fourn-arg-icon">🎯</span>
+            <div><div class="fourn-arg-title">Touchez les pros, au bon moment</div><div class="fourn-arg-desc">Vos produits et offres visibles directement dans l'outil de travail des artisans.</div></div>
+          </div>
+          <div class="fourn-arg-item reveal reveal-delay-3">
+            <span class="fourn-arg-icon">📢</span>
+            <div><div class="fourn-arg-title">Diffusez vos nouveautés</div><div class="fourn-arg-desc">Partagez vos catalogues, promotions et actualités auprès de professionnels actifs.</div></div>
+          </div>
+          <div class="fourn-arg-item reveal reveal-delay-4">
+            <span class="fourn-arg-icon">📈</span>
+            <div><div class="fourn-arg-title">Développez vos ventes</div><div class="fourn-arg-desc">Un réseau qui grandit. Des artisans qui achètent. Une plateforme qui travaille pour vous.</div></div>
+          </div>
+        </div>
+        <div class="fourn-card reveal reveal-delay-2">
+          <div class="fourn-badge">Partenaire PlaqPro+</div>
+          <h3 style="font-size:22px;font-weight:800;line-height:1.3;margin-bottom:16px">Devenez partenaire de la plateforme référence du bâtiment.</h3>
+          <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px">Rejoignez les fournisseurs qui font confiance à PlaqPro+ pour toucher les artisans du second œuvre.</p>
+          <div style="border-top:1px solid var(--border);padding-top:20px;margin-bottom:8px">
+            <div class="fourn-avantage">✅ Visibilité immédiate auprès des artisans</div>
+            <div class="fourn-avantage">✅ Intégration de votre catalogue produits</div>
+            <div class="fourn-avantage">✅ Support dédié et suivi personnalisé</div>
+          </div>
+          <a href="mailto:contact@plaqproplus.fr" class="fourn-cta">Devenez partenaire →</a>
+          <p style="font-size:12px;color:var(--dim);margin-top:16px">Réponse sous 48h — Sans engagement</p>
         </div>
       </div>
     </div>
