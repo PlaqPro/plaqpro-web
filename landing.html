@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PlaqPro+ — Le quotidien du bâtiment mérite mieux.</title>
+  <meta name="description" content="PlaqPro+ : l'outil de gestion pour artisans BTP. Devis, factures, chantiers, sous-traitants. Simple, rapide, professionnel.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0D0F14">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0D0F14;
+      --surface:  #13161E;
+      --elevated: #1A1E2A;
+      --accent:   #4F8EF7;
+      --accent-h: #6BA3FF;
+      --accent-d: rgba(79,142,247,0.15);
+      --orange:   #F59E0B;
+      --green:    #10B981;
+      --text:     #F0F2F8;
+      --muted:    #8892AA;
+      --dim:      #4E5770;
+      --border:   rgba(255,255,255,0.08);
+      --font:     'Outfit', sans-serif;
+      --r:        16px;
+      --r-lg:     24px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    /* ── ANIMATIONS ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+    .reveal-delay-1 { transition-delay: .1s; }
+    .reveal-delay-2 { transition-delay: .2s; }
+    .reveal-delay-3 { transition-delay: .3s; }
+    .reveal-delay-4 { transition-delay: .4s; }
+    .reveal-delay-5 { transition-delay: .5s; }
+    .reveal-delay-6 { transition-delay: .6s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-8px); }
+    }
+    @keyframes pulse-ring {
+      0%   { box-shadow: 0 0 0 0 rgba(79,142,247,0.4); }
+      70%  { box-shadow: 0 0 0 16px rgba(79,142,247,0); }
+      100% { box-shadow: 0 0 0 0 rgba(79,142,247,0); }
+    }
+    @keyframes shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position:  200% center; }
+    }
+    @keyframes badge-glow {
+      0%, 100% { box-shadow: 0 0 8px rgba(79,142,247,0.3); }
+      50%       { box-shadow: 0 0 20px rgba(79,142,247,0.6); }
+    }
+
+    /* ── GRID BG ── */
+    .grid-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(79,142,247,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,142,247,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 40px;
+      background: rgba(13,15,20,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-logo img { height: 36px; width: auto; }
+    .nav-logo-text {
+      font-size: 20px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #4F8EF7, #2DD4A0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      transition: all .18s;
+    }
+    .nav-cta:hover { background: var(--accent-h); transform: translateY(-1px); }
+
+    /* ── HERO ── */
+    #hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      overflow: hidden;
+    }
+    .hero-gradient {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(79,142,247,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 80% 80%, rgba(245,158,11,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 20% 60%, rgba(16,185,129,0.04) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      background: rgba(79,142,247,0.1);
+      border: 1px solid rgba(79,142,247,0.3);
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 28px;
+      animation: badge-glow 2.5s ease-in-out infinite;
+    }
+    .hero-badge span { animation: float 3s ease-in-out infinite; display: inline-block; }
+    .hero-h1 {
+      font-size: clamp(36px, 7vw, 80px);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
+      max-width: 820px;
+    }
+    .hero-h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--accent) 0%, #2DD4A0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-sub {
+      font-size: clamp(18px, 2.5vw, 24px);
+      font-weight: 400;
+      color: var(--muted);
+      margin-bottom: 40px;
+      letter-spacing: 0.04em;
+    }
+    .hero-ctas {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn-primary-lg {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 32px;
+      background: linear-gradient(135deg, var(--accent), #3B7DE8);
+      color: #fff;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      transition: all .2s;
+      box-shadow: 0 8px 30px rgba(79,142,247,0.4);
+      animation: pulse-ring 2.5s ease-out infinite;
+    }
+    .btn-primary-lg:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(79,142,247,0.55); }
+    .btn-secondary-lg {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 32px;
+      background: var(--elevated);
+      color: var(--text);
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 16px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-secondary-lg:hover { border-color: rgba(79,142,247,0.4); background: rgba(79,142,247,0.05); transform: translateY(-2px); }
+    .hero-scroll {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: var(--dim);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .hero-scroll-line {
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(var(--border), transparent);
+    }
+
+    /* ── SECTIONS COMMUNES ── */
+    section { padding: 100px 24px; position: relative; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-tag {
+      display: inline-block;
+      padding: 4px 14px;
+      background: var(--accent-d);
+      border: 1px solid rgba(79,142,247,0.2);
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: clamp(26px, 4vw, 44px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      margin-bottom: 14px;
+    }
+    .section-sub {
+      font-size: 17px;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 600px;
+      margin-bottom: 52px;
+    }
+
+    /* ── SECTION 2 — PROBLÈME ── */
+    #probleme { background: var(--bg); }
+    .probleme-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    @media (max-width: 768px) { .probleme-grid { grid-template-columns: 1fr; } }
+    .pb-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .2s, transform .2s;
+    }
+    .pb-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(239,68,68,0.5), transparent);
+    }
+    .pb-card:hover { border-color: rgba(239,68,68,0.3); transform: translateY(-4px); }
+    .pb-icon { font-size: 36px; margin-bottom: 16px; display: block; }
+    .pb-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    /* ── SECTION 3 — SOLUTION ── */
+    #solution { background: var(--surface); }
+    .solution-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    @media (max-width: 900px) { .solution-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .solution-grid { grid-template-columns: 1fr; } }
+    .sol-card {
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px;
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .sol-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(79,142,247,0.6), transparent);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .sol-card:hover { border-color: rgba(79,142,247,0.35); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+    .sol-card:hover::before { opacity: 1; }
+    .sol-icon { font-size: 32px; margin-bottom: 14px; display: block; animation: float 4s ease-in-out infinite; }
+    .sol-card:nth-child(2) .sol-icon { animation-delay: .4s; }
+    .sol-card:nth-child(3) .sol-icon { animation-delay: .8s; }
+    .sol-card:nth-child(4) .sol-icon { animation-delay: 1.2s; }
+    .sol-card:nth-child(5) .sol-icon { animation-delay: 1.6s; }
+    .sol-card:nth-child(6) .sol-icon { animation-delay: 2s; }
+    .sol-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .sol-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ── SECTION 4 — PREMIUM ── */
+    #premium { background: var(--surface); }
+    .premium-inner {
+      background: linear-gradient(135deg, #0f1629, #0d1b40);
+      border: 1px solid rgba(79,142,247,0.2);
+      border-radius: 28px;
+      padding: 56px 48px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    @media (max-width: 768px) { .premium-inner { grid-template-columns: 1fr; padding: 32px 24px; } }
+    .premium-inner::before {
+      content: '';
+      position: absolute;
+      top: -80px; right: -80px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(79,142,247,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .premium-avantages { display: flex; flex-direction: column; gap: 16px; }
+    .prem-av {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px 20px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+    }
+    .prem-av-icon { font-size: 22px; flex-shrink: 0; }
+    .prem-av-text { font-size: 14px; font-weight: 600; color: var(--text); }
+    .prem-av-sub  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .premium-card-mock {
+      background: linear-gradient(135deg, #1a1a2e, #0f3460);
+      border-radius: 20px;
+      padding: 28px;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      animation: float 5s ease-in-out infinite;
+    }
+    .pcm-logo { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
+    .pcm-logo span:nth-child(1) { color: #fff; }
+    .pcm-logo span:nth-child(2) { color: var(--accent); }
+    .pcm-logo span:nth-child(3) { color: #fff; }
+    .pcm-logo span:nth-child(4) { color: #ef4444; }
+    .pcm-pro { font-size: 11px; font-weight: 700; color: var(--orange); letter-spacing: .08em; margin-bottom: 20px; }
+    .pcm-line { height: 1px; background: rgba(255,255,255,0.08); margin: 16px 0; }
+    .pcm-row { display: flex; justify-content: space-between; font-size: 11px; }
+    .pcm-label { color: rgba(255,255,255,0.4); }
+    .pcm-val { font-weight: 700; color: #fff; }
+    .pcm-qr {
+      width: 52px; height: 52px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin-top: 12px;
+    }
+
+    /* ── SECTION 5 — POURQUOI ── */
+    #pourquoi { background: var(--bg); }
+    .pourquoi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    @media (max-width: 768px) { .pourquoi-grid { grid-template-columns: 1fr; } }
+    .pq-card {
+      text-align: center;
+      padding: 40px 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      transition: transform .2s, border-color .2s;
+    }
+    .pq-card:hover { transform: translateY(-6px); border-color: rgba(79,142,247,0.3); }
+    .pq-num {
+      font-size: 48px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent), #2DD4A0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+      letter-spacing: -0.04em;
+    }
+    .pq-title { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+    .pq-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* ── SECTION 6 — BÊTA ── */
+    #beta {
+      background: linear-gradient(135deg, #060c1f 0%, #0d1640 50%, #060c1f 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    #beta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(79,142,247,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,142,247,0.05) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .beta-inner {
+      position: relative;
+      max-width: 720px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .beta-spots {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--orange);
+      margin-bottom: 28px;
+    }
+    .beta-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 32px auto;
+      max-width: 420px;
+      text-align: left;
+    }
+    .beta-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .beta-list li::before {
+      content: '✅';
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .beta-note {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 20px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 48px 24px;
+      text-align: center;
+    }
+    .footer-logo { margin-bottom: 12px; }
+    .footer-logo img { height: 40px; }
+    .footer-tagline { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+    .footer-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--accent);
+      transition: all .2s;
+      margin-bottom: 32px;
+    }
+    .footer-link:hover { background: var(--accent-d); border-color: rgba(79,142,247,0.3); }
+    .footer-credit { font-size: 13px; color: var(--dim); margin-bottom: 8px; }
+    .footer-copy { font-size: 12px; color: var(--dim); }
+
+    /* ── STICKY CTA MOBILE ── */
+    .sticky-cta {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      padding: 12px 16px;
+      background: rgba(13,15,20,0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      z-index: 200;
+    }
+    .sticky-cta a {
+      display: block;
+      text-align: center;
+      padding: 14px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 16px;
+    }
+    @media (max-width: 640px) { .sticky-cta { display: block; } }
+
+    /* ── DIVIDER ── */
+    .divider {
+      width: 60px; height: 3px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      border-radius: 2px;
+      margin: 0 auto 48px;
+    }
+    .divider-left { margin: 0 0 48px; }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">
+      <img src="assets/Logo Plaqpro+.png" alt="PlaqPro+"
+        onerror="this.style.display='none';document.getElementById('nav-logo-txt').style.display='block'">
+      <span id="nav-logo-txt" style="display:none" class="nav-logo-text">PlaQPro+</span>
+    </div>
+    <a href="index.html" class="nav-cta">Tester →</a>
+  </nav>
+
+  <!-- ════════════════════════════════ HERO ════════════════════════════════ -->
+  <section id="hero">
+    <div class="hero-gradient"></div>
+    <div class="grid-bg"></div>
+
+    <div class="hero-badge reveal">
+      <span>🚀</span> Bêta — Accès Premium offert
+    </div>
+
+    <h1 class="hero-h1 reveal reveal-delay-1">
+      Le quotidien du bâtiment<br><em>mérite mieux.</em>
+    </h1>
+
+    <p class="hero-sub reveal reveal-delay-2">Simple. Rapide. Professionnel.</p>
+
+    <div class="hero-ctas reveal reveal-delay-3">
+      <a href="index.html" class="btn-primary-lg">Tester gratuitement →</a>
+      <a href="#beta" class="btn-secondary-lg">Rejoindre la bêta</a>
+    </div>
+
+    <div class="hero-scroll">
+      <div class="hero-scroll-line"></div>
+      Découvrir
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════ PROBLÈME ════════════════════════════ -->
+  <section id="probleme">
+    <div class="container">
+      <div style="text-align:center;margin-bottom:52px">
+        <span class="section-tag reveal">Le problème</span>
+        <h2 class="section-title reveal reveal-delay-1">Trop de temps perdu<br>sur l'administratif.</h2>
+        <div class="divider reveal reveal-delay-2"></div>
+      </div>
+      <div class="probleme-grid">
+        <div class="pb-card reveal reveal-delay-1">
+          <span class="pb-icon">📋</span>
+          <p class="pb-text">Devis faits à la main, calculs approximatifs, erreurs de chiffrage</p>
+        </div>
+        <div class="pb-card reveal reveal-delay-2">
+          <span class="pb-icon">⏱</span>
+          <p class="pb-text">Des heures perdues sur la facturation au lieu d'être sur le chantier</p>
+        </div>
+        <div class="pb-card reveal reveal-delay-3">
+          <span class="pb-icon">😤</span>
+          <p class="pb-text">Outils trop complexes, trop chers, pas adaptés au terrain</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════ SOLUTION ════════════════════════════ -->
+  <section id="solution">
+    <div class="container">
+      <div style="text-align:center;margin-bottom:52px">
+        <span class="section-tag reveal">La solution</span>
+        <h2 class="section-title reveal reveal-delay-1">Tout ce dont vous avez besoin,<br>dans un seul outil.</h2>
+        <p class="section-sub reveal reveal-delay-2" style="margin:0 auto 0">
+          Conçu par et pour les artisans BTP. Zéro superflu, 100% terrain.
+        </p>
+        <div class="divider reveal reveal-delay-3" style="margin-top:32px"></div>
+      </div>
+      <div class="solution-grid">
+        <div class="sol-card reveal reveal-delay-1">
+          <span class="sol-icon">📄</span>
+          <div class="sol-title">Devis &amp; Factures</div>
+          <div class="sol-desc">Générez des documents professionnels en 2 minutes. PDF, email, signature électronique.</div>
+        </div>
+        <div class="sol-card reveal reveal-delay-2">
+          <span class="sol-icon">🏗</span>
+          <div class="sol-title">Gestion chantiers</div>
+          <div class="sol-desc">Suivez l'avancement de tous vos chantiers, métrés, planning et budget en temps réel.</div>
+        </div>
+        <div class="sol-card reveal reveal-delay-3">
+          <span class="sol-icon">📊</span>
+          <div class="sol-title">Export DPGF</div>
+          <div class="sol-desc">Format professionnel AOS prêt à envoyer aux maîtres d'ouvrage. Conforme marchés publics.</div>
+        </div>
+        <div class="sol-card reveal reveal-delay-4">
+          <span class="sol-icon">🤝</span>
+          <div class="sol-title">Sous-traitants</div>
+          <div class="sol-desc">Gérez vos ST, contrats loi 75-1334, conformité assurances et affectations chantier.</div>
+        </div>
+        <div class="sol-card reveal reveal-delay-5">
+          <span class="sol-icon">💰</span>
+          <div class="sol-title">Base de prix</div>
+          <div class="sol-desc">68 postes, 6 corps de métier intégrés. Vos tarifs réels, toujours à jour.</div>
+        </div>
+        <div class="sol-card reveal reveal-delay-6">
+          <span class="sol-icon">📦</span>
+          <div class="sol-title">Catalogue fournisseurs</div>
+          <div class="sol-desc">Importez vos tarifs Saint-Gobain, Knauf, Sonepar en un clic. CSV, Excel ou texte libre.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════ PREMIUM ════════════════════════════ -->
+  <section id="premium">
+    <div class="container">
+      <div class="premium-inner reveal">
+        <div>
+          <span class="section-tag">Carte adhérent</span>
+          <h2 class="section-title" style="margin-top:12px">La carte Premium<br>PlaqPro+</h2>
+          <p style="font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:32px">
+            Un QR code unique. Des avantages exclusifs.<br>
+            Une identité professionnelle reconnue.
+          </p>
+          <div class="premium-avantages">
+            <div class="prem-av">
+              <span class="prem-av-icon">⭐</span>
+              <div>
+                <div class="prem-av-text">Accès prioritaire aux nouvelles features</div>
+                <div class="prem-av-sub">Beta-testeurs en avant-première</div>
+              </div>
+            </div>
+            <div class="prem-av">
+              <span class="prem-av-icon">🎯</span>
+              <div>
+                <div class="prem-av-text">Visible des fournisseurs partenaires</div>
+                <div class="prem-av-sub">Tarifs négociés BTP exclusifs</div>
+              </div>
+            </div>
+            <div class="prem-av">
+              <span class="prem-av-icon">🔒</span>
+              <div>
+                <div class="prem-av-text">Données sécurisées localement</div>
+                <div class="prem-av-sub">Zéro cloud, zéro serveur, 100% chez vous</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center;align-items:center">
+          <div class="premium-card-mock">
+            <div class="pcm-logo">
+              <span>Pla</span><span>Q</span><span>Pro</span><span>+</span>
+            </div>
+            <div class="pcm-pro">PRO MEMBER</div>
+            <div class="pcm-line"></div>
+            <div class="pcm-row" style="margin-bottom:8px">
+              <span class="pcm-label">ADHÉRENT</span>
+              <span class="pcm-label">STATUT</span>
+            </div>
+            <div class="pcm-row">
+              <span class="pcm-val">Votre Nom</span>
+              <span style="color:#10b981;font-weight:700;font-size:12px">Actif 2026</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px">
+              <div>
+                <div class="pcm-label" style="font-size:10px;margin-bottom:4px">ID MEMBRE</div>
+                <div style="font-size:13px;font-weight:700;color:var(--orange)">PP+·XXXX</div>
+              </div>
+              <div class="pcm-qr">🔲</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════ POURQUOI ════════════════════════════ -->
+  <section id="pourquoi">
+    <div class="container">
+      <div style="text-align:center;margin-bottom:52px">
+        <span class="section-tag reveal">Pourquoi PlaqPro+</span>
+        <h2 class="section-title reveal reveal-delay-1">Différent par design.</h2>
+        <div class="divider reveal reveal-delay-2"></div>
+      </div>
+      <div class="pourquoi-grid">
+        <div class="pq-card reveal reveal-delay-1">
+          <div class="pq-num">0€</div>
+          <div class="pq-title">Zéro abonnement</div>
+          <div class="pq-desc">Payez une fois, utilisez à vie. Pas de surprise en fin de mois.</div>
+        </div>
+        <div class="pq-card reveal reveal-delay-2">
+          <div class="pq-num">0s</div>
+          <div class="pq-title">Zéro installation</div>
+          <div class="pq-desc">Fonctionne directement dans votre navigateur. Mobile, tablette, PC.</div>
+        </div>
+        <div class="pq-card reveal reveal-delay-3">
+          <div class="pq-num">0</div>
+          <div class="pq-title">Zéro serveur</div>
+          <div class="pq-desc">Vos données restent sur votre appareil. Personne n'y a accès sauf vous.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════ BÊTA ════════════════════════════════ -->
+  <section id="beta">
+    <div class="grid-bg"></div>
+    <div class="beta-inner">
+      <div class="beta-spots reveal">🎯 5 places disponibles</div>
+      <h2 class="section-title reveal reveal-delay-1">Devenez bêta testeur</h2>
+      <p style="font-size:18px;color:var(--muted);line-height:1.7;margin-top:12px" class="reveal reveal-delay-2">
+        Je cherche <strong style="color:var(--text)">5 artisans BTP</strong> pour tester PlaqPro+
+        en conditions réelles.<br>En échange : accès Premium <strong style="color:var(--accent)">gratuit à vie.</strong>
+      </p>
+      <ul class="beta-list reveal reveal-delay-3">
+        <li>Accès immédiat à toutes les fonctionnalités</li>
+        <li>Statut Premium offert à vie</li>
+        <li>Votre avis façonne directement le produit</li>
+      </ul>
+      <a href="index.html" class="btn-primary-lg reveal reveal-delay-4" style="margin:0 auto;display:inline-flex">
+        Tester maintenant →
+      </a>
+      <p class="beta-note reveal reveal-delay-5">Déjà accessible sur mobile et desktop · Aucune installation requise</p>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════ FOOTER ════════════════════════════ -->
+  <footer>
+    <div class="footer-logo">
+      <img src="assets/Logo Plaqpro+.png" alt="PlaqPro+"
+        onerror="this.style.display='none';document.getElementById('footer-logo-txt').style.display='block'">
+      <div id="footer-logo-txt" style="display:none;font-size:24px;font-weight:900;background:linear-gradient(135deg,#4F8EF7,#2DD4A0);-webkit-background-clip:text;-webkit-text-fill-color:transparent">
+        PlaQPro+
+      </div>
+    </div>
+    <div class="footer-tagline">Gestion BTP — Tous corps de métier</div>
+    <a href="index.html" class="footer-link">Accéder à l'application →</a>
+    <div class="footer-credit">Créé par un artisan plaquiste, pour les pros du bâtiment.</div>
+    <div class="footer-copy">© 2026 PlaqPro+ · By AATB · Saint-Priest (69)</div>
+  </footer>
+
+  <!-- STICKY CTA MOBILE -->
+  <div class="sticky-cta">
+    <a href="index.html">🚀 Tester PlaqPro+ gratuitement</a>
+  </div>
+
+  <script>
+    // Scroll reveal
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Masquer sticky CTA quand #beta est visible
+    const betaSection = document.getElementById('beta');
+    const stickyCta   = document.querySelector('.sticky-cta');
+    if (betaSection && stickyCta) {
+      const betaObs = new IntersectionObserver(entries => {
+        stickyCta.style.display = entries[0].isIntersecting ? 'none' : '';
+      });
+      betaObs.observe(betaSection);
+    }
+  </script>
+
+</body>
+</html>
