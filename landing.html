@@ -676,6 +676,114 @@
       gap: 32px; flex-wrap: wrap;
     }
     .comm-sec-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); font-weight: 500; }
+
+    /* ── CORPS DE MÉTIER ── */
+    #metiers { background: var(--surface); }
+    .metiers-grid {
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      gap: 16px;
+    }
+    @media (max-width: 900px) { .metiers-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 480px) { .metiers-grid { grid-template-columns: 1fr 1fr; } }
+    .metier-card {
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 20px 16px;
+      text-align: center;
+      transition: border-color .2s, transform .2s;
+      cursor: default;
+    }
+    .metier-card:hover { border-color: rgba(79,142,247,0.35); transform: translateY(-4px); }
+    .metier-emoji { font-size: 32px; display: block; margin-bottom: 10px; }
+    .metier-name { font-size: 13px; font-weight: 800; margin-bottom: 4px; }
+    .metier-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+    .metiers-soon {
+      margin-top: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 24px;
+      background: rgba(79,142,247,0.06);
+      border: 1px solid rgba(79,142,247,0.15);
+      border-radius: 99px;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      flex-wrap: wrap;
+    }
+
+    /* ── PROCESSUS ── */
+    .process-steps {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      flex-wrap: wrap;
+      margin-top: 40px;
+    }
+    .process-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 20px 16px;
+      flex: 1;
+      min-width: 140px;
+    }
+    .process-num {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--accent-d);
+      border: 2px solid rgba(79,142,247,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 800; color: var(--accent);
+      margin-bottom: 12px; flex-shrink: 0;
+    }
+    .process-label { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .process-arrow {
+      font-size: 20px; color: var(--dim);
+      padding: 0 4px; flex-shrink: 0; margin-top: -20px;
+    }
+    @media (max-width: 640px) { .process-arrow { display: none; } }
+
+    /* ── BARRE BAS DE PAGE ── */
+    .stats-bar {
+      background: var(--surface);
+      border-top: 1px solid rgba(79,142,247,0.2);
+      border-bottom: 1px solid var(--border);
+      padding: 36px 24px;
+    }
+    .stats-bar-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 24px;
+      text-align: center;
+    }
+    @media (max-width: 640px) { .stats-bar-inner { grid-template-columns: 1fr; } }
+    .stat-item-icon { font-size: 28px; margin-bottom: 8px; }
+    .stat-item-label {
+      font-size: 11px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--accent); margin-bottom: 4px;
+    }
+    .stat-item-desc { font-size: 13px; color: var(--muted); }
+
+    /* ── SOCIAL ICONS ── */
+    .social-links { display: flex; gap: 12px; justify-content: center; margin-top: 20px; }
+    .social-link {
+      width: 36px; height: 36px;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: var(--muted);
+      transition: all .2s; text-decoration: none;
+    }
+    .social-link:hover { border-color: rgba(79,142,247,0.4); color: var(--accent); }
   </style>
 </head>
 <body>
@@ -696,14 +804,14 @@
     <div class="grid-bg"></div>
 
     <div class="hero-badge reveal">
-      <span>🏗</span> Conçu par un plaquiste, pour les pros du bâtiment
+      <span>🏗</span> Un outil. Tous les métiers du second œuvre.
     </div>
 
     <h1 class="hero-h1 reveal reveal-delay-1">
-      La plateforme <em>100% dédiée</em><br>aux professionnels du bâtiment.
+      L'application <em>multi-corps</em><br>des artisans.
     </h1>
 
-    <p class="hero-sub reveal reveal-delay-2">Gagnez du temps &bull; Trouvez les bons produits &bull; Comparez &bull; Gérez &bull; Progressez</p>
+    <p class="hero-sub reveal reveal-delay-2">Gagnez du temps &bull; Trouvez les bons produits &bull; Collaborez avec les fournisseurs &bull; Développez votre activité.</p>
 
     <div class="hero-ctas reveal reveal-delay-3">
       <a href="index.html" class="btn-primary-lg">Essayez gratuitement →</a>
@@ -737,6 +845,65 @@
           <span class="pb-icon">😤</span>
           <p class="pb-text">Pas d'outil adapté au terrain, pensé pour les vrais pros du bâtiment</p>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════ CORPS DE MÉTIER ════════════════════ -->
+  <section id="metiers">
+    <div class="container">
+      <div style="text-align:center;margin-bottom:48px">
+        <span class="section-tag reveal">Corps de métier</span>
+        <h2 class="section-title reveal reveal-delay-1">Une application pensée pour vous.</h2>
+        <p class="section-sub reveal reveal-delay-2" style="margin:0 auto">
+          PlaqPro+ regroupe tous les corps de métier du second œuvre pour vous offrir une expérience simple, rapide et complète.
+        </p>
+        <div class="divider reveal reveal-delay-3" style="margin-top:28px"></div>
+      </div>
+      <div class="metiers-grid">
+        <div class="metier-card reveal reveal-delay-1">
+          <span class="metier-emoji">🔵</span>
+          <div class="metier-name">Plaquiste</div>
+          <div class="metier-desc">Cloisons, plafonds, doublages</div>
+        </div>
+        <div class="metier-card reveal reveal-delay-1">
+          <span class="metier-emoji">🟠</span>
+          <div class="metier-name">Peintre</div>
+          <div class="metier-desc">Peintures, enduits, préparations</div>
+        </div>
+        <div class="metier-card reveal reveal-delay-2">
+          <span class="metier-emoji">⚡</span>
+          <div class="metier-name">Électricien</div>
+          <div class="metier-desc">Courants forts et faibles</div>
+        </div>
+        <div class="metier-card reveal reveal-delay-2">
+          <span class="metier-emoji">🔧</span>
+          <div class="metier-name">Plombier</div>
+          <div class="metier-desc">Réseaux, sanitaires, chauffage</div>
+        </div>
+        <div class="metier-card reveal reveal-delay-3">
+          <span class="metier-emoji">🟤</span>
+          <div class="metier-name">Carreleur</div>
+          <div class="metier-desc">Carrelage, faïence, sols</div>
+        </div>
+        <div class="metier-card reveal reveal-delay-3">
+          <span class="metier-emoji">🪵</span>
+          <div class="metier-name">Menuisier</div>
+          <div class="metier-desc">Menuiseries int., agencement</div>
+        </div>
+        <div class="metier-card reveal reveal-delay-4">
+          <span class="metier-emoji">🟡</span>
+          <div class="metier-name">Solier</div>
+          <div class="metier-desc">Revêtements souples, parquets, PVC</div>
+        </div>
+        <div class="metier-card reveal reveal-delay-4">
+          <span class="metier-emoji">🏚</span>
+          <div class="metier-name">Façadier</div>
+          <div class="metier-desc">ITE, enduits, bardage</div>
+        </div>
+      </div>
+      <div class="metiers-soon reveal reveal-delay-5">
+        ⏳ D'autres corps de métier intégrés prochainement — PlaqPro+ évolue en continu avec et pour les artisans.
       </div>
     </div>
   </section>
@@ -927,6 +1094,34 @@
         <div class="comm-sec-item">Partenaires vérifiés</div>
         <div class="comm-sec-item">Plateforme fiable et évolutive</div>
       </div>
+      <div style="margin-top:48px;text-align:center">
+        <span class="section-tag reveal" style="margin-bottom:16px">Comment ça marche</span>
+        <div class="process-steps reveal reveal-delay-1">
+          <div class="process-step">
+            <div class="process-num">1</div>
+            <div class="process-label">Recherchez</div>
+            <div style="font-size:12px;color:var(--muted)">un produit ou fournisseur</div>
+          </div>
+          <div class="process-arrow">→</div>
+          <div class="process-step">
+            <div class="process-num">2</div>
+            <div class="process-label">Comparez</div>
+            <div style="font-size:12px;color:var(--muted)">les options disponibles</div>
+          </div>
+          <div class="process-arrow">→</div>
+          <div class="process-step">
+            <div class="process-num">3</div>
+            <div class="process-label">Contactez</div>
+            <div style="font-size:12px;color:var(--muted)">vos fournisseurs</div>
+          </div>
+          <div class="process-arrow">→</div>
+          <div class="process-step">
+            <div class="process-num">4</div>
+            <div class="process-label">Recevez</div>
+            <div style="font-size:12px;color:var(--muted)">vos réponses rapidement</div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -952,6 +1147,27 @@
     </div>
   </section>
 
+  <!-- ════════════════════════════════ BARRE STATS ════════════════════════ -->
+  <div class="stats-bar">
+    <div class="stats-bar-inner">
+      <div class="reveal">
+        <div class="stat-item-icon">⏱</div>
+        <div class="stat-item-label">Gain de temps</div>
+        <div class="stat-item-desc">Moins de recherches, plus d'action</div>
+      </div>
+      <div class="reveal reveal-delay-1">
+        <div class="stat-item-icon">🎯</div>
+        <div class="stat-item-label">Meilleurs choix</div>
+        <div class="stat-item-desc">Trouvez et comparez facilement</div>
+      </div>
+      <div class="reveal reveal-delay-2">
+        <div class="stat-item-icon">📈</div>
+        <div class="stat-item-label">Plus de rentabilité</div>
+        <div class="stat-item-desc">Développez votre activité</div>
+      </div>
+    </div>
+  </div>
+
   <!-- ════════════════════════════════ FOOTER ════════════════════════════ -->
   <footer>
     <div class="footer-logo">
@@ -961,11 +1177,17 @@
         PlaQPro+
       </div>
     </div>
-    <div class="footer-tagline">Votre métier. Notre plateforme. Votre succès.</div>
+    <div class="footer-tagline">Un outil. Tous les métiers du second œuvre.</div>
     <div style="font-size:13px;color:var(--dim);margin-bottom:20px">Plus de temps sur le chantier, moins devant l'écran.</div>
     <a href="index.html" class="footer-link">Accéder à l'application →</a>
     <div class="footer-credit">Créé par un artisan plaquiste, pour les pros du bâtiment.</div>
     <div class="footer-copy">© 2026 PlaqPro+ · By AATB · Saint-Priest (69)</div>
+    <div class="social-links">
+      <a href="#" class="social-link" title="Facebook">f</a>
+      <a href="#" class="social-link" title="Instagram">i</a>
+      <a href="#" class="social-link" title="YouTube">▶</a>
+      <a href="#" class="social-link" title="LinkedIn">in</a>
+    </div>
   </footer>
 
   <!-- STICKY CTA MOBILE -->
