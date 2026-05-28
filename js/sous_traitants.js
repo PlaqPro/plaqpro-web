@@ -523,7 +523,7 @@ const ST = {
     if (!chantier || !st) return;
     const affectations = chantier.sousTraitants || [];
     affectations.push({ stId, travaux, montant: parseFloat(montant)||0, date, statut:'En cours' });
-    DB.updateChantier(chantierId, { sousTraitants: affectations });
+    DB.updateChantier(parseInt(chantierId), { sousTraitants: affectations });
     App.closeModal();
     App.toast(`${st.nom} affecté au chantier ${chantier.nom} ✅`, 'success');
   },
@@ -533,7 +533,7 @@ const ST = {
     if (!st) return;
     const config  = DB.getConfig();
     const date    = new Date().toLocaleDateString('fr-FR');
-    const donneur = config.nom || 'AATB';
+    const donneur = config.nomEntreprise || 'AATB';
     const adresseDonneur = config.adresse || '';
     const siretDonneur   = config.siret   || '';
 

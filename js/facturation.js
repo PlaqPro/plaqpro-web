@@ -440,7 +440,7 @@ Object.assign(Pages, {
           <div style="font-size:12px;color:#666">Facture référence : ${facture.numero}</div>
         </div>
         <div style="text-align:right;font-size:12px;color:#666">
-          <b>${config.nom || ''}</b><br>${config.adresse || ''}<br>
+          <b>${config.nomEntreprise || ''}</b><br>${config.adresse || ''}<br>
           SIRET : ${config.siret || ''}<br>Date : ${date}
         </div>
       </div>
@@ -462,10 +462,10 @@ Object.assign(Pages, {
         <tr style="background:#f0f9ff"><td><b>Acompte TTC à régler</b></td><td style="text-align:right"><b>${montantTTC.toFixed(2)} €</b></td></tr>
       </tbody></table>
       <div style="margin-top:16px;font-size:12px;color:#666">
-        <b>Règlement :</b> ${config.iban ? 'Virement IBAN : ' + config.iban : 'Chèque à l\'ordre de ' + (config.nom||'')}
+        <b>Règlement :</b> ${config.iban ? 'Virement IBAN : ' + config.iban : 'Chèque à l\'ordre de ' + (config.nomEntreprise||'')}
       </div>
       <div class="footer">
-        ${config.nom||''} — SIRET ${config.siret||''} — ${config.rcs||''}<br>
+        ${config.nomEntreprise||''} — SIRET ${config.siret||''} — ${config.rcs||''}<br>
         ${config.piedPageFacture||''}
       </div>
       </body></html>`;
@@ -521,8 +521,9 @@ Object.assign(Pages, {
     });
 
     const lignesFactures = factureMois.map(f => {
-      const client = (DB.clients || []).find(c => c.id === f.clientId);
-      const nomClient = client ? client.nom : f.clientId || '—';
+      const chantierF = DB.getChantier(f.chantierId);
+      const client = chantierF ? DB.getClient(chantierF.clientId) : null;
+      const nomClient = client ? client.nom : '—';
       return `<tr>
         <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb">${f.numero || f.id}</td>
         <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb">${nomClient}</td>
@@ -534,8 +535,9 @@ Object.assign(Pages, {
     }).join('');
 
     const lignesDevis = devisMois.map(d => {
-      const client = (DB.clients || []).find(c => c.id === d.clientId);
-      const nomClient = client ? client.nom : d.clientId || '—';
+      const chantierD = DB.getChantier(d.chantierId);
+      const client = chantierD ? DB.getClient(chantierD.clientId) : null;
+      const nomClient = client ? client.nom : '—';
       return `<tr>
         <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb">${d.numero || d.id}</td>
         <td style="padding:6px 10px;border-bottom:1px solid #e5e7eb">${nomClient}</td>
