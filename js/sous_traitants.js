@@ -146,7 +146,18 @@ Pages.sousTraitants = function() {
         </div>
         <div class="st-form-full">
           <div class="st-label">Adresse</div>
-          <input class="st-input" id="st-f-adresse" placeholder="12 rue des Artisans, 69000 Lyon">
+          <input class="st-input" id="st-f-adresse" placeholder="12 rue des Artisans">
+        </div>
+        <div class="st-form-row">
+          <div>
+            <div class="st-label">Code postal</div>
+            <input class="st-input" id="st-f-cp" placeholder="69000" maxlength="5" inputmode="numeric">
+          </div>
+          <div>
+            <div class="st-label">Ville</div>
+            <div id="st-f-cp-select"></div>
+            <input class="st-input" id="st-f-ville" placeholder="Lyon" readonly>
+          </div>
         </div>
 
         <div class="st-section">🔨 Corps de métier</div>
@@ -381,6 +392,39 @@ const ST = {
     return alertes;
   },
 
+  _attachCpAutocomplete() {
+    const cpInput = document.getElementById('st-f-cp');
+    const villeInput = document.getElementById('st-f-ville');
+    const selectContainer = document.getElementById('st-f-cp-select');
+    if (!cpInput || !villeInput || !selectContainer) return;
+
+    cpInput.addEventListener('keyup', function() {
+      const cp = this.value.replace(/\D/g, '');
+      if (cp.length !== 5) { selectContainer.innerHTML = ''; return; }
+      fetch(`https://geo.api.gouv.fr/communes?codePostal=${cp}&fields=nom&format=json`)
+        .then(r => r.json())
+        .then(communes => {
+          selectContainer.innerHTML = '';
+          if (!communes || communes.length === 0) return;
+          if (communes.length === 1) {
+            villeInput.value = communes[0].nom;
+            villeInput.readOnly = true;
+          } else {
+            const sel = document.createElement('select');
+            sel.className = 'st-input';
+            sel.style.marginBottom = '6px';
+            sel.innerHTML = '<option value="">— Choisir la commune —</option>' +
+              communes.map(c => `<option value="${c.nom}">${c.nom}</option>`).join('');
+            sel.addEventListener('change', function() {
+              if (this.value) { villeInput.value = this.value; villeInput.readOnly = true; }
+            });
+            selectContainer.appendChild(sel);
+          }
+        })
+        .catch(() => { villeInput.readOnly = false; });
+    });
+  },
+
   toggleCorps(btn) {
     btn.classList.toggle('active');
     this._corps = [...document.querySelectorAll('.st-corps-btn.active')].map(b => b.dataset.key);
@@ -390,7 +434,7 @@ const ST = {
     this._editId = id;
     this._corps = [];
     document.querySelectorAll('.st-corps-btn').forEach(b => b.classList.remove('active'));
-    const fields = ['nom','prenom','siret','statut','tel','email','adresse','qualifs',
+    const fields = ['nom','prenom','siret','statut','tel','email','adresse','cp','ville','qualifs',
       'assureur-rc','police-rc','exp-rc','exp-dec','assureur-dec','police-dec',
       'taux','delai','iban','retenue','notes'];
     fields.forEach(f => { const el = document.getElementById('st-f-'+f); if (el) el.value = ''; });
@@ -417,6 +461,9 @@ const ST = {
         document.getElementById('st-f-iban').value      = st.iban || '';
         document.getElementById('st-f-retenue').value   = st.retenue || '5';
         document.getElementById('st-f-notes').value     = st.notes || '';
+        document.getElementById('st-f-cp').value        = st.cp || '';
+        document.getElementById('st-f-ville').value     = st.ville || '';
+        if (st.ville) document.getElementById('st-f-ville').readOnly = true;
         this._corps = st.corps || [];
         this._corps.forEach(key => {
           const btn = document.querySelector(`.st-corps-btn[data-key="${key}"]`);
@@ -430,6 +477,10 @@ const ST = {
       document.getElementById('st-f-retenue').value = '5';
     }
     document.getElementById('st-modal').style.display = 'flex';
+    if (!this._cpAutocompleteAttached) {
+      this._attachCpAutocomplete();
+      this._cpAutocompleteAttached = true;
+    }
   },
 
   fermerFormulaire() {
@@ -462,6 +513,8 @@ const ST = {
       iban:        document.getElementById('st-f-iban').value.trim(),
       retenue:     parseInt(document.getElementById('st-f-retenue').value) || 5,
       notes:       document.getElementById('st-f-notes').value.trim(),
+      cp:          document.getElementById('st-f-cp').value.trim(),
+      ville:       document.getElementById('st-f-ville').value.trim(),
       corps:       [...document.querySelectorAll('.st-corps-btn.active')].map(b => b.dataset.key),
     };
 
