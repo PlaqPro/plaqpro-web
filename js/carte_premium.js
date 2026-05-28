@@ -73,6 +73,8 @@ window.CartePremium = {
       + '<button class="btn btn-primary" onclick="CartePremium.telechargerPDF()">📥 Telecharger PDF</button>'
       + '<button class="btn btn-secondary" onclick="CartePremium.partagerCarte()">📤 Partager</button>'
       + '<button class="btn btn-secondary" onclick="CartePremium.voirVerification()">🔍 Verification</button>'
+      + '<button onclick="CartePremium.ajouterWallet(\'apple\')" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:#000;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🍎 Apple Wallet</button>'
+      + '<button onclick="CartePremium.ajouterWallet(\'google\')" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:#fff;color:#1a73e8;border:1px solid #dadce0;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🤖 Google Wallet</button>'
       + '</div>'
       + '<div style="margin-top:10px;padding:10px 14px;background:rgba(79,142,247,0.06);border-radius:var(--radius-sm);font-size:11px;color:var(--text-tertiary);line-height:1.6">'
       + '💡 Presentez cette carte chez nos partenaires fournisseurs pour beneficier de tarifs negocies.<br>'
@@ -185,6 +187,46 @@ window.CartePremium = {
       '<button class="btn btn-primary" onclick="navigator.clipboard.writeText(\'' + data.verifyUrl.replace(/'/g,"\\'") + '\').then(()=>App.toast(\'Copie!\',\'success\'))">📋 Copier</button>'
       + '<button class="btn btn-secondary" onclick="App.closeModal()">Fermer</button>'
     );
+  },
+
+  ajouterWallet(type) {
+    const data = this._carteData;
+    if (!data) { App.toast('Chargez la carte d\'abord', 'error'); return; }
+
+    if (type === 'apple') {
+      const pkpass = {
+        formatVersion: 1,
+        passTypeIdentifier: 'pass.fr.plaqproplus.membre',
+        serialNumber: data.id,
+        teamIdentifier: 'PLAQPRO',
+        organizationName: 'PlaqPro+',
+        description: 'Carte Adherent PlaqPro+',
+        logoText: 'PlaqPro+',
+        foregroundColor: 'rgb(240,242,248)',
+        backgroundColor: 'rgb(13,15,20)',
+        labelColor: 'rgb(136,146,170)',
+        storeCard: {
+          primaryFields:   [{ key: 'membre',  label: 'ADHERENT', value: data.nom }],
+          secondaryFields: [
+            { key: 'statut', label: 'STATUT',    value: 'Actif ' + data.annee },
+            { key: 'id',     label: 'ID MEMBRE', value: data.id },
+          ],
+          auxiliaryFields: [{ key: 'plan', label: 'PLAN', value: data.plan }],
+          backFields:      [{ key: 'verif', label: 'Verification', value: data.verifyUrl }],
+        },
+      };
+      const blob = new Blob([JSON.stringify(pkpass, null, 2)], { type: 'application/vnd.apple.pkpass' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'carte_premium_plaqpro.pkpass';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      App.toast('Fichier .pkpass telecharge — ouvrez-le sur votre iPhone ✅', 'success');
+    } else if (type === 'google') {
+      App.toast('Google Wallet — integration complete disponible prochainement 🤖', 'info');
+    } else {
+      App.toast('Fonctionnalite disponible sur iOS et Android', 'info');
+    }
   },
 
   _carteData: null

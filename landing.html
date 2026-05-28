@@ -612,6 +612,16 @@
       gap: 20px;
     }
     @media (max-width: 640px) { .solution-grid-4 { grid-template-columns: 1fr; } }
+    .solution-grid-5 {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 20px;
+    }
+    .solution-grid-5 .sol4-card:nth-child(-n+3) { grid-column: span 2; }
+    .solution-grid-5 .sol4-card:nth-child(4)    { grid-column: 2 / span 2; }
+    .solution-grid-5 .sol4-card:nth-child(5)    { grid-column: 4 / span 2; }
+    @media (max-width: 768px) { .solution-grid-5 { grid-template-columns: repeat(2,1fr); } .solution-grid-5 .sol4-card { grid-column: span 1 !important; } }
+    @media (max-width: 480px) { .solution-grid-5 { grid-template-columns: 1fr; } }
     .sol4-card {
       background: var(--elevated);
       border: 1px solid var(--border);
@@ -760,11 +770,12 @@
       max-width: 1100px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: repeat(3,1fr);
+      grid-template-columns: repeat(4,1fr);
       gap: 24px;
       text-align: center;
     }
-    @media (max-width: 640px) { .stats-bar-inner { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) { .stats-bar-inner { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 480px) { .stats-bar-inner { grid-template-columns: 1fr; } }
     .stat-item-icon { font-size: 28px; margin-bottom: 8px; }
     .stat-item-label {
       font-size: 11px; font-weight: 800; text-transform: uppercase;
@@ -849,10 +860,11 @@
     </div>
 
     <h1 class="hero-h1 reveal reveal-delay-1">
-      L'application <em>multi-corps</em><br>des artisans.
+      La plateforme <em>multi-corps</em><br>des artisans du second œuvre.
     </h1>
 
-    <p class="hero-sub reveal reveal-delay-2">Gagnez du temps &bull; Trouvez les bons produits &bull; Collaborez avec les fournisseurs &bull; Développez votre activité.</p>
+    <p class="hero-sub reveal reveal-delay-2" style="margin-bottom:16px">Tout ce dont vous avez besoin, au même endroit.</p>
+    <p class="hero-sub reveal reveal-delay-2" style="font-size:clamp(14px,1.8vw,18px);margin-bottom:0">Gagnez du temps &bull; Trouvez les bons produits &bull; Collaborez avec les pros &bull; Développez votre activité</p>
 
     <div class="hero-ctas reveal reveal-delay-3">
       <a href="index.html" class="btn-primary-lg">Essayez gratuitement →</a>
@@ -968,7 +980,7 @@
         <h2 class="section-title reveal reveal-delay-1">La solution tout-en-un<br>pour les pros du bâtiment.</h2>
         <div class="divider reveal reveal-delay-2" style="margin-top:28px"></div>
       </div>
-      <div class="solution-grid-4">
+      <div class="solution-grid-5">
         <div class="sol4-card reveal reveal-delay-1">
           <span class="sol4-icon">✅</span>
           <div><div class="sol4-title">Tous vos produits</div><div class="sol4-desc">Plaques, isolants, ossatures, enduits et accessoires en un clic. Catalogue complet et filtrable.</div></div>
@@ -984,6 +996,10 @@
         <div class="sol4-card reveal reveal-delay-4">
           <span class="sol4-icon">✅</span>
           <div><div class="sol4-title">100% Pro. 100% Terrain.</div><div class="sol4-desc">Conçu par un plaquiste, pour les plaquistes. Zéro superflu, 100% adapté au métier.</div></div>
+        </div>
+        <div class="sol4-card reveal reveal-delay-5">
+          <span class="sol4-icon">✅</span>
+          <div><div class="sol4-title">Suivi chantiers</div><div class="sol4-desc">Organisez, planifiez, suivez facilement. Tous vos chantiers au même endroit.</div></div>
         </div>
       </div>
     </div>
@@ -1069,7 +1085,7 @@
             </div>
           </div>
         </div>
-        <div style="display:flex;justify-content:center;align-items:center">
+        <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px">
           <div class="premium-card-mock">
             <div class="pcm-deco1"></div>
             <div class="pcm-deco2"></div>
@@ -1111,6 +1127,11 @@
               <div class="pcm-valid">Valide 31/12/2026</div>
             </div>
           </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+            <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;padding:11px 20px;background:#000;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;transition:opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">🍎 Ajouter à Apple Wallet</a>
+            <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;padding:11px 20px;background:#fff;color:#1a73e8;border:1px solid #dadce0;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;transition:opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">🤖 Ajouter à Google Wallet</a>
+          </div>
+          <div style="font-size:12px;color:var(--dim)">Disponible sur iOS et Android</div>
         </div>
       </div>
     </div>
@@ -1289,8 +1310,13 @@
         <div class="stat-item-desc">Trouvez et comparez facilement</div>
       </div>
       <div class="reveal reveal-delay-2">
+        <div class="stat-item-icon">🏗</div>
+        <div class="stat-item-label">Plus de chantiers</div>
+        <div class="stat-item-desc">Organisez et suivez facilement</div>
+      </div>
+      <div class="reveal reveal-delay-3">
         <div class="stat-item-icon">📈</div>
-        <div class="stat-item-label">Plus de rentabilité</div>
+        <div class="stat-item-label">Plus de résultats</div>
         <div class="stat-item-desc">Développez votre activité</div>
       </div>
     </div>
