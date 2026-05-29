@@ -398,44 +398,46 @@ if (typeof PagePeinture !== 'undefined') {
 }
 
 // Patch Calcul Express
-const _origCalcCompute = typeof Calc !== 'undefined' ? Calc.compute : undefined;
-if (typeof Calc !== 'undefined' && _origCalcCompute) {
-  Calc.computeAvecAlertes = function() {
-    _origCalcCompute.call(this);
+window.addEventListener('DOMContentLoaded', function() {
+  if (typeof Calc !== 'undefined' && typeof Calc.compute === 'function') {
+    const _origCalcCompute = Calc.compute;
+    Calc.computeAvecAlertes = function() {
+      _origCalcCompute.call(this);
 
-    const tab = this.currentTab;
-    let ctx = { type: tab };
+      const tab = this.currentTab;
+      let ctx = { type: tab };
 
-    if (tab === 'cloison') {
-      ctx.hauteur    = this.v('cl-hauteur', 2.60);
-      ctx.avecIso    = this.checked('cl-iso');
-      ctx.doublePlaquage = this.checked('cl-double');
-      ctx.avecJoint  = this.checked('cl-joint');
-      ctx.nbPortes   = 0;
-      ctx.plaque     = 'S';
-    } else if (tab === 'peinture') {
-      ctx.nbCouches  = this.v('pe-couches', 2);
-      ctx.surfMurs   = this.v('pe-murs', 0);
-      ctx.avecBoiseries = this.checked('pe-boiseries');
-      ctx.surPlaconeuf = true;
-    }
-
-    // Conteneur alertes dans le panneau résultats
-    let alertContainer = document.getElementById('calc-alertes');
-    if (!alertContainer) {
-      const resBody = document.getElementById('calc-results-body');
-      if (resBody) {
-        alertContainer = document.createElement('div');
-        alertContainer.id = 'calc-alertes';
-        resBody.appendChild(alertContainer);
+      if (tab === 'cloison') {
+        ctx.hauteur    = this.v('cl-hauteur', 2.60);
+        ctx.avecIso    = this.checked('cl-iso');
+        ctx.doublePlaquage = this.checked('cl-double');
+        ctx.avecJoint  = this.checked('cl-joint');
+        ctx.nbPortes   = 0;
+        ctx.plaque     = 'S';
+      } else if (tab === 'peinture') {
+        ctx.nbCouches  = this.v('pe-couches', 2);
+        ctx.surfMurs   = this.v('pe-murs', 0);
+        ctx.avecBoiseries = this.checked('pe-boiseries');
+        ctx.surPlaconeuf = true;
       }
-    }
 
-    if (alertContainer) {
-      Alertes.afficher('calc-alertes', ctx, { priorites: ['danger', 'warning'] });
-    }
-  };
+      // Conteneur alertes dans le panneau résultats
+      let alertContainer = document.getElementById('calc-alertes');
+      if (!alertContainer) {
+        const resBody = document.getElementById('calc-results-body');
+        if (resBody) {
+          alertContainer = document.createElement('div');
+          alertContainer.id = 'calc-alertes';
+          resBody.appendChild(alertContainer);
+        }
+      }
 
-  // Remplacer compute
-  Calc.compute = Calc.computeAvecAlertes;
-}
+      if (alertContainer) {
+        Alertes.afficher('calc-alertes', ctx, { priorites: ['danger', 'warning'] });
+      }
+    };
+
+    // Remplacer compute
+    Calc.compute = Calc.computeAvecAlertes;
+  }
+});

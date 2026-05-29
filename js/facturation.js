@@ -503,8 +503,10 @@ Object.assign(Pages, {
 
     const lignesAvoir = (facture.lignes || []).map(l => ({
       ...l,
-      baseHT:      -(Math.abs(parseFloat(l.baseHT      || 0))),
-      totalClient: -(Math.abs(parseFloat(l.totalClient  || 0))),
+      baseHT:      -(Math.abs(parseFloat(l.baseHT      || l.prixHT     || 0))),
+      totalClient: -(Math.abs(parseFloat(l.totalClient  || l.totalHT   || 0))),
+      prixHT:      -(Math.abs(parseFloat(l.prixHT      || l.baseHT     || 0))),
+      totalHT:     -(Math.abs(parseFloat(l.totalHT     || l.totalClient || 0))),
     }));
 
     const existing = DB.factures.find(f => f.type === 'avoir' && f.factureOriginId === factureId);
