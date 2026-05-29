@@ -223,7 +223,7 @@ Object.assign(Pages, {
         </ram:SpecifiedTradeProduct>
         <ram:SpecifiedLineTradeAgreement>
           <ram:NetPriceProductTradePrice>
-            <ram:ChargeAmount>${fmtAmt(l.baseHT || l.prixUnitaire || 0)}</ram:ChargeAmount>
+            <ram:ChargeAmount>${fmtAmt(l.baseHT || l.prixHT || l.prixUnitaire || 0)}</ram:ChargeAmount>
           </ram:NetPriceProductTradePrice>
         </ram:SpecifiedLineTradeAgreement>
         <ram:SpecifiedLineTradeDelivery>
@@ -236,7 +236,7 @@ Object.assign(Pages, {
             <ram:RateApplicablePercent>${tvaRate}</ram:RateApplicablePercent>
           </ram:ApplicableTradeTax>
           <ram:SpecifiedTradeSettlementLineMonetarySummation>
-            <ram:LineTotalAmount>${fmtAmt(l.totalClient || l.prixUnitaire || 0)}</ram:LineTotalAmount>
+            <ram:LineTotalAmount>${fmtAmt(l.totalClient || l.totalHT || l.prixUnitaire || 0)}</ram:LineTotalAmount>
           </ram:SpecifiedTradeSettlementLineMonetarySummation>
         </ram:SpecifiedLineTradeSettlement>
       </ram:IncludedSupplyChainTradeLineItem>`).join('');

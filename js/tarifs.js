@@ -708,31 +708,36 @@ GestTarifs.mettreAJourPrix = function() {
     '🔒 Tarifs protégés (' + nbProteges + ') → inchangés\n\n' +
     'Cette opération simule une mise à jour depuis les distributeurs.';
 
-  if (!confirm(msg)) return;
+  App.modalConfirmDanger({
+    titre: '🔄 Simulation mise à jour prix',
+    message: 'Prix catalogue → recalculés<br>🔒 Tarifs protégés (' + nbProteges + ') → inchangés<br>Cette opération simule une mise à jour depuis les distributeurs.',
+    motConfirm: 'CONFIRMER',
+    onConfirm: () => {
+      const produits = DB.produits;
+      const coefEnseignes = {
+        'LM': 1.05, 'BD': 1.00, 'BM': 1.08,
+        'GED': 0.94, 'CHAU': 0.92, 'GIR': 0.91,
+        'LPI': 0.90, 'REX': 0.88, 'SON': 0.89,
+        'WUR': 0.95, 'PP': 0.93, 'MAN': 0.92,
+      };
 
-  const produits = DB.produits;
-  const coefEnseignes = {
-    'LM': 1.05, 'BD': 1.00, 'BM': 1.08,
-    'GED': 0.94, 'CHAU': 0.92, 'GIR': 0.91,
-    'LPI': 0.90, 'REX': 0.88, 'SON': 0.89,
-    'WUR': 0.95, 'PP': 0.93, 'MAN': 0.92,
-  };
-
-  let mises_a_jour = [];
-  produits.forEach(p => {
-    if (!p.prixHT || p.prixHT <= 0) return;
-    const enseignesValides = getEnseignesParFamille(p.categorie || '');
-    enseignesValides
-      .filter(e => !e.protege && coefEnseignes[e.id])
-      .forEach(e => {
-        const coef = coefEnseignes[e.id];
-        const variation = 0.98 + Math.random() * 0.04; // ±2%
-        const prix = Math.round(p.prixHT * coef * variation * 100) / 100;
-        mises_a_jour.push({ ref: p.reference, enseigneId: e.id, prix });
+      let mises_a_jour = [];
+      produits.forEach(p => {
+        if (!p.prixHT || p.prixHT <= 0) return;
+        const enseignesValides = getEnseignesParFamille(p.categorie || '');
+        enseignesValides
+          .filter(e => !e.protege && coefEnseignes[e.id])
+          .forEach(e => {
+            const coef = coefEnseignes[e.id];
+            const variation = 0.98 + Math.random() * 0.04; // ±2%
+            const prix = Math.round(p.prixHT * coef * variation * 100) / 100;
+            mises_a_jour.push({ ref: p.reference, enseigneId: e.id, prix });
+          });
       });
-  });
 
-  const result = Tarifs.mettreAJourBatch(mises_a_jour);
-  App.toast('✅ ' + result.ok + ' prix mis à jour · 🔒 ' + result.skip + ' protégés conservés');
-  App.navigate('tarifs');
+      const result = Tarifs.mettreAJourBatch(mises_a_jour);
+      App.toast('✅ ' + result.ok + ' prix mis à jour · 🔒 ' + result.skip + ' protégés conservés');
+      App.navigate('tarifs');
+    }
+  });
 };

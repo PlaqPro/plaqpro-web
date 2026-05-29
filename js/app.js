@@ -898,10 +898,16 @@ const Pages = {
   },
 
   supprimerMetrage(id, chantierId) {
-    if (!confirm('Supprimer ce métré ?')) return;
-    DB.deleteMetrage(id);
-    Pages.chargerMetrages(chantierId);
-    App.toast('Métré supprimé');
+    App.modalConfirmDanger({
+      titre: 'Supprimer ce métré ?',
+      message: 'Ce métré sera supprimé définitivement.',
+      motConfirm: 'SUPPRIMER',
+      onConfirm: () => {
+        DB.deleteMetrage(id);
+        Pages.chargerMetrages(chantierId);
+        App.toast('Métré supprimé');
+      }
+    });
   },
 
   genererDevisDepuisMetrages(chantierId) {
@@ -2409,11 +2415,17 @@ const Pages = {
   },
 
   supprimerClient(id) {
-    if (!confirm('Désactiver ce client ?')) return;
-    DB.deleteClient(id);
-    App.closeModal();
-    App.navigate('clients');
-    App.toast('Client désactivé');
+    App.modalConfirmDanger({
+      titre: 'Désactiver ce client ?',
+      message: 'Ce client sera désactivé et retiré de la liste.',
+      motConfirm: 'OK',
+      onConfirm: () => {
+        DB.deleteClient(id);
+        App.closeModal();
+        App.navigate('clients');
+        App.toast('Client désactivé');
+      }
+    });
   },
 
   modalNouveauChantier() {
