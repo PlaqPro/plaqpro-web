@@ -398,7 +398,7 @@ if (typeof PagePeinture !== 'undefined') {
 }
 
 // Patch Calcul Express
-const _origCalcCompute = Calc?.compute;
+const _origCalcCompute = typeof Calc !== 'undefined' ? Calc.compute : undefined;
 if (typeof Calc !== 'undefined' && _origCalcCompute) {
   Calc.computeAvecAlertes = function() {
     _origCalcCompute.call(this);
