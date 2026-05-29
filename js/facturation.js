@@ -366,10 +366,10 @@ Object.assign(Pages, {
         <tbody>
           ${lignes.map(l => `
             <tr style="border-bottom:0.5px solid var(--border)">
-              <td style="padding:9px 12px">${l.poste}</td>
-              <td style="padding:9px 12px;text-align:right;font-family:var(--font-mono)">${Calculs.fmt(l.baseHT)}</td>
+              <td style="padding:9px 12px">${(l.poste || l.designation || '')}</td>
+              <td style="padding:9px 12px;text-align:right;font-family:var(--font-mono)">${Calculs.fmt((l.baseHT || l.prixHT || 0))}</td>
               <td style="padding:9px 12px;text-align:right;font-family:var(--font-mono)">${Math.round((l.marge||0)*100)} %</td>
-              <td style="padding:9px 12px;text-align:right;font-family:var(--font-mono);font-weight:600;color:var(--accent)">${Calculs.fmt(l.totalClient)}</td>
+              <td style="padding:9px 12px;text-align:right;font-family:var(--font-mono);font-weight:600;color:var(--accent)">${Calculs.fmt((l.totalClient || l.totalHT || 0))}</td>
             </tr>`).join('')}
         </tbody>
       </table>
