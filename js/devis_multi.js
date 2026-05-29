@@ -153,31 +153,44 @@ var DevisMulti = {
   },
 
   _nouveauClient: function() {
-    var nom = prompt('Nom du client :');
-    if (!nom) return;
-    var tel  = prompt('Téléphone :') || '';
-    var email = prompt('Email :') || '';
-    var client = DB.addClient({ nom: nom, telephone: tel, email: email, statut: 'Actif' });
-    DevisMulti._state.clientId = String(client.id);
-    // Rafraîchir la page
-    var wrap = document.getElementById('dm-wrap');
-    if (wrap) { wrap.innerHTML = DevisMulti._buildHTML(); DevisMulti._bindEvents(); }
-    App.toast('Client ' + nom + ' créé ✅', 'success');
+    App.modalForm({
+      titre: 'Nouveau client',
+      champs: [
+        { id: 'nom',   label: 'Nom *',       type: 'text',  required: true },
+        { id: 'tel',   label: 'Téléphone',   type: 'tel' },
+        { id: 'email', label: 'Email',        type: 'email' },
+      ],
+      onConfirm: function(vals) {
+        if (!vals.nom) { App.toast('Le nom est obligatoire', 'error'); return false; }
+        var client = DB.addClient({ nom: vals.nom, telephone: vals.tel || '', email: vals.email || '', statut: 'Actif' });
+        DevisMulti._state.clientId = String(client.id);
+        var wrap = document.getElementById('dm-wrap');
+        if (wrap) { wrap.innerHTML = DevisMulti._buildHTML(); DevisMulti._bindEvents(); }
+        App.toast('Client ' + vals.nom + ' créé ✅', 'success');
+      }
+    });
   },
 
   _nouveauChantier: function() {
     if (!DevisMulti._state.clientId) { App.toast('Sélectionnez d\'abord un client', 'warning'); return; }
-    var nom = prompt('Nom du chantier :');
-    if (!nom) return;
-    var adresse = prompt('Adresse du chantier :') || '';
-    var chantier = DB.addChantier({
-      clientId: parseInt(DevisMulti._state.clientId),
-      nom: nom, adresse: adresse, statut: 'En cours'
+    App.modalForm({
+      titre: 'Nouveau chantier',
+      champs: [
+        { id: 'nom',     label: 'Nom du chantier *', type: 'text', required: true },
+        { id: 'adresse', label: 'Adresse',            type: 'text' },
+      ],
+      onConfirm: function(vals) {
+        if (!vals.nom) { App.toast('Le nom est obligatoire', 'error'); return false; }
+        var chantier = DB.addChantier({
+          clientId: parseInt(DevisMulti._state.clientId),
+          nom: vals.nom, adresse: vals.adresse || '', statut: 'En cours'
+        });
+        DevisMulti._state.chantierId = String(chantier.id);
+        var wrap = document.getElementById('dm-wrap');
+        if (wrap) { wrap.innerHTML = DevisMulti._buildHTML(); DevisMulti._bindEvents(); }
+        App.toast('Chantier ' + vals.nom + ' créé ✅', 'success');
+      }
     });
-    DevisMulti._state.chantierId = String(chantier.id);
-    var wrap = document.getElementById('dm-wrap');
-    if (wrap) { wrap.innerHTML = DevisMulti._buildHTML(); DevisMulti._bindEvents(); }
-    App.toast('Chantier ' + nom + ' créé ✅', 'success');
   },
 
   _onChantierChange: function(chantierId) {

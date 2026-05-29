@@ -196,6 +196,59 @@ const App = {
     overlay.classList.remove('open');
   },
 
+  modalForm({ titre, champs, onConfirm }) {
+    const id = 'modal-form-' + Date.now();
+    const html = `<div id="${id}" style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:28px;width:380px;max-width:95vw">
+        <div style="font-weight:700;font-size:16px;margin-bottom:20px">${esc(titre)}</div>
+        ${champs.map(c => `<div style="margin-bottom:14px">
+          <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:4px">${esc(c.label)}</label>
+          <input id="${id}-${c.id}" type="${c.type||'text'}" style="width:100%;padding:8px 10px;background:var(--bg-input,var(--bg));border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:14px" />
+        </div>`).join('')}
+        <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+          <button onclick="document.getElementById('${id}').remove()" style="padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text);cursor:pointer">Annuler</button>
+          <button id="${id}-ok" style="padding:8px 16px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-weight:600;cursor:pointer">Créer</button>
+        </div>
+      </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+    const modal = document.getElementById(id);
+    modal.querySelector(`#${id}-ok`).addEventListener('click', () => {
+      const vals = {};
+      champs.forEach(c => { vals[c.id] = modal.querySelector(`#${id}-${c.id}`).value.trim(); });
+      if (onConfirm(vals) !== false) modal.remove();
+    });
+    const first = modal.querySelector('input');
+    if (first) first.focus();
+  },
+
+  modalConfirmDanger({ titre, message, motConfirm, onConfirm }) {
+    const id = 'modal-danger-' + Date.now();
+    const html = `<div id="${id}" style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center">
+      <div style="background:var(--bg-card);border:1px solid #ef4444;border-radius:12px;padding:28px;width:420px;max-width:95vw">
+        <div style="font-weight:700;font-size:16px;margin-bottom:12px;color:#ef4444">${esc(titre)}</div>
+        <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px">${message}</p>
+        <p style="font-size:13px;margin-bottom:8px">Tapez <strong>${esc(motConfirm)}</strong> pour confirmer :</p>
+        <input id="${id}-inp" type="text" placeholder="${esc(motConfirm)}" style="width:100%;padding:8px 10px;background:var(--bg-input,var(--bg));border:1px solid #ef4444;border-radius:6px;color:var(--text);font-size:14px" />
+        <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+          <button onclick="document.getElementById('${id}').remove()" style="padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text);cursor:pointer">Annuler</button>
+          <button id="${id}-ok" style="padding:8px 16px;background:#ef4444;border:none;border-radius:6px;color:#fff;font-weight:600;cursor:pointer">Supprimer définitivement</button>
+        </div>
+      </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+    const modal = document.getElementById(id);
+    modal.querySelector(`#${id}-ok`).addEventListener('click', () => {
+      if (modal.querySelector(`#${id}-inp`).value.trim() === motConfirm) {
+        modal.remove();
+        onConfirm();
+      } else {
+        App.toast('Tapez exactement : ' + motConfirm, 'error');
+      }
+    });
+    modal.querySelector(`#${id}-inp`).focus();
+  },
+
   // ── Notification toast ────────────────────────────────────
   toast(message, type = 'success') {
     const toast = document.createElement('div');
@@ -2215,12 +2268,19 @@ const Pages = {
 
   // ── Modales ───────────────────────────────────────────────
   reinitialiserDonnees() {
-    if (!confirm('Êtes-vous sûr ? Cette action est irréversible.\n\nTous les clients, chantiers, devis, factures et métrés seront supprimés.\nLa configuration entreprise et les produits seront conservés.')) return;
-    [DB.KEYS.clients, DB.KEYS.chantiers, DB.KEYS.devis, DB.KEYS.factures, DB.KEYS.metrages].forEach(key => {
-      localStorage.removeItem(key);
+    App.modalConfirmDanger({
+      titre: '⚠️ Réinitialisation irréversible',
+      message: 'Tous les clients, chantiers, devis, factures et métrés seront supprimés définitivement.<br>La configuration entreprise et les produits seront conservés.',
+      motConfirm: 'SUPPRIMER',
+      onConfirm: () => {
+        [DB.KEYS.clients, DB.KEYS.chantiers, DB.KEYS.devis,
+         DB.KEYS.factures, DB.KEYS.metrages].forEach(key => {
+          localStorage.removeItem(key);
+        });
+        App.toast('Base de données réinitialisée', 'success');
+        setTimeout(() => App.navigate('dashboard'), 400);
+      }
     });
-    App.toast('Base de données réinitialisée', 'success');
-    setTimeout(() => App.navigate('dashboard'), 400);
   },
 
   toggleAccordion(id) {
