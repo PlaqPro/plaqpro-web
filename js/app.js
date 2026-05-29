@@ -1192,9 +1192,11 @@ const Pages = {
         const existing = (DB.factures || []).find(f => f.devisId === devisId);
         if (!existing) {
           setTimeout(() => {
-            if (confirm('✅ Devis accepté ! Créer la facture maintenant ?')) {
-              Pages.convertirEnFacture(devisId);
-            }
+            App.modalForm({
+              titre: '✅ Devis accepté !',
+              champs: [],
+              onConfirm: function() { Pages.convertirEnFacture(devisId); }
+            });
           }, 300);
         }
       }
