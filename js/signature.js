@@ -27,10 +27,11 @@ var Signature = {
   },
 
   // ── Lien de signature ─────────────────────────────────────
-  lienSignature(devisId, devisNumero, token) {
+  lienSignature(devisId, devisNumero, token, clientNom) {
     var base = window.location.origin;
     return base + '/signature.html?devis=' + encodeURIComponent(devisNumero)
-      + '&id=' + devisId + '&token=' + token;
+      + '&id=' + devisId + '&token=' + token
+      + '&client=' + encodeURIComponent(clientNom || '');
   },
 
   // ── Accesseurs localStorage ───────────────────────────────
@@ -118,7 +119,9 @@ var Signature = {
     var devis = DB.getById(DB.KEYS.devis, devisId);
     if (!devis) { App.toast('Devis introuvable', 'error'); return; }
     var token = Signature.genererToken(devisId);
-    var lien  = Signature.lienSignature(devisId, devis.numero || '', token);
+    var client = (typeof DB !== 'undefined' && devis.clientId) ? (DB.getClient(devis.clientId) || {}) : {};
+    var clientNom = client.nom || client.prenom || '';
+    var lien  = Signature.lienSignature(devisId, devis.numero || '', token, clientNom);
 
     var d = document.createElement('div');
     d.innerHTML = '<div class="form-group">'
