@@ -15,13 +15,16 @@ window.CartePremium = {
   },
 
   genererHash(id, nom, annee) {
-    const str = id + '|' + nom + '|' + annee + '|PlaqPro2026';
-    let hash = 0;
+    const sel = 'PP+' + (id.length * 7 + 31) + 'xK9' + annee + 'zQ';
+    const str = sel + '|' + id + '|' + nom.toLowerCase().trim() + '|' + annee;
+    let h1 = 0x9e3779b9, h2 = 0x6c62272e;
     for (let i = 0; i < str.length; i++) {
-      hash = ((hash << 5) - hash) + str.charCodeAt(i);
-      hash |= 0;
+      const c = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ c, 0x9e3779b9) >>> 0;
+      h2 = Math.imul(h2 ^ c, 0x85ebca77) >>> 0;
     }
-    return Math.abs(hash).toString(36).toUpperCase().substring(0, 8);
+    h1 = (Math.imul(h1 ^ (h1 >>> 16), 0x85ebca6b) ^ Math.imul(h2 ^ (h2 >>> 13), 0xc2b2ae35)) >>> 0;
+    return (h1 >>> 0).toString(36).toUpperCase().padStart(8, '0').substring(0, 8);
   },
 
   getVerifyUrl(id, nom, annee) {
