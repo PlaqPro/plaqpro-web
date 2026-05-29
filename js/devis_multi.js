@@ -282,7 +282,7 @@ var DevisMulti = {
     // Chercher si section existe déjà
     var sec = state.sections.find(function(s) { return s.key === key; });
     if (!sec) {
-      sec = { key: key, icon: icon, titre: titre, tva: 10, lignes: [] };
+      sec = { key: key, icon: icon, titre: titre, tva: 10, lignes: [], sid: DevisMulti._uid() };
       state.sections.push(sec);
     }
     sec.lignes.push({
