@@ -137,7 +137,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous" defer></script>
   <script src="js/graphiques.js"></script>
   <script src="js/calendrier.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous" defer></script>
   <script src="js/prospection.js"></script>
   <script src="js/pack_maconnerie.js"></script>
   <script src="js/pack_electricite.js"></script>
@@ -145,8 +145,8 @@
   <script src="js/pack_exterieur.js"></script>
   <script src="js/analyse_photo.js"></script>
   <script src="js/pause_cafe.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" integrity="sha384-OUW9euuUyxyHcAhTqbhI+Iyb8LMssXt/cpz0yXhs9UWG2/R/uaWdakx/4cfww7Vb" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" integrity="sha384-OUW9euuUyxyHcAhTqbhI+Iyb8LMssXt/cpz0yXhs9UWG2/R/uaWdakx/4cfww7Vb" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous" defer></script>
   <script src="js/dpgf.js?v=21052026b"></script>
   <script src="js/aide.js"></script>
   <script src="js/mode_chantier.js"></script>
@@ -382,6 +382,21 @@
 <script src="js/devis_intelligent.js"></script>
 <script src="js/import_catalogue.js"></script>
 <script src="js/carte_premium.js"></script>
+<script>
+// Guard CDN — affiche un avertissement discret si une lib critique est absente
+window.addEventListener('DOMContentLoaded', function() {
+  var manquants = [];
+  if (typeof L === 'undefined')    manquants.push('Leaflet (carte)');
+  if (typeof XLSX === 'undefined') manquants.push('Excel (exports)');
+  if (typeof QRCode === 'undefined') manquants.push('QR Code');
+  if (typeof Chart === 'undefined') manquants.push('Graphiques');
+  if (manquants.length > 0 && typeof App !== 'undefined') {
+    setTimeout(function() {
+      App.toast('Modules indisponibles (réseau) : ' + manquants.join(', ') + ' — fonctions limitées', 'warning', 6000);
+    }, 2000);
+  }
+});
+</script>
 </body>
 </html>
 
