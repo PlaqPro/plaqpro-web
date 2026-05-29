@@ -389,14 +389,6 @@ Object.assign(Pages, {
         </div>
       </div>
 
-      <!-- Badge Factur-X 2026 -->
-      <div style="margin-top:20px;padding:10px 14px;background:rgba(45,212,160,0.07);border:1px solid rgba(45,212,160,0.2);border-radius:8px;display:flex;align-items:center;gap:10px;font-size:12px">
-        <span style="font-size:16px">🇪🇺</span>
-        <div>
-          <div style="font-weight:700;color:#2DD4A0">Facture conforme Factur-X 2026</div>
-          <div style="color:var(--text-tertiary);font-size:11px">Format électronique européen EN16931 (ZUGFeRD 2.x) — téléchargez le fichier XML pour votre comptable ou logiciel de facturation</div>
-        </div>
-      </div>
     `;
     return d;
   },
