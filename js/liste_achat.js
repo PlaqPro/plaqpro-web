@@ -258,9 +258,9 @@ const ListeAchat = {
               <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">
                 LISTE D'ACHAT MATÉRIAUX
               </div>
-              <div style="font-size:22px;font-weight:800;color:var(--text-primary);letter-spacing:-0.5px">${ch.nom}</div>
+              <div style="font-size:22px;font-weight:800;color:var(--text-primary);letter-spacing:-0.5px">${esc(ch.nom)}</div>
               <div style="font-size:14px;color:var(--text-secondary);margin-top:4px">
-                ${client ? client.nom : '—'} · ${ch.adresse || ''} · Générée le ${new Date().toLocaleDateString('fr-FR')}
+                ${client ? esc(client.nom) : '—'} · ${esc(ch.adresse || '')} · Générée le ${new Date().toLocaleDateString('fr-FR')}
               </div>
             </div>
             <div style="text-align:right">
@@ -274,7 +274,7 @@ const ListeAchat = {
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--glass-border)">
             ${pieces.map(p => `
               <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--r-md);padding:8px 14px;font-size:12px">
-                <strong style="color:var(--text-primary)">${p.piece}</strong>
+                <strong style="color:var(--text-primary)">${esc(p.piece)}</strong>
                 <span style="color:var(--text-tertiary);margin-left:8px">${p.longueur}×${p.largeur}×${p.hauteur}m</span>
                 <span style="color:var(--accent);margin-left:8px">${this.fmtN(p.murs)} m² murs</span>
               </div>
@@ -287,7 +287,7 @@ const ListeAchat = {
       ${lignes.map(g => `
         <div class="card mb-16" style="border-color:var(--glass-border-md)">
           <div class="card-header" style="background:${couleursFam[g.fam]||'var(--glass-bg)'}">
-            <span class="card-title">${g.fam}</span>
+            <span class="card-title">${esc(g.fam)}</span>
             <span style="font-size:13px;font-weight:700;color:var(--text-primary);font-family:var(--font-mono)">
               ${this.fmt(g.items.reduce((s,i)=>s+i.total,0))} €
             </span>
@@ -302,9 +302,9 @@ const ListeAchat = {
               <tbody>
                 ${g.items.map(i => `
                   <tr>
-                    <td class="font-mono" style="font-size:12px;color:var(--text-tertiary)">${i.ref}</td>
-                    <td style="font-weight:500">${i.nom}</td>
-                    <td style="font-family:var(--font-mono);font-size:13px;color:var(--text-secondary)">${i.detail}</td>
+                    <td class="font-mono" style="font-size:12px;color:var(--text-tertiary)">${esc(i.ref)}</td>
+                    <td style="font-weight:500">${esc(i.nom)}</td>
+                    <td style="font-family:var(--font-mono);font-size:13px;color:var(--text-secondary)">${esc(i.detail)}</td>
                     <td style="text-align:right;font-family:var(--font-mono);color:var(--text-secondary)">${i.prixU ? this.fmt(i.prixU) + ' €' : '—'}</td>
                     <td style="text-align:right;font-family:var(--font-mono);font-weight:700;color:${i.isMO ? 'var(--green)' : 'var(--text-primary)'}">
                       ${this.fmt(i.total)} €
