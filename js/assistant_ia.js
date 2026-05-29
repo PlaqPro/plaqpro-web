@@ -173,7 +173,7 @@ Tu réponds en français, de façon courte et pratique.`,
 
     } catch (err) {
       const bubble = document.getElementById(thinkingId);
-      if (bubble) bubble.innerHTML = `<span style="color:#F75B5B">⚠ Erreur : ${err.message}</span>`;
+      if (bubble) bubble.innerHTML = `<span style="color:#F75B5B">⚠ Erreur : ${esc(err.message)}</span>`;
     }
 
     this._loading = false;

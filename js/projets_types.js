@@ -539,9 +539,9 @@ var ProjetsTypes = {
 
     var rows = lignes.map(function(l, i) {
       return '<tr>'
-        + '<td><input class="pt-cell-input" value="' + (l.ref || '') + '" onchange="ProjetsTypes._updateLigne(\'' + id + '\',' + i + ',\'ref\',this.value)"></td>'
-        + '<td><input class="pt-cell-input pt-cell-wide" value="' + l.designation + '" onchange="ProjetsTypes._updateLigne(\'' + id + '\',' + i + ',\'designation\',this.value)"></td>'
-        + '<td><input class="pt-cell-input pt-cell-sm" value="' + l.unite + '" onchange="ProjetsTypes._updateLigne(\'' + id + '\',' + i + ',\'unite\',this.value)"></td>'
+        + '<td><input class="pt-cell-input" value="' + esc(l.ref || '') + '" onchange="ProjetsTypes._updateLigne(\'' + id + '\',' + i + ',\'ref\',this.value)"></td>'
+        + '<td><input class="pt-cell-input pt-cell-wide" value="' + esc(l.designation || '') + '" onchange="ProjetsTypes._updateLigne(\'' + id + '\',' + i + ',\'designation\',this.value)"></td>'
+        + '<td><input class="pt-cell-input pt-cell-sm" value="' + esc(l.unite || '') + '" onchange="ProjetsTypes._updateLigne(\'' + id + '\',' + i + ',\'unite\',this.value)"></td>'
         + '<td><input class="pt-cell-input pt-cell-sm" type="number" value="' + l.qte + '" onchange="ProjetsTypes._updateLigne(\'' + id + '\',' + i + ',\'qte\',parseFloat(this.value)||0)"></td>'
         + '<td><input class="pt-cell-input pt-cell-sm" type="number" step="0.01" value="' + l.prix.toFixed(2) + '" onchange="ProjetsTypes._updateLigne(\'' + id + '\',' + i + ',\'prix\',parseFloat(this.value)||0)"></td>'
         + '<td class="pt-cell-total">' + ((l.qte * l.prix) || 0).toFixed(2) + ' €</td>'
@@ -594,9 +594,9 @@ var ProjetsTypes = {
 
     wrap.innerHTML = items.map(function(a, i) {
       return '<div class="pt-libre-row">'
-        + '<input class="pt-cell-input" placeholder="Réf." value="' + (a.ref||'') + '" onchange="ProjetsTypes._updateLibre(\'' + id + '\',' + i + ',\'ref\',this.value)">'
-        + '<input class="pt-cell-input pt-cell-wide" placeholder="Désignation" value="' + (a.designation||'') + '" onchange="ProjetsTypes._updateLibre(\'' + id + '\',' + i + ',\'designation\',this.value)">'
-        + '<input class="pt-cell-input pt-cell-sm" placeholder="Unité" value="' + (a.unite||'u') + '" onchange="ProjetsTypes._updateLibre(\'' + id + '\',' + i + ',\'unite\',this.value)">'
+        + '<input class="pt-cell-input" placeholder="Réf." value="' + esc(a.ref||'') + '" onchange="ProjetsTypes._updateLibre(\'' + id + '\',' + i + ',\'ref\',this.value)">'
+        + '<input class="pt-cell-input pt-cell-wide" placeholder="Désignation" value="' + esc(a.designation||'') + '" onchange="ProjetsTypes._updateLibre(\'' + id + '\',' + i + ',\'designation\',this.value)">'
+        + '<input class="pt-cell-input pt-cell-sm" placeholder="Unité" value="' + esc(a.unite||'u') + '" onchange="ProjetsTypes._updateLibre(\'' + id + '\',' + i + ',\'unite\',this.value)">'
         + '<input class="pt-cell-input pt-cell-sm" type="number" placeholder="Qté" value="' + (a.qte||1) + '" onchange="ProjetsTypes._updateLibre(\'' + id + '\',' + i + ',\'qte\',parseFloat(this.value)||0)">'
         + '<input class="pt-cell-input pt-cell-sm" type="number" step="0.01" placeholder="Prix" value="' + (a.prix||0) + '" onchange="ProjetsTypes._updateLibre(\'' + id + '\',' + i + ',\'prix\',parseFloat(this.value)||0)">'
         + '<button class="btn btn-secondary btn-sm" title="Sauvegarder dans la base produits" onclick="ProjetsTypes._saveProduit(\'' + id + '\',' + i + ')">💾</button>'
