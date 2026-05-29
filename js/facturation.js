@@ -123,6 +123,31 @@ Object.assign(Pages, {
     if (body) body.innerHTML = Pages._renderLignesFactures(list);
   },
 
+  // ── Logique de création facture (partagée) ────────────────
+  _executerCreationFacture(devisId, devis) {
+    const date = new Date().toISOString().split('T')[0];
+    const ech  = new Date(); ech.setDate(ech.getDate() + 30);
+    const facture = DB.addFacture({
+      devisId:      devis.id,
+      devisNumero:  devis.numero || '',
+      chantierId:   devis.chantierId,
+      date,
+      dateEcheance: ech.toISOString().split('T')[0],
+      statut:       'Brouillon',
+      lignes:       devis.lignes || [],
+      totalHT:      devis.totalHT    || 0,
+      totalTTC:     devis.totalTTC   || 0,
+      montantTVA:   devis.montantTVA || 0,
+      tva:          devis.tva        || 0.1,
+      datePaiement: null,
+    });
+    App.toast(`Facture ${facture.numero} créée !`);
+    const devisRef = DB.getById(DB.KEYS.devis, devisId);
+    if (devisRef) { devisRef.facture = facture.numero; DB.save(DB.KEYS.devis, DB.devis); }
+    App.navigate('factures');
+    setTimeout(() => Pages.voirFacture(facture.id), 150);
+  },
+
   // ── Convertir un devis en facture ─────────────────────────
   convertirEnFacture(devisId) {
     const devis = DB.getById(DB.KEYS.devis, devisId);
@@ -131,33 +156,16 @@ Object.assign(Pages, {
 
     const existing = DB.factures.find(f => f.devisId === devisId);
     if (existing) {
-      if (!confirm(`Une facture ${existing.numero} existe déjà pour ce devis. Créer quand même ?`)) return;
+      App.modalConfirmDanger({
+        titre: '⚠️ Facture existante',
+        message: `Une facture <strong>${existing.numero}</strong> existe déjà pour ce devis.<br>Créer une nouvelle facture quand même ?`,
+        motConfirm: 'CRÉER',
+        onConfirm: () => { Pages._executerCreationFacture(devisId, devis); }
+      });
+      return;
     }
 
-    const date = new Date().toISOString().split('T')[0];
-    const ech  = new Date(); ech.setDate(ech.getDate() + 30);
-
-    const facture = DB.addFacture({
-      devisId:     devis.id,
-      devisNumero: devis.numero,
-      chantierId:  devis.chantierId,
-      date,
-      dateEcheance: ech.toISOString().split('T')[0],
-      statut:      'Brouillon',
-      lignes:      devis.lignes || [],
-      totalHT:     devis.totalHT     || 0,
-      totalTTC:    devis.totalTTC    || 0,
-      montantTVA:  devis.montantTVA  || 0,
-      tva:         devis.tva         || 0.1,
-      datePaiement: null,
-    });
-
-    App.toast(`Facture ${facture.numero} créée !`);
-      // Marquer le devis comme facturé
-      const devisRef = DB.getById(DB.KEYS.devis, devisId);
-      if (devisRef) { devisRef.facture = facture.numero; DB.save(DB.KEYS.devis, DB.devis); }
-    App.navigate('factures');
-    setTimeout(() => Pages.voirFacture(facture.id), 150);
+    this._executerCreationFacture(devisId, devis);
   },
 
   // ── Afficher le détail d'une facture ──────────────────────
