@@ -137,7 +137,7 @@ Pages.monCompte = function() {
               ✅ 8 outils techniques + PDF<br>
               ✅ DPGF & Appels d'offres IA<br>
               ✅ Prospection IA permis<br>
-              ✅ Factur-X XML 2026<br>
+              ✅ Export XML facture<br>
               ✅ Support prioritaire
             </div>
             <button class="btn btn-primary" style="width:100%" onclick="App.toast('Bientôt disponible — nous vous contacterons !', 'success')">

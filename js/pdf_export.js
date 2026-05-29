@@ -155,7 +155,7 @@ const PDF = {
           <div style="font-size:9pt;color:#666;margin-top:4pt">
             Édité le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
           </div>
-          ${isFacture ? '<div style="margin-top:6pt;font-size:8pt;color:#2a7a5a;border:1px solid #2a7a5a;border-radius:3pt;padding:2pt 6pt;display:inline-block">🇪🇺 Facture conforme Factur-X 2026 · EN16931</div>' : ''}
+          ${isFacture ? '<div style="margin-top:6pt;font-size:8pt;color:#2a7a5a;border:1px solid #2a7a5a;border-radius:3pt;padding:2pt 6pt;display:inline-block">🇪🇺 Export XML disponible</div>' : ''}
         </div>
       </div>
     `;

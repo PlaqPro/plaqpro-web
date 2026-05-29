@@ -184,7 +184,7 @@ Object.assign(Pages, {
         <button class="btn btn-primary" onclick="EmailDevis.envoyerFacture(${factureId})">📧 Envoyer au client</button>
         <button class="btn btn-secondary" onclick="DocPrint.apercu('facture',${factureId})">🖨 Imprimer / PDF</button>
         <button class="btn btn-secondary" onclick="ExcelExport.exporterFacture(${factureId})">📊 Excel</button>
-        <button class="btn btn-secondary" onclick="Pages.telechargerXMLFacturX(${factureId})" title="Télécharger le fichier XML Factur-X (ZUGFeRD EN16931)">🇪🇺 XML Factur-X</button>
+        <button class="btn btn-secondary" onclick="Pages.telechargerXMLFacturX(${factureId})" title="Télécharger le fichier XML">🇪🇺 Export XML</button>
         <button class="btn btn-secondary" onclick="Pages.genererAcompte(${factureId})" title="Générer un acompte 30%">💰 Acompte 30%</button>
         <button class="btn btn-secondary" onclick="App.closeModal()">Fermer</button>
       </div>`
@@ -310,7 +310,7 @@ Object.assign(Pages, {
     a.download = 'facturx_' + facture.numero.replace(/[^a-z0-9]/gi, '_') + '.xml';
     a.click();
     URL.revokeObjectURL(a.href);
-    App.toast('XML Factur-X téléchargé', 'success');
+    App.toast('Fichier XML téléchargé', 'success');
   },
 
   _detailFacture(facture, chantier, client, config) {

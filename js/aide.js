@@ -169,7 +169,7 @@ var Aide = {
     { icon: '🤖', nom: 'Assistant IA',            desc: 'Posez vos questions pro à l\'IA 24h/24',                 niveau: 'easy',   page: null, action: "document.getElementById('ia-fab-btn')&&document.getElementById('ia-fab-btn').click()" },
     { icon: '🧠', nom: 'Quiz Plaquiste',          desc: 'Testez et développez vos connaissances',                 niveau: 'easy',   page: 'quiz' },
     { icon: '☕', nom: 'Pause Café',             desc: 'Musique lofi + citation + minuteur. Bouton ☕ en bas de la sidebar.',                                    niveau: 'easy',   page: null, action: 'PauseCafe.show()' },
-    { icon: '🇪🇺', nom: 'Factur-X 2026',         desc: 'Vos factures sont automatiquement conformes à la réforme 2026. Téléchargez le XML depuis chaque facture.', niveau: 'easy',   page: 'factures' },
+    { icon: '🇪🇺', nom: 'Export XML facture',      desc: 'Téléchargez un fichier XML structuré depuis chaque facture, compatible avec la plupart des logiciels comptables.', niveau: 'easy',   page: 'factures' },
     { icon: '📊', nom: 'Export comptable',        desc: 'Exportez vos écritures en 1 clic — compatible Sage, EBP, Cegid. Dans Configuration → Export comptable.',   niveau: 'easy',   page: 'config' },
     { icon: '🔍', nom: 'Scanner facture four.',   desc: 'Photographiez une facture fournisseur → PlaqPro+ extrait les montants et la rattache au chantier. Dans Dashboard → Outils & Goodies', niveau: 'easy', page: null, action: 'AnalysePhoto.showModalFournisseur()' },
     { icon: '📈', nom: 'Marge brute temps réel',  desc: 'Voyez votre marge en temps réel sur le dashboard — total facturé vs total achats.',                         niveau: 'easy',   page: 'dashboard' },
@@ -218,8 +218,8 @@ var Aide = {
       page: 'dpgf',
     },
     {
-      q: "Qu'est-ce que le Factur-X 2026 ?",
-      a: 'C\'est le format de facture électronique obligatoire en France à partir de septembre 2026. PlaqPro+ génère automatiquement vos factures dans ce format conforme EN16931. Téléchargez le XML depuis chaque facture.',
+      q: "Qu'est-ce que l'export XML facture ?",
+      a: 'PlaqPro+ génère un fichier XML structuré pour chaque facture, téléchargeable depuis la fiche facture. Compatible avec la plupart des logiciels comptables.',
       page: 'factures',
     },
     {
