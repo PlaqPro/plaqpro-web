@@ -11,6 +11,11 @@
 //  app.js
 // ============================================================
 
+window.esc = function(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+};
+
 const App = {
 
   currentPage: 'dashboard',

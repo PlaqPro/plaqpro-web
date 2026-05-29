@@ -310,9 +310,9 @@ const ST = {
       <div class="st-panel">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
           <div>
-            <div style="font-size:20px;font-weight:800;letter-spacing:-0.02em">${st.nom || ''} ${st.prenom || ''}</div>
+            <div style="font-size:20px;font-weight:800;letter-spacing:-0.02em">${esc(st.nom)} ${esc(st.prenom)}</div>
             <div style="font-size:13px;color:var(--text-tertiary);margin-top:4px">
-              ${st.statut || ''} · SIRET : ${st.siret || '—'}
+              ${esc(st.statut)} · SIRET : ${esc(st.siret) || '—'}
             </div>
           </div>
           <div style="display:flex;gap:8px">
@@ -323,7 +323,7 @@ const ST = {
 
         ${alertes.length > 0 ? `
           <div style="margin-bottom:16px">
-            ${alertes.map(a => `<div class="st-alerte ${a.type}">${a.msg}</div>`).join('')}
+            ${alertes.map(a => `<div class="st-alerte ${esc(a.type)}">${esc(a.msg)}</div>`).join('')}
           </div>` : `
           <div class="st-alerte ok" style="margin-bottom:16px">✅ Dossier complet — conformité OK</div>`
         }
