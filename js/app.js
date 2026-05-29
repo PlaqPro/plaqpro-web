@@ -29,6 +29,8 @@ const App = {
   },
 
   // ── Navigation ────────────────────────────────────────────
+  // NOTE : ce router partiel est écrasé au chargement par index.html (App.navigate = navigateTo).
+  // Ne pas ajouter de pages ici — les ajouter dans pageMap de index.html uniquement.
   navigate(page, params = {}) {
     this.currentPage = page;
     this.currentParams = params;

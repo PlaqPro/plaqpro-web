@@ -357,11 +357,33 @@ const Installer = {
       if (outcome === 'accepted') this.afficherSucces();
     } else if (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')) {
       // Safari — instructions manuelles
-      alert('Sur Safari :\n1. Appuyez sur le bouton Partager ⬆\n2. Sélectionnez "Sur l\'écran d\'accueil"\n3. Confirmez');
+      this.afficherInstructionsSafari();
     } else {
       // Fallback — ouvrir l'app
       window.location.href = 'login.html';
     }
+  },
+
+  afficherInstructionsSafari() {
+    const container = document.getElementById('steps-container');
+    if (container) {
+      container.innerHTML = [
+        { titre: 'Ouvrez le partage Safari', detail: 'Appuyez sur le bouton Partager dans la barre Safari' },
+        { titre: 'Ajoutez à l’écran d’accueil', detail: 'Sélectionnez l’option Sur l’écran d’accueil' },
+        { titre: 'Confirmez l’installation', detail: 'Validez pour retrouver PlaqPro+ comme une application' },
+      ].map((e, i) => `
+        <div class="step">
+          <div class="step-num">${i + 1}</div>
+          <div class="step-content">
+            <div class="step-titre">${e.titre}</div>
+            <div class="step-detail">${e.detail}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    const text = document.getElementById('btn-install-text');
+    if (text) text.textContent = 'Instructions Safari affichées';
   },
 
   afficherSucces() {
@@ -373,8 +395,7 @@ const Installer = {
   enregistrerSW() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js')
-        .then(() => console.log('PlaqPro+ SW enregistré'))
-        .catch(e => console.warn('SW:', e));
+        .catch(() => {});
     }
   },
 };
