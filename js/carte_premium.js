@@ -26,7 +26,7 @@ window.CartePremium = {
 
   getVerifyUrl(id, nom, annee) {
     const hash = this.genererHash(id, nom, annee);
-    return 'https://plaqpro.github.io/plaqpro-web/verify.html?id=' + encodeURIComponent(id) + '&h=' + hash + '&a=' + annee;
+    return 'https://plaqpro.github.io/plaqpro-web/verify.html?id=' + encodeURIComponent(id) + '&n=' + encodeURIComponent(nom) + '&h=' + hash + '&a=' + annee;
   },
 
   async afficherDansMonCompte(containerId) {

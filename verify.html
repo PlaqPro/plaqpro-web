@@ -221,44 +221,84 @@
   </div>
 
   <script>
-    const mode = new URLSearchParams(window.location.search).get('mode');
+    (function() {
+  const p        = new URLSearchParams(window.location.search);
+  const mode     = p.get('mode');
+  const id       = p.get('id');
+  const nom      = p.get('n');
+  const annee    = p.get('a');
+  const hParam   = p.get('h');
 
-    const config = mode === 'premium'
-      ? {
-          icon:    '⭐',
-          title:   'Compte Premium activé !',
-          badge:   '✓ Premium actif',
-          badgeCls:'premium',
-          message: 'Votre abonnement Premium est actif. Profitez de toutes les fonctionnalités PlaqPro+.',
-          btnText: 'Accéder à l\'application →',
-          btnHref: 'index.html',
-          btnCls:  'premium',
-        }
-      : {
-          icon:    '✉️',
-          title:   'Vérification de votre email',
-          badge:   '✓ Compte créé',
-          badgeCls:'email',
-          message: 'Votre compte a bien été créé. Un email de confirmation vous a été envoyé.',
-          btnText: 'Retour à la connexion →',
-          btnHref: 'login.html',
-          btnCls:  'email',
-        };
+  function genererHash(id, nom, annee) {
+    const str = id + '|' + nom + '|' + annee + '|PlaqPro2026';
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash).toString(36).toUpperCase().substring(0, 8);
+  }
 
-    document.getElementById('verify-icon').textContent    = config.icon;
-    document.getElementById('verify-title').textContent   = config.title;
-    document.getElementById('verify-message').textContent = config.message;
+  let config;
 
-    const badge = document.getElementById('verify-badge');
-    badge.textContent = config.badge;
-    badge.classList.add(config.badgeCls);
+  if (id && nom && annee && hParam) {
+    const hCalc = genererHash(id, nom, annee);
+    const valid = (hCalc === hParam);
+    config = valid ? {
+      icon:    '⭐',
+      title:   'Carte Premium vérifiée',
+      badge:   '✓ Membre ' + id + ' — ' + decodeURIComponent(nom),
+      badgeCls:'premium',
+      message: 'Cette carte PlaqPro+ est authentique. Année ' + annee + '.',
+      btnText: 'Accéder à l\'application →',
+      btnHref: 'index.html',
+      btnCls:  'premium',
+    } : {
+      icon:    '❌',
+      title:   'Carte invalide',
+      badge:   '✗ Vérification échouée',
+      badgeCls:'email',
+      message: 'Cette carte ne correspond à aucun membre PlaqPro+ valide.',
+      btnText: 'Retour à la connexion →',
+      btnHref: 'login.html',
+      btnCls:  'email',
+    };
+  } else if (mode === 'premium') {
+    config = {
+      icon:    '⭐',
+      title:   'Compte Premium activé !',
+      badge:   '✓ Premium actif',
+      badgeCls:'premium',
+      message: 'Votre abonnement Premium est actif. Profitez de toutes les fonctionnalités PlaqPro+.',
+      btnText: 'Accéder à l\'application →',
+      btnHref: 'index.html',
+      btnCls:  'premium',
+    };
+  } else {
+    config = {
+      icon:    '✉️',
+      title:   'Vérification de votre email',
+      badge:   '✓ Compte créé',
+      badgeCls:'email',
+      message: 'Votre compte a bien été créé. Un email de confirmation vous a été envoyé.',
+      btnText: 'Retour à la connexion →',
+      btnHref: 'login.html',
+      btnCls:  'email',
+    };
+  }
 
-    const btn = document.getElementById('verify-btn');
-    btn.textContent = config.btnText;
-    btn.href        = config.btnHref;
-    btn.classList.add(config.btnCls);
-
-    document.title = 'PlaqPro+ — ' + config.title;
+  document.getElementById('verify-icon').textContent    = config.icon;
+  document.getElementById('verify-title').textContent   = config.title;
+  document.getElementById('verify-message').textContent = config.message;
+  const badge = document.getElementById('verify-badge');
+  badge.textContent = config.badge;
+  badge.classList.add(config.badgeCls);
+  const btn = document.getElementById('verify-btn');
+  btn.textContent = config.btnText;
+  btn.href        = config.btnHref;
+  btn.classList.add(config.btnCls);
+  document.title = 'PlaqPro+ — ' + config.title;
+})();
   </script>
 
   <script>
