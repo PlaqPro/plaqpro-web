@@ -330,21 +330,21 @@
         if (tokens[token]) { tokens[token].signed = true; localStorage.setItem('plaqpro_tokens', JSON.stringify(tokens)); }
       } catch(e) {}
 
-      // ── Envoi email confirmation à l'artisan via EmailJS ──────────
+      // ── Envoi email confirmation artisan via EmailJS ───────────────
       (function() {
         try {
           var svcId  = localStorage.getItem('plaqpro_emailjs_service') || '';
           var pubKey = localStorage.getItem('plaqpro_emailjs_key')     || '';
-          var toMail = localStorage.getItem('plaqpro_emailjs_to')      || '';
+          var toMail = localStorage.getItem('plaqpro_emailjs_to')      || localStorage.getItem('plaqpro_config') && JSON.parse(localStorage.getItem('plaqpro_config') || '{}').email || '';
           if (!svcId || !pubKey || !toMail) return;
           if (typeof emailjs === 'undefined') return;
           var d = new Date(sigs[token].signedAt);
-          var dateStr = d.toLocaleDateString('fr-FR') + ' à ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+          var dateStr = d.toLocaleDateString('fr-FR') + ' a ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'});
           emailjs.init(pubKey);
           emailjs.send(svcId, 'template_sngwde7', {
             to_email:       toMail,
-            devis_numero:   devisNum  || '—',
-            client_nom:     (params.get('client') ? decodeURIComponent(params.get('client')) : 'Client'),
+            devis_numero:   devisNum || '--',
+            client_nom:     params.get('client') ? decodeURIComponent(params.get('client')) : 'Client',
             date_signature: dateStr,
             code_signature: sigs[token].code,
             signature_img:  sigs[token].signatureImg || '',
