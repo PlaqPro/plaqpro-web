@@ -117,10 +117,10 @@ const DocPrint = {
     const lignesHTML = lignes.length
       ? lignes.map((l, i) => `
         <tr class="${i % 2 === 1 ? 'tr-even' : ''}">
-          <td class="td-des">${DocPrint._esc(l.poste)}</td>
+          <td class="td-des">${DocPrint._esc(l.poste || l.designation || '')}</td>
           <td class="td-c">1&nbsp;Forfait</td>
-          <td class="td-r">${DocPrint._n(l.totalClient)}&nbsp;€</td>
-          <td class="td-r td-bold">${DocPrint._n(l.totalClient)}&nbsp;€</td>
+          <td class="td-r">${DocPrint._n(l.totalClient || l.totalHT || 0)}&nbsp;€</td>
+          <td class="td-r td-bold">${DocPrint._n(l.totalClient || l.totalHT || 0)}&nbsp;€</td>
         </tr>`).join('')
       : `<tr><td colspan="4" style="text-align:center;padding:18pt;color:#9CA3AF;font-style:italic">Aucune prestation</td></tr>`;
 

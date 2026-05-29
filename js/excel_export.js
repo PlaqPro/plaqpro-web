@@ -104,13 +104,12 @@ const ExcelExport = {
     App.toast('Export Excel telecharge', 'success');
   },
 
-  exporterListeAchat(listeId) {
-    const liste = DB.getById(DB.KEYS.listesAchat, listeId);
-    if (!liste) { App.toast('Liste introuvable', 'error'); return; }
+  exporterListeAchat(chantier, lignes, totaux) {
     if (typeof XLSX === 'undefined') { App.toast('Module Excel non charge -- rechargez la page', 'error'); return; }
 
+    const nomChantier = (chantier && (chantier.nom || chantier.adresse)) || 'liste';
     const header = ['Ref', 'Designation', 'Fournisseur', 'Unite', 'Qte', 'Prix U HT', 'Total HT'];
-    const rows = (liste.lignes || []).map(function(l) {
+    const rows = (lignes || []).map(function(l) {
       return [
         l.ref          || '',
         l.designation  || l.nom || '',
@@ -127,7 +126,7 @@ const ExcelExport = {
     ws['!cols'] = [{ wch: 10 }, { wch: 38 }, { wch: 20 }, { wch: 8 }, { wch: 8 }, { wch: 12 }, { wch: 14 }];
     XLSX.utils.book_append_sheet(wb, ws, 'Liste achat');
 
-    const filename = 'liste_achat_' + (liste.numero || listeId).replace(/[^a-z0-9]/gi, '_') + '.xlsx';
+    const filename = 'liste_achat_' + nomChantier.replace(/[^a-z0-9]/gi, '_') + '.xlsx';
     XLSX.writeFile(wb, filename);
     App.toast('Export Excel telecharge', 'success');
   },
