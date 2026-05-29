@@ -309,7 +309,16 @@ var DevisMulti = {
   },
 
   _nouveau: function() {
-    if (!confirm('Effacer le devis en cours et recommencer ?')) return;
+    App.modalConfirmDanger({
+      titre: '🗑 Effacer le devis ?',
+      message: 'Le devis en cours sera effacé définitivement.',
+      motConfirm: 'EFFACER',
+      onConfirm: () => {
+        DevisMulti._state = DevisMulti._newState();
+        DevisMulti._rerenderAll();
+      }
+    });
+    return;
     DevisMulti._state = DevisMulti._newState();
     DevisMulti._rerenderAll();
   },
@@ -677,10 +686,15 @@ Règles importantes :
   },
 
   removeSection: function(sid) {
-    if (!confirm('Supprimer cette section et toutes ses lignes ?')) return;
-    DevisMulti._state.sections = DevisMulti._state.sections.filter(function(s) { return s.sid !== sid; });
-    DevisMulti._rerenderSectionsCol();
-    DevisMulti._refreshTotaux(null);
+    App.modalConfirmDanger({
+      titre: '🗑 Supprimer la section ?',
+      message: 'Cette section et toutes ses lignes seront supprimées.',
+      motConfirm: 'SUPPRIMER',
+      onConfirm: () => {
+        DevisMulti._state.sections = DevisMulti._state.sections.filter(s => s.sid !== sid);
+        DevisMulti._rerenderAll();
+      }
+    });
   },
 
   _onTitreChange: function(sid, val) {

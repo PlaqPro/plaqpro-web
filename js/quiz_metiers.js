@@ -565,12 +565,19 @@ window.QM = {
   async lancerIA() {
     const apiKey = localStorage.getItem('plaqpro_groq_key') || localStorage.getItem('groq_api_key') || '';
     if (!apiKey.startsWith('gsk_')) {
-      const saisie = prompt('Clé API Groq (gsk_...) pour les questions IA illimitées :');
-      if (!saisie || !saisie.startsWith('gsk_')) {
-        App.toast('Clé Groq invalide. Les questions IA ne sont pas disponibles.', 'error');
-        return;
-      }
-      localStorage.setItem('plaqpro_groq_key', saisie);
+      App.modalForm({
+        titre: 'Clé API Groq',
+        champs: [{ id: 'cle', label: 'Clé API Groq (gsk_...)', type: 'text', required: true }],
+        onConfirm: function(vals) {
+          if (!vals.cle || !vals.cle.startsWith('gsk_')) {
+            App.toast('Clé invalide — doit commencer par gsk_', 'error');
+            return false;
+          }
+          localStorage.setItem('plaqpro_groq_key', vals.cle.trim());
+          App.toast('Clé Groq enregistrée ✅ — relancez la question IA', 'success');
+        }
+      });
+      return;
     }
     const metierLabel = this._metier?.label || 'BTP général';
     document.getElementById('qm-screen-niveau').innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-tertiary)">🤖 Génération de 10 questions IA pour ${metierLabel}…</div>`;

@@ -37,9 +37,15 @@ const Session = {
 
   // Déconnexion
   deconnecter() {
-    if (!confirm('Se déconnecter de PlaqPro+ ?')) return;
-    this.detruire();
-    window.location.href = 'login.html';
+    App.modalConfirmDanger({
+      titre: 'Se déconnecter ?',
+      message: 'Vous allez être déconnecté de PlaqPro+.',
+      motConfirm: 'OK',
+      onConfirm: () => {
+        Auth.detruire();
+        window.location.href = 'login.html';
+      }
+    });
   },
 
   // Obtenir l'utilisateur courant

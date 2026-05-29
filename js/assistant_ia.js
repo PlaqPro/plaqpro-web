@@ -140,7 +140,7 @@ Tu réponds en français, de façon courte et pratique.`,
     input.value = '';
     input.style.height = 'auto';
 
-    this._addMessage('user', text);
+    this._addMessage('user', esc(text));
     this._history.push({ role: 'user', content: text });
 
     this._loading = true;
