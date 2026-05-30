@@ -501,7 +501,8 @@ Pages.calculateur = function() {
 
         <!-- ── TAB PAYSAGISME — TERRAIN & SOL ── -->
         <div id="tab-pay-terrain" class="calc-form">
-          <div class="calc-section-title">📐 Surface (m²)</div>
+          <div class="calc-section-title">📐 Surface du terrain</div>
+          <div id="polygone-container"></div>
           <div class="calc-input-group">
             <label>Longueur (m)</label>
             <div class="calc-input-wrap">
@@ -1060,6 +1061,11 @@ const Calc = {
   currentTab: 'cloison',
 
   switchTab(tab, btn) {
+    if (tab === 'pay-terrain' && typeof PolygoneMetrage !== 'undefined') {
+      setTimeout(() => PolygoneMetrage.init('polygone-container', {
+        onSurface: (s) => { Calc._surfacePoly = s; Calc.compute(); }
+      }), 50);
+    }
     this.currentTab = tab;
     document.querySelectorAll('.calc-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.calc-form').forEach(f => f.classList.remove('active'));
@@ -2366,9 +2372,10 @@ var DevisWizard = {
 
   // ── Paysagisme : TERRAIN & SOL ────────────────────────────
   calcPayTerrain() {
+    const surfacePoly = this._surfacePoly || 0;
     const longueur = this.v('pt-longueur', 20);
     const largeur  = this.v('pt-largeur', 15);
-    const surface  = longueur * largeur;
+    const surface  = surfacePoly > 0 ? surfacePoly : longueur * largeur;
     const profond  = this.v('pt-profondeur', 0.30);
     const margeMat = this.v('pt-marge-mat', 30) / 100;
     const margeMO  = this.v('pt-marge-mo', 20) / 100;
