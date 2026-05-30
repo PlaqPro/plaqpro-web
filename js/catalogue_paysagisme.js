@@ -277,7 +277,7 @@
 
           <div class="card" style="padding:12px;border:1px solid var(--border);background:var(--bg-card)">
             <div class="calc-section-title">Import / export CSV</div>
-            <textarea data-catp-csv rows="6" style="width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md,8px);padding:10px;color:var(--text);font-family:var(--font-mono,monospace)" placeholder="reference;designation;unite;prixHT;categorie&#10;WIL-001;Cordyline australis 60cm;u;28.50;VEGETAUX"></textarea>
+            <textarea data-catp-csv rows="6" style="width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md,8px);padding:10px;color:var(--text);font-family:var(--font-mono,monospace)" placeholder="reference;designation;unite;prixHT;categorie;prixBas;prixMoyen;prixHaut;source;dateMaj;notes&#10;CORDYLINE-U;Cordyline australis 60cm;u;28.50;VEGETAUX;18.00;28.50;45.00;catalogue_paysagisme_base_prix_2026;2026-05-30;Plant graphique pour bac decoratif"></textarea>
             <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:10px">
               <button type="button" class="btn btn-secondary" data-catp-action="exporter">Exporter CSV</button>
               <button type="button" class="btn btn-primary" data-catp-action="importer">Importer CSV</button>

@@ -142,8 +142,12 @@ Object.assign(Pages, {
       datePaiement: null,
     });
     App.toast(`Facture ${facture.numero} créée !`);
-    const devisRef = DB.getById(DB.KEYS.devis, devisId);
-    if (devisRef) { devisRef.facture = facture.numero; DB.save(DB.KEYS.devis, DB.devis); }
+    const devisList = DB.devis;
+    const idx = devisList.findIndex(d => d.id === devisId);
+    if (idx >= 0) {
+      devisList[idx].facture = facture.numero;
+      DB.save(DB.KEYS.devis, devisList);
+    }
     App.navigate('factures');
     setTimeout(() => Pages.voirFacture(facture.id), 150);
   },
