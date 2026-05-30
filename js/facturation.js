@@ -458,13 +458,13 @@ Object.assign(Pages, {
         <div style="font-size:14px;color:#666;margin-bottom:8px">Acompte à la commande (30%)</div>
         <div class="acompte-montant">${montantTTC.toFixed(2)} €</div>
         <div style="font-size:13px;color:#666;margin-top:8px">
-          HT : ${montant.toFixed(2)} € — TVA ${Math.round((facture.tva||0.1)*100)}% : ${(montantTTC-montant).toFixed(2)} €
+          HT : ${montant.toFixed(2)} € — TVA ${Math.round((facture.tva||0)*100)}% : ${(montantTTC-montant).toFixed(2)} €
         </div>
       </div>
       <table><tbody>
         <tr><td>Montant total chantier HT</td><td style="text-align:right"><b>${parseFloat(facture.totalHT).toFixed(2)} €</b></td></tr>
         <tr><td>Acompte 30% HT</td><td style="text-align:right"><b>${montant.toFixed(2)} €</b></td></tr>
-        <tr><td>TVA ${Math.round((facture.tva||0.1)*100)}%</td><td style="text-align:right">${(montantTTC-montant).toFixed(2)} €</td></tr>
+        <tr><td>TVA ${Math.round((facture.tva||0)*100)}%</td><td style="text-align:right">${(montantTTC-montant).toFixed(2)} €</td></tr>
         <tr style="background:#f0f9ff"><td><b>Acompte TTC à régler</b></td><td style="text-align:right"><b>${montantTTC.toFixed(2)} €</b></td></tr>
       </tbody></table>
       <div style="margin-top:16px;font-size:12px;color:#666">

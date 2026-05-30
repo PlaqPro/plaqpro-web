@@ -40,7 +40,7 @@ var EmailDevis = {
     const lignes = doc.lignes || [];
     const totalHT  = doc.totalHT  || (doc.totaux && doc.totaux.totalHT)  || 0;
     const totalTTC = doc.totalTTC || (doc.totaux && doc.totaux.totalTTC) || 0;
-    const tva      = doc.tva      || (doc.totaux && doc.totaux.tva)      || 0.1;
+    const tva      = (doc.tva !== undefined && doc.tva !== null) ? doc.tva : ((doc.totaux && doc.totaux.tva) || 0);
     const fmt = function(v) {
       return (typeof Calculs !== 'undefined' ? Calculs.fmt(v) : parseFloat(v).toFixed(2) + ' €');
     };
