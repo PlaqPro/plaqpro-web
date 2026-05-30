@@ -131,7 +131,7 @@
 
     _buildHTML() {
       return `
-        <div class="card metrage-paysagisme" style="display:flex;flex-direction:column;gap:16px">
+        <div class="card metrage-paysagisme" style="display:flex;flex-direction:column;gap:16px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word;overflow:visible">
           <div>
             <h2 style="margin:0 0 4px;color:var(--text)">Métrage paysagisme</h2>
             <p style="margin:0;color:var(--text-secondary,var(--text));font-size:13px">Calculs surfaces, volumes, pentes, murs, bacs et conversions terrain.</p>
@@ -341,7 +341,7 @@
 
   function segmentTable(kind) {
     return `
-      <table style="width:100%;border-collapse:collapse;min-width:420px">
+      <table style="width:100%;max-width:100%;border-collapse:collapse;min-width:0;table-layout:fixed;word-wrap:break-word;overflow-wrap:break-word">
         <thead><tr><th>#</th><th>Longueur (m)</th><th>Largeur (m)</th><th></th></tr></thead>
         <tbody data-mp-${kind}-rows>
           ${segmentRow(1, kind)}

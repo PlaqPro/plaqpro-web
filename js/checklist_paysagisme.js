@@ -228,7 +228,7 @@
       const checklist = this._getChecklist(type);
       const groups = groupByCategorie(checklist);
       return `
-        <div class="card checklist-paysagisme" style="display:flex;flex-direction:column;gap:16px">
+        <div class="card checklist-paysagisme" style="display:flex;flex-direction:column;gap:16px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word;overflow:visible">
           <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
             <div>
               <h2 style="margin:0 0 4px;color:var(--text)">Checklist paysagisme</h2>
@@ -240,13 +240,13 @@
           </div>
 
           <div data-clp-score style="border:1px solid var(--border);background:var(--bg-card);border-radius:var(--r-md,8px);padding:12px"></div>
-          <div data-clp-alertes style="display:flex;flex-direction:column;gap:8px"></div>
+          <div data-clp-alertes style="display:flex;flex-direction:column;gap:8px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word"></div>
 
-          <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;flex-direction:column;gap:14px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
             ${Object.keys(groups).map(categorie => `
               <div style="border:1px solid var(--border);border-radius:var(--r-md,8px);background:var(--bg-card);padding:12px">
                 <div class="calc-section-title">${escapeHtml(categorie)}</div>
-                <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;flex-direction:column;gap:8px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
                   ${groups[categorie].map(item => this._itemHTML(type, item)).join('')}
                 </div>
               </div>

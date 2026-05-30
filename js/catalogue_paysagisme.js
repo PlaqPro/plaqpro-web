@@ -261,7 +261,7 @@
 
     _buildHTML() {
       return `
-        <div class="card catalogue-paysagisme" style="display:flex;flex-direction:column;gap:16px">
+        <div class="card catalogue-paysagisme" style="display:flex;flex-direction:column;gap:16px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word;overflow:visible">
           <div>
             <h2 style="margin:0 0 4px;color:var(--text)">Catalogue paysagisme</h2>
             <p style="margin:0;color:var(--text-secondary,var(--text));font-size:13px">Base locale de prix HT : fournitures, vegetaux, materiaux et finitions.</p>

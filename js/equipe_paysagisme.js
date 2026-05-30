@@ -138,7 +138,7 @@
 
     _buildHTML() {
       return `
-        <div class="card equipe-paysagisme" style="display:flex;flex-direction:column;gap:16px">
+        <div class="card equipe-paysagisme" style="display:flex;flex-direction:column;gap:16px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word;overflow:visible">
           <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
             <div>
               <h2 style="margin:0 0 4px;color:var(--text)">Équipe paysagisme</h2>
@@ -173,7 +173,7 @@
 
     _cardSalarie(salarie) {
       return `
-        <div class="card" style="border:1px solid var(--border);background:var(--bg-card);display:flex;flex-direction:column;gap:10px">
+        <div class="card" style="border:1px solid var(--border);background:var(--bg-card);display:flex;flex-direction:column;gap:10px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word;overflow:visible">
           <div style="display:flex;justify-content:space-between;gap:8px">
             <div>
               <div style="font-weight:800;color:var(--text)">${escapeHtml(salarie.prenom)} ${escapeHtml(salarie.nom)}</div>
@@ -219,7 +219,7 @@
       }
       title.textContent = salarie ? 'Modifier salarié' : 'Ajouter salarié';
       body.innerHTML = `
-        <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;flex-direction:column;gap:12px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
           ${field('eqp-prenom', 'Prénom', salarie ? salarie.prenom : '', 'text')}
           ${field('eqp-nom', 'Nom', salarie ? salarie.nom : '', 'text')}
           <label class="calc-input-group">
@@ -272,7 +272,7 @@
           </div>
           <div style="font-size:12px;color:var(--text-secondary,var(--text))">${total.detail.length} salarié(s) sélectionné(s)</div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:4px;margin-top:8px">
+        <div style="display:flex;flex-direction:column;gap:4px;margin-top:8px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
           ${total.detail.map(item => `<div style="display:flex;justify-content:space-between;color:var(--text);font-size:13px"><span>${escapeHtml(item.nom)} · ${item.heures} h</span><strong>${money(item.cout)}</strong></div>`).join('')}
         </div>
       `;

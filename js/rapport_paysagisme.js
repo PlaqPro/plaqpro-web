@@ -240,7 +240,7 @@
       const chantiers = getChantiersPaysage();
       const devisPaysage = getDevis().filter(d => d.source === 'Pack Paysagisme' || d.analyseInterne);
       return `
-        <div class="rapport-paysagisme" style="display:flex;flex-direction:column;gap:16px">
+        <div class="rapport-paysagisme" style="display:flex;flex-direction:column;gap:16px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word;overflow:visible">
           <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
               <h2 style="margin:0 0 4px;color:var(--text)">Rapports paysagisme</h2>
@@ -251,14 +251,14 @@
 
           <div class="card">
             <div class="calc-section-title">Chantiers paysagisme</div>
-            <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;flex-direction:column;gap:8px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
               ${chantiers.length ? chantiers.map(item => chantierRow(item)).join('') : '<div style="color:var(--text-secondary,var(--text));font-size:13px">Aucun chantier paysagisme.</div>'}
             </div>
           </div>
 
           <div class="card">
             <div class="calc-section-title">Fiches devis client</div>
-            <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;flex-direction:column;gap:8px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
               ${devisPaysage.length ? devisPaysage.map(devis => devisRow(devis)).join('') : '<div style="color:var(--text-secondary,var(--text));font-size:13px">Aucun devis paysagisme détecté.</div>'}
             </div>
           </div>
@@ -388,7 +388,7 @@
       .concat((apres || []).map(p => Object.assign({}, p, { label: 'Après' })));
     if (!all.length) return '<p style="color:#666">Aucune photo avant/après disponible.</p>';
     return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">${all.map(photo => `
-      <figure style="margin:0;border:1px solid #ddd;border-radius:8px;overflow:hidden">
+      <figure style="margin:0;border:1px solid #ddd;border-radius:8px;overflow:visible;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
         <img src="${escapeAttr(photo.base64)}" alt="${escapeAttr(photo.label)}" style="width:100%;height:120px;object-fit:cover;display:block">
         <figcaption style="padding:6px;text-align:center;font-size:12px;color:#555">${escapeHtml(photo.label)}</figcaption>
       </figure>
@@ -467,7 +467,7 @@
   function alertList(alertes) {
     alertes = alertes || [];
     if (!alertes.length) return '<p style="color:#666">Aucune alerte active.</p>';
-    return `<div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">${alertes.map(a => `<div style="border:1px solid #f59e0b;background:#fff7ed;border-radius:8px;padding:8px;color:#7c2d12">${escapeHtml(a)}</div>`).join('')}</div>`;
+    return `<div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">${alertes.map(a => `<div style="border:1px solid #f59e0b;background:#fff7ed;border-radius:8px;padding:8px;color:#7c2d12;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">${escapeHtml(a)}</div>`).join('')}</div>`;
   }
 
   function redAlert(message) {

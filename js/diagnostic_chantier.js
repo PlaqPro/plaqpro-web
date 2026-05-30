@@ -114,7 +114,7 @@
 
     _buildHTML() {
       return `
-        <div class="card diagnostic-chantier" style="display:flex;flex-direction:column;gap:16px">
+        <div class="card diagnostic-chantier" style="display:flex;flex-direction:column;gap:16px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word;overflow:visible">
           <div>
             <h2 style="margin:0 0 4px;color:var(--text)">Diagnostic chantier exterieur</h2>
             <p style="margin:0;color:var(--text-secondary,var(--text));font-size:13px">Evaluation initiale acces, sol, reseaux et contraintes avant chiffrage paysagisme.</p>
@@ -180,7 +180,7 @@
                 <div data-diag-temps style="font-size:24px;font-weight:800;color:var(--accent)">1.50 h</div>
               </div>
             </div>
-            <div data-diag-alertes style="display:flex;flex-direction:column;gap:8px;margin-top:12px"></div>
+            <div data-diag-alertes style="display:flex;flex-direction:column;gap:8px;margin-top:12px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word"></div>
           </div>
 
           <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">

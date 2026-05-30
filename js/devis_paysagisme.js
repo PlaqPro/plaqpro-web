@@ -204,7 +204,7 @@
       const chantiers = getCollection('chantiers');
 
       return `
-        <div class="card devis-paysagisme" style="display:flex;flex-direction:column;gap:16px">
+        <div class="card devis-paysagisme" style="display:flex;flex-direction:column;gap:16px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word;overflow:visible">
           <div>
             <h2 style="margin:0 0 4px;color:var(--text)">Devis paysagisme</h2>
             <p style="margin:0;color:var(--text-secondary,var(--text));font-size:13px">Selectionnez les lots, ajustez les quantites et creez un devis structure depuis le Pack Paysagisme.</p>
@@ -239,7 +239,7 @@
           </div>
 
           <div class="calc-section-title">Lots metier</div>
-          <div data-devp-lots style="display:flex;flex-direction:column;gap:10px">
+          <div data-devp-lots style="display:flex;flex-direction:column;gap:10px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
             ${lots.map(lot => this._lotHTML(lot)).join('')}
           </div>
 
@@ -256,23 +256,23 @@
     _lotHTML(lot) {
       return `
         <div class="card" data-devp-lot="${escapeAttr(lot.code || lot.id)}" style="padding:12px;border:1px solid var(--border)">
-          <div style="display:grid;grid-template-columns:auto 1fr 110px 130px;gap:10px;align-items:start">
+          <div class="devp-lot-grid" style="display:grid;grid-template-columns:auto minmax(0,1fr) minmax(100px,110px) minmax(110px,130px);gap:10px;align-items:start;min-width:0">
             <label style="display:flex;align-items:center;gap:8px;margin-top:4px">
               <input type="checkbox" data-devp-enabled>
               <span style="font-size:20px">${escapeHtml(lot.icone || '')}</span>
             </label>
-            <div>
+            <div style="min-width:0;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
               <div style="font-weight:700;color:var(--text)">${escapeHtml(lot.nom)}</div>
               <div style="font-size:12px;color:var(--text-secondary,var(--text));margin-top:2px">${escapeHtml(lot.description || '')}</div>
               <div data-devp-options style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px">
                 ${this._optionsHTML(lot.code || lot.id)}
               </div>
             </div>
-            <div class="form-group" style="margin:0">
+            <div class="form-group" style="margin:0;min-width:0">
               <label>Quantite (${escapeHtml(lot.unite)})</label>
               <input type="number" min="0" step="0.01" value="1" data-devp-quantite>
             </div>
-            <div style="text-align:right">
+            <div style="text-align:right;min-width:0;word-wrap:break-word;overflow-wrap:break-word">
               <div style="font-size:12px;color:var(--text-secondary,var(--text))">Prix calcule</div>
               <div data-devp-prix style="font-weight:800;color:var(--accent);font-size:17px">0,00 €</div>
             </div>

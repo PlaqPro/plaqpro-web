@@ -50,7 +50,7 @@
 
     getHTML() {
       return `
-        <div class="poly-metrage" style="display:flex;flex-direction:column;gap:16px">
+        <div class="poly-metrage" style="display:flex;flex-direction:column;gap:16px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word;overflow:visible">
           <div class="calc-section-title">Mode de metrage</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button type="button" class="btn btn-secondary" data-poly-action="mode-polygone">Mode polygone</button>
@@ -100,7 +100,7 @@
 
           <div>
             <div class="calc-section-title">Deductions d'obstacles</div>
-            <div data-poly-deductions style="display:flex;flex-direction:column;gap:8px"></div>
+            <div data-poly-deductions style="display:flex;flex-direction:column;gap:8px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word"></div>
             <button type="button" class="btn btn-secondary" data-poly-action="add-deduction" style="margin-top:10px">Ajouter une deduction</button>
           </div>
 

@@ -994,3 +994,72 @@ tbody tr:hover {
   }
 }
 
+/* Correctifs responsives limites aux pages paysagisme */
+.paysagisme-page,
+.paysagisme-page * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.paysagisme-page {
+  width: 100%;
+  max-width: 100%;
+  overflow: visible;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.paysagisme-page .page-header,
+.paysagisme-page .card,
+.paysagisme-page [id$="-container"],
+.paysagisme-page [id*="pays"],
+.paysagisme-page [class*="paysagisme"] {
+  width: 100%;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.paysagisme-page h1,
+.paysagisme-page h2,
+.paysagisme-page h3,
+.paysagisme-page p,
+.paysagisme-page label,
+.paysagisme-page span,
+.paysagisme-page div,
+.paysagisme-page strong {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.paysagisme-page input,
+.paysagisme-page select,
+.paysagisme-page textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.paysagisme-page .btn {
+  white-space: normal;
+  text-align: center;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .paysagisme-page [style*="grid-template-columns"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .paysagisme-page table {
+    min-width: 0 !important;
+    table-layout: auto;
+  }
+
+  .paysagisme-page th,
+  .paysagisme-page td {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+}
+

@@ -1294,7 +1294,7 @@ const Pages = {
 
   // ── Catalogue paysagisme ──────────────────────────────────
   cataloguePaysagisme() {
-    const el = document.createElement('div'); el.className = 'page-content';
+    const el = document.createElement('div'); el.className = 'page-content paysagisme-page';
     el.style.cssText = 'overflow:visible;min-width:0;width:100%;box-sizing:border-box;';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">🌿 Catalogue prix paysagisme</h1></div><div id="catalogue-pays-container" class="mt-16"></div>';
     setTimeout(() => {
@@ -1307,7 +1307,7 @@ const Pages = {
 
   // ── Checklist paysagisme ──────────────────────────────────
   checklistPaysagisme() {
-    const el = document.createElement('div'); el.className = 'page-content';
+    const el = document.createElement('div'); el.className = 'page-content paysagisme-page';
     el.style.cssText = 'overflow:visible;min-width:0;width:100%;box-sizing:border-box;';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">✅ Checklists chantier</h1></div><div id="checklist-container" class="mt-16"></div>';
     setTimeout(() => {
@@ -1320,7 +1320,7 @@ const Pages = {
 
   // ── Équipe paysagisme ─────────────────────────────────────
   equipePaysagisme() {
-    const el = document.createElement('div'); el.className = 'page-content';
+    const el = document.createElement('div'); el.className = 'page-content paysagisme-page';
     el.style.cssText = 'overflow:visible;min-width:0;width:100%;box-sizing:border-box;';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">👷 Mon équipe</h1></div><div id="equipe-container" class="mt-16"></div>';
     setTimeout(() => {
@@ -1333,7 +1333,7 @@ const Pages = {
 
   // ── Parc matériel paysagisme ──────────────────────────────
   materielPaysagisme() {
-    const el = document.createElement('div'); el.className = 'page-content';
+    const el = document.createElement('div'); el.className = 'page-content paysagisme-page';
     el.style.cssText = 'overflow:visible;min-width:0;width:100%;box-sizing:border-box;';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">🚜 Parc matériel</h1></div><div id="materiel-container" class="mt-16"></div>';
     setTimeout(() => {
@@ -1346,7 +1346,7 @@ const Pages = {
 
   // ── Métrages paysagisme ───────────────────────────────────
   metragePaysagisme() {
-    const el = document.createElement('div'); el.className = 'page-content';
+    const el = document.createElement('div'); el.className = 'page-content paysagisme-page';
     el.style.cssText = 'overflow:visible;min-width:0;width:100%;box-sizing:border-box;';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">📐 Métrages avancés</h1></div><div id="metrage-container" class="mt-16"></div>';
     setTimeout(() => {
@@ -1359,7 +1359,7 @@ const Pages = {
 
   // ── Import CSV / Willemse ─────────────────────────────────
   importCsvPaysagisme() {
-    const el = document.createElement('div'); el.className = 'page-content';
+    const el = document.createElement('div'); el.className = 'page-content paysagisme-page';
     el.style.cssText = 'overflow:visible;min-width:0;width:100%;box-sizing:border-box;';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">📥 Import CSV / Willemse</h1></div><div id="import-csv-container" class="mt-16"></div>';
     setTimeout(() => {
@@ -1372,7 +1372,7 @@ const Pages = {
 
   // ── Rapports paysagisme ───────────────────────────────────
   rapportsPaysagisme() {
-    const el = document.createElement('div'); el.className = 'page-content';
+    const el = document.createElement('div'); el.className = 'page-content paysagisme-page';
     el.style.cssText = 'overflow:visible;min-width:0;width:100%;box-sizing:border-box;';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">📊 Rapports & marges</h1></div><div id="rapports-pays-container" class="mt-16"></div>';
     setTimeout(() => {
@@ -1385,7 +1385,7 @@ const Pages = {
 
   // ── Chantiers paysagisme ──────────────────────────────────
   chantiersPaysagisme() {
-    const el = document.createElement('div'); el.className = 'page-content';
+    const el = document.createElement('div'); el.className = 'page-content paysagisme-page';
     el.style.cssText = 'overflow:visible;min-width:0;width:100%;box-sizing:border-box;';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">🌿 Chantiers extérieurs</h1></div><div id="chantiers-pays-container" class="mt-16"></div>';
     setTimeout(() => {
@@ -1398,9 +1398,9 @@ const Pages = {
 
   // ── Paysagisme ────────────────────────────────────────────
   paysagisme() {
-    const el = document.createElement('div'); el.className = 'page-content';
+    const el = document.createElement('div'); el.className = 'page-content paysagisme-page';
     el.style.cssText = 'overflow:visible;min-width:0;width:100%;box-sizing:border-box;';
-    el.innerHTML = '<div class="page-header"><h1 class="page-title">🌿 Paysagisme</h1></div><div id="paysagisme-devis-container" class="card p-16"></div>';
+    el.innerHTML = '<div class="page-header"><h1 class="page-title">🌿 Paysagisme</h1></div><div id="paysagisme-devis-container" class="mt-16"></div>';
     setTimeout(() => {
       const container = document.getElementById('paysagisme-devis-container');
       if (typeof DevisPaysagisme !== 'undefined') DevisPaysagisme.getHTML('paysagisme-devis-container');
@@ -1412,9 +1412,9 @@ const Pages = {
 
   // ── Diagnostic chantier ───────────────────────────────────
   diagnostic() {
-    const el = document.createElement('div'); el.className = 'page-content';
+    const el = document.createElement('div'); el.className = 'page-content paysagisme-page';
     el.style.cssText = 'overflow:visible;min-width:0;width:100%;box-sizing:border-box;';
-    el.innerHTML = '<div class="page-header"><h1 class="page-title">📋 Diagnostic chantier</h1></div><div id="diagnostic-container" class="card p-16"></div>';
+    el.innerHTML = '<div class="page-header"><h1 class="page-title">📋 Diagnostic chantier</h1></div><div id="diagnostic-container" class="mt-16"></div>';
     setTimeout(() => {
       const container = document.getElementById('diagnostic-container');
       if (typeof DiagnosticChantier !== 'undefined') DiagnosticChantier.getHTML('diagnostic-container');

@@ -127,7 +127,7 @@
 
     _buildHTML() {
       return `
-        <div class="card materiel-paysagisme" style="display:flex;flex-direction:column;gap:16px">
+        <div class="card materiel-paysagisme" style="display:flex;flex-direction:column;gap:16px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word;overflow:visible">
           <div>
             <h2 style="margin:0 0 4px;color:var(--text)">Parc matériel paysagisme</h2>
             <p style="margin:0;color:var(--text-secondary,var(--text));font-size:13px">Amortissement, entretien et coût journalier du matériel possédé.</p>
@@ -215,7 +215,7 @@
       }
       title.textContent = `Modifier ${item.nom}`;
       body.innerHTML = `
-        <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;flex-direction:column;gap:12px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
           ${field('matp-edit-nom', 'Nom', item.nom, 'text')}
           ${field('matp-edit-valeur', 'Valeur (€)', item.valeur)}
           ${field('matp-edit-duree', 'Durée amortissement (ans)', item.dureeAmort)}
@@ -272,7 +272,7 @@
           </div>
           <div style="font-size:12px;color:var(--text-secondary,var(--text))">${total.detailParMateriel.length} matériel(s) sélectionné(s)</div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:4px;margin-top:8px">
+        <div style="display:flex;flex-direction:column;gap:4px;margin-top:8px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
           ${total.detailParMateriel.map(item => `<div style="display:flex;justify-content:space-between;color:var(--text);font-size:13px"><span>${escapeHtml(item.nom)} (${item.jours} j / ${item.heures} h)</span><strong>${money(item.cout)}</strong></div>`).join('')}
         </div>
       `;

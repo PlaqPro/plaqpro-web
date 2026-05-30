@@ -159,7 +159,7 @@
     _buildHTML() {
       const items = this._filtered();
       return `
-        <div class="chantier-paysagisme" style="display:flex;flex-direction:column;gap:16px">
+        <div class="chantier-paysagisme" style="display:flex;flex-direction:column;gap:16px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word;overflow:visible">
           <div class="card" style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
             <div>
               <h2 style="margin:0 0 4px;color:var(--text)">Chantiers paysagisme</h2>
@@ -192,7 +192,7 @@
       const clientNom = client ? (client.nom || client.raisonSociale || `Client #${client.id}`) : 'Client non renseigné';
 
       return `
-        <div class="card" data-cp-id="${escapeAttr(item.id)}" style="border:1px solid var(--border);display:flex;flex-direction:column;gap:12px">
+        <div class="card" data-cp-id="${escapeAttr(item.id)}" style="border:1px solid var(--border);display:flex;flex-direction:column;gap:12px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word;overflow:visible">
           <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
             <div>
               <div style="font-weight:800;color:var(--text);font-size:16px">${escapeHtml(titre)}</div>
@@ -207,7 +207,7 @@
               <span>Avancement</span>
               <span>${round2(item.avancement)} %</span>
             </div>
-            <div style="height:9px;background:var(--bg-card);border:1px solid var(--border);border-radius:999px;overflow:hidden">
+            <div style="height:9px;background:var(--bg-card);border:1px solid var(--border);border-radius:999px;overflow:visible">
               <div style="height:100%;width:${clamp(item.avancement, 0, 100)}%;background:var(--accent)"></div>
             </div>
           </div>
@@ -276,7 +276,7 @@
       openModal(
         'Nouveau chantier paysagisme',
         `
-          <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:12px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
             <label class="calc-input-group">
               <span>Chantier PlaqPro</span>
               <select id="cp-new-chantier" style="${inputStyle()}">
@@ -328,7 +328,7 @@
       openModal(
         'Fiche chantier paysagisme',
         `
-          <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:12px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
             <div class="card" style="background:var(--bg-card);border:1px solid var(--border)">
               <strong>${escapeHtml(linked ? (linked.nom || linked.titre || 'Chantier') : 'Chantier non lié')}</strong>
               <div style="font-size:13px;color:var(--text-secondary,var(--text));margin-top:4px">${escapeHtml(formatAdresse(linked))}</div>
@@ -358,7 +358,7 @@
       openModal(
         'Modifier chantier paysagisme',
         `
-          <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:12px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
             <label class="calc-input-group">
               <span>Statut</span>
               <select id="cp-edit-statut" style="${inputStyle()}">
@@ -438,10 +438,10 @@
       openModal(
         'Photos chantier',
         `
-          <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:12px;box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
               ${item.photos.length ? item.photos.map(photo => `
-                <div style="border:1px solid var(--border);border-radius:var(--r-md,8px);overflow:hidden;background:var(--bg-card)">
+                <div style="border:1px solid var(--border);border-radius:var(--r-md,8px);overflow:visible;background:var(--bg-card);box-sizing:border-box;width:100%;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
                   <img src="${escapeAttr(photo.base64)}" alt="${escapeAttr(photo.type)}" style="width:100%;height:100px;object-fit:cover;display:block">
                   <div style="padding:6px;font-size:12px;color:var(--text);text-align:center">${escapeHtml(photo.type)}</div>
                 </div>
@@ -532,7 +532,7 @@
       'réceptionné': ['#8B5CF6', 'rgba(139,92,246,0.12)'],
     };
     const c = colors[statut] || colors['planifié'];
-    return `border:1px solid ${c[0]};background:${c[1]};color:${c[0]};border-radius:999px;padding:4px 9px;font-size:12px;font-weight:700;white-space:nowrap`;
+    return `border:1px solid ${c[0]};background:${c[1]};color:${c[0]};border-radius:999px;padding:4px 9px;font-size:12px;font-weight:700;white-space:normal;word-wrap:break-word;overflow-wrap:break-word`;
   }
 
   function openModal(title, bodyHTML, footerHTML) {
@@ -577,7 +577,7 @@
   }
 
   function orangeBadge(label) {
-    return `<span style="display:inline-block;border:1px solid #F59E0B;background:rgba(245,158,11,0.14);color:#B45309;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:800;white-space:nowrap">${escapeHtml(label)}</span>`;
+    return `<span style="display:inline-block;border:1px solid #F59E0B;background:rgba(245,158,11,0.14);color:#B45309;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:800;white-space:normal;word-wrap:break-word;overflow-wrap:break-word">${escapeHtml(label)}</span>`;
   }
 
   function formatAdresse(chantier) {
