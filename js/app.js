@@ -1301,6 +1301,15 @@ const Pages = {
     else el.querySelector('#catalogue-pays-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
   },
 
+  // ── Checklist paysagisme ──────────────────────────────────
+  checklistPaysagisme() {
+    const el = document.getElementById('main-content');
+    if (!el) return;
+    el.innerHTML = '<div class="page-header"><h1 class="page-title">✅ Checklists chantier</h1></div><div id="checklist-container" class="card p-16 mt-16"></div>';
+    if (typeof ChecklistPaysagisme !== 'undefined') ChecklistPaysagisme.getHTML('checklist-container', 'complete');
+    else el.querySelector('#checklist-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+  },
+
   // ── Import CSV / Willemse ─────────────────────────────────
   importCsvPaysagisme() {
     const el = document.getElementById('main-content');

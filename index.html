@@ -151,6 +151,7 @@
   <script src="js/chantier_paysagisme.js"></script>
   <script src="js/rapport_paysagisme.js"></script>
   <script src="js/template_csv_paysagisme.js"></script>
+  <script src="js/checklist_paysagisme.js"></script>
   <script src="js/analyse_photo.js"></script>
   <script src="js/pause_cafe.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" integrity="sha384-OUW9euuUyxyHcAhTqbhI+Iyb8LMssXt/cpz0yXhs9UWG2/R/uaWdakx/4cfww7Vb" crossorigin="anonymous" defer></script>
@@ -205,6 +206,7 @@
       { page: 'chantiersPaysagisme', icon: '<i class="ph ph-shovel"></i>',          label: 'Chantiers extérieurs' },
       { page: 'rapportsPaysagisme',  icon: '<i class="ph ph-chart-bar"></i>',       label: 'Rapports & marges' },
       { page: 'importCsvPaysagisme', icon: '<i class="ph ph-upload-simple"></i>',   label: 'Import CSV / Willemse' },
+      { page: 'checklistPaysagisme', icon: '<i class="ph ph-check-square"></i>',    label: 'Checklists chantier' },
 
       { section: '📐 Techniques' },
       { page: 'acoustique',  icon: '<i class="ph ph-speaker-high"></i>', label: 'Acoustique' },
@@ -304,6 +306,7 @@
         chantiersPaysagisme:  '🌿 Chantiers extérieurs',
         rapportsPaysagisme:    '🌿 Rapports & marges',
         importCsvPaysagisme:   '🌿 Import CSV / Willemse',
+        checklistPaysagisme:   '🌿 Checklists chantier',
         dpgf:        "🏛 Appels d'offres — Analyse IA",
         aide:        '❓ Guide & Aide',
         chantier_mobile: '🏗 Mode Chantier',
@@ -368,6 +371,7 @@
         chantiersPaysagisme:  function() { return Pages.chantiersPaysagisme(); },
         rapportsPaysagisme:    function() { return Pages.rapportsPaysagisme(); },
         importCsvPaysagisme:   function() { return Pages.importCsvPaysagisme(); },
+        checklistPaysagisme:   function() { return Pages.checklistPaysagisme(); },
       };
 
       if (pageMap[page]) {
