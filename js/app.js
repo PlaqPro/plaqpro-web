@@ -1294,91 +1294,123 @@ const Pages = {
 
   // ── Catalogue paysagisme ──────────────────────────────────
   cataloguePaysagisme() {
-    const el = document.getElementById('main-content');
-    if (!el) return;
+    const el = document.createElement('div'); el.className = 'page-content';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">🌿 Catalogue prix paysagisme</h1></div><div id="catalogue-pays-container" class="mt-16"></div>';
-    if (typeof CataloguePaysagisme !== 'undefined') CataloguePaysagisme.getHTML('catalogue-pays-container');
-    else el.querySelector('#catalogue-pays-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    setTimeout(() => {
+      const container = document.getElementById('catalogue-pays-container');
+      if (typeof CataloguePaysagisme !== 'undefined') CataloguePaysagisme.getHTML('catalogue-pays-container');
+      else if (container) container.innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    }, 0);
+    return el;
   },
 
   // ── Checklist paysagisme ──────────────────────────────────
   checklistPaysagisme() {
-    const el = document.getElementById('main-content');
-    if (!el) return;
+    const el = document.createElement('div'); el.className = 'page-content';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">✅ Checklists chantier</h1></div><div id="checklist-container" class="mt-16"></div>';
-    if (typeof ChecklistPaysagisme !== 'undefined') ChecklistPaysagisme.getHTML('checklist-container', 'complete');
-    else el.querySelector('#checklist-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    setTimeout(() => {
+      const container = document.getElementById('checklist-container');
+      if (typeof ChecklistPaysagisme !== 'undefined') ChecklistPaysagisme.getHTML('checklist-container', 'complete');
+      else if (container) container.innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    }, 0);
+    return el;
   },
 
   // ── Équipe paysagisme ─────────────────────────────────────
   equipePaysagisme() {
-    const el = document.getElementById('main-content');
-    if (!el) return;
+    const el = document.createElement('div'); el.className = 'page-content';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">👷 Mon équipe</h1></div><div id="equipe-container" class="mt-16"></div>';
-    if (typeof EquipePaysagisme !== 'undefined') EquipePaysagisme.getHTML('equipe-container');
-    else el.querySelector('#equipe-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    setTimeout(() => {
+      const container = document.getElementById('equipe-container');
+      if (typeof EquipePaysagisme !== 'undefined') EquipePaysagisme.getHTML('equipe-container');
+      else if (container) container.innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    }, 0);
+    return el;
   },
 
   // ── Parc matériel paysagisme ──────────────────────────────
   materielPaysagisme() {
-    const el = document.getElementById('main-content');
-    if (!el) return;
+    const el = document.createElement('div'); el.className = 'page-content';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">🚜 Parc matériel</h1></div><div id="materiel-container" class="mt-16"></div>';
-    if (typeof MaterielPaysagisme !== 'undefined') MaterielPaysagisme.getHTML('materiel-container');
-    else el.querySelector('#materiel-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    setTimeout(() => {
+      const container = document.getElementById('materiel-container');
+      if (typeof MaterielPaysagisme !== 'undefined') MaterielPaysagisme.getHTML('materiel-container');
+      else if (container) container.innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    }, 0);
+    return el;
   },
 
   // ── Métrages paysagisme ───────────────────────────────────
   metragePaysagisme() {
-    const el = document.getElementById('main-content');
-    if (!el) return;
+    const el = document.createElement('div'); el.className = 'page-content';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">📐 Métrages avancés</h1></div><div id="metrage-container" class="mt-16"></div>';
-    if (typeof MetragePaysagisme !== 'undefined') MetragePaysagisme.getHTML('metrage-container');
-    else el.querySelector('#metrage-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    setTimeout(() => {
+      const container = document.getElementById('metrage-container');
+      if (typeof MetragePaysagisme !== 'undefined') MetragePaysagisme.getHTML('metrage-container');
+      else if (container) container.innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    }, 0);
+    return el;
   },
 
   // ── Import CSV / Willemse ─────────────────────────────────
   importCsvPaysagisme() {
-    const el = document.getElementById('main-content');
-    if (!el) return;
+    const el = document.createElement('div'); el.className = 'page-content';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">📥 Import CSV / Willemse</h1></div><div id="import-csv-container" class="mt-16"></div>';
-    if (typeof TemplateCsvPaysagisme !== 'undefined') TemplateCsvPaysagisme.getHTML('import-csv-container');
-    else el.querySelector('#import-csv-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    setTimeout(() => {
+      const container = document.getElementById('import-csv-container');
+      if (typeof TemplateCsvPaysagisme !== 'undefined') TemplateCsvPaysagisme.getHTML('import-csv-container');
+      else if (container) container.innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    }, 0);
+    return el;
   },
 
   // ── Rapports paysagisme ───────────────────────────────────
   rapportsPaysagisme() {
-    const el = document.getElementById('main-content');
-    if (!el) return;
+    const el = document.createElement('div'); el.className = 'page-content';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">📊 Rapports & marges</h1></div><div id="rapports-pays-container" class="mt-16"></div>';
-    if (typeof RapportPaysagisme !== 'undefined') RapportPaysagisme.getHTML('rapports-pays-container');
-    else el.querySelector('#rapports-pays-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    setTimeout(() => {
+      const container = document.getElementById('rapports-pays-container');
+      if (typeof RapportPaysagisme !== 'undefined') RapportPaysagisme.getHTML('rapports-pays-container');
+      else if (container) container.innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    }, 0);
+    return el;
   },
 
   // ── Chantiers paysagisme ──────────────────────────────────
   chantiersPaysagisme() {
-    const el = document.getElementById('main-content');
-    if (!el) return;
+    const el = document.createElement('div'); el.className = 'page-content';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">🌿 Chantiers extérieurs</h1></div><div id="chantiers-pays-container" class="mt-16"></div>';
-    if (typeof ChantierPaysagisme !== 'undefined') ChantierPaysagisme.getHTML('chantiers-pays-container');
-    else el.querySelector('#chantiers-pays-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    setTimeout(() => {
+      const container = document.getElementById('chantiers-pays-container');
+      if (typeof ChantierPaysagisme !== 'undefined') ChantierPaysagisme.getHTML('chantiers-pays-container');
+      else if (container) container.innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    }, 0);
+    return el;
   },
 
   // ── Paysagisme ────────────────────────────────────────────
   paysagisme() {
-    const el = document.getElementById('main-content');
-    if (!el) return;
+    const el = document.createElement('div'); el.className = 'page-content';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">🌿 Paysagisme</h1></div><div id="paysagisme-devis-container" class="card p-16"></div>';
-    if (typeof DevisPaysagisme !== 'undefined') DevisPaysagisme.getHTML('paysagisme-devis-container');
+    setTimeout(() => {
+      const container = document.getElementById('paysagisme-devis-container');
+      if (typeof DevisPaysagisme !== 'undefined') DevisPaysagisme.getHTML('paysagisme-devis-container');
+      else if (container) container.innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    }, 0);
     // margeGlobale appliquée via DevisPaysagisme.setMarge() si disponible
+    return el;
   },
 
   // ── Diagnostic chantier ───────────────────────────────────
   diagnostic() {
-    const el = document.getElementById('main-content');
-    if (!el) return;
+    const el = document.createElement('div'); el.className = 'page-content';
     el.innerHTML = '<div class="page-header"><h1 class="page-title">📋 Diagnostic chantier</h1></div><div id="diagnostic-container" class="card p-16"></div>';
-    if (typeof DiagnosticChantier !== 'undefined') DiagnosticChantier.getHTML('diagnostic-container');
+    setTimeout(() => {
+      const container = document.getElementById('diagnostic-container');
+      if (typeof DiagnosticChantier !== 'undefined') DiagnosticChantier.getHTML('diagnostic-container');
+      else if (container) container.innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    }, 0);
+    return el;
   },
 
   // ── Base tarifaire ────────────────────────────────────────
@@ -2969,4 +3001,5 @@ const Pages = {
 
 // Lancer l'app
 document.addEventListener('DOMContentLoaded', () => App.init());
+
 
