@@ -118,6 +118,13 @@
       const item = this.get(id);
       if (!item) return null;
       const devis = findSignedDevis(item.chantierId);
+      if (!devis) {
+        return {
+          chantierPaysagismeId: item.id,
+          chantierId: item.chantierId,
+          erreur: 'Aucun devis signé trouvé',
+        };
+      }
       const prixVendu = devis ? n(devis.totalHT || devis.totalClient || devis.totalTTC, 0) : 0;
       const coutReel = n(item.coutReel, 0);
       const margeEuro = prixVendu - coutReel;
@@ -495,9 +502,16 @@
     const signed = ['signé', 'signe', 'accepté', 'accepte', 'validé', 'valide'];
     return getDevis().find(devis => {
       const sameChantier = String(devis.chantierId) === String(chantierId);
-      const statut = String(devis.statut || '').toLowerCase();
+      const statut = normalizeStatut(devis.statut);
       return sameChantier && signed.indexOf(statut) >= 0;
-    }) || getDevis().find(devis => String(devis.chantierId) === String(chantierId)) || null;
+    }) || null;
+  }
+
+  function normalizeStatut(statut) {
+    return String(statut || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
   }
 
   function filterButton(value, label, active) {

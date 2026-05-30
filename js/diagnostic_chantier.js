@@ -14,6 +14,8 @@
 (function() {
   'use strict';
 
+  const STORAGE_KEY = 'plaqpro_diagnostic_chantier_courant';
+
   const DEFAULT_DIAGNOSTIC = {
     accesVehicule: 'facile',
     distanceCamion: 10,
@@ -35,7 +37,13 @@
     _containerId: null,
     _diagnostic: clone(DEFAULT_DIAGNOSTIC),
 
+    init() {
+      this._diagnostic = Object.assign({}, DEFAULT_DIAGNOSTIC, loadDiagnostic());
+      return this;
+    },
+
     getHTML(containerId) {
+      this.init();
       const html = this._buildHTML();
       if (containerId) {
         this._containerId = containerId;
@@ -92,6 +100,7 @@
 
     reset() {
       this._diagnostic = clone(DEFAULT_DIAGNOSTIC);
+      clearDiagnostic();
       this._syncForm();
       this._renderEvaluation();
       if (window.App && typeof window.App.toast === 'function') {
@@ -206,6 +215,7 @@
         if (input.checked) this._diagnostic[key] = input.value;
       } else if (input.type === 'number') this._diagnostic[key] = n(input.value, 0);
       else this._diagnostic[key] = input.value;
+      saveDiagnostic(this._diagnostic);
     },
 
     _syncForm() {
@@ -307,6 +317,29 @@
     return JSON.parse(JSON.stringify(value));
   }
 
+  function loadDiagnostic() {
+    try {
+      const raw = window.localStorage ? window.localStorage.getItem(STORAGE_KEY) : null;
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveDiagnostic(diagnostic) {
+    try {
+      if (window.localStorage) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(diagnostic || {}));
+    } catch (e) {}
+  }
+
+  function clearDiagnostic() {
+    try {
+      if (window.localStorage) window.localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {}
+  }
+
   function escapeHtml(value) {
     return String(value === undefined || value === null ? '' : value)
       .replace(/&/g, '&amp;')
@@ -320,5 +353,6 @@
     return escapeHtml(value);
   }
 
+  DiagnosticChantier.init();
   window.DiagnosticChantier = DiagnosticChantier;
 })();

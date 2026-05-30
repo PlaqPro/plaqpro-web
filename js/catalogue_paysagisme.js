@@ -119,20 +119,32 @@
     importerCSV(texte) {
       this._ensureLoaded();
       const lignes = String(texte || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+      const premiereLigne = lignes.length ? parseCSVLine(lignes[0]).join(';').toLowerCase() : '';
+      const formatWillemse = premiereLigne.indexOf('reference_fournisseur') >= 0 || premiereLigne.indexOf('nom_produit') >= 0;
+      const formatStandard = premiereLigne.indexOf('reference') >= 0 && premiereLigne.indexOf('designation') >= 0;
+      const startIndex = formatWillemse || formatStandard ? 1 : 0;
       let count = 0;
 
-      lignes.forEach((ligne, index) => {
+      lignes.slice(startIndex).forEach(ligne => {
         const cols = parseCSVLine(ligne);
-        if (index === 0 && /^reference$/i.test(cols[0] || '')) return;
-        if (cols.length < 4) return;
+        if (formatWillemse && cols.length < 6) return;
+        if (!formatWillemse && cols.length < 4) return;
 
-        const article = normalizeArticle({
-          ref: cols[0],
-          designation: cols[1],
-          unite: cols[2],
-          prixHT: parsePrice(cols[3]),
-          categorie: cols[4] || 'VEGETAUX',
-        });
+        const article = formatWillemse
+          ? normalizeArticle({
+              ref: cols[0],
+              designation: cols[1],
+              unite: cols[3],
+              prixHT: parsePrice(cols[4]),
+              categorie: cols[5] || 'VEGETAUX',
+            })
+          : normalizeArticle({
+              ref: cols[0],
+              designation: cols[1],
+              unite: cols[2],
+              prixHT: parsePrice(cols[3]),
+              categorie: cols[4] || 'VEGETAUX',
+            });
         if (!article.ref || !article.designation) return;
         upsertArticle(this._articles, article);
         count++;
