@@ -970,8 +970,8 @@ const Pages = {
         totaux: d.totaux || {
           totalHT:    d.totalHT    || 0,
           totalTTC:   d.totalTTC   || 0,
-          montantTVA: d.montantTVA || (d.totalHT ? d.totalHT * (d.tva || 0.1) : 0),
-          tva:        d.tva        || 0.1,
+          montantTVA: d.montantTVA || (d.totalHT ? d.totalHT * (d.tva || 0) : 0),
+          tva:        d.tva        || 0,
         },
       };
       Pages.afficherDevis(Pages._devisEnCours, chantier, client);
@@ -1108,7 +1108,7 @@ const Pages = {
             Devis valable 30 jours · Prix HT ·
             ${(totaux.tva === 0 || totaux.tva === '0') ?
               'TVA 0% — Auto-liquidation TVA art. 283-2 du CGI' :
-              'TVA ' + Math.round((totaux.tva || 0.1) * 100) + '%'
+              'TVA ' + Math.round((totaux.tva || 0) * 100) + '%'
             } · SIRET ${config.siret}
           </div>
 
@@ -2007,9 +2007,9 @@ const Pages = {
       const client   = chantier ? (DB.getClient ? DB.getClient(chantier.clientId) : null) : null;
       const clientNom = client?.nom || ('Client ' + (f.chantierId || f.id));
       const totalHT   = parseFloat(f.totalHT  || 0);
-      const tvaAmt    = parseFloat(f.montantTVA || totalHT * (f.tva || 0.1));
+      const tvaAmt    = parseFloat(f.montantTVA || totalHT * (f.tva || 0));
       const totalTTC  = parseFloat(f.totalTTC  || totalHT + tvaAmt);
-      const tvaRate   = Math.round((f.tva || 0.1) * 100);
+      const tvaRate   = Math.round((f.tva || 0) * 100);
       const numEcr    = String(ecritureNum++).padStart(6, '0');
       const clientCode = '411' + String(f.id || ecritureNum).padStart(3, '0');
       const tvaCode   = tvaRate <= 10 ? '445712' : '445711';
@@ -2969,3 +2969,4 @@ const Pages = {
 
 // Lancer l'app
 document.addEventListener('DOMContentLoaded', () => App.init());
+
