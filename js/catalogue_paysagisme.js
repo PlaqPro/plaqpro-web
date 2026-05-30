@@ -125,6 +125,7 @@
       const premiereLigne = lignes.length ? parseCSVLine(lignes[0]).join(';').toLowerCase() : '';
       const formatWillemse = premiereLigne.indexOf('reference_fournisseur') >= 0 || premiereLigne.indexOf('nom_produit') >= 0;
       const formatEnrichi = premiereLigne.indexOf('prixbas') >= 0 && premiereLigne.indexOf('prixmoyen') >= 0 && premiereLigne.indexOf('prixhaut') >= 0;
+      const formatEnrichiExport = formatEnrichi && premiereLigne.indexOf('prixht') >= 0;
       const formatStandard = premiereLigne.indexOf('reference') >= 0 && premiereLigne.indexOf('designation') >= 0;
       const startIndex = formatWillemse || formatEnrichi || formatStandard ? 1 : 0;
       let count = 0;
@@ -145,19 +146,33 @@
               categorie: cols[5] || 'VEGETAUX',
             })
           : formatEnrichi
-            ? normalizeArticle({
-                ref: cols[0],
-                designation: cols[1],
-                unite: cols[2],
-                prixHT: parsePrice(cols[4]),
-                prixBas: parsePrice(cols[3]),
-                prixMoyen: parsePrice(cols[4]),
-                prixHaut: parsePrice(cols[5]),
-                categorie: cols[6] || 'VEGETAUX',
-                source: cols[7] || '',
-                dateMaj: cols[8] || '',
-                notes: cols[9] || '',
-              })
+            ? (formatEnrichiExport
+              ? normalizeArticle({
+                  ref: cols[0],
+                  designation: cols[1],
+                  unite: cols[2],
+                  prixHT: parsePrice(cols[3]),
+                  categorie: cols[4] || 'VEGETAUX',
+                  prixBas: parsePrice(cols[5]),
+                  prixMoyen: parsePrice(cols[6]),
+                  prixHaut: parsePrice(cols[7]),
+                  source: cols[8] || '',
+                  dateMaj: cols[9] || '',
+                  notes: cols[10] || '',
+                })
+              : normalizeArticle({
+                  ref: cols[0],
+                  designation: cols[1],
+                  unite: cols[2],
+                  prixHT: parsePrice(cols[4]),
+                  prixBas: parsePrice(cols[3]),
+                  prixMoyen: parsePrice(cols[4]),
+                  prixHaut: parsePrice(cols[5]),
+                  categorie: cols[6] || 'VEGETAUX',
+                  source: cols[7] || '',
+                  dateMaj: cols[8] || '',
+                  notes: cols[9] || '',
+                }))
           : normalizeArticle({
               ref: cols[0],
               designation: cols[1],
@@ -185,13 +200,19 @@
 
     exporterCSV() {
       this._ensureLoaded();
-      const header = 'reference;designation;unite;prixHT;categorie';
+      const header = 'reference;designation;unite;prixHT;categorie;prixBas;prixMoyen;prixHaut;source;dateMaj;notes';
       const rows = this._articles.map(article => [
         csvEscape(article.ref),
         csvEscape(article.designation),
         csvEscape(article.unite),
         String(round2(article.prixHT)).replace('.', ','),
         csvEscape(article.categorie),
+        String(round2(article.prixBas)).replace('.', ','),
+        String(round2(article.prixMoyen || article.prixHT)).replace('.', ','),
+        String(round2(article.prixHaut)).replace('.', ','),
+        csvEscape(article.source),
+        csvEscape(article.dateMaj),
+        csvEscape(article.notes),
       ].join(';'));
       return [header].concat(rows).join('\n');
     },

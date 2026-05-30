@@ -14,7 +14,7 @@
 (function() {
   'use strict';
 
-  const HEADER = 'reference;designation;unite;prixHT;categorie;fournisseur;notes';
+  const HEADER = 'reference;designation;unite;prixHT;categorie;prixBas;prixMoyen;prixHaut;source;dateMaj;notes';
   const WILLEMSE_HEADER = 'reference_fournisseur;nom_produit;taille_conditionnement;unite;prix_ht;categorie_plaqpro;ean;disponibilite;notes';
 
   const TemplateCsvPaysagisme = {
@@ -33,26 +33,12 @@
     exempleVegetaux() {
       return [
         HEADER,
-        'VEG-CORDYLINE-60;Cordyline australis 60cm;u;28.50;VEGETAUX;Willemse;Plante graphique pour bac decoratif',
-        'VEG-CORDYLINE-90;Cordyline australis 90cm;u;42.00;VEGETAUX;Willemse;Sujet plus haut pour massif',
-        'VEG-OLIVIER-120;Olivier 120/140cm;u;95.00;VEGETAUX;Pepiniere locale;Prevoir tuteurage',
-        'VEG-ROMARIN-U;Romarin officinal;u;6.50;VEGETAUX;Pepiniere locale;Aromatique resistant',
-        'VEG-POURPIER-U;Pourpier decoratif;u;3.20;VEGETAUX;Pepiniere locale;Floraison estivale',
-        'VEG-LAVANDE-U;Lavande vraie;u;5.80;VEGETAUX;Pepiniere locale;Massif sec',
-        'VEG-GAURA-U;Gaura blanc;u;6.20;VEGETAUX;Pepiniere locale;Vivace fleurie',
-        'VEG-PHOTINIA-U;Photinia 80/100cm;u;18.00;VEGETAUX;Willemse;Haie persistante',
-        'VEG-LAURIER-U;Laurier sauce 80cm;u;16.00;VEGETAUX;Pepiniere locale;Persistant',
-        'VEG-GRAMINEE-U;Graminee decorative;u;7.50;VEGETAUX;Pepiniere locale;Massif contemporain',
-        'VEG-BAMBOU-U;Bambou non tracant;u;32.00;VEGETAUX;Willemse;Prevoir barriere si doute',
-        'VEG-ERABLE-U;Erable du Japon petit sujet;u;48.00;VEGETAUX;Pepiniere locale;Exposition mi-ombre',
-        'VEG-HORTENSIA-U;Hortensia;u;14.50;VEGETAUX;Willemse;Sol frais',
-        'VEG-THYM-U;Thym rampant;u;4.20;VEGETAUX;Pepiniere locale;Couvre-sol sec',
-        'VEG-FETUQUE-U;Fetuque bleue;u;5.10;VEGETAUX;Pepiniere locale;Graminee basse',
-        'VEG-GAZON-ROULEAU;Gazon rouleau;m2;4.50;VEGETAUX;Fournisseur gazon;Prix hors pose',
-        'VEG-SEMENCE-SPORT;Semences gazon rustique;kg;8.00;VEGETAUX;Fournisseur gazon;Dose selon fiche technique',
-        'VEG-TERREAU-70L;Terreau plantation 70L;sac;9.90;VEGETAUX;Negoce;Amendement plantation',
-        'VEG-TERRE-VEG;Terre vegetale criblee;m3;35.00;TERRASSEMENT;Carriere locale;Livraison a chiffrer',
-        'VEG-GEOTEXTILE;Geotextile anti-repousse;m2;1.20;TERRASSEMENT;Negoce;Sous galets ou paillage',
+        'CORDYLINE-U;Cordyline australis 60cm;u;28.50;VEGETAUX;18.00;28.50;45.00;catalogue_paysagisme_base_prix_2026;2026-05-30;Plant graphique pour bac decoratif',
+        'OLIVIER-U;Olivier en pot tronc 8-10cm;u;180.00;VEGETAUX;120.00;180.00;280.00;catalogue_paysagisme_base_prix_2026;2026-05-30;Prevoir manutention et tuteurage',
+        'ROMARIN-U;Romarin en pot 2L;u;6.50;VEGETAUX;4.50;6.50;9.00;catalogue_paysagisme_base_prix_2026;2026-05-30;Aromatique resistant au sec',
+        'GAZON-ROUL-M2;Gazon rouleau fourniture seule;m2;4.50;VEGETAUX;3.80;4.50;6.50;catalogue_paysagisme_base_prix_2026;2026-05-30;Prix hors preparation et pose',
+        'SEMENCES-KG;Semences gazon rustique;kg;8.00;VEGETAUX;6.00;8.00;12.00;catalogue_paysagisme_base_prix_2026;2026-05-30;Dose selon fiche technique',
+        'PLANT-MOY;Plant arbuste moyen 40-60cm;u;18.00;VEGETAUX;12.00;18.00;28.00;catalogue_paysagisme_base_prix_2026;2026-05-30;Reference moyenne pour chiffrage rapide',
       ].join('\n') + '\n';
     },
 

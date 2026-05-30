@@ -43,6 +43,11 @@ var DevisMulti = {
     return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
   },
 
+  _tvaValue: function(value, fallback) {
+    var parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  },
+
   _newState: function() {
     return { clientId: '', chantierId: '', objet: "Devis multi-corps d'état", sections: [] };
   },
@@ -462,7 +467,7 @@ var DevisMulti = {
     DevisMulti._state.sections.forEach(function(sec) {
       var secHT = DevisMulti._sectionTotal(sec);
       ht  += secHT;
-      tva += secHT * ((parseFloat(sec.tva) || 10) / 100);
+      tva += secHT * (DevisMulti._tvaValue(sec.tva, 0) / 100);
     });
     return { ht: ht, tva: tva, ttc: ht + tva };
   },
@@ -704,7 +709,7 @@ Règles importantes :
 
   _onTvaChange: function(sid, val) {
     var sec = DevisMulti._state.sections.find(function(s) { return s.sid === sid; });
-    if (sec) { sec.tva = parseFloat(val) || 10; DevisMulti._refreshTotaux(sid); }
+    if (sec) { sec.tva = DevisMulti._tvaValue(val, 0); DevisMulti._refreshTotaux(sid); }
   },
 
   // ── Actions lignes ────────────────────────────────────────
@@ -954,7 +959,7 @@ Règles importantes :
           unite:       l.unite || 'u',
           quantite:    parseFloat(l.qte)  || 0,
           prixHT:      parseFloat(l.prix) || 0,
-          tva:         parseFloat(sec.tva) || 10,
+          tva:         DevisMulti._tvaValue(sec.tva, 0),
           totalHT:     (parseFloat(l.qte) || 0) * (parseFloat(l.prix) || 0)
         });
       });
@@ -1026,7 +1031,7 @@ Règles importantes :
       var secTot = DevisMulti._sectionTotal(sec);
       return '<div class="p-section">'
         + '<div class="p-sec-head">' + sec.icon + ' ' + DevisMulti._esc(sec.titre)
-        + '<span class="p-sec-tva">TVA ' + (sec.tva || 10) + '%</span></div>'
+        + '<span class="p-sec-tva">TVA ' + DevisMulti._tvaValue(sec.tva, 0) + '%</span></div>'
         + '<table class="p-tbl"><thead><tr><th>Réf.</th><th>Désignation</th><th>Unité</th><th style="text-align:right">Qté</th><th style="text-align:right">Prix HT</th><th style="text-align:right">Total HT</th></tr></thead>'
         + '<tbody>' + (rows || '<tr><td colspan="6" style="text-align:center;color:#999;padding:8px">Aucune ligne</td></tr>') + '</tbody>'
         + '<tfoot><tr><td colspan="5" style="text-align:right;padding:6px 8px;font-weight:700">Sous-total ' + DevisMulti._esc(sec.titre) + '</td>'
