@@ -1310,6 +1310,15 @@ const Pages = {
     else el.querySelector('#checklist-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
   },
 
+  // ── Métrages paysagisme ───────────────────────────────────
+  metragePaysagisme() {
+    const el = document.getElementById('main-content');
+    if (!el) return;
+    el.innerHTML = '<div class="page-header"><h1 class="page-title">📐 Métrages avancés</h1></div><div id="metrage-container" class="card p-16 mt-16"></div>';
+    if (typeof MetragePaysagisme !== 'undefined') MetragePaysagisme.getHTML('metrage-container');
+    else el.querySelector('#metrage-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+  },
+
   // ── Import CSV / Willemse ─────────────────────────────────
   importCsvPaysagisme() {
     const el = document.getElementById('main-content');
