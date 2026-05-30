@@ -1,7 +1,7 @@
 ﻿{
   "name": "PlaqPro+",
   "short_name": "PlaqPro+",
-  "description": "ERP Plaquiste & Peinture",
+  "description": "ERP BTP multi-métiers — Plaquiste, Peinture, Paysagisme & Extérieur",
   "start_url": "/plaqpro-web/login.html",
   "display": "standalone",
   "background_color": "#0D0F14",

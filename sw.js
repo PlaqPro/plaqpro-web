@@ -1,4 +1,4 @@
-const CACHE_NAME = 'plaqpro-v20260530';
+const CACHE_NAME = 'plaqpro-v20260530b';
 
 const FICHIERS_CACHE = [
   '/plaqpro-web/login.html',
@@ -74,6 +74,9 @@ const FICHIERS_CACHE = [
   '/plaqpro-web/js/import_catalogue.js',
   '/plaqpro-web/js/carte_premium.js',
   '/plaqpro-web/assets/logo_plaqpro.png',
+  '/plaqpro-web/assets/catalogue_paysagisme_base_prix_2026.csv',
+  '/plaqpro-web/install.html',
+  '/plaqpro-web/landing.html',
   '/plaqpro-web/assets/icon-192.png',
   '/plaqpro-web/assets/icon-512.png',
 ];
