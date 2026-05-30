@@ -7,6 +7,12 @@
 
 :root {
   --bg-base:          #0D0F14;
+  /* Alias compatibilité modules paysagisme */
+  --bg:               var(--bg-base);
+  --bg-card:          var(--bg-elevated);
+  --bg-input:         var(--bg-surface);
+  --border:           var(--glass-border);
+  --text:             var(--text-primary);
   --bg-surface:       #13161E;
   --bg-elevated:      #1A1E2A;
   --glass-bg:         rgba(255,255,255,0.04);
