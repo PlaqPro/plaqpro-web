@@ -1292,6 +1292,22 @@ const Pages = {
     else App.toast('Enregistrez le devis d\'abord', 'error');
   },
 
+  // ── Paysagisme ────────────────────────────────────────────
+  paysagisme() {
+    const el = document.getElementById('main-content');
+    if (!el) return;
+    el.innerHTML = '<div class="page-header"><h1 class="page-title">🌿 Paysagisme</h1></div><div id="paysagisme-devis-container" class="card p-16"></div>';
+    if (typeof DevisPaysagisme !== 'undefined') DevisPaysagisme.getHTML('paysagisme-devis-container');
+  },
+
+  // ── Diagnostic chantier ───────────────────────────────────
+  diagnostic() {
+    const el = document.getElementById('main-content');
+    if (!el) return;
+    el.innerHTML = '<div class="page-header"><h1 class="page-title">📋 Diagnostic chantier</h1></div><div id="diagnostic-container" class="card p-16"></div>';
+    if (typeof DiagnosticChantier !== 'undefined') DiagnosticChantier.getHTML('diagnostic-container');
+  },
+
   // ── Base tarifaire ────────────────────────────────────────
   produits() {
     const produits = DB.produits;

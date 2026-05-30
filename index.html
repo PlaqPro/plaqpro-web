@@ -146,6 +146,7 @@
   <script src="js/pack_paysagisme.js"></script>
   <script src="js/polygone_metrage.js"></script>
   <script src="js/devis_paysagisme.js"></script>
+  <script src="js/diagnostic_chantier.js"></script>
   <script src="js/analyse_photo.js"></script>
   <script src="js/pause_cafe.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" integrity="sha384-OUW9euuUyxyHcAhTqbhI+Iyb8LMssXt/cpz0yXhs9UWG2/R/uaWdakx/4cfww7Vb" crossorigin="anonymous" defer></script>
@@ -192,6 +193,10 @@
       { page: 'catalogueFournisseurs', icon: '<i class="ph ph-storefront"></i>', label: 'Catalogue fournisseurs' },
       { page: 'tarifs',      icon: '<i class="ph ph-coins"></i>', label: 'Mes prix de vente' },
       { page: 'calculateur', icon: '<i class="ph ph-lightning"></i>', label: 'Calcul Express' },
+
+      { section: '🌿 Paysagisme & Extérieur' },
+      { page: 'paysagisme',   icon: '<i class="ph ph-tree"></i>',           label: 'Paysagisme' },
+      { page: 'diagnostic',   icon: '<i class="ph ph-clipboard-text"></i>', label: 'Diagnostic chantier' },
 
       { section: '📐 Techniques' },
       { page: 'acoustique',  icon: '<i class="ph ph-speaker-high"></i>', label: 'Acoustique' },
@@ -345,6 +350,8 @@
         chargesCouts:    function() { return Pages.chargesCouts(); },
         inscription:     function() { return Pages.inscription(); },
         legal:           function() { return Pages.legal(); },
+        paysagisme:      function() { return Pages.paysagisme(); },
+        diagnostic:      function() { return Pages.diagnostic(); },
       };
 
       if (pageMap[page]) {

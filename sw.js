@@ -37,6 +37,7 @@ const FICHIERS_CACHE = [
   '/plaqpro-web/js/pack_paysagisme.js',
   '/plaqpro-web/js/polygone_metrage.js',
   '/plaqpro-web/js/devis_paysagisme.js',
+  '/plaqpro-web/js/diagnostic_chantier.js',
   '/plaqpro-web/js/analyse_photo.js',
   '/plaqpro-web/js/pause_cafe.js',
   '/plaqpro-web/js/dpgf.js',
