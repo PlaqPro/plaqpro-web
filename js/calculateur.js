@@ -58,6 +58,15 @@ Pages.calculateur = function() {
           <button class="calc-tab" data-tab="multipacks" onclick="Calc.switchTab('multipacks', this)">
             <span class="calc-tab-icon">🔧</span> Multi-packs
           </button>
+          <button class="calc-tab" data-tab="pay-terrain" onclick="Calc.switchTab('pay-terrain', this)">
+            <span class="calc-tab-icon">⛏</span> Terrain & Sol
+          </button>
+          <button class="calc-tab" data-tab="pay-vegetal" onclick="Calc.switchTab('pay-vegetal', this)">
+            <span class="calc-tab-icon">🌿</span> Végétal
+          </button>
+          <button class="calc-tab" data-tab="pay-mo" onclick="Calc.switchTab('pay-mo', this)">
+            <span class="calc-tab-icon">👷</span> Main d'œuvre
+          </button>
         </div>
 
         <!-- ── TAB CLOISON ── -->
@@ -490,6 +499,220 @@ Pages.calculateur = function() {
           </div>
         </div>
 
+        <!-- ── TAB PAYSAGISME — TERRAIN & SOL ── -->
+        <div id="tab-pay-terrain" class="calc-form">
+          <div class="calc-section-title">📐 Surface (m²)</div>
+          <div class="calc-input-group">
+            <label>Longueur (m)</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pt-longueur" value="20" min="1" step="0.5" oninput="Calc.compute()">
+              <span class="calc-unit">m</span>
+            </div>
+          </div>
+          <div class="calc-input-group">
+            <label>Largeur (m)</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pt-largeur" value="15" min="1" step="0.5" oninput="Calc.compute()">
+              <span class="calc-unit">m</span>
+            </div>
+          </div>
+          <div class="calc-section-title mt-16">⛏ Terrassement</div>
+          <div class="calc-input-group">
+            <label>Profondeur (m)</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pt-profondeur" value="0.30" min="0.05" step="0.05" oninput="Calc.compute()">
+              <span class="calc-unit">m</span>
+            </div>
+          </div>
+          <div class="calc-section-title mt-16">🪨 Béton désactivé</div>
+          <label class="calc-check"><input type="checkbox" id="pt-beton" onchange="Calc.compute()"><span>Inclure béton désactivé</span></label>
+          <div class="calc-input-group">
+            <label>Épaisseur (cm)</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pt-beton-ep" value="12" min="5" max="30" oninput="Calc.compute()">
+              <span class="calc-unit">cm</span>
+            </div>
+          </div>
+          <div class="calc-input-group">
+            <label>Dosage ciment</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pt-beton-dosage" value="350" min="200" max="450" oninput="Calc.compute()">
+              <span class="calc-unit">kg/m³</span>
+            </div>
+          </div>
+          <div class="calc-section-title mt-16">💧 Résine drainante</div>
+          <label class="calc-check"><input type="checkbox" id="pt-resine" onchange="Calc.compute()"><span>Inclure résine drainante</span></label>
+          <div class="calc-input-group">
+            <label>Épaisseur (cm)</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pt-resine-ep" value="5" min="3" max="15" oninput="Calc.compute()">
+              <span class="calc-unit">cm</span>
+            </div>
+          </div>
+          <div class="calc-section-title mt-16">🌱 Mélange terre/sable</div>
+          <label class="calc-check"><input type="checkbox" id="pt-melange" onchange="Calc.compute()"><span>Inclure mélange terre/sable</span></label>
+          <div class="calc-input-group">
+            <label>Ratio sable (%)</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pt-melange-ratio" value="30" min="0" max="100" oninput="Calc.compute()">
+              <span class="calc-unit">%</span>
+            </div>
+          </div>
+          <div class="calc-section-title mt-16">💰 Marges</div>
+          <div class="calc-input-group">
+            <label>Marge mat.</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pt-marge-mat" value="30" min="0" max="100" oninput="Calc.compute()">
+              <span class="calc-unit">%</span>
+            </div>
+          </div>
+          <div class="calc-input-group">
+            <label>Marge MO</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pt-marge-mo" value="20" min="0" max="100" oninput="Calc.compute()">
+              <span class="calc-unit">%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── TAB PAYSAGISME — VÉGÉTAL ── -->
+        <div id="tab-pay-vegetal" class="calc-form">
+          <div class="calc-section-title">📐 Surface totale (m²)</div>
+          <div class="calc-input-group">
+            <label>Surface</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pv-surface" value="100" min="1" step="1" oninput="Calc.compute()">
+              <span class="calc-unit">m²</span>
+            </div>
+          </div>
+          <div class="calc-section-title mt-16">🌱 Gazon</div>
+          <label class="calc-check"><input type="checkbox" id="pv-gazon" onchange="Calc.compute()"><span>Inclure gazon</span></label>
+          <label class="calc-radio"><input type="radio" name="pv-gazon-type" value="rouleau" checked onchange="Calc.compute()"><span>Rouleau (posé au m²)</span></label>
+          <label class="calc-radio"><input type="radio" name="pv-gazon-type" value="semis" onchange="Calc.compute()"><span>Semis (g/m²)</span></label>
+          <div class="calc-input-group">
+            <label>Grammage semis</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pv-gazon-semis" value="35" min="20" max="60" oninput="Calc.compute()">
+              <span class="calc-unit">g/m²</span>
+            </div>
+          </div>
+          <div class="calc-section-title mt-16">🌳 Plantation</div>
+          <label class="calc-check"><input type="checkbox" id="pv-plantation" onchange="Calc.compute()"><span>Inclure plantation</span></label>
+          <div class="calc-input-group">
+            <label>Nombre de plants</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pv-nb-plants" value="20" min="1" oninput="Calc.compute()">
+              <span class="calc-unit">plants</span>
+            </div>
+          </div>
+          <div class="calc-input-group">
+            <label>Prix / plant HT</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pv-prix-plant" value="15" min="1" step="0.5" oninput="Calc.compute()">
+              <span class="calc-unit">€</span>
+            </div>
+          </div>
+          <div class="calc-section-title mt-16">🍂 Paillage</div>
+          <label class="calc-check"><input type="checkbox" id="pv-paillage" onchange="Calc.compute()"><span>Inclure paillage</span></label>
+          <div class="calc-input-group">
+            <label>Épaisseur</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pv-paillage-ep" value="8" min="3" max="20" oninput="Calc.compute()">
+              <span class="calc-unit">cm</span>
+            </div>
+          </div>
+          <div class="calc-section-title mt-16">💰 Marges</div>
+          <div class="calc-input-group">
+            <label>Marge mat.</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pv-marge-mat" value="30" min="0" max="100" oninput="Calc.compute()">
+              <span class="calc-unit">%</span>
+            </div>
+          </div>
+          <div class="calc-input-group">
+            <label>Marge MO</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pv-marge-mo" value="20" min="0" max="100" oninput="Calc.compute()">
+              <span class="calc-unit">%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── TAB PAYSAGISME — MAIN D'ŒUVRE ── -->
+        <div id="tab-pay-mo" class="calc-form">
+          <div class="calc-section-title">👷 Équipe salariée</div>
+          <div class="calc-input-group">
+            <label>Nb salariés</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pm-nb-salaries" value="4" min="1" max="10" oninput="Calc.compute()">
+              <span class="calc-unit">pers.</span>
+            </div>
+          </div>
+          <div class="calc-input-group">
+            <label>Heures / salarié</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pm-h-salarie" value="8" min="1" max="12" oninput="Calc.compute()">
+              <span class="calc-unit">h</span>
+            </div>
+          </div>
+          <div class="calc-input-group">
+            <label>Taux horaire chargé</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pm-taux-salarie" value="35" min="15" max="100" step="0.5" oninput="Calc.compute()">
+              <span class="calc-unit">€/h</span>
+            </div>
+          </div>
+          <div class="calc-section-title mt-16">🚜 Mini-pelle</div>
+          <label class="calc-check"><input type="checkbox" id="pm-minipelle" onchange="Calc.compute()"><span>Inclure mini-pelle</span></label>
+          <div class="calc-input-group">
+            <label>Heures mini-pelle</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pm-h-pelle" value="4" min="0.5" step="0.5" oninput="Calc.compute()">
+              <span class="calc-unit">h</span>
+            </div>
+          </div>
+          <div class="calc-input-group">
+            <label>Coût horaire pelle</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pm-cout-pelle" value="90" min="30" max="300" oninput="Calc.compute()">
+              <span class="calc-unit">€/h</span>
+            </div>
+          </div>
+          <div class="calc-section-title mt-16">🤝 Sous-traitants</div>
+          <label class="calc-check"><input type="checkbox" id="pm-st1" onchange="Calc.compute()"><span>Marbrier / Ardoise</span></label>
+          <div class="calc-input-group">
+            <label>Forfait marbrier HT</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pm-forfait-st1" value="1500" min="0" step="100" oninput="Calc.compute()">
+              <span class="calc-unit">€</span>
+            </div>
+          </div>
+          <label class="calc-check"><input type="checkbox" id="pm-st2" onchange="Calc.compute()"><span>Électricien extérieur</span></label>
+          <div class="calc-input-group">
+            <label>Forfait électricien HT</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pm-forfait-st2" value="800" min="0" step="100" oninput="Calc.compute()">
+              <span class="calc-unit">€</span>
+            </div>
+          </div>
+          <label class="calc-check"><input type="checkbox" id="pm-st3" onchange="Calc.compute()"><span>Plombier extérieur</span></label>
+          <div class="calc-input-group">
+            <label>Forfait plombier HT</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pm-forfait-st3" value="600" min="0" step="100" oninput="Calc.compute()">
+              <span class="calc-unit">€</span>
+            </div>
+          </div>
+          <div class="calc-section-title mt-16">💰 Marge MO</div>
+          <div class="calc-input-group">
+            <label>Marge MO</label>
+            <div class="calc-input-wrap">
+              <input type="number" id="pm-marge-mo" value="20" min="0" max="100" oninput="Calc.compute()">
+              <span class="calc-unit">%</span>
+            </div>
+          </div>
+        </div>
+
       </div><!-- /calc-panel -->
 
       <!-- ── PANNEAU RÉSULTATS ──────────────────────────── -->
@@ -898,7 +1121,10 @@ const Calc = {
     else if (tab === 'plafond')    result = this.calcPlafond();
     else if (tab === 'peinture')   result = this.calcPeinture();
     else if (tab === 'complet')    result = this.calcComplet();
-    else if (tab === 'multipacks') result = this.calcMultiPacks();
+    else if (tab === 'multipacks')  result = this.calcMultiPacks();
+    else if (tab === 'pay-terrain') result = this.calcPayTerrain();
+    else if (tab === 'pay-vegetal') result = this.calcPayVegetal();
+    else if (tab === 'pay-mo')      result = this.calcPayMO();
 
     if (result) this.renderResults(result);
   },
@@ -2136,5 +2362,209 @@ var DevisWizard = {
       .dw-input:focus { border-color:var(--accent); }
     `;
     document.head.appendChild(s);
+  },
+
+  // ── Paysagisme : TERRAIN & SOL ────────────────────────────
+  calcPayTerrain() {
+    const longueur = this.v('pt-longueur', 20);
+    const largeur  = this.v('pt-largeur', 15);
+    const surface  = longueur * largeur;
+    const profond  = this.v('pt-profondeur', 0.30);
+    const margeMat = this.v('pt-marge-mat', 30) / 100;
+    const margeMO  = this.v('pt-marge-mo', 20) / 100;
+
+    const sections = [];
+    let coutMat = 0, coutMO = 0;
+
+    // Terrassement
+    const volTerra = surface * profond;
+    const hTerra   = volTerra * 0.8;
+    coutMO += hTerra * 45;
+    sections.push({
+      titre: `⛏ Terrassement — ${this.fmtN(surface)} m² × ${profond} m = ${this.fmtN(volTerra)} m³`,
+      items: [{ icon: '⛏', nom: 'Main-d\'œuvre terrassement', ref: '', qte: this.fmtN(hTerra) + ' h', prix: hTerra * 45 }]
+    });
+
+    // Béton désactivé
+    if (document.getElementById('pt-beton')?.checked) {
+      const ep       = this.v('pt-beton-ep', 12) / 100;
+      const dosage   = this.v('pt-beton-dosage', 350);
+      const volBeton = surface * ep;
+      const ciment   = volBeton * dosage;
+      const gravier  = volBeton * 1800;
+      const pCiment  = 8 / 35;
+      const pGravier = 25 / 1000;
+      const matBeton = ciment * pCiment + gravier * pGravier;
+      const hBeton   = surface * 2;
+      coutMat += matBeton;
+      coutMO  += hBeton * 45;
+      sections.push({
+        titre: `🪨 Béton désactivé — ${this.fmtN(surface)} m² × ${ep * 100} cm`,
+        items: [
+          { icon: '🪨', nom: 'Ciment', ref: '', qte: this.fmtN(Math.ceil(ciment / 35)) + ' sacs 35kg', prix: ciment * pCiment },
+          { icon: '🚛', nom: 'Gravier béton', ref: '', qte: this.fmtN(Math.ceil(gravier / 1000)) + ' t', prix: gravier * pGravier },
+          { icon: '👷', nom: 'MO coulage + finition désactivée', ref: '', qte: this.fmtN(hBeton) + ' h', prix: hBeton * 45 },
+        ]
+      });
+    }
+
+    // Résine drainante
+    if (document.getElementById('pt-resine')?.checked) {
+      const epR     = this.v('pt-resine-ep', 5);
+      const matRes  = surface * 30;
+      const hRes    = surface * 0.5;
+      coutMat += matRes;
+      coutMO  += hRes * 45;
+      sections.push({
+        titre: `💧 Résine drainante — ${this.fmtN(surface)} m² × ${epR} cm`,
+        items: [
+          { icon: '💧', nom: 'Résine drainante + granulats', ref: '', qte: this.fmtN(surface) + ' m²', prix: matRes },
+          { icon: '👷', nom: 'MO application résine', ref: '', qte: this.fmtN(hRes) + ' h', prix: hRes * 45 },
+        ]
+      });
+    }
+
+    // Mélange terre/sable
+    if (document.getElementById('pt-melange')?.checked) {
+      const ratio   = this.v('pt-melange-ratio', 30) / 100;
+      const volS    = volTerra * ratio;
+      const volT    = volTerra * (1 - ratio);
+      const matMel  = volS * 25 + volT * 35;
+      coutMat += matMel;
+      sections.push({
+        titre: `🌱 Mélange terre/sable — ${Math.round(ratio * 100)}% sable`,
+        items: [
+          { icon: '🏖', nom: 'Sable', ref: '', qte: this.fmtN(volS) + ' m³', prix: volS * 25 },
+          { icon: '🌱', nom: 'Terre végétale', ref: '', qte: this.fmtN(volT) + ' m³', prix: volT * 35 },
+        ]
+      });
+    }
+
+    if (!sections.length) return null;
+    return { sections, coutMat, coutMO, margeMat, margeMO, surface };
+  },
+
+  // ── Paysagisme : VÉGÉTAL ──────────────────────────────────
+  calcPayVegetal() {
+    const surface  = this.v('pv-surface', 100);
+    const margeMat = this.v('pv-marge-mat', 30) / 100;
+    const margeMO  = this.v('pv-marge-mo', 20) / 100;
+
+    const sections = [];
+    let coutMat = 0, coutMO = 0;
+
+    // Gazon
+    if (document.getElementById('pv-gazon')?.checked) {
+      const type = this.radio('pv-gazon-type') || 'rouleau';
+      if (type === 'rouleau') {
+        const mat = surface * 4.5;
+        const h   = surface * 0.15;
+        coutMat += mat; coutMO += h * 40;
+        sections.push({
+          titre: `🌱 Gazon rouleau — ${this.fmtN(surface)} m²`,
+          items: [
+            { icon: '🌱', nom: 'Gazon rouleau', ref: '', qte: this.fmtN(surface) + ' m²', prix: mat },
+            { icon: '👷', nom: 'MO pose', ref: '', qte: this.fmtN(h) + ' h', prix: h * 40 },
+          ]
+        });
+      } else {
+        const g = this.v('pv-gazon-semis', 35);
+        const kg = surface * g / 1000;
+        const mat = kg * 8;
+        const h   = surface * 0.05;
+        coutMat += mat; coutMO += h * 40;
+        sections.push({
+          titre: `🌱 Gazon semis — ${this.fmtN(surface)} m² × ${g} g/m²`,
+          items: [
+            { icon: '🌾', nom: 'Semences gazon', ref: '', qte: this.fmtN(kg) + ' kg', prix: mat },
+            { icon: '👷', nom: 'MO semis', ref: '', qte: this.fmtN(h) + ' h', prix: h * 40 },
+          ]
+        });
+      }
+    }
+
+    // Plantation
+    if (document.getElementById('pv-plantation')?.checked) {
+      const nb  = this.v('pv-nb-plants', 20);
+      const pu  = this.v('pv-prix-plant', 15);
+      const mat = nb * pu;
+      const h   = nb * 0.25;
+      coutMat += mat; coutMO += h * 40;
+      sections.push({
+        titre: `🌳 Plantation — ${nb} plants`,
+        items: [
+          { icon: '🌳', nom: 'Plants (pépinière / Willemse)', ref: '', qte: nb + ' plants', prix: mat },
+          { icon: '👷', nom: 'MO plantation', ref: '', qte: this.fmtN(h) + ' h', prix: h * 40 },
+        ]
+      });
+    }
+
+    // Paillage
+    if (document.getElementById('pv-paillage')?.checked) {
+      const ep  = this.v('pv-paillage-ep', 8) / 100;
+      const vol = surface * ep;
+      const mat = vol * 35;
+      const h   = surface * 0.05;
+      coutMat += mat; coutMO += h * 40;
+      sections.push({
+        titre: `🍂 Paillage — ${this.fmtN(surface)} m² × ${ep * 100} cm = ${this.fmtN(vol)} m³`,
+        items: [
+          { icon: '🍂', nom: 'Paillage bois / écorce', ref: '', qte: this.fmtN(vol) + ' m³', prix: mat },
+          { icon: '👷', nom: 'MO épandage', ref: '', qte: this.fmtN(h) + ' h', prix: h * 40 },
+        ]
+      });
+    }
+
+    if (!sections.length) return null;
+    return { sections, coutMat, coutMO, margeMat, margeMO, surface };
+  },
+
+  // ── Paysagisme : MAIN D'ŒUVRE ─────────────────────────────
+  calcPayMO() {
+    const nbSal   = this.v('pm-nb-salaries', 4);
+    const hSal    = this.v('pm-h-salarie', 8);
+    const taux    = this.v('pm-taux-salarie', 35);
+    const margeMO = this.v('pm-marge-mo', 20) / 100;
+
+    const sections = [];
+    let coutMat = 0, coutMO = 0;
+
+    // Salariés
+    const totalSal = nbSal * hSal * taux;
+    coutMO += totalSal;
+    sections.push({
+      titre: `👷 Équipe — ${nbSal} salarié(s) × ${hSal}h × ${taux}€/h`,
+      items: [{ icon: '👷', nom: `MO salariés (${nbSal} pers.)`, ref: '', qte: (nbSal * hSal) + ' h total', prix: totalSal }]
+    });
+
+    // Mini-pelle
+    if (document.getElementById('pm-minipelle')?.checked) {
+      const hP = this.v('pm-h-pelle', 4);
+      const cP = this.v('pm-cout-pelle', 90);
+      coutMO += hP * cP;
+      sections.push({
+        titre: `🚜 Mini-pelle — ${hP}h × ${cP}€/h`,
+        items: [{ icon: '🚜', nom: 'Location mini-pelle + opérateur', ref: '', qte: hP + ' h', prix: hP * cP }]
+      });
+    }
+
+    // Sous-traitants
+    const stDefs = [
+      { cbId: 'pm-st1', valId: 'pm-forfait-st1', icon: '🪨', nom: 'Marbrier / Ardoise', def: 1500 },
+      { cbId: 'pm-st2', valId: 'pm-forfait-st2', icon: '⚡', nom: 'Électricien extérieur', def: 800 },
+      { cbId: 'pm-st3', valId: 'pm-forfait-st3', icon: '🚿', nom: 'Plombier extérieur', def: 600 },
+    ];
+    const stItems = [];
+    stDefs.forEach(st => {
+      if (document.getElementById(st.cbId)?.checked) {
+        const f = this.v(st.valId, st.def);
+        stItems.push({ icon: st.icon, nom: st.nom + ' (forfait)', ref: '', qte: '1 forfait', prix: f });
+        coutMat += f;
+      }
+    });
+    if (stItems.length) sections.push({ titre: '🤝 Sous-traitants', items: stItems });
+
+    if (!sections.length) return null;
+    return { sections, coutMat, coutMO, margeMat: 0, margeMO, surface: 0 };
   },
 };
