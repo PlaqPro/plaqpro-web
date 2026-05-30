@@ -1310,6 +1310,15 @@ const Pages = {
     else el.querySelector('#checklist-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
   },
 
+  // ── Parc matériel paysagisme ──────────────────────────────
+  materielPaysagisme() {
+    const el = document.getElementById('main-content');
+    if (!el) return;
+    el.innerHTML = '<div class="page-header"><h1 class="page-title">🚜 Parc matériel</h1></div><div id="materiel-container" class="card p-16 mt-16"></div>';
+    if (typeof MaterielPaysagisme !== 'undefined') MaterielPaysagisme.getHTML('materiel-container');
+    else el.querySelector('#materiel-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+  },
+
   // ── Métrages paysagisme ───────────────────────────────────
   metragePaysagisme() {
     const el = document.getElementById('main-content');

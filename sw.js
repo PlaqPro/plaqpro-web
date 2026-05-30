@@ -44,6 +44,7 @@ const FICHIERS_CACHE = [
   '/plaqpro-web/js/template_csv_paysagisme.js',
   '/plaqpro-web/js/checklist_paysagisme.js',
   '/plaqpro-web/js/metrage_paysagisme.js',
+  '/plaqpro-web/js/materiel_paysagisme.js',
   '/plaqpro-web/js/analyse_photo.js',
   '/plaqpro-web/js/pause_cafe.js',
   '/plaqpro-web/js/dpgf.js',
