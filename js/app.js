@@ -497,7 +497,7 @@ const Pages = {
           <span class="db-action-label">Nouveau chantier</span>
           <span class="db-action-desc">Intérieur ou extérieur</span>
         </button>
-        <button class="db-action" onclick="App.navigate('calcul')">
+        <button class="db-action" onclick="App.navigate('calculateur')">
           <span class="db-action-icon">📐</span>
           <span class="db-action-label">Calculer</span>
           <span class="db-action-desc">Quantités & matériaux</span>
@@ -766,7 +766,7 @@ const Pages = {
     ];
     const packsExt = [
       { icon:'🧱', label:'Maçonnerie',  page:'maconnerie'  },
-      { icon:'🌿', label:'Paysagisme',  page:'cloisons'    },
+      { icon:'🌿', label:'Paysagisme',  page:'paysagisme'  },
       { icon:'🏗', label:'Terrassement',page:'maconnerie'  },
     ];
     const packs = isExt ? packsExt : packsInt;

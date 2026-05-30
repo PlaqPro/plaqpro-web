@@ -372,7 +372,7 @@ window.ImportCatalogue = (() => {
       App.closeModal();
       // Recharger la page catalogue si on y est
       if (typeof PROD !== 'undefined' && PROD.render) {
-        setTimeout(() => { if (typeof App !== 'undefined') App.navigate('catalogue'); }, 400);
+        setTimeout(() => { if (typeof App !== 'undefined') App.navigate('produits'); }, 400);
       }
     } else {
       document.getElementById('ic-overlay')?.remove();

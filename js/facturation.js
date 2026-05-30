@@ -138,7 +138,7 @@ Object.assign(Pages, {
       totalHT:      devis.totalHT    || 0,
       totalTTC:     devis.totalTTC   || 0,
       montantTVA:   devis.montantTVA || 0,
-      tva:          devis.tva        || 0.1,
+      tva:          devis.tva        || 0,
       datePaiement: null,
     });
     App.toast(`Facture ${facture.numero} créée !`);
@@ -206,9 +206,9 @@ Object.assign(Pages, {
     const fmtAmt  = n => parseFloat(n || 0).toFixed(2);
     const now     = fmtDate(new Date().toISOString().slice(0, 10));
     const echeance= fmtDate(facture.dateEcheance || '');
-    const tvaRate = Math.round((facture.tva || 0.1) * 100);
+    const tvaRate = Math.round((facture.tva || 0) * 100);
     const totalHT = parseFloat(facture.totalHT  || 0);
-    const montantTVA = parseFloat(facture.montantTVA || totalHT * (facture.tva || 0.1));
+    const montantTVA = parseFloat(facture.montantTVA || totalHT * (facture.tva || 0));
     const totalTTC= parseFloat(facture.totalTTC || 0);
     const siretVendeur  = esc(config.siret  || '');
     const siretAcheteur = esc(client?.siret || '');
@@ -324,7 +324,7 @@ Object.assign(Pages, {
   _detailFacture(facture, chantier, client, config) {
     const lignes   = facture.lignes  || [];
     const totalHT  = facture.totalHT  || 0;
-    const tva      = facture.tva      || 0.1;
+    const tva      = facture.tva      || 0;
     const enRetard = facture.statut !== 'Payée' && facture.statut !== 'Annulée'
                   && facture.dateEcheance && new Date(facture.dateEcheance) < new Date();
 
@@ -420,7 +420,7 @@ Object.assign(Pages, {
       const client   = chantier ? DB.getClient(chantier.clientId) : null;
       const config   = DB.getConfig();
       const montant  = parseFloat(facture.totalHT || 0) * 0.30;
-      const montantTTC = montant * (1 + (facture.tva || 0.1));
+      const montantTTC = montant * (1 + (facture.tva || 0));
       const date     = new Date().toLocaleDateString('fr-FR');
 
       const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
@@ -529,7 +529,7 @@ Object.assign(Pages, {
       mention:          'Avoir sur facture N° ' + facture.numero,
       lignes:           lignesAvoir,
       totalHT, montantTVA, totalTTC,
-      tva: facture.tva || 0.1,
+      tva: facture.tva || 0,
       datePaiement: null,
     });
     DB.updateFacture(avoir.id, { numero: numeroAvoir });
@@ -541,7 +541,7 @@ Object.assign(Pages, {
   },
 
   _imprimerAvoir(facture, chantier, client, config, numeroAvoir, totalHT, montantTVA, totalTTC, date, lignes) {
-    const tva = facture.tva || 0.1;
+    const tva = facture.tva || 0;
     const dateFmt = d => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
 
     const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
