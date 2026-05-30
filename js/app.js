@@ -1310,6 +1310,15 @@ const Pages = {
     else el.querySelector('#checklist-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
   },
 
+  // ── Équipe paysagisme ─────────────────────────────────────
+  equipePaysagisme() {
+    const el = document.getElementById('main-content');
+    if (!el) return;
+    el.innerHTML = '<div class="page-header"><h1 class="page-title">👷 Mon équipe</h1></div><div id="equipe-container" class="card p-16 mt-16"></div>';
+    if (typeof EquipePaysagisme !== 'undefined') EquipePaysagisme.getHTML('equipe-container');
+    else el.querySelector('#equipe-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+  },
+
   // ── Parc matériel paysagisme ──────────────────────────────
   materielPaysagisme() {
     const el = document.getElementById('main-content');
