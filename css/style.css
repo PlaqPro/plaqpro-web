@@ -9,6 +9,8 @@
   --bg-base:          #0D0F14;
   /* Alias compatibilité modules paysagisme */
   --bg:               var(--bg-base);
+  /* Conteneurs paysagisme */
+  --pays-overflow:    visible;
   --bg-card:          var(--bg-elevated);
   --bg-input:         var(--bg-surface);
   --border:           var(--glass-border);
