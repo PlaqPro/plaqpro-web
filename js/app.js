@@ -1301,6 +1301,15 @@ const Pages = {
     else el.querySelector('#catalogue-pays-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
   },
 
+  // ── Rapports paysagisme ───────────────────────────────────
+  rapportsPaysagisme() {
+    const el = document.getElementById('main-content');
+    if (!el) return;
+    el.innerHTML = '<div class="page-header"><h1 class="page-title">📊 Rapports & marges</h1></div><div id="rapports-pays-container" class="mt-16"></div>';
+    if (typeof RapportPaysagisme !== 'undefined') RapportPaysagisme.getHTML('rapports-pays-container');
+    else el.querySelector('#rapports-pays-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+  },
+
   // ── Chantiers paysagisme ──────────────────────────────────
   chantiersPaysagisme() {
     const el = document.getElementById('main-content');

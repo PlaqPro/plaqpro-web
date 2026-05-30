@@ -40,6 +40,7 @@ const FICHIERS_CACHE = [
   '/plaqpro-web/js/diagnostic_chantier.js',
   '/plaqpro-web/js/catalogue_paysagisme.js',
   '/plaqpro-web/js/chantier_paysagisme.js',
+  '/plaqpro-web/js/rapport_paysagisme.js',
   '/plaqpro-web/js/analyse_photo.js',
   '/plaqpro-web/js/pause_cafe.js',
   '/plaqpro-web/js/dpgf.js',
