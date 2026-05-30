@@ -143,7 +143,7 @@
         if (recap && recap.style.display !== 'none') this._afficherRecap();
       }
       if (window.App && typeof window.App.toast === 'function') {
-        window.App.toast('Marge mise à jour : ' + this._margeGlobale + '%', 'info');
+        window.App.toast('Majoration sur coût mise à jour : ' + this._margeGlobale + '%', 'info');
       }
     },
 
@@ -226,7 +226,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label>Marge globale (%)</label>
+              <label>Majoration sur coût (%)</label>
               <input type="number" min="0" step="1" value="${escapeAttr(this._margeGlobale)}" data-devp-marge oninput="DevisPaysagisme.setMarge(this.value)" style="width:100%">
             </div>
           </div>
@@ -383,15 +383,17 @@
       if (!node) return;
       const lots = this._collectLots();
       const calcul = this.calcDevisComplet(lots, this._margeGlobale);
+      const margeReelle = margeReelleDepuisMajoration(this._margeGlobale);
       node.innerHTML = `
         <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
           <div>
-            <div style="font-size:12px;color:var(--text-secondary,var(--text))">Avec marge ${escapeHtml(this._margeGlobale)}%</div>
+            <div style="font-size:12px;color:var(--text-secondary,var(--text))">Prix majoré de ${escapeHtml(this._margeGlobale)}% sur coût</div>
             <div style="font-size:22px;font-weight:800;color:var(--accent)">${fmt(calcul.prixAvecMargeGlobale)}</div>
+            <div style="font-size:12px;color:var(--text-secondary,var(--text));margin-top:4px">Majoration de ${escapeHtml(this._margeGlobale)}% sur coût direct = marge réelle de ${fmtNumber(margeReelle)}% sur prix de vente</div>
           </div>
           <div style="font-size:13px;color:var(--text-secondary,var(--text));text-align:right">
             Coût direct : <strong style="color:var(--text)">${fmt(calcul.coutDirect)}</strong><br>
-            Marge : <strong style="color:var(--text)">${fmt(calcul.margeEuro)} (${fmtNumber(calcul.margePct)} %)</strong>
+            Marge réelle : <strong style="color:var(--text)">${fmt(calcul.margeEuro)} (${fmtNumber(calcul.margePct)} %)</strong>
           </div>
         </div>
       `;
@@ -410,6 +412,10 @@
 
       const calcul = this.calcDevisComplet(lots, this._margeGlobale);
       this._lastCalcul = calcul;
+      const margeReelle = margeReelleDepuisMajoration(this._margeGlobale);
+      const prixMajoreLabel = calcul.margeAppliquee === 'CDC'
+        ? 'Prix conseillé CDC'
+        : `Prix majoré de ${calcul.margeAppliquee}% sur coût`;
       recap.style.display = 'block';
       recap.innerHTML = `
         <div class="card" style="margin-top:12px">
@@ -419,8 +425,11 @@
             ${metric('Cout complet', calcul.coutComplet)}
             ${metric('Prix minimum', calcul.prixMinimum)}
             ${metric('Prix conseille', calcul.prixConseille)}
-            ${metric(`Avec marge ${calcul.margeAppliquee}%`, calcul.prixAvecMargeGlobale)}
-            ${metric('Marge globale', `${fmt(calcul.margeEuro)} (${fmtNumber(calcul.margePct)} %)`, true)}
+            ${metric(prixMajoreLabel, calcul.prixAvecMargeGlobale)}
+            ${metric('Marge réelle sur prix de vente', `${fmt(calcul.margeEuro)} (${fmtNumber(calcul.margePct)} %)`, true)}
+          </div>
+          <div style="margin-top:10px;color:var(--text-secondary,var(--text));font-size:13px">
+            Majoration de ${escapeHtml(this._margeGlobale)}% sur coût direct = marge réelle de ${fmtNumber(margeReelle)}% sur prix de vente.
           </div>
           <div style="overflow:auto;margin-top:12px">
             <table style="width:100%;border-collapse:collapse;min-width:620px">
@@ -554,7 +563,7 @@
       VEGETALISATION: [
         { name: 'typeGazon', label: 'Gazon', type: 'select', values: ['non', 'semis', 'rouleau'], def: 'non' },
         { name: 'nbVegetaux', label: 'Vegetaux (u)', def: 0, step: '1' },
-        { name: 'prixVegetalMoyen', label: 'Prix vegetal moy.', def: 18, step: '1' },
+        { name: 'prixVegetalMoyen', label: 'Prix vegetal moy.', def: '', step: '1' },
         { name: 'paillage', label: 'Paillage / galets', type: 'checkbox', def: true },
       ],
       OUVRAGES_SPECIAUX: [
@@ -648,6 +657,11 @@
         <div style="font-size:20px;font-weight:800;color:var(--accent)">${escapeHtml(displayValue)}</div>
       </div>
     `;
+  }
+
+  function margeReelleDepuisMajoration(pct) {
+    pct = n(pct, 0);
+    return Math.round((pct / (100 + pct)) * 100 * 10) / 10;
   }
 
   function toast(message, type) {

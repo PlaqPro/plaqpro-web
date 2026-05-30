@@ -75,6 +75,15 @@
     }).format(value || 0);
   }
 
+  function prixCatalogue(ref, fallback) {
+    const catalogue = window.CataloguePaysagisme;
+    if (catalogue && typeof catalogue.getPrix === 'function') {
+      const prix = n(catalogue.getPrix(ref), 0);
+      if (prix > 0) return prix;
+    }
+    return fallback;
+  }
+
   function result(prixFournitures, heuresMO, detail, options) {
     const r = ratios(options);
     const prixMOBrut = heuresMO * r.tauxHoraire;
@@ -85,7 +94,7 @@
     detail = detail || [];
     detail.push(`Main d'oeuvre : ${heuresMO.toFixed(2)} h x ${money(r.tauxHoraire)}/h = ${money(prixMOBrut)}`);
     if (r.coefAlea > 0) detail.push(`Alea chantier : ${(r.coefAlea * 100).toFixed(1)} % = ${money(alea)}`);
-    detail.push(`Marge appliquee : x ${r.coefMarge.toFixed(2)}`);
+    detail.push(`Majoration appliquee : x ${r.coefMarge.toFixed(2)}`);
 
     return {
       prixFournitures: round2(prixFournitures),
@@ -134,12 +143,14 @@
       const difficulte = clamp(n(options.difficulte, 2), 1, 3);
       const dessouchage = bool(options.dessouchage);
       const evacuation = bool(options.evacuation);
+      const prixEvacuationForfait = prixCatalogue('EVAC-VEGETAUX-U', 45);
+      const prixEvacuationHauteur = prixCatalogue('EVAC-VEGETAUX-ML', 8);
 
       const hBase = clamp(1.4 + hauteur * 0.45 + (difficulte - 1) * 1.1, 2, 8);
       const hDessouchage = dessouchage ? 1.5 + difficulte * 0.75 : 0;
       const hEvacuation = evacuation ? 0.75 + hauteur * 0.2 : 0;
       const heures = (hBase + hDessouchage + hEvacuation) * qte;
-      const fournitures = (evacuation ? 45 + hauteur * 8 : 0) * qte;
+      const fournitures = (evacuation ? prixEvacuationForfait + hauteur * prixEvacuationHauteur : 0) * qte;
 
       return result(fournitures, heures, [
         `Sujets : ${qte} u`,
@@ -193,8 +204,10 @@
       const couvertine = Math.max(0, n(options.couvertine, 0));
       const hParM2 = type === 'bac' ? 3 : (type === 'muret' ? 1.8 : 1.5);
       const heures = surface * hParM2 + (enduit ? surface * 0.6 : 0) + couvertine * 0.35;
-      const prixBaseM2 = type === 'bac' ? 78 : (type === 'muret' ? 58 : 52);
-      const fournitures = surface * prixBaseM2 + (enduit ? surface * 18 : 0) + couvertine * 28;
+      const prixBaseM2 = type === 'bac' ? prixCatalogue('BAC-MACONNERIE-M2', 78) : (type === 'muret' ? prixCatalogue('MURET-M2', 58) : prixCatalogue('MUR-M2', 52));
+      const prixEnduitM2 = prixCatalogue('ENDUIT-EXT-M2', 18);
+      const prixCouvertineMl = prixCatalogue('COUVERTINE-ML', 28);
+      const fournitures = surface * prixBaseM2 + (enduit ? surface * prixEnduitM2 : 0) + couvertine * prixCouvertineMl;
 
       return result(fournitures, heures, [
         `Surface : ${surface.toFixed(2)} m2`,
@@ -219,9 +232,10 @@
       const volume = surface * (epaisseurCm / 100);
       const hParM2 = type === 'desactive' ? 1.5 : (type === 'taloche' ? 1.15 : 1);
       const heures = surface * hParM2;
-      const prixBetonM3 = type === 'desactive' ? 185 : 145;
-      const finition = type === 'desactive' ? surface * 9 : (type === 'taloche' ? surface * 4 : 0);
-      const fournitures = volume * prixBetonM3 + surface * 12 + finition;
+      const prixBetonM3 = type === 'desactive' ? prixCatalogue('BETON-DESACTIVE-M3', 185) : prixCatalogue('BETON-STANDARD-M3', 145);
+      const prixTreillisM2 = prixCatalogue('TREILLIS-COFFRAGE-M2', 12);
+      const finition = type === 'desactive' ? surface * prixCatalogue('DESACTIVANT-M2', 9) : (type === 'taloche' ? surface * prixCatalogue('FINITION-TALOCHE-M2', 4) : 0);
+      const fournitures = volume * prixBetonM3 + surface * prixTreillisM2 + finition;
 
       return result(fournitures, heures, [
         `Surface : ${surface.toFixed(2)} m2`,
@@ -247,7 +261,7 @@
       const volume = surface * (epaisseurCm / 100);
       const coefPente = 1 + Math.min(pente, 25) / 100;
       const heures = surface * 1.5 * coefPente + (risqueMeteo ? surface * 0.15 : 0);
-      const fournitures = volume * 190 + surface * 18 + (risqueMeteo ? surface * 3.5 : 0);
+      const fournitures = volume * prixCatalogue('BETON-DESACTIVE-M3', 190) + surface * prixCatalogue('DESACTIVANT-M2', 18) + (risqueMeteo ? surface * prixCatalogue('PROTECTION-METEO-M2', 3.5) : 0);
 
       return result(fournitures, heures, [
         `Surface : ${surface.toFixed(2)} m2`,
@@ -270,12 +284,16 @@
       const materiau = options.materiau || 'ardoise';
       const angles = Math.max(0, n(options.angles, 0));
       const chutesPct = Math.max(0, n(options.chutes, 10));
-      const prixM2 = { ardoise: 68, pierre: 82, plaquettes: 48 }[materiau] || 60;
+      const prixM2 = {
+        ardoise: prixCatalogue('ARDOISE-M2', 85),
+        pierre: prixCatalogue('PIERRE-RECONST-M2', 45),
+        plaquettes: prixCatalogue('PLAQUETTES-M2', 48),
+      }[materiau] || prixCatalogue('PAREMENT-M2', 60);
       const hBase = materiau === 'ardoise' ? 3.5 : (materiau === 'pierre' ? 4 : 3);
       const hParM2 = clamp(hBase + angles * 0.15 + chutesPct / 50, 3, 5);
       const heures = surface * hParM2;
       const surfaceAchetee = surface * (1 + chutesPct / 100);
-      const fournitures = surfaceAchetee * prixM2 + angles * 18 + surface * 9;
+      const fournitures = surfaceAchetee * prixM2 + angles * prixCatalogue('ANGLE-PAREMENT-U', 18) + surface * prixCatalogue('COLLE-PAREMENT-M2', 9);
 
       return result(fournitures, heures, [
         `Surface posee : ${surface.toFixed(2)} m2`,
@@ -299,7 +317,7 @@
       const longueur = Math.max(0, n(options.longueurReseau, 10));
       const programmateur = bool(options.programmateur);
       const heures = qte * 2.5 + longueur * 0.12 + (programmateur ? 0.6 : 0);
-      const fournitures = qte * 95 + longueur * 4.5 + (programmateur ? 75 : 0);
+      const fournitures = qte * prixCatalogue('ROBINET-EXT-U', 95) + longueur * prixCatalogue('TUYAU-PE-ML', 4.5) + (programmateur ? prixCatalogue('PROGRAMMATEUR-U', 75) : 0);
 
       return result(fournitures, heures, [
         `Point(s) d'eau : ${qte}`,
@@ -321,7 +339,7 @@
       const longueur = Math.max(0, n(options.longueurGaines, 10));
       const sousTraitance = n(options.sousTraitance, 0);
       const heures = qte * 1.2 + longueur * 0.08;
-      const fournitures = longueur * 3.8 + qte * 28 + sousTraitance;
+      const fournitures = longueur * prixCatalogue('GAINE-ELEC-ML', 3.8) + qte * prixCatalogue('BOITE-ATTENTE-U', 28) + sousTraitance;
 
       return result(fournitures, heures, [
         `Forfait attentes : ${qte}`,
@@ -344,12 +362,14 @@
       const typeGazon = options.typeGazon || 'non';
       const nbVegetaux = Math.max(0, n(options.nbVegetaux, 0));
       const paillage = bool(options.paillage);
-      const prixVegetalMoyen = n(options.prixVegetalMoyen, 18);
+      const prixVegetalMoyen = n(options.prixVegetalMoyen, prixCatalogue('PLANT-MOY', 18));
       const hGazon = typeGazon === 'rouleau' ? 0.5 : (typeGazon === 'semis' ? 0.3 : 0);
       const hPlantation = nbVegetaux * 0.25;
       const heures = surface * hGazon + hPlantation + (paillage ? surface * 0.12 : 0);
-      const prixGazonM2 = typeGazon === 'rouleau' ? 8.5 : (typeGazon === 'semis' ? 1.6 : 0);
-      const fournitures = surface * 9 + surface * prixGazonM2 + nbVegetaux * prixVegetalMoyen + (paillage ? surface * 7.5 : 0);
+      const prixTerreM2 = prixCatalogue('TERRE-VEG-M2', prixCatalogue('TERRE-VEG-M3', 35) * 0.10);
+      const prixGazonM2 = typeGazon === 'rouleau' ? prixCatalogue('GAZON-ROUL-M2', 4.50) : (typeGazon === 'semis' ? prixCatalogue('SEMENCES-GAZON-M2', 1.6) : 0);
+      const prixPaillageM2 = prixCatalogue('ECORCE-PIN-M2', prixCatalogue('ECORCE-PIN-M3', 35) * 0.08);
+      const fournitures = surface * prixTerreM2 + surface * prixGazonM2 + nbVegetaux * prixVegetalMoyen + (paillage ? surface * prixPaillageM2 : 0);
 
       return result(fournitures, heures, [
         `Surface : ${surface.toFixed(2)} m2`,
@@ -373,7 +393,7 @@
       const surface = Math.max(0, n(options.surface, 4));
       const complexite = clamp(n(options.complexite, 2), 1, 3);
       const heures = qte * (surface * (1.2 + complexite * 0.45) + complexite * 2);
-      const fournitures = qte * (surface * (55 + complexite * 18) + 120);
+      const fournitures = qte * (surface * (prixCatalogue('POLYCARBONATE-M2', 55) + complexite * prixCatalogue('PROFIL-ALU-M2', 18)) + prixCatalogue('QUINCAILLERIE-U', 120));
 
       return result(fournitures, heures, [
         `Forfait : ${qte}`,
@@ -395,7 +415,7 @@
       const qte = Math.max(1, n(quantite, 1));
       const niveau = clamp(n(options.niveau, 2), 1, 3);
       const heures = qte * (1.5 + niveau * 0.75);
-      const fournitures = qte * (35 + niveau * 20);
+      const fournitures = qte * (prixCatalogue('NETTOYANT-FACADE-L', 35) + niveau * prixCatalogue('EVAC-DECHETS-U', 20));
 
       return result(fournitures, heures, [
         `Forfait nettoyage : ${qte}`,

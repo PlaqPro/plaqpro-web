@@ -46,13 +46,16 @@
     { ref: 'COFFRAGE-M2', designation: 'Coffrage', unite: 'm2', prixHT: 8, categorie: 'MACONNERIE' },
 
     { ref: 'ARDOISE-NAT-M2', designation: 'Ardoise naturelle', unite: 'm2', prixHT: 85, categorie: 'PAREMENT' },
+    { ref: 'ARDOISE-M2', designation: 'Ardoise naturelle', unite: 'm2', prixHT: 85, categorie: 'PAREMENT' },
     { ref: 'PIERRE-RECONST-M2', designation: 'Pierre reconstituee', unite: 'm2', prixHT: 45, categorie: 'PAREMENT' },
     { ref: 'PLAQUETTES-M2', designation: 'Plaquettes de parement', unite: 'm2', prixHT: 48, categorie: 'PAREMENT' },
     { ref: 'GALETS-M3', designation: 'Galets', unite: 'm3', prixHT: 95, categorie: 'PAREMENT' },
     { ref: 'GRAVIER-DECO-M3', designation: 'Gravier deco', unite: 'm3', prixHT: 65, categorie: 'PAREMENT' },
 
     { ref: 'GAZON-ROULEAU-M2', designation: 'Gazon rouleau', unite: 'm2', prixHT: 4.50, categorie: 'VEGETAUX' },
+    { ref: 'GAZON-ROUL-M2', designation: 'Gazon rouleau', unite: 'm2', prixHT: 4.50, categorie: 'VEGETAUX' },
     { ref: 'SEMENCES-GAZON-KG', designation: 'Semences gazon', unite: 'kg', prixHT: 8, categorie: 'VEGETAUX' },
+    { ref: 'PLANT-MOY', designation: 'Vegetal moyen', unite: 'u', prixHT: 18, categorie: 'VEGETAUX' },
     { ref: 'ARBUSTE-U', designation: 'Arbustes', unite: 'u', prixHT: 18, categorie: 'VEGETAUX' },
     { ref: 'VIVACE-U', designation: 'Vivaces', unite: 'u', prixHT: 7.5, categorie: 'VEGETAUX' },
     { ref: 'OLIVIER-U', designation: 'Olivier', unite: 'u', prixHT: 95, categorie: 'VEGETAUX' },
@@ -124,6 +127,7 @@
       const formatStandard = premiereLigne.indexOf('reference') >= 0 && premiereLigne.indexOf('designation') >= 0;
       const startIndex = formatWillemse || formatStandard ? 1 : 0;
       let count = 0;
+      let ignoredPrix = 0;
 
       lignes.slice(startIndex).forEach(ligne => {
         const cols = parseCSVLine(ligne);
@@ -146,12 +150,20 @@
               categorie: cols[4] || 'VEGETAUX',
             });
         if (!article.ref || !article.designation) return;
+        if (n(article.prixHT, 0) <= 0) {
+          ignoredPrix++;
+          return;
+        }
         upsertArticle(this._articles, article);
         count++;
       });
 
       this._save();
       this._render();
+      this._lastImportStats = { importes: count, ignoresPrix: ignoredPrix };
+      if (window.App && typeof window.App.toast === 'function') {
+        window.App.toast(`${count} articles importés, ${ignoredPrix} ignorés (prix manquant)`, count ? 'success' : 'warning');
+      }
       return count;
     },
 
@@ -317,10 +329,7 @@
 
     _importFromTextarea() {
       const textarea = this._container ? this._container.querySelector('[data-catp-csv]') : null;
-      const count = this.importerCSV(textarea ? textarea.value : '');
-      if (window.App && typeof window.App.toast === 'function') {
-        window.App.toast(`${count} article(s) importe(s)`, count ? 'success' : 'warning');
-      }
+      this.importerCSV(textarea ? textarea.value : '');
     },
   };
 
