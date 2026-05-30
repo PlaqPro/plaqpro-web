@@ -434,7 +434,7 @@ window.addEventListener('DOMContentLoaded', function() {
   if (typeof Chart === 'undefined') manquants.push('Graphiques');
   if (manquants.length > 0 && typeof App !== 'undefined') {
     setTimeout(function() {
-      App.toast('Modules indisponibles (réseau) : ' + manquants.join(', ') + ' — fonctions limitées', 'warning', 6000);
+      App.toast('⚠️ ' + manquants.join(', ') + ' indisponible(s) hors ligne', 'warning', 3000);
     }, 2000);
   }
 });
