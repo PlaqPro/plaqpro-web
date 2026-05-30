@@ -1,0 +1,73 @@
+reference;designation;unite;prixBas;prixMoyen;prixHaut;categorie;source;dateMaj;notes
+TERRE-VEG-M3;Terre végétale;m3;25;45;70;TERRASSEMENT;Gravalis Koncrete tarifs paysagistes;2026-05-30;Prix public moyen France 2026 hors transport longue distance
+TERRE-VEG-M2;Terre végétale épandue base 10 cm;m2;2.5;4.5;7;TERRASSEMENT;Calcul depuis TERRE-VEG-M3;2026-05-30;Alias pack pour végétalisation sur 10 cm
+SABLE-M3;Sable vrac;m3;40;60;85;TERRASSEMENT;Gravalis SelfBeton 2026 Tourbières de Sucé;2026-05-30;Prix départ ou livré local selon fournisseur
+GRAVIER-M3;Gravier tout-venant;m3;45;75;125;TERRASSEMENT;Prix-travaux-m2 Berger et fils Tourbières de Sucé;2026-05-30;Fourchette large selon calibre et livraison
+GEOTEXTILE-M2;Géotextile 100g/m²;m2;1.2;2.2;3;TERRASSEMENT;DPI France 2026 distributeurs jardin;2026-05-30;Prix rouleau ou détail selon largeur
+EVAC-VEGETAUX-U;Evacuation végétaux forfait par sujet;u;30;45;75;TERRASSEMENT;Estimation PlaqPro terrain;2026-05-30;Alias pack abattage hors benne lourde
+EVAC-VEGETAUX-ML;Evacuation végétaux selon hauteur;ml;5;8;12;TERRASSEMENT;Estimation PlaqPro terrain;2026-05-30;Majoration par mètre de hauteur arbre
+EVAC-DECHETS-U;Evacuation déchets verts et gravats légers;u;15;20;35;TERRASSEMENT;Estimation PlaqPro terrain;2026-05-30;Alias pack nettoyage final
+BETON-STD-M3;Béton standard prêt à l'emploi;m3;100;145;200;BETON;BuildEstimatory Mager ECTP31 SelfBeton 2026;2026-05-30;Référence demandée alias standard
+BETON-STANDARD-M3;Béton standard prêt à l'emploi;m3;100;145;200;BETON;BuildEstimatory Mager ECTP31 SelfBeton 2026;2026-05-30;Référence technique utilisée par pack_paysagisme
+BETON-DESACTIVE-M3;Béton désactivé prêt à l'emploi;m3;180;230;330;BETON;TravauxBeton ECTP31 2026;2026-05-30;Prix matière m3 hors transport spécial
+BETON-DESACTIVE-M2;Béton désactivé finition;m2;80;120;170;BETON;TravauxBeton Allotravaux tarifs artisans;2026-05-30;Prix indicatif surface finie selon épaisseur et accès
+DESACTIVANT-M2;Désactivant et consommables;m2;8;18;30;BETON;ECTP31 TravauxBeton estimation PlaqPro;2026-05-30;Alias pack béton désactivé
+TREILLIS-COFFRAGE-M2;Treillis soudé coffrage consommables;m2;8;12;20;BETON;BuildEstimatory distributeurs matériaux;2026-05-30;Complément fourniture dalle
+FINITION-TALOCHE-M2;Finition talochée consommables;m2;3;4;7;BETON;Estimation PlaqPro terrain;2026-05-30;Alias pack dalle talochée
+PROTECTION-METEO-M2;Protection météo béton;m2;2.5;3.5;6;BETON;Estimation PlaqPro terrain;2026-05-30;Film protection et aléas lavage
+CIMENT-SAC;Ciment 35kg;sac;7;9;12;BETON;BuildEstimatory distributeurs matériaux;2026-05-30;Sac courant 35 kg
+CIMENT-35KG;Ciment 35kg;sac;7;9;12;BETON;BuildEstimatory distributeurs matériaux;2026-05-30;Alias catalogue historique
+GRAVIER-BETON-T;Gravier béton par tonne;t;30;45;70;BETON;Berger et fils Tourbières de Sucé prix-travaux-m2;2026-05-30;Granulat béton vrac
+GRAVIER-BETON-M3;Gravier béton;m3;48;72;112;BETON;Conversion depuis prix tonne;2026-05-30;Base densité environ 1.6 t par m3
+BLOC-BETON-U;Bloc béton 20x20x50;u;1.5;2.2;3.5;MACONNERIE;TravauxBeton distributeurs matériaux;2026-05-30;Bloc creux courant unité ou palette
+MORTIER-SAC;Mortier colle 25kg;sac;7;10;16;MACONNERIE;SelfBeton Quéguiner distributeurs matériaux;2026-05-30;Mortier ou colle selon usage
+MORTIER-25KG;Mortier 25kg;sac;7;10;16;MACONNERIE;SelfBeton Quéguiner distributeurs matériaux;2026-05-30;Alias catalogue historique
+ENDUIT-EXT-SAC;Enduit extérieur 25kg;sac;18;28;45;MACONNERIE;Quéguiner PRB distributeurs façade;2026-05-30;Enduit monocouche ou extérieur courant
+ENDUIT-EXT-25KG;Enduit extérieur 25kg;sac;18;28;45;MACONNERIE;Quéguiner PRB distributeurs façade;2026-05-30;Alias catalogue historique
+ENDUIT-EXT-M2;Enduit extérieur au m²;m2;12;18;30;MACONNERIE;Estimation depuis sacs 25 kg;2026-05-30;Alias pack maçonnerie extérieure
+PLIOLITE-BIDON;Peinture pliolite 15L;bidon;65;90;130;MACONNERIE;Distributeurs peinture façade;2026-05-30;Bidon 15 L selon marque
+PLIOLITE-15L;Peinture pliolite 15L;bidon;65;90;130;MACONNERIE;Distributeurs peinture façade;2026-05-30;Alias catalogue historique
+MUR-M2;Fournitures mur extérieur;m2;45;52;75;MACONNERIE;Estimation PlaqPro matériaux;2026-05-30;Alias pack mur simple
+MURET-M2;Fournitures muret extérieur;m2;50;58;85;MACONNERIE;Estimation PlaqPro matériaux;2026-05-30;Alias pack muret
+BAC-MACONNERIE-M2;Fournitures bac maçonné;m2;65;78;110;MACONNERIE;Estimation PlaqPro matériaux;2026-05-30;Alias pack bac maçonné
+COUVERTINE-ML;Couvertine béton ou pierre;ml;18;28;45;MACONNERIE;Distributeurs matériaux estimation PlaqPro;2026-05-30;Hors découpe spéciale
+ARDOISE-M2;Ardoise naturelle pose comprise;m2;35;85;120;PAREMENT;Ootravaux Pierre et Parquet Decoon;2026-05-30;Prix fourniture selon gamme et format
+ARDOISE-NAT-M2;Ardoise naturelle;m2;35;85;120;PAREMENT;Ootravaux Pierre et Parquet Decoon;2026-05-30;Alias catalogue historique
+PIERRE-RECONS-M2;Pierre reconstituée pose comprise;m2;30;45;90;PAREMENT;Ootravaux distributeurs parement;2026-05-30;Référence demandée
+PIERRE-RECONST-M2;Pierre reconstituée;m2;30;45;90;PAREMENT;Ootravaux distributeurs parement;2026-05-30;Référence technique utilisée par pack
+PLAQUETTE-M2;Plaquettes de parement;m2;25;48;75;PAREMENT;Ootravaux distributeurs parement;2026-05-30;Référence demandée
+PLAQUETTES-M2;Plaquettes de parement;m2;25;48;75;PAREMENT;Ootravaux distributeurs parement;2026-05-30;Référence technique utilisée par pack
+PAREMENT-M2;Parement extérieur moyen;m2;35;60;100;PAREMENT;Ootravaux moyenne PlaqPro;2026-05-30;Fallback générique pack
+ANGLE-PAREMENT-U;Angle de parement;u;10;18;35;PAREMENT;Distributeurs parement estimation PlaqPro;2026-05-30;Pièce d'angle ou coupe renforcée
+COLLE-PAREMENT-M2;Colle et joints parement;m2;6;9;16;PAREMENT;Distributeurs matériaux estimation PlaqPro;2026-05-30;Consommables pose
+GALETS-SAC;Galets décoratifs sac 25kg;sac;8;12;18;PAREMENT;Tourbières de Sucé distributeurs jardin;2026-05-30;Sac 15 à 25 L selon calibre
+GALETS-M3;Galets décoratifs;m3;250;390;620;PAREMENT;Tourbières de Sucé tarifs 2026;2026-05-30;Vrac ou big bag selon couleur
+GRAVIER-DECO-T;Gravier décoratif par tonne;t;50;130;280;PAREMENT;Tourbières de Sucé Berger et fils 2026;2026-05-30;Très variable selon teinte et origine
+GRAVIER-DECO-M3;Gravier décoratif;m3;80;200;420;PAREMENT;Conversion depuis tonne;2026-05-30;Base densité variable 1.5 à 1.7
+GAZON-ROUL-M2;Gazon rouleau fourniture seule;m2;6;10;25;VEGETAUX;Gazon Rouleau France AP Gazon AMG Matériaux;2026-05-30;Fourniture seule hors préparation du sol
+GAZON-ROULEAU-M2;Gazon rouleau;m2;6;10;25;VEGETAUX;Gazon Rouleau France AP Gazon AMG Matériaux;2026-05-30;Alias catalogue historique
+SEMENCES-KG;Semences gazon;kg;7;12;25;VEGETAUX;Distributeurs jardin estimation PlaqPro;2026-05-30;Mélange standard à rustique
+SEMENCES-GAZON-KG;Semences gazon;kg;7;12;25;VEGETAUX;Distributeurs jardin estimation PlaqPro;2026-05-30;Alias catalogue historique
+SEMENCES-GAZON-M2;Semences gazon au m²;m2;0.5;1.6;3;VEGETAUX;Conversion depuis kg;2026-05-30;Alias pack pour semis incluant consommables
+PLANT-MOY;Plant arbuste moyen 40-60cm;u;12;25;45;VEGETAUX;Willemse Jardiland Truffaut estimation;2026-05-30;Plant courant hors sujet premium
+PLANT-GRAND;Plant arbuste grand 80-120cm;u;35;65;120;VEGETAUX;Willemse Jardiland Truffaut estimation;2026-05-30;Plant plus développé
+OLIVIER-U;Olivier en pot tronc 8-10cm;u;90;180;350;VEGETAUX;Willemse Jardiland Truffaut estimation;2026-05-30;Très variable selon âge et tronc
+CORDYLINE-U;Cordyline australis 60cm;u;20;30;55;VEGETAUX;Willemse Jardiland Truffaut estimation;2026-05-30;Pot 2 à 5 L selon fournisseur
+ROMARIN-U;Romarin en pot 2L;u;5;8;15;VEGETAUX;Willemse Jardiland Truffaut estimation;2026-05-30;Pot 1.5 à 3 L
+ECORCE-PIN-M3;Écorce de pin;m3;35;70;110;PAILLAGE;Tourbières de Sucé Babée Jardin distributeurs;2026-05-30;Vrac ou big bag selon calibre
+ECORCE-PIN-M2;Écorce de pin au m²;m2;3;5.6;9;PAILLAGE;Conversion depuis m3;2026-05-30;Alias pack base 8 cm d'épaisseur
+POUZZOLANE-M3;Pouzzolane;m3;75;95;130;PAILLAGE;Tourbières de Sucé tarifs 2026;2026-05-30;Vrac ou big bag
+ARDOISE-PILEE-M3;Ardoise pilée décorative;m3;190;230;320;PAILLAGE;Tourbières de Sucé tarifs 2026;2026-05-30;Vrac décoratif
+PAILLAGE-MINERAL-T;Paillage minéral par tonne;t;80;140;260;PAILLAGE;Tourbières de Sucé Berger et fils 2026;2026-05-30;Selon pierre décorative
+PAILLAGE-MINERAL-M3;Paillage minéral;m3;120;210;390;PAILLAGE;Conversion depuis tonne;2026-05-30;Alias catalogue historique
+TUYAU-PE-ML;Tuyau PE ø25 au mètre;ml;1.2;2.2;4.5;EAU;Mister Arrosage Mon-Irrigation Entrepôt du Bricolage;2026-05-30;PEBD ou PEHD arrosage enterré
+ROBINET-EXT-U;Robinet extérieur laiton;u;18;35;60;EAU;Plomberie-Pro distributeurs bricolage;2026-05-30;Robinet simple laiton hors pose
+PROGRAMMATEUR-U;Programmateur arrosage simple;u;30;65;120;EAU;Mister Arrosage Jardiland distributeurs;2026-05-30;Programmateur nez de robinet
+GOUTTEUSE-ML;Goutteur intégré au mètre;ml;0.6;1.5;3;EAU;France Arrosage Plomberie-Pro Jardiland;2026-05-30;Tuyau goutte à goutte ou goutteurs intégrés
+GOUTTEURS-U;Goutteur individuel;u;0.25;0.45;1.2;EAU;France Arrosage distributeurs irrigation;2026-05-30;Alias catalogue historique
+GAINE-ELEC-ML;Gaine électrique extérieure;ml;1.5;3.8;7;EAU;Distributeurs électricité estimation PlaqPro;2026-05-30;Classée EAU pour compatibilité onglets existants
+BOITE-ATTENTE-U;Boîte ou attente extérieure;u;15;28;50;EAU;Distributeurs électricité estimation PlaqPro;2026-05-30;Attente hors raccordement électricien
+POLYCARBONATE-M2;Plaque polycarbonate;m2;35;55;90;FINITIONS;Distributeurs bricolage estimation PlaqPro;2026-05-30;Fermeture sous balcon
+PROFIL-ALU-M2;Profilés aluminium rapportés;m2;12;18;35;FINITIONS;Distributeurs bricolage estimation PlaqPro;2026-05-30;Complément par m2 d'ouvrage spécial
+QUINCAILLERIE-U;Quincaillerie ouvrage spécial;u;80;120;220;FINITIONS;Estimation PlaqPro terrain;2026-05-30;Rails visserie accessoires
+NETTOYANT-FACADE-L;Nettoyant façade;L;5;8;15;FINITIONS;Distributeurs façade estimation PlaqPro;2026-05-30;Nettoyant ou consommables nettoyage final

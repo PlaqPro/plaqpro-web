@@ -124,14 +124,16 @@
       const lignes = String(texte || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
       const premiereLigne = lignes.length ? parseCSVLine(lignes[0]).join(';').toLowerCase() : '';
       const formatWillemse = premiereLigne.indexOf('reference_fournisseur') >= 0 || premiereLigne.indexOf('nom_produit') >= 0;
+      const formatEnrichi = premiereLigne.indexOf('prixbas') >= 0 && premiereLigne.indexOf('prixmoyen') >= 0 && premiereLigne.indexOf('prixhaut') >= 0;
       const formatStandard = premiereLigne.indexOf('reference') >= 0 && premiereLigne.indexOf('designation') >= 0;
-      const startIndex = formatWillemse || formatStandard ? 1 : 0;
+      const startIndex = formatWillemse || formatEnrichi || formatStandard ? 1 : 0;
       let count = 0;
       let ignoredPrix = 0;
 
       lignes.slice(startIndex).forEach(ligne => {
         const cols = parseCSVLine(ligne);
         if (formatWillemse && cols.length < 6) return;
+        if (formatEnrichi && cols.length < 7) return;
         if (!formatWillemse && cols.length < 4) return;
 
         const article = formatWillemse
@@ -142,6 +144,20 @@
               prixHT: parsePrice(cols[4]),
               categorie: cols[5] || 'VEGETAUX',
             })
+          : formatEnrichi
+            ? normalizeArticle({
+                ref: cols[0],
+                designation: cols[1],
+                unite: cols[2],
+                prixHT: parsePrice(cols[4]),
+                prixBas: parsePrice(cols[3]),
+                prixMoyen: parsePrice(cols[4]),
+                prixHaut: parsePrice(cols[5]),
+                categorie: cols[6] || 'VEGETAUX',
+                source: cols[7] || '',
+                dateMaj: cols[8] || '',
+                notes: cols[9] || '',
+              })
           : normalizeArticle({
               ref: cols[0],
               designation: cols[1],
@@ -354,7 +370,13 @@
       designation: String(article.designation || '').trim(),
       unite: String(article.unite || 'u').trim(),
       prixHT: round2(n(article.prixHT, 0)),
+      prixBas: round2(n(article.prixBas, 0)),
+      prixMoyen: round2(n(article.prixMoyen, article.prixHT || 0)),
+      prixHaut: round2(n(article.prixHaut, 0)),
       categorie: normalizeCategorie(article.categorie),
+      source: String(article.source || '').trim(),
+      dateMaj: String(article.dateMaj || '').trim(),
+      notes: String(article.notes || '').trim(),
     };
   }
 
