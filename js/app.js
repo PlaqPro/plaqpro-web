@@ -1301,6 +1301,15 @@ const Pages = {
     else el.querySelector('#catalogue-pays-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
   },
 
+  // ── Import CSV / Willemse ─────────────────────────────────
+  importCsvPaysagisme() {
+    const el = document.getElementById('main-content');
+    if (!el) return;
+    el.innerHTML = '<div class="page-header"><h1 class="page-title">📥 Import CSV / Willemse</h1></div><div id="import-csv-container" class="card p-16 mt-16"></div>';
+    if (typeof TemplateCsvPaysagisme !== 'undefined') TemplateCsvPaysagisme.getHTML('import-csv-container');
+    else el.querySelector('#import-csv-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+  },
+
   // ── Rapports paysagisme ───────────────────────────────────
   rapportsPaysagisme() {
     const el = document.getElementById('main-content');
