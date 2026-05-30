@@ -147,6 +147,8 @@
   <script src="js/polygone_metrage.js"></script>
   <script src="js/devis_paysagisme.js"></script>
   <script src="js/diagnostic_chantier.js"></script>
+  <script src="js/catalogue_paysagisme.js"></script>
+  <script src="js/chantier_paysagisme.js"></script>
   <script src="js/analyse_photo.js"></script>
   <script src="js/pause_cafe.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" integrity="sha384-OUW9euuUyxyHcAhTqbhI+Iyb8LMssXt/cpz0yXhs9UWG2/R/uaWdakx/4cfww7Vb" crossorigin="anonymous" defer></script>
@@ -195,8 +197,10 @@
       { page: 'calculateur', icon: '<i class="ph ph-lightning"></i>', label: 'Calcul Express' },
 
       { section: '🌿 Paysagisme & Extérieur' },
-      { page: 'paysagisme',   icon: '<i class="ph ph-tree"></i>',           label: 'Paysagisme' },
-      { page: 'diagnostic',   icon: '<i class="ph ph-clipboard-text"></i>', label: 'Diagnostic chantier' },
+      { page: 'paysagisme',          icon: '<i class="ph ph-tree"></i>',           label: 'Paysagisme' },
+      { page: 'diagnostic',          icon: '<i class="ph ph-clipboard-text"></i>', label: 'Diagnostic chantier' },
+      { page: 'cataloguePaysagisme', icon: '<i class="ph ph-plant"></i>',           label: 'Catalogue prix' },
+      { page: 'chantiersPaysagisme', icon: '<i class="ph ph-shovel"></i>',          label: 'Chantiers extérieurs' },
 
       { section: '📐 Techniques' },
       { page: 'acoustique',  icon: '<i class="ph ph-speaker-high"></i>', label: 'Acoustique' },
@@ -291,7 +295,9 @@
         sectionCable:  '💡 Section Câble — NF C15-100',
         tempsChantier: '⏱️ Temps Chantier — Ratios Professionnels',
         linteau:       '🏗️ Dimensionnement Linteau',
-        exterieur:   '🌿 Pack Extérieur & Paysagisme',
+        exterieur:            '🌿 Pack Extérieur & Paysagisme',
+        cataloguePaysagisme:  '🌿 Catalogue prix paysagisme',
+        chantiersPaysagisme:  '🌿 Chantiers extérieurs',
         dpgf:        "🏛 Appels d'offres — Analyse IA",
         aide:        '❓ Guide & Aide',
         chantier_mobile: '🏗 Mode Chantier',
@@ -350,8 +356,10 @@
         chargesCouts:    function() { return Pages.chargesCouts(); },
         inscription:     function() { return Pages.inscription(); },
         legal:           function() { return Pages.legal(); },
-        paysagisme:      function() { return Pages.paysagisme(); },
-        diagnostic:      function() { return Pages.diagnostic(); },
+        paysagisme:           function() { return Pages.paysagisme(); },
+        diagnostic:           function() { return Pages.diagnostic(); },
+        cataloguePaysagisme:  function() { return Pages.cataloguePaysagisme(); },
+        chantiersPaysagisme:  function() { return Pages.chantiersPaysagisme(); },
       };
 
       if (pageMap[page]) {

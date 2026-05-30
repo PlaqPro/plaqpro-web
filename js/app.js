@@ -1292,6 +1292,24 @@ const Pages = {
     else App.toast('Enregistrez le devis d\'abord', 'error');
   },
 
+  // ── Catalogue paysagisme ──────────────────────────────────
+  cataloguePaysagisme() {
+    const el = document.getElementById('main-content');
+    if (!el) return;
+    el.innerHTML = '<div class="page-header"><h1 class="page-title">🌿 Catalogue prix paysagisme</h1></div><div id="catalogue-pays-container" class="mt-16"></div>';
+    if (typeof CataloguePaysagisme !== 'undefined') CataloguePaysagisme.getHTML('catalogue-pays-container');
+    else el.querySelector('#catalogue-pays-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+  },
+
+  // ── Chantiers paysagisme ──────────────────────────────────
+  chantiersPaysagisme() {
+    const el = document.getElementById('main-content');
+    if (!el) return;
+    el.innerHTML = '<div class="page-header"><h1 class="page-title">🌿 Chantiers extérieurs</h1></div><div id="chantiers-pays-container" class="mt-16"></div>';
+    if (typeof ChantierPaysagisme !== 'undefined') ChantierPaysagisme.getHTML('chantiers-pays-container');
+    else el.querySelector('#chantiers-pays-container').innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+  },
+
   // ── Paysagisme ────────────────────────────────────────────
   paysagisme() {
     const el = document.getElementById('main-content');
