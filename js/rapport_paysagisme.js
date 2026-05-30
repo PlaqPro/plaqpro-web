@@ -57,7 +57,7 @@
             `${fmtNumber(lot.quantite)} ${lot.unite || ''}`,
             money(lot.coutDirect),
             money(lot.prixVendu || lot.prixConseilleLot),
-            `${money(lot.margeEuro)} (${fmtNumber(lot.margePct)} %)`,
+            marge.erreur ? 'Non calculable' : `${money(lot.margeEuro)} (${fmtNumber(lot.margePct)} %)`,
           ])
         ))}
 
@@ -65,12 +65,15 @@
         ${section('Matériel', resourceTable(chantierPaysage.materiel, ['nom', 'heures', 'cout'], 'Aucun matériel renseigné.'))}
         ${section('Sous-traitants', resourceTable(chantierPaysage.soustraitants, ['nom', 'metier', 'cout'], 'Aucun sous-traitant renseigné.'))}
 
-        ${section('Synthèse financière', metrics([
-          ['Coût direct', money(marge.coutDirect)],
-          ['Coût complet estimé', money(marge.coutComplet)],
-          ['Prix vendu HT', money(marge.prixVendu)],
-          ['Marge', `${money(marge.margeEuro)} (${fmtNumber(marge.margePct)} %)`],
-        ]))}
+        ${section('Synthèse financière', marge.erreur
+          ? redAlert('⚠️ Aucun devis signé — marge non calculable')
+          : metrics([
+            ['Coût direct', money(marge.coutDirect)],
+            ['Coût complet estimé', money(marge.coutComplet)],
+            ['Prix vendu HT', money(marge.prixVendu)],
+            ['Marge', `${money(marge.margeEuro)} (${fmtNumber(marge.margePct)} %)`],
+          ])
+        )}
 
         ${section('Photos avant / après', photosBlock(photosAvant, photosApres))}
       `);
@@ -139,10 +142,11 @@
         const marge = calcMarge(item);
         return {
           nom: chantier ? (chantier.nom || chantier.titre || `Chantier #${chantier.id}`) : `Chantier #${item.chantierId}`,
-          ca: marge.prixVendu,
-          cout: marge.coutDirect,
-          margeEuro: marge.margeEuro,
-          margePct: marge.margePct,
+          erreur: marge.erreur || '',
+          ca: marge.erreur ? 0 : marge.prixVendu,
+          cout: marge.erreur ? 0 : marge.coutDirect,
+          margeEuro: marge.erreur ? 0 : marge.margeEuro,
+          margePct: marge.erreur ? 0 : marge.margePct,
         };
       });
       const totalCA = rows.reduce((s, r) => s + r.ca, 0);
@@ -168,11 +172,11 @@
           ['Chantier', 'CA HT', 'Coût réel', 'Marge €', 'Marge %', 'Alerte'],
           rows.map(row => [
             row.nom,
-            money(row.ca),
-            money(row.cout),
-            money(row.margeEuro),
-            `${fmtNumber(row.margePct)} %`,
-            row.margePct < 15 ? '⚠️ Marge < 15%' : '',
+            row.erreur ? 'Non calculable' : money(row.ca),
+            row.erreur ? 'Non calculable' : money(row.cout),
+            row.erreur ? 'Non calculable' : money(row.margeEuro),
+            row.erreur ? 'Non calculable' : `${fmtNumber(row.margePct)} %`,
+            row.erreur ? '⚠️ Aucun devis signé — marge non calculable' : (row.margePct < 15 ? '⚠️ Marge < 15%' : ''),
           ])
         ))}
       `);
@@ -344,6 +348,9 @@
     const margeModule = window.ChantierPaysagisme && typeof window.ChantierPaysagisme.calcMargeReelle === 'function'
       ? window.ChantierPaysagisme.calcMargeReelle(chantierPaysage.id)
       : null;
+    if (margeModule && margeModule.erreur) {
+      return { erreur: margeModule.erreur };
+    }
     const lots = getDetailLots(chantierPaysage);
     const coutLots = lots.reduce((sum, lot) => sum + n(lot.coutDirect, 0), 0);
     const venduLots = lots.reduce((sum, lot) => sum + n(lot.prixVendu || lot.prixConseilleLot, 0), 0);
@@ -461,6 +468,10 @@
     alertes = alertes || [];
     if (!alertes.length) return '<p style="color:#666">Aucune alerte active.</p>';
     return `<div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">${alertes.map(a => `<div style="border:1px solid #f59e0b;background:#fff7ed;border-radius:8px;padding:8px;color:#7c2d12">${escapeHtml(a)}</div>`).join('')}</div>`;
+  }
+
+  function redAlert(message) {
+    return `<div style="border:1px solid #ef4444;background:#fef2f2;border-radius:8px;padding:10px;color:#991b1b;font-weight:700">${escapeHtml(message)}</div>`;
   }
 
   function signatureBlock() {

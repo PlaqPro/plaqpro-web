@@ -186,6 +186,7 @@
       const linked = getLinkedChantier(item.chantierId);
       const client = linked && linked.clientId ? getClient(linked.clientId) : null;
       const marge = this.calcMargeReelle(item.id);
+      const margeErreur = marge && marge.erreur;
       const titre = linked ? (linked.nom || linked.titre || `Chantier #${linked.id}`) : `Chantier DB #${item.chantierId}`;
       const adresse = linked ? formatAdresse(linked) : 'Adresse non disponible';
       const clientNom = client ? (client.nom || client.raisonSociale || `Client #${client.id}`) : 'Client non renseigné';
@@ -222,7 +223,7 @@
             </div>
             <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-sm,6px);padding:8px">
               <div style="color:var(--text-secondary,var(--text))">Marge réelle</div>
-              <strong style="color:${marge && marge.margePct < item.margeCible ? '#EF4444' : 'var(--text)'}">${marge ? `${round2(marge.margePct)} %` : '-'}</strong>
+              ${margeErreur ? orangeBadge('Aucun devis signé') : `<strong style="color:${marge && marge.margePct < item.margeCible ? '#EF4444' : 'var(--text)'}">${marge ? `${round2(marge.margePct)} %` : '-'}</strong>`}
             </div>
           </div>
 
@@ -323,6 +324,7 @@
       if (!item) return;
       const linked = getLinkedChantier(item.chantierId);
       const marge = this.calcMargeReelle(id);
+      const margeErreur = marge && marge.erreur;
       openModal(
         'Fiche chantier paysagisme',
         `
@@ -336,7 +338,7 @@
             ${kv('Date début', item.dateDebut || '-')}
             ${kv('Date fin', item.dateFin || '-')}
             ${kv('Cout réel', fmt(item.coutReel))}
-            ${kv('Marge réelle', marge ? `${fmt(marge.margeEuro)} (${round2(marge.margePct)} %)` : '-')}
+            ${margeErreur ? kvHtml('Marge réelle', orangeBadge('Aucun devis signé')) : kv('Marge réelle', marge ? `${fmt(marge.margeEuro)} (${round2(marge.margePct)} %)` : '-')}
             ${kv('Equipe', `${item.equipe.length} affectation(s)`)}
             ${kv('Matériel', `${item.materiel.length} élément(s)`)}
             ${kv('Sous-traitants', `${item.soustraitants.length} intervenant(s)`)}
@@ -563,6 +565,19 @@
         <strong style="color:var(--text);font-size:13px;text-align:right">${escapeHtml(value)}</strong>
       </div>
     `;
+  }
+
+  function kvHtml(label, valueHTML) {
+    return `
+      <div style="display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--border);padding:7px 0">
+        <span style="color:var(--text-secondary,var(--text));font-size:13px">${escapeHtml(label)}</span>
+        <strong style="color:var(--text);font-size:13px;text-align:right">${valueHTML}</strong>
+      </div>
+    `;
+  }
+
+  function orangeBadge(label) {
+    return `<span style="display:inline-block;border:1px solid #F59E0B;background:rgba(245,158,11,0.14);color:#B45309;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:800;white-space:nowrap">${escapeHtml(label)}</span>`;
   }
 
   function formatAdresse(chantier) {

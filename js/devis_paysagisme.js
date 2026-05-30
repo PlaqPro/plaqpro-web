@@ -185,7 +185,7 @@
                   <th style="text-align:right;padding:8px;border-top:2px solid var(--border)">${fmt(totalDirect)}</th>
                   <th style="text-align:right;padding:8px;border-top:2px solid var(--border)">${fmt(totalVendu)}</th>
                   <th style="text-align:right;padding:8px;border-top:2px solid var(--border)">${fmt(marge)}</th>
-                  <th style="text-align:right;padding:8px;border-top:2px solid var(--border)">${fmt(margePct)} %</th>
+                  <th style="text-align:right;padding:8px;border-top:2px solid var(--border)">${Math.round(margePct)} %</th>
                 </tr>
               </tfoot>
             </table>
@@ -624,7 +624,7 @@
         <td style="text-align:right;padding:8px;border-bottom:1px solid var(--border)">${fmt(coutDirect)}</td>
         <td style="text-align:right;padding:8px;border-bottom:1px solid var(--border)">${fmt(prixVendu)}</td>
         <td style="text-align:right;padding:8px;border-bottom:1px solid var(--border)">${fmt(marge)}</td>
-        <td style="text-align:right;padding:8px;border-bottom:1px solid var(--border)">${fmt(margePct)} %</td>
+        <td style="text-align:right;padding:8px;border-bottom:1px solid var(--border)">${Math.round(margePct)} %</td>
       </tr>
     `;
   }
@@ -635,7 +635,7 @@
         <td style="padding:8px;border-bottom:1px solid var(--border)">${escapeHtml(lot.nom)}</td>
         <td style="text-align:right;padding:8px;border-bottom:1px solid var(--border)">${fmt(lot.coutDirect)}</td>
         <td style="text-align:right;padding:8px;border-bottom:1px solid var(--border)">${fmt(lot.prixVendu || lot.prixConseilleLot)}</td>
-        <td style="text-align:right;padding:8px;border-bottom:1px solid var(--border)">${fmt(lot.margeEuro)} (${fmt(lot.margePct)} %)</td>
+        <td style="text-align:right;padding:8px;border-bottom:1px solid var(--border)">${fmt(lot.margeEuro)} (${Math.round(lot.margePct || 0)} %)</td>
       </tr>
     `;
   }
