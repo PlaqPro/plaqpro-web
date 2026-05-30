@@ -22,16 +22,17 @@
     _container: null,
     _containerId: null,
     _lastCalcul: null,
+    _margeGlobale: 30,
 
     genererDevis(options) {
       options = options || {};
       const lotsSaisis = Array.isArray(options.lots) ? options.lots : [];
-      const margeGlobale = n(options.margeGlobale, 30);
-      const calcul = this.calcDevisComplet(lotsSaisis);
+      const margeGlobale = n(options.margeGlobale, this._margeGlobale);
+      const calcul = this.calcDevisComplet(lotsSaisis, margeGlobale);
       const config = getConfig();
       const numero = options.numero || nextNumero(config);
       const lignes = calcul.detailParLot.map(detail => {
-        const prixVente = detail.prixVendu || detail.prixConseilleLot;
+        const prixVente = detail.prixVendu;
         const quantite = detail.quantite || 1;
         const prixUnitaire = quantite > 0 ? prixVente / quantite : prixVente;
 
@@ -82,6 +83,10 @@
           coutComplet: calcul.coutComplet,
           prixMinimum: calcul.prixMinimum,
           prixConseille: calcul.prixConseille,
+          prixAvecMargeGlobale: calcul.prixAvecMargeGlobale,
+          margeAppliquee: calcul.margeAppliquee,
+          margeEuro: calcul.margeEuro,
+          margePct: calcul.margePct,
           detailParLot: calcul.detailParLot,
         },
       };
@@ -101,21 +106,45 @@
       return html;
     },
 
-    calcDevisComplet(lots) {
+    calcDevisComplet(lots, margeGlobale) {
       lots = Array.isArray(lots) ? lots : [];
-      const detailParLot = lots.map(item => this._calcLot(item)).filter(Boolean);
+      margeGlobale = n(margeGlobale, this._margeGlobale);
+      const detailParLot = lots.map(item => this._calcLot(item, margeGlobale)).filter(Boolean);
       const coutDirect = detailParLot.reduce((sum, lot) => sum + lot.coutDirect, 0);
       const coutComplet = coutDirect * FRAIS_GENERAUX;
       const prixMinimum = coutComplet * MARGE_SURVIE;
       const prixConseille = coutComplet * MARGE_CIBLE;
+      const prixAvecMargeGlobale = margeGlobale > 0 ? coutDirect * (1 + margeGlobale / 100) : prixConseille;
+      const totalVendu = detailParLot.reduce((sum, lot) => sum + lot.prixVendu, 0);
+      const margeEuro = totalVendu - coutDirect;
+      const margePct = totalVendu > 0 ? margeEuro / totalVendu * 100 : 0;
 
       return {
         coutDirect: round2(coutDirect),
         coutComplet: round2(coutComplet),
         prixMinimum: round2(prixMinimum),
         prixConseille: round2(prixConseille),
+        prixAvecMargeGlobale: round2(prixAvecMargeGlobale),
+        margeAppliquee: margeGlobale > 0 ? margeGlobale : 'CDC',
+        margeEuro: round2(margeEuro),
+        margePct: round2(margePct),
         detailParLot,
       };
+    },
+
+    setMarge(pct) {
+      this._margeGlobale = Math.max(0, n(pct, 0));
+      if (this._container) {
+        const input = this._container.querySelector('[data-devp-marge]');
+        if (input && n(input.value, 0) !== this._margeGlobale) input.value = this._margeGlobale;
+        this._refreshLotPrices();
+        this._renderLiveMarge();
+        const recap = this._container.querySelector('[data-devp-recap]');
+        if (recap && recap.style.display !== 'none') this._afficherRecap();
+      }
+      if (window.App && typeof window.App.toast === 'function') {
+        window.App.toast('Marge mise à jour : ' + this._margeGlobale + '%', 'info');
+      }
     },
 
     exporterRecap(devisId) {
@@ -198,9 +227,11 @@
             </div>
             <div class="form-group">
               <label>Marge globale (%)</label>
-              <input type="number" min="0" step="1" value="30" data-devp-marge style="width:100%">
+              <input type="number" min="0" step="1" value="${escapeAttr(this._margeGlobale)}" data-devp-marge oninput="DevisPaysagisme.setMarge(this.value)" style="width:100%">
             </div>
           </div>
+
+          <div data-devp-live-marge style="border:1px solid var(--border);background:var(--bg-card);border-radius:var(--r-md,8px);padding:12px;color:var(--text)"></div>
 
           <div class="form-group">
             <label>Notes internes / contexte</label>
@@ -284,8 +315,19 @@
 
     _bind() {
       if (!this._container) return;
-      this._container.addEventListener('input', () => this._refreshLotPrices());
-      this._container.addEventListener('change', () => this._refreshLotPrices());
+      this._container.addEventListener('input', event => {
+        if (event.target && event.target.matches('[data-devp-marge]')) return;
+        this._refreshLotPrices();
+        this._renderLiveMarge();
+      });
+      this._container.addEventListener('change', event => {
+        if (event.target && event.target.matches('[data-devp-marge]')) {
+          this.setMarge(event.target.value);
+          return;
+        }
+        this._refreshLotPrices();
+        this._renderLiveMarge();
+      });
       this._container.addEventListener('click', event => {
         const target = event.target.closest('[data-devp-action]');
         if (!target) return;
@@ -309,9 +351,10 @@
         }
         const quantite = n(row.querySelector('[data-devp-quantite]')?.value, 0);
         const optionsLot = readOptions(row);
-        const calc = lot.calcPrix(quantite, optionsLot);
-        prixEl.textContent = fmt(calc.prixTotal);
+        const detail = this._calcLot({ lotId, quantite, optionsLot }, this._margeGlobale);
+        prixEl.textContent = detail ? fmt(detail.prixVendu) : '0,00 €';
       });
+      this._renderLiveMarge();
     },
 
     _collectLots() {
@@ -325,15 +368,33 @@
         const quantite = n(row.querySelector('[data-devp-quantite]')?.value, 0);
         if (quantite <= 0) return;
         const optionsLot = readOptions(row);
-        const calc = lot.calcPrix(quantite, optionsLot);
         lots.push({
           lotId,
           quantite,
           optionsLot,
-          prixVente: calc.prixTotal,
         });
       });
       return lots;
+    },
+
+    _renderLiveMarge() {
+      if (!this._container) return;
+      const node = this._container.querySelector('[data-devp-live-marge]');
+      if (!node) return;
+      const lots = this._collectLots();
+      const calcul = this.calcDevisComplet(lots, this._margeGlobale);
+      node.innerHTML = `
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+          <div>
+            <div style="font-size:12px;color:var(--text-secondary,var(--text))">Avec marge ${escapeHtml(this._margeGlobale)}%</div>
+            <div style="font-size:22px;font-weight:800;color:var(--accent)">${fmt(calcul.prixAvecMargeGlobale)}</div>
+          </div>
+          <div style="font-size:13px;color:var(--text-secondary,var(--text));text-align:right">
+            Coût direct : <strong style="color:var(--text)">${fmt(calcul.coutDirect)}</strong><br>
+            Marge : <strong style="color:var(--text)">${fmt(calcul.margeEuro)} (${fmtNumber(calcul.margePct)} %)</strong>
+          </div>
+        </div>
+      `;
     },
 
     _afficherRecap() {
@@ -347,7 +408,7 @@
         return;
       }
 
-      const calcul = this.calcDevisComplet(lots);
+      const calcul = this.calcDevisComplet(lots, this._margeGlobale);
       this._lastCalcul = calcul;
       recap.style.display = 'block';
       recap.innerHTML = `
@@ -358,6 +419,8 @@
             ${metric('Cout complet', calcul.coutComplet)}
             ${metric('Prix minimum', calcul.prixMinimum)}
             ${metric('Prix conseille', calcul.prixConseille)}
+            ${metric(`Avec marge ${calcul.margeAppliquee}%`, calcul.prixAvecMargeGlobale)}
+            ${metric('Marge globale', `${fmt(calcul.margeEuro)} (${fmtNumber(calcul.margePct)} %)`, true)}
           </div>
           <div style="overflow:auto;margin-top:12px">
             <table style="width:100%;border-collapse:collapse;min-width:620px">
@@ -387,7 +450,7 @@
 
       const clientId = n(this._container.querySelector('[data-devp-client]')?.value, 0) || null;
       const chantierId = n(this._container.querySelector('[data-devp-chantier]')?.value, 0) || null;
-      const margeGlobale = n(this._container.querySelector('[data-devp-marge]')?.value, 30);
+      const margeGlobale = n(this._container.querySelector('[data-devp-marge]')?.value, this._margeGlobale);
       const notes = this._container.querySelector('[data-devp-notes]')?.value || '';
 
       const devis = this.genererDevis({ clientId, chantierId, lots, margeGlobale, notes });
@@ -403,10 +466,11 @@
       }
     },
 
-    _calcLot(item) {
+    _calcLot(item, margeGlobale) {
       const lot = findLot(item.lotId || item.code);
       if (!lot || typeof lot.calcPrix !== 'function') return null;
 
+      margeGlobale = n(margeGlobale, this._margeGlobale);
       const quantite = n(item.quantite, 0);
       const optionsLot = item.optionsLot || {};
       const calc = lot.calcPrix(quantite, optionsLot);
@@ -417,7 +481,7 @@
       const coutComplet = coutDirect * FRAIS_GENERAUX;
       const prixMinimumLot = coutComplet * MARGE_SURVIE;
       const prixConseilleLot = coutComplet * MARGE_CIBLE;
-      const prixVendu = n(item.prixVente, prixConseilleLot);
+      const prixVendu = margeGlobale > 0 ? coutDirect * (1 + margeGlobale / 100) : prixConseilleLot;
 
       return {
         lotId: lot.code || item.lotId,
@@ -436,6 +500,7 @@
         prixMinimumLot: round2(prixMinimumLot),
         prixConseilleLot: round2(prixConseilleLot),
         prixVendu: round2(prixVendu),
+        margeAppliquee: margeGlobale > 0 ? margeGlobale : 'CDC',
         margeEuro: round2(prixVendu - coutDirect),
         margePct: prixVendu > 0 ? round2((prixVendu - coutDirect) / prixVendu * 100) : 0,
         detail: Array.isArray(calc.detail) ? calc.detail.slice() : [],
@@ -576,10 +641,11 @@
   }
 
   function metric(label, value) {
+    const displayValue = typeof value === 'string' ? value : fmt(value);
     return `
       <div style="border:1px solid var(--border);border-radius:var(--r-md,8px);background:var(--bg-card);padding:12px">
         <div style="font-size:12px;color:var(--text-secondary,var(--text))">${escapeHtml(label)}</div>
-        <div style="font-size:20px;font-weight:800;color:var(--accent)">${fmt(value)}</div>
+        <div style="font-size:20px;font-weight:800;color:var(--accent)">${escapeHtml(displayValue)}</div>
       </div>
     `;
   }
@@ -594,6 +660,13 @@
       style: 'currency',
       currency: 'EUR',
       minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value || 0);
+  }
+
+  function fmtNumber(value) {
+    return new Intl.NumberFormat('fr-FR', {
+      minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(value || 0);
   }
