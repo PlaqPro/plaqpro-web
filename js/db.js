@@ -29,6 +29,16 @@ const DB = {
     sousTraitants: 'plaqpro_sous_traitants',
   },
 
+  // Données paysagisme
+  PAYSAGISME_KEYS: [
+    'plaqpro_catalogue_paysagisme',
+    'plaqpro_chantiers_paysagisme',
+    'plaqpro_diagnostic_chantier_courant',
+    'plaqpro_equipe_paysagisme',
+    'plaqpro_materiel_paysagisme',
+    'plaqpro_checklists_paysagisme',
+  ],
+
   // ── CRUD générique ────────────────────────────────────────
   getAll(key) {
     try { return JSON.parse(localStorage.getItem(key) || '[]'); }
@@ -278,13 +288,39 @@ const DB = {
     Object.entries(this.KEYS).forEach(([k, v]) => {
       data[k] = this.getAll(v);
     });
+    this.PAYSAGISME_KEYS.forEach(key => {
+      const raw = localStorage.getItem(key);
+      if (raw !== null) {
+        try { data[key] = JSON.parse(raw); }
+        catch { data[key] = raw; }
+      }
+    });
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('plaqpro_checklist_') || key.startsWith('plaqpro_checklists_')) {
+        const raw = localStorage.getItem(key);
+        if (raw !== null) {
+          try { data[key] = JSON.parse(raw); }
+          catch { data[key] = raw; }
+        }
+      }
+    });
     return JSON.stringify(data, null, 2);
   },
 
   importAll(jsonStr) {
     const data = JSON.parse(jsonStr);
     Object.entries(this.KEYS).forEach(([k, v]) => {
-      if (data[k]) this.save(v, data[k]);
+      if (Object.prototype.hasOwnProperty.call(data, k)) this.save(v, data[k]);
+    });
+    this.PAYSAGISME_KEYS.forEach(key => {
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
+        localStorage.setItem(key, JSON.stringify(data[key]));
+      }
+    });
+    Object.keys(data).forEach(key => {
+      if (key.startsWith('plaqpro_checklist_') || key.startsWith('plaqpro_checklists_')) {
+        localStorage.setItem(key, JSON.stringify(data[key]));
+      }
     });
   },
 
