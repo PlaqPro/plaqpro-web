@@ -343,11 +343,11 @@
       const W = this._cw, H = this._ch;
       const margin = 30;
       const pts = this._canvasPoints;
-      let maxM = 10;
+      let maxM = 20;
       if (pts.length > 0) {
         const maxX = Math.max(...pts.map(p => p.xm));
         const maxY = Math.max(...pts.map(p => p.ym));
-        maxM = Math.max(maxX + 2, maxY + 2, 5);
+        maxM = Math.max(maxX + 2, maxY + 2, 20);
       }
       const scale = Math.min(W - margin * 2, H - margin * 2) / maxM;
       this._canvasScale = scale;
@@ -366,12 +366,12 @@
       ctx.fillStyle = 'rgba(100,116,139,.7)';
       ctx.font = '10px system-ui';
       ctx.textAlign = 'center';
-      for (let m = 0; m <= maxM; m += 2) {
+      for (let m = 0; m <= maxM; m += 5) {
         const x = toX(m);
         if (x <= W - margin) ctx.fillText(m + 'm', x, H - margin + 14);
       }
       ctx.textAlign = 'right';
-      for (let m = 0; m <= maxM; m += 2) {
+      for (let m = 0; m <= maxM; m += 5) {
         const y = toY(m);
         if (y <= H - margin) ctx.fillText(m + 'm', margin - 4, y + 4);
       }
@@ -404,6 +404,25 @@
         ctx.lineWidth = 1.5;
         ctx.stroke();
         ctx.setLineDash([]);
+        const dx = preview.xm - last.xm;
+        const dy = preview.ym - last.ym;
+        const dist = Math.round(Math.sqrt(dx*dx + dy*dy) * 10) / 10;
+        if (dist > 0) {
+          const labelX = (toX(last.xm) + preview.px) / 2;
+          const labelY = (toY(last.ym) + preview.py) / 2 - 10;
+          ctx.save();
+          ctx.fillStyle = 'rgba(30,30,30,.75)';
+          const txt = dist + ' m';
+          ctx.font = 'bold 12px system-ui';
+          const tw = ctx.measureText(txt).width;
+          ctx.beginPath();
+          ctx.roundRect(labelX - tw/2 - 6, labelY - 14, tw + 12, 20, 4);
+          ctx.fill();
+          ctx.fillStyle = '#fff';
+          ctx.textAlign = 'center';
+          ctx.fillText(txt, labelX, labelY);
+          ctx.restore();
+        }
         if (pts.length >= 3) {
           const dx = preview.xm - pts[0].xm;
           const dy = preview.ym - pts[0].ym;
