@@ -258,7 +258,7 @@
         <div class="card" data-devp-lot="${escapeAttr(lot.code || lot.id)}" style="padding:12px;border:1px solid var(--border)">
           <div class="devp-lot-grid" style="display:grid;grid-template-columns:auto minmax(0,1fr) minmax(100px,110px) minmax(110px,130px);gap:10px;align-items:start;min-width:0">
             <label style="display:flex;align-items:center;gap:8px;margin-top:4px">
-              <input type="checkbox" data-devp-enabled>
+              <input type="checkbox" data-devp-enabled checked>
               <span style="font-size:20px">${escapeHtml(lot.icone || '')}</span>
             </label>
             <div style="min-width:0;max-width:100%;word-wrap:break-word;overflow-wrap:break-word">
