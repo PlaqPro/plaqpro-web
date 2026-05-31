@@ -245,15 +245,15 @@
 
     reset() {
       this._mode = 'polygone';
-      this._points = [
-        { x: 0, y: 0 },
-        { x: 5, y: 0 },
-        { x: 5, y: 4 },
-        { x: 0, y: 4 },
-      ];
+      this._points = [];
       this._segments = [{ longueur: 5, largeur: 1 }];
       this._deductions = [];
       this._pente = 0;
+      if (this._container) {
+        this._container.querySelectorAll('[data-shape]').forEach(b => b.style.border = '2px solid var(--border,#e2e8f0)');
+        const box = this._container.querySelector('#poly-shape-inputs');
+        if (box) box.style.display = 'none';
+      }
       this._render();
     },
 
