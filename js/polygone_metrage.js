@@ -31,6 +31,71 @@
     _deductions: [],
     _pente: 0,
 
+    _showShapeInputs(shape) {
+      const box = document.getElementById('poly-shape-inputs');
+      if (!box) return;
+      const field = (id, label, placeholder) =>
+        `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <label style="font-size:.85rem;color:var(--text-secondary,#666);min-width:120px">${label}</label>
+          <input id="${id}" type="number" min="0" step="0.01" placeholder="${placeholder}"
+            style="width:100px;padding:6px 10px;border-radius:6px;border:1px solid var(--border,#e2e8f0);font-size:.9rem">
+          <span style="font-size:.8rem;color:var(--text-tertiary,#999)">m</span>
+        </div>`;
+      const configs = {
+        rectangle: {
+          html: field('shape-l','Longueur','ex: 12') + field('shape-w','Largeur','ex: 8'),
+          btn: 'Calculer le rectangle'
+        },
+        triangle: {
+          html: field('shape-b','Base','ex: 10') + field('shape-h','Hauteur','ex: 6'),
+          btn: 'Calculer le triangle'
+        },
+        'forme-l': {
+          html: field('shape-l1','Longueur 1','ex: 10') + field('shape-w1','Largeur 1','ex: 4') +
+                field('shape-l2','Longueur 2','ex: 6') + field('shape-w2','Largeur 2','ex: 3'),
+          btn: 'Calculer la forme en L'
+        },
+        libre: { html: '', btn: null }
+      };
+      const cfg = configs[shape];
+      if (!cfg) return;
+      if (shape === 'libre') {
+        box.style.display = 'none';
+        return;
+      }
+      box.innerHTML = cfg.html +
+        `<button type="button" id="shape-apply" style="margin-top:4px;padding:8px 18px;border-radius:8px;border:none;background:var(--accent,#2563eb);color:#fff;font-weight:600;cursor:pointer;align-self:flex-start">${cfg.btn}</button>`;
+      box.style.display = 'flex';
+      document.getElementById('shape-apply').onclick = () => this._applyShape(shape);
+    },
+
+    _applyShape(shape) {
+      const v = id => parseFloat(document.getElementById(id)?.value) || 0;
+      let points = [];
+      if (shape === 'rectangle') {
+        const L = v('shape-l'), W = v('shape-w');
+        if (!L || !W) { App.toast('Saisir longueur et largeur', 'warning'); return; }
+        points = [{x:0,y:0},{x:L,y:0},{x:L,y:W},{x:0,y:W}];
+      } else if (shape === 'triangle') {
+        const B = v('shape-b'), H = v('shape-h');
+        if (!B || !H) { App.toast('Saisir base et hauteur', 'warning'); return; }
+        points = [{x:0,y:0},{x:B,y:0},{x:0,y:H}];
+      } else if (shape === 'forme-l') {
+        const L1=v('shape-l1'),W1=v('shape-w1'),L2=v('shape-l2'),W2=v('shape-w2');
+        if (!L1||!W1||!L2||!W2) { App.toast('Saisir toutes les dimensions', 'warning'); return; }
+        points = [
+          {x:0,y:0},{x:L1,y:0},{x:L1,y:W2},
+          {x:L2,y:W2},{x:L2,y:W1},{x:0,y:W1}
+        ];
+      }
+      this._points = points;
+      this._mode = 'polygone';
+      document.getElementById('poly-shape-inputs').style.display = 'none';
+      document.querySelectorAll('[data-shape]').forEach(b => b.style.border = '2px solid var(--border,#e2e8f0)');
+      this._render();
+      App.toast('✅ Points calculés — vérifiez et ajustez si besoin', 'success');
+    },
+
     init(containerId, options) {
       this._containerId = containerId;
       this._container = document.getElementById(containerId);
@@ -56,6 +121,25 @@
             <button type="button" class="btn btn-secondary" data-poly-action="mode-polygone">Mode polygone</button>
             <button type="button" class="btn btn-secondary" data-poly-action="mode-segments">Mode segments</button>
             <button type="button" class="btn btn-secondary" data-poly-action="reset">Reinitialiser</button>
+          </div>
+
+          <div id="poly-shapes" style="background:var(--bg-secondary,#f8f9fa);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px">
+            <div style="font-size:.8rem;font-weight:600;color:var(--text-secondary,#666);text-transform:uppercase;letter-spacing:.05em">Démarrage rapide — choisir une forme</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" data-shape="rectangle" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px;border-radius:8px;border:2px solid var(--border,#e2e8f0);background:var(--bg-card,#fff);cursor:pointer;font-size:.8rem;color:var(--text-main,#111);min-width:80px">
+                <span style="font-size:1.4rem">▬</span>Rectangle
+              </button>
+              <button type="button" data-shape="triangle" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px;border-radius:8px;border:2px solid var(--border,#e2e8f0);background:var(--bg-card,#fff);cursor:pointer;font-size:.8rem;color:var(--text-main,#111);min-width:80px">
+                <span style="font-size:1.4rem">◭</span>Triangle
+              </button>
+              <button type="button" data-shape="forme-l" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px;border-radius:8px;border:2px solid var(--border,#e2e8f0);background:var(--bg-card,#fff);cursor:pointer;font-size:.8rem;color:var(--text-main,#111);min-width:80px">
+                <span style="font-size:1.4rem">⌐</span>Forme en L
+              </button>
+              <button type="button" data-shape="libre" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px;border-radius:8px;border:2px solid var(--border,#e2e8f0);background:var(--bg-card,#fff);cursor:pointer;font-size:.8rem;color:var(--text-main,#111);min-width:80px">
+                <span style="font-size:1.4rem">✏️</span>Libre
+              </button>
+            </div>
+            <div id="poly-shape-inputs" style="display:none;flex-direction:column;gap:8px"></div>
           </div>
 
           <div data-poly-panel="polygone">
@@ -182,6 +266,18 @@
     },
 
     _bind() {
+      this._container.querySelectorAll('[data-shape]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          this._container.querySelectorAll('[data-shape]').forEach(b => b.style.border = '2px solid var(--border,#e2e8f0)');
+          btn.style.border = '2px solid var(--accent,#2563eb)';
+          this._showShapeInputs(btn.dataset.shape);
+          if (btn.dataset.shape !== 'libre') {
+            this._mode = 'polygone';
+            this._render();
+          }
+        });
+      });
+
       this._container.addEventListener('click', event => {
         const target = event.target.closest('[data-poly-action]');
         if (!target) return;
