@@ -388,7 +388,7 @@ ${text.slice(-4000)}`;
 
       const nom = this._infosAffaire.nom || file.name;
       const msgDPGF = lignesPDF.length > 0 ? ` + ${lignesPDF.length} lignes DPGF` : '';
-      if (statusEl) statusEl.innerHTML = `✅ <strong>${nom}</strong><br><span style="color:var(--text-tertiary)">${this._exigencesCCTP.length} exigences${msgDPGF}</span>`;
+      if (statusEl) statusEl.innerHTML = `✅ <strong>${this._esc(nom)}</strong><br><span style="color:var(--text-tertiary)">${this._exigencesCCTP.length} exigences${msgDPGF}</span>`;
       if (zoneEl) zoneEl.style.borderColor = '#2DD4A0';
       this._cctpCharge = true;
       this._verifierPret();
@@ -599,7 +599,7 @@ ${dpgfSlice}` }],
       const nom    = this._infosAffaire.nom || file.name;
       const nbLig  = lignesPDF.length;
       const nbExig = this._exigencesCCTP.length;
-      if (statusEl) statusEl.innerHTML = `✅ <strong>${nom}</strong><br><span style="color:var(--text-tertiary)">${nbExig} exigences + ${nbLig} lignes DPGF</span>`;
+      if (statusEl) statusEl.innerHTML = `✅ <strong>${this._esc(nom)}</strong><br><span style="color:var(--text-tertiary)">${nbExig} exigences + ${nbLig} lignes DPGF</span>`;
       if (zoneEl) zoneEl.style.borderColor = '#A78BFA';
       this._cctpCharge = true;
       this._dpgfCharge = true;

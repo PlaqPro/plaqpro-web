@@ -224,6 +224,24 @@ const App = {
     if (first) first.focus();
   },
 
+  modalConfirm({ message, onConfirm, labelOui = 'Confirmer', labelNon = 'Annuler' }) {
+    const id = 'modal-confirm-' + Date.now();
+    const el = document.createElement('div');
+    el.id = id;
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';
+    el.innerHTML = `<div style="background:var(--bg-card,#fff);border-radius:12px;padding:24px;max-width:360px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+      <p style="margin:0 0 20px;font-size:1rem;color:var(--text-main,#111)">${message}</p>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button id="${id}-non" style="padding:8px 16px;border-radius:8px;border:1px solid var(--border,#ddd);background:transparent;cursor:pointer">${labelNon}</button>
+        <button id="${id}-oui" style="padding:8px 16px;border-radius:8px;border:none;background:var(--accent,#2563eb);color:#fff;cursor:pointer;font-weight:600">${labelOui}</button>
+      </div></div>`;
+    document.body.appendChild(el);
+    const close = () => document.body.removeChild(el);
+    document.getElementById(id + '-non').onclick = close;
+    document.getElementById(id + '-oui').onclick = () => { close(); onConfirm(); };
+    el.onclick = e => { if (e.target === el) close(); };
+  },
+
   modalConfirmDanger({ titre, message, motConfirm, onConfirm }) {
     const id = 'modal-danger-' + Date.now();
     const html = `<div id="${id}" style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center">
@@ -1473,10 +1491,11 @@ const Pages = {
   },
 
   supprimerProduit(id) {
-    if (!confirm('Désactiver ce produit ?')) return;
-    DB.updateProduit(id, { actif: false });
-    App.navigate('produits');
-    App.toast('Produit désactivé');
+    App.modalConfirm({ message: 'Désactiver ce produit ?', onConfirm: () => {
+      DB.updateProduit(id, { actif: false });
+      App.navigate('produits');
+      App.toast('Produit désactivé');
+    }});
   },
 
   // ── Widget Marge brute mensuelle ──────────────────────────
@@ -2172,10 +2191,11 @@ const Pages = {
   },
 
   supprimerLogo() {
-    if (!confirm('Supprimer le logo ?')) return;
-    localStorage.removeItem('plaqpro_logo_entreprise');
-    App.navigate('config');
-    App.toast('Logo supprimé');
+    App.modalConfirm({ message: 'Supprimer le logo ?', onConfirm: () => {
+      localStorage.removeItem('plaqpro_logo_entreprise');
+      App.navigate('config');
+      App.toast('Logo supprimé');
+    }});
   },
 
   _renderPrixMarche(corpsFiltré) {
@@ -2348,11 +2368,12 @@ const Pages = {
   },
 
   supprimerGroqKey() {
-    if (!confirm('Supprimer la clé API Groq ?')) return;
-    localStorage.removeItem('plaqpro_groq_key');
-    if (typeof AssistantIA !== 'undefined') AssistantIA._checkGroq();
-    App.navigate('config');
-    App.toast('Clé supprimée');
+    App.modalConfirm({ message: 'Supprimer la clé API Groq ?', onConfirm: () => {
+      localStorage.removeItem('plaqpro_groq_key');
+      if (typeof AssistantIA !== 'undefined') AssistantIA._checkGroq();
+      App.navigate('config');
+      App.toast('Clé supprimée');
+    }});
   },
 
   toggleGroqKeyVisibility() {
@@ -2791,11 +2812,12 @@ const Pages = {
   },
 
   supprimerChantier(id) {
-    if (!confirm('Supprimer ce chantier ?')) return;
-    DB.deleteChantier(id);
-    App.closeModal();
-    App.navigate('chantiers');
-    App.toast('Chantier supprimé');
+    App.modalConfirm({ message: 'Supprimer ce chantier ?', onConfirm: () => {
+      DB.deleteChantier(id);
+      App.closeModal();
+      App.navigate('chantiers');
+      App.toast('Chantier supprimé');
+    }});
   },
 
   modalNouveauMetrage(chantierId) {

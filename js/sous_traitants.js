@@ -550,15 +550,16 @@ const ST = {
   },
 
   supprimer(id) {
-    if (!confirm('Supprimer ce sous-traitant ?')) return;
-    DB.deleteSousTraitant(id);
-    document.getElementById('st-detail').innerHTML = `
-      <div class="st-panel" style="text-align:center;padding:60px 20px;color:var(--text-tertiary)">
-        <div style="font-size:48px;margin-bottom:16px">🤝</div>
-        <div style="font-size:14px">Sélectionnez un sous-traitant pour voir sa fiche</div>
-      </div>`;
-    this.renderListe();
-    App.toast('Sous-traitant supprimé', 'success');
+    App.modalConfirm({ message: 'Supprimer ce sous-traitant ?', onConfirm: () => {
+      DB.deleteSousTraitant(id);
+      document.getElementById('st-detail').innerHTML = `
+        <div class="st-panel" style="text-align:center;padding:60px 20px;color:var(--text-tertiary)">
+          <div style="font-size:48px;margin-bottom:16px">🤝</div>
+          <div style="font-size:14px">Sélectionnez un sous-traitant pour voir sa fiche</div>
+        </div>`;
+      this.renderListe();
+      App.toast('Sous-traitant supprimé', 'success');
+    }});
   },
 
   affecter(stId) {

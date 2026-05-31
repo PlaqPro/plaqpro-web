@@ -285,13 +285,14 @@ Format STRICT — réponds UNIQUEMENT avec ce JSON, sans texte avant ni après :
   },
 
   supprimerIA(id) {
-    if (!confirm('Supprimer ce produit du catalogue ?')) return;
-    DB.delete(DB.KEYS.produits, id);
-    const hist = JSON.parse(localStorage.getItem('plaqpro_produits_ia') || '[]')
-      .filter(h => h.id !== id);
-    localStorage.setItem('plaqpro_produits_ia', JSON.stringify(hist));
-    App.toast('Produit supprimé');
-    App.navigate('config');
+    App.modalConfirm({ message: 'Supprimer ce produit du catalogue ?', onConfirm: () => {
+      DB.delete(DB.KEYS.produits, id);
+      const hist = JSON.parse(localStorage.getItem('plaqpro_produits_ia') || '[]')
+        .filter(h => h.id !== id);
+      localStorage.setItem('plaqpro_produits_ia', JSON.stringify(hist));
+      App.toast('Produit supprimé');
+      App.navigate('config');
+    }});
   },
 
   _esc(str) {

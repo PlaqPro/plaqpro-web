@@ -606,10 +606,11 @@ const GestTarifs = {
   },
 
   supprimerTarif(ref, ensId) {
-    if (!confirm('Supprimer ce tarif ?')) return;
-    Tarifs.supprimer(ref, ensId);
-    App.toast('Tarif supprimé');
-    App.navigate('tarifs');
+    App.modalConfirm({ message: 'Supprimer ce tarif ?', onConfirm: () => {
+      Tarifs.supprimer(ref, ensId);
+      App.toast('Tarif supprimé');
+      App.navigate('tarifs');
+    }});
   },
 
   exporterCSV() {

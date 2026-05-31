@@ -374,9 +374,10 @@ const PageCloison = {
   },
 
   supprimer(id) {
-    if (!confirm('Supprimer cette cloison ?')) return;
-    DB.delete(DB.KEYS.cloisons, id);
-    App.toast('Cloison supprimée');
-    this.charger(this._chantierId);
+    App.modalConfirm({ message: 'Supprimer cette cloison ?', onConfirm: () => {
+      DB.delete(DB.KEYS.cloisons, id);
+      App.toast('Cloison supprimée');
+      this.charger(this._chantierId);
+    }});
   },
 };

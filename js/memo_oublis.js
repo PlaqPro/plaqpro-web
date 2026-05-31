@@ -138,10 +138,11 @@ const PageMemo = {
   },
 
   supprimer(id) {
-    if (!confirm('Supprimer cette tâche ?')) return;
-    this.save(this.getAll().filter(t => t.id !== id));
-    App.toast('Tâche supprimée');
-    this.charger(this._chantierId);
+    App.modalConfirm({ message: 'Supprimer cette tâche ?', onConfirm: () => {
+      this.save(this.getAll().filter(t => t.id !== id));
+      App.toast('Tâche supprimée');
+      this.charger(this._chantierId);
+    }});
   },
 
   modalAjouter() {

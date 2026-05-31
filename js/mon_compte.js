@@ -239,8 +239,9 @@ const MC = {
   },
 
   deconnexion() {
-    if (!confirm('Se déconnecter de PlaqPro+ ?')) return;
-    sessionStorage.removeItem('plaqpro_session');
-    window.location.href = 'login.html';
+    App.modalConfirm({ message: 'Se déconnecter de PlaqPro+ ?', labelOui: 'Se déconnecter', onConfirm: () => {
+      sessionStorage.removeItem('plaqpro_session');
+      window.location.href = 'login.html';
+    }});
   }
 };

@@ -410,9 +410,10 @@ Pages.devisIntelligent = function(params = {}) {
       render();
     },
     supprimerPiece(pi) {
-      if (!confirm('Supprimer cette pièce et ses lignes ?')) return;
-      state.pieces.splice(pi, 1);
-      render();
+      App.modalConfirm({ message: 'Supprimer cette pièce et ses lignes ?', onConfirm: () => {
+        state.pieces.splice(pi, 1);
+        render();
+      }});
     },
     async genererAvecIA() {
       const groqKey = localStorage.getItem('plaqpro_groq_key') || localStorage.getItem('groq_api_key') || '';

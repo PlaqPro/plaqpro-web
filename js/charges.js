@@ -760,10 +760,11 @@ Pages.chargesCouts = function() {
       App.toast('✅ Paramètres sauvegardés !', 'success');
     },
     reinitialiser() {
-      if (!confirm('Réinitialiser tous les paramètres ?')) return;
-      localStorage.removeItem('plaqpro_charges_simple');
-      App.navigate('chargesCouts');
-      App.toast('Paramètres réinitialisés', 'success');
+      App.modalConfirm({ message: 'Réinitialiser tous les paramètres ?', onConfirm: () => {
+        localStorage.removeItem('plaqpro_charges_simple');
+        App.navigate('chargesCouts');
+        App.toast('Paramètres réinitialisés', 'success');
+      }});
     },
   };
 

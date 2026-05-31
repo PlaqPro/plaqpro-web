@@ -396,9 +396,10 @@ const PagePeinture = {
   },
 
   supprimer(id) {
-    if (!confirm('Supprimer cette zone ?')) return;
-    DB.delete(DB.KEYS.peintures, id);
-    App.toast('Zone supprimée');
-    this.charger(this._chantierId);
+    App.modalConfirm({ message: 'Supprimer cette zone ?', onConfirm: () => {
+      DB.delete(DB.KEYS.peintures, id);
+      App.toast('Zone supprimée');
+      this.charger(this._chantierId);
+    }});
   },
 };
