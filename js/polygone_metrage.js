@@ -330,8 +330,9 @@
       const py = e.clientY - rect.top;
       const margin = 30;
       const scale = this._canvasScale || 1;
-      const xm = Math.max(0, Math.round((px - margin) / scale));
-      const ym = Math.max(0, Math.round((py - margin) / scale));
+      const step = 0.5;
+      const xm = Math.max(0, Math.round((px - margin) / scale / step) * step);
+      const ym = Math.max(0, Math.round((py - margin) / scale / step) * step);
       const pxSnap = margin + xm * scale;
       const pySnap = margin + ym * scale;
       return { px: pxSnap, py: pySnap, xm, ym };
@@ -356,10 +357,11 @@
       ctx.clearRect(0, 0, W, H);
       ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card') || '#fff';
       ctx.fillRect(0, 0, W, H);
-      ctx.strokeStyle = 'rgba(148,163,184,.25)';
-      ctx.lineWidth = 1;
-      for (let m = 0; m <= maxM + 1; m++) {
+      for (let m = 0; m <= maxM + 1; m += 0.5) {
         const x = toX(m); const y = toY(m);
+        const isMajor = m % 5 === 0;
+        ctx.strokeStyle = isMajor ? 'rgba(148,163,184,.45)' : 'rgba(148,163,184,.15)';
+        ctx.lineWidth = isMajor ? 1 : 0.5;
         if (x <= W - margin) { ctx.beginPath(); ctx.moveTo(x, margin); ctx.lineTo(x, H - margin); ctx.stroke(); }
         if (y <= H - margin) { ctx.beginPath(); ctx.moveTo(margin, y); ctx.lineTo(W - margin, y); ctx.stroke(); }
       }
@@ -408,8 +410,13 @@
         const dy = preview.ym - last.ym;
         const dist = Math.round(Math.sqrt(dx*dx + dy*dy) * 10) / 10;
         if (dist > 0) {
-          const labelX = (toX(last.xm) + preview.px) / 2;
-          const labelY = (toY(last.ym) + preview.py) / 2 - 10;
+          const midX = (toX(last.xm) + preview.px) / 2;
+          const midY = (toY(last.ym) + preview.py) / 2;
+          const dx2 = preview.px - toX(last.xm);
+          const dy2 = preview.py - toY(last.ym);
+          const len = Math.sqrt(dx2*dx2 + dy2*dy2) || 1;
+          const labelX = midX + (-dy2 / len) * 22;
+          const labelY = midY + (dx2 / len) * 22;
           ctx.save();
           ctx.fillStyle = 'rgba(30,30,30,.75)';
           const txt = dist + ' m';
