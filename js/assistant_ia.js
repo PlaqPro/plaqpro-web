@@ -297,7 +297,7 @@ Tu réponds en français, de façon courte et pratique.`,
       }
 
       #ia-toggle-btn {
-        position: fixed; bottom: 28px; right: 28px; z-index: 9000;
+        position: fixed; bottom: 28px; right: 88px; z-index: 9000;
         width: 54px; height: 54px; border-radius: 50%;
         background: linear-gradient(135deg, #5B9BFF, #3B7DE8);
         border: 1px solid rgba(79,142,247,0.4);
@@ -310,7 +310,7 @@ Tu réponds en français, de façon courte et pratique.`,
       #ia-toggle-btn.ia-btn-active { background: rgba(30,35,50,0.95); font-size: 18px; }
 
       #ia-window {
-        position: fixed; bottom: 96px; right: 28px; z-index: 8999;
+        position: fixed; bottom: 96px; right: 88px; z-index: 8999;
         width: 380px; height: 520px;
         background: var(--ia-bg);
         border: 1px solid var(--ia-border);
