@@ -1790,6 +1790,211 @@ const Calc = {
     if (!this._lastResult) { App.toast('Aucun résultat à enregistrer', 'error'); return; }
     DevisWizard.show(this._lastResult);
   },
+
+  // ── Paysagisme : TERRAIN & SOL ────────────────────────────
+  calcPayTerrain() {
+    const surfacePoly = this._surfacePoly || 0;
+    const longueur = this.v('pt-longueur', 20);
+    const largeur  = this.v('pt-largeur', 15);
+    const surface  = surfacePoly > 0 ? surfacePoly : longueur * largeur;
+    const profond  = this.v('pt-profondeur', 0.30);
+    const margeMat = this.v('pt-marge-mat', 30) / 100;
+    const margeMO  = this.v('pt-marge-mo', 20) / 100;
+
+    const sections = [];
+    let coutMat = 0, coutMO = 0;
+
+    // Terrassement
+    const volTerra = surface * profond;
+    const hTerra   = volTerra * 0.8;
+    coutMO += hTerra * 45;
+    sections.push({
+      titre: `⛏ Terrassement — ${this.fmtN(surface)} m² × ${profond} m = ${this.fmtN(volTerra)} m³`,
+      items: [{ icon: '⛏', nom: 'Main-d\'œuvre terrassement', ref: '', qte: this.fmtN(hTerra) + ' h', prix: hTerra * 45 }]
+    });
+
+    // Béton désactivé
+    if (document.getElementById('pt-beton')?.checked) {
+      const ep       = this.v('pt-beton-ep', 12) / 100;
+      const dosage   = this.v('pt-beton-dosage', 350);
+      const volBeton = surface * ep;
+      const ciment   = volBeton * dosage;
+      const gravier  = volBeton * 1800;
+      const pCiment  = 8 / 35;
+      const pGravier = 25 / 1000;
+      const matBeton = ciment * pCiment + gravier * pGravier;
+      const hBeton   = surface * 2;
+      coutMat += matBeton;
+      coutMO  += hBeton * 45;
+      sections.push({
+        titre: `🪨 Béton désactivé — ${this.fmtN(surface)} m² × ${ep * 100} cm`,
+        items: [
+          { icon: '🪨', nom: 'Ciment', ref: '', qte: this.fmtN(Math.ceil(ciment / 35)) + ' sacs 35kg', prix: ciment * pCiment },
+          { icon: '🚛', nom: 'Gravier béton', ref: '', qte: this.fmtN(Math.ceil(gravier / 1000)) + ' t', prix: gravier * pGravier },
+          { icon: '👷', nom: 'MO coulage + finition désactivée', ref: '', qte: this.fmtN(hBeton) + ' h', prix: hBeton * 45 },
+        ]
+      });
+    }
+
+    // Résine drainante
+    if (document.getElementById('pt-resine')?.checked) {
+      const epR     = this.v('pt-resine-ep', 5);
+      const matRes  = surface * 30;
+      const hRes    = surface * 0.5;
+      coutMat += matRes;
+      coutMO  += hRes * 45;
+      sections.push({
+        titre: `💧 Résine drainante — ${this.fmtN(surface)} m² × ${epR} cm`,
+        items: [
+          { icon: '💧', nom: 'Résine drainante + granulats', ref: '', qte: this.fmtN(surface) + ' m²', prix: matRes },
+          { icon: '👷', nom: 'MO application résine', ref: '', qte: this.fmtN(hRes) + ' h', prix: hRes * 45 },
+        ]
+      });
+    }
+
+    // Mélange terre/sable
+    if (document.getElementById('pt-melange')?.checked) {
+      const ratio   = this.v('pt-melange-ratio', 30) / 100;
+      const volS    = volTerra * ratio;
+      const volT    = volTerra * (1 - ratio);
+      const matMel  = volS * 25 + volT * 35;
+      coutMat += matMel;
+      sections.push({
+        titre: `🌱 Mélange terre/sable — ${Math.round(ratio * 100)}% sable`,
+        items: [
+          { icon: '🏖', nom: 'Sable', ref: '', qte: this.fmtN(volS) + ' m³', prix: volS * 25 },
+          { icon: '🌱', nom: 'Terre végétale', ref: '', qte: this.fmtN(volT) + ' m³', prix: volT * 35 },
+        ]
+      });
+    }
+
+    if (!sections.length) return null;
+    return { sections, coutMat, coutMO, margeMat, margeMO, surface };
+  },
+
+  // ── Paysagisme : VÉGÉTAL ──────────────────────────────────
+  calcPayVegetal() {
+    const surface  = this.v('pv-surface', 100);
+    const margeMat = this.v('pv-marge-mat', 30) / 100;
+    const margeMO  = this.v('pv-marge-mo', 20) / 100;
+
+    const sections = [];
+    let coutMat = 0, coutMO = 0;
+
+    // Gazon
+    if (document.getElementById('pv-gazon')?.checked) {
+      const type = this.radio('pv-gazon-type') || 'rouleau';
+      if (type === 'rouleau') {
+        const mat = surface * 4.5;
+        const h   = surface * 0.15;
+        coutMat += mat; coutMO += h * 40;
+        sections.push({
+          titre: `🌱 Gazon rouleau — ${this.fmtN(surface)} m²`,
+          items: [
+            { icon: '🌱', nom: 'Gazon rouleau', ref: '', qte: this.fmtN(surface) + ' m²', prix: mat },
+            { icon: '👷', nom: 'MO pose', ref: '', qte: this.fmtN(h) + ' h', prix: h * 40 },
+          ]
+        });
+      } else {
+        const g = this.v('pv-gazon-semis', 35);
+        const kg = surface * g / 1000;
+        const mat = kg * 8;
+        const h   = surface * 0.05;
+        coutMat += mat; coutMO += h * 40;
+        sections.push({
+          titre: `🌱 Gazon semis — ${this.fmtN(surface)} m² × ${g} g/m²`,
+          items: [
+            { icon: '🌾', nom: 'Semences gazon', ref: '', qte: this.fmtN(kg) + ' kg', prix: mat },
+            { icon: '👷', nom: 'MO semis', ref: '', qte: this.fmtN(h) + ' h', prix: h * 40 },
+          ]
+        });
+      }
+    }
+
+    // Plantation
+    if (document.getElementById('pv-plantation')?.checked) {
+      const nb  = this.v('pv-nb-plants', 20);
+      const pu  = this.v('pv-prix-plant', 15);
+      const mat = nb * pu;
+      const h   = nb * 0.25;
+      coutMat += mat; coutMO += h * 40;
+      sections.push({
+        titre: `🌳 Plantation — ${nb} plants`,
+        items: [
+          { icon: '🌳', nom: 'Plants (pépinière / Willemse)', ref: '', qte: nb + ' plants', prix: mat },
+          { icon: '👷', nom: 'MO plantation', ref: '', qte: this.fmtN(h) + ' h', prix: h * 40 },
+        ]
+      });
+    }
+
+    // Paillage
+    if (document.getElementById('pv-paillage')?.checked) {
+      const ep  = this.v('pv-paillage-ep', 8) / 100;
+      const vol = surface * ep;
+      const mat = vol * 35;
+      const h   = surface * 0.05;
+      coutMat += mat; coutMO += h * 40;
+      sections.push({
+        titre: `🍂 Paillage — ${this.fmtN(surface)} m² × ${ep * 100} cm = ${this.fmtN(vol)} m³`,
+        items: [
+          { icon: '🍂', nom: 'Paillage bois / écorce', ref: '', qte: this.fmtN(vol) + ' m³', prix: mat },
+          { icon: '👷', nom: 'MO épandage', ref: '', qte: this.fmtN(h) + ' h', prix: h * 40 },
+        ]
+      });
+    }
+
+    if (!sections.length) return null;
+    return { sections, coutMat, coutMO, margeMat, margeMO, surface };
+  },
+
+  // ── Paysagisme : MAIN D'ŒUVRE ─────────────────────────────
+  calcPayMO() {
+    const nbSal   = this.v('pm-nb-salaries', 4);
+    const hSal    = this.v('pm-h-salarie', 8);
+    const taux    = this.v('pm-taux-salarie', 35);
+    const margeMO = this.v('pm-marge-mo', 20) / 100;
+
+    const sections = [];
+    let coutMat = 0, coutMO = 0;
+
+    // Salariés
+    const totalSal = nbSal * hSal * taux;
+    coutMO += totalSal;
+    sections.push({
+      titre: `👷 Équipe — ${nbSal} salarié(s) × ${hSal}h × ${taux}€/h`,
+      items: [{ icon: '👷', nom: `MO salariés (${nbSal} pers.)`, ref: '', qte: (nbSal * hSal) + ' h total', prix: totalSal }]
+    });
+
+    // Mini-pelle
+    if (document.getElementById('pm-minipelle')?.checked) {
+      const hP = this.v('pm-h-pelle', 4);
+      const cP = this.v('pm-cout-pelle', 90);
+      coutMO += hP * cP;
+      sections.push({
+        titre: `🚜 Mini-pelle — ${hP}h × ${cP}€/h`,
+        items: [{ icon: '🚜', nom: 'Location mini-pelle + opérateur', ref: '', qte: hP + ' h', prix: hP * cP }]
+      });
+    }
+
+    // Sous-traitants
+    const stDefs = [
+      { cbId: 'pm-st1', valId: 'pm-forfait-st1', icon: '🪨', nom: 'Marbrier / Ardoise', def: 1500 },
+      { cbId: 'pm-st2', valId: 'pm-forfait-st2', icon: '⚡', nom: 'Électricien extérieur', def: 800 },
+      { cbId: 'pm-st3', valId: 'pm-forfait-st3', icon: '🚿', nom: 'Plombier extérieur', def: 600 },
+    ];
+    const stItems = [];
+    stDefs.forEach(st => {
+      if (document.getElementById(st.cbId)?.checked) {
+        const f = this.v(st.valId, st.def);
+        stItems.push({ icon: st.icon, nom: st.nom + ' (forfait)', ref: '', qte: '1 forfait', prix: f });
+        coutMat += f;
+      }
+    });
+    if (stItems.length) sections.push({ titre: '🤝 Sous-traitants', items: stItems });
+
+    if (!sections.length) return null;
+    return { sections, coutMat, coutMO, margeMat: 0, margeMO, surface: 0 };
+  },
 };
 
 // ============================================================
@@ -2370,208 +2575,4 @@ var DevisWizard = {
     document.head.appendChild(s);
   },
 
-  // ── Paysagisme : TERRAIN & SOL ────────────────────────────
-  calcPayTerrain() {
-    const surfacePoly = this._surfacePoly || 0;
-    const longueur = this.v('pt-longueur', 20);
-    const largeur  = this.v('pt-largeur', 15);
-    const surface  = surfacePoly > 0 ? surfacePoly : longueur * largeur;
-    const profond  = this.v('pt-profondeur', 0.30);
-    const margeMat = this.v('pt-marge-mat', 30) / 100;
-    const margeMO  = this.v('pt-marge-mo', 20) / 100;
-
-    const sections = [];
-    let coutMat = 0, coutMO = 0;
-
-    // Terrassement
-    const volTerra = surface * profond;
-    const hTerra   = volTerra * 0.8;
-    coutMO += hTerra * 45;
-    sections.push({
-      titre: `⛏ Terrassement — ${this.fmtN(surface)} m² × ${profond} m = ${this.fmtN(volTerra)} m³`,
-      items: [{ icon: '⛏', nom: 'Main-d\'œuvre terrassement', ref: '', qte: this.fmtN(hTerra) + ' h', prix: hTerra * 45 }]
-    });
-
-    // Béton désactivé
-    if (document.getElementById('pt-beton')?.checked) {
-      const ep       = this.v('pt-beton-ep', 12) / 100;
-      const dosage   = this.v('pt-beton-dosage', 350);
-      const volBeton = surface * ep;
-      const ciment   = volBeton * dosage;
-      const gravier  = volBeton * 1800;
-      const pCiment  = 8 / 35;
-      const pGravier = 25 / 1000;
-      const matBeton = ciment * pCiment + gravier * pGravier;
-      const hBeton   = surface * 2;
-      coutMat += matBeton;
-      coutMO  += hBeton * 45;
-      sections.push({
-        titre: `🪨 Béton désactivé — ${this.fmtN(surface)} m² × ${ep * 100} cm`,
-        items: [
-          { icon: '🪨', nom: 'Ciment', ref: '', qte: this.fmtN(Math.ceil(ciment / 35)) + ' sacs 35kg', prix: ciment * pCiment },
-          { icon: '🚛', nom: 'Gravier béton', ref: '', qte: this.fmtN(Math.ceil(gravier / 1000)) + ' t', prix: gravier * pGravier },
-          { icon: '👷', nom: 'MO coulage + finition désactivée', ref: '', qte: this.fmtN(hBeton) + ' h', prix: hBeton * 45 },
-        ]
-      });
-    }
-
-    // Résine drainante
-    if (document.getElementById('pt-resine')?.checked) {
-      const epR     = this.v('pt-resine-ep', 5);
-      const matRes  = surface * 30;
-      const hRes    = surface * 0.5;
-      coutMat += matRes;
-      coutMO  += hRes * 45;
-      sections.push({
-        titre: `💧 Résine drainante — ${this.fmtN(surface)} m² × ${epR} cm`,
-        items: [
-          { icon: '💧', nom: 'Résine drainante + granulats', ref: '', qte: this.fmtN(surface) + ' m²', prix: matRes },
-          { icon: '👷', nom: 'MO application résine', ref: '', qte: this.fmtN(hRes) + ' h', prix: hRes * 45 },
-        ]
-      });
-    }
-
-    // Mélange terre/sable
-    if (document.getElementById('pt-melange')?.checked) {
-      const ratio   = this.v('pt-melange-ratio', 30) / 100;
-      const volS    = volTerra * ratio;
-      const volT    = volTerra * (1 - ratio);
-      const matMel  = volS * 25 + volT * 35;
-      coutMat += matMel;
-      sections.push({
-        titre: `🌱 Mélange terre/sable — ${Math.round(ratio * 100)}% sable`,
-        items: [
-          { icon: '🏖', nom: 'Sable', ref: '', qte: this.fmtN(volS) + ' m³', prix: volS * 25 },
-          { icon: '🌱', nom: 'Terre végétale', ref: '', qte: this.fmtN(volT) + ' m³', prix: volT * 35 },
-        ]
-      });
-    }
-
-    if (!sections.length) return null;
-    return { sections, coutMat, coutMO, margeMat, margeMO, surface };
-  },
-
-  // ── Paysagisme : VÉGÉTAL ──────────────────────────────────
-  calcPayVegetal() {
-    const surface  = this.v('pv-surface', 100);
-    const margeMat = this.v('pv-marge-mat', 30) / 100;
-    const margeMO  = this.v('pv-marge-mo', 20) / 100;
-
-    const sections = [];
-    let coutMat = 0, coutMO = 0;
-
-    // Gazon
-    if (document.getElementById('pv-gazon')?.checked) {
-      const type = this.radio('pv-gazon-type') || 'rouleau';
-      if (type === 'rouleau') {
-        const mat = surface * 4.5;
-        const h   = surface * 0.15;
-        coutMat += mat; coutMO += h * 40;
-        sections.push({
-          titre: `🌱 Gazon rouleau — ${this.fmtN(surface)} m²`,
-          items: [
-            { icon: '🌱', nom: 'Gazon rouleau', ref: '', qte: this.fmtN(surface) + ' m²', prix: mat },
-            { icon: '👷', nom: 'MO pose', ref: '', qte: this.fmtN(h) + ' h', prix: h * 40 },
-          ]
-        });
-      } else {
-        const g = this.v('pv-gazon-semis', 35);
-        const kg = surface * g / 1000;
-        const mat = kg * 8;
-        const h   = surface * 0.05;
-        coutMat += mat; coutMO += h * 40;
-        sections.push({
-          titre: `🌱 Gazon semis — ${this.fmtN(surface)} m² × ${g} g/m²`,
-          items: [
-            { icon: '🌾', nom: 'Semences gazon', ref: '', qte: this.fmtN(kg) + ' kg', prix: mat },
-            { icon: '👷', nom: 'MO semis', ref: '', qte: this.fmtN(h) + ' h', prix: h * 40 },
-          ]
-        });
-      }
-    }
-
-    // Plantation
-    if (document.getElementById('pv-plantation')?.checked) {
-      const nb  = this.v('pv-nb-plants', 20);
-      const pu  = this.v('pv-prix-plant', 15);
-      const mat = nb * pu;
-      const h   = nb * 0.25;
-      coutMat += mat; coutMO += h * 40;
-      sections.push({
-        titre: `🌳 Plantation — ${nb} plants`,
-        items: [
-          { icon: '🌳', nom: 'Plants (pépinière / Willemse)', ref: '', qte: nb + ' plants', prix: mat },
-          { icon: '👷', nom: 'MO plantation', ref: '', qte: this.fmtN(h) + ' h', prix: h * 40 },
-        ]
-      });
-    }
-
-    // Paillage
-    if (document.getElementById('pv-paillage')?.checked) {
-      const ep  = this.v('pv-paillage-ep', 8) / 100;
-      const vol = surface * ep;
-      const mat = vol * 35;
-      const h   = surface * 0.05;
-      coutMat += mat; coutMO += h * 40;
-      sections.push({
-        titre: `🍂 Paillage — ${this.fmtN(surface)} m² × ${ep * 100} cm = ${this.fmtN(vol)} m³`,
-        items: [
-          { icon: '🍂', nom: 'Paillage bois / écorce', ref: '', qte: this.fmtN(vol) + ' m³', prix: mat },
-          { icon: '👷', nom: 'MO épandage', ref: '', qte: this.fmtN(h) + ' h', prix: h * 40 },
-        ]
-      });
-    }
-
-    if (!sections.length) return null;
-    return { sections, coutMat, coutMO, margeMat, margeMO, surface };
-  },
-
-  // ── Paysagisme : MAIN D'ŒUVRE ─────────────────────────────
-  calcPayMO() {
-    const nbSal   = this.v('pm-nb-salaries', 4);
-    const hSal    = this.v('pm-h-salarie', 8);
-    const taux    = this.v('pm-taux-salarie', 35);
-    const margeMO = this.v('pm-marge-mo', 20) / 100;
-
-    const sections = [];
-    let coutMat = 0, coutMO = 0;
-
-    // Salariés
-    const totalSal = nbSal * hSal * taux;
-    coutMO += totalSal;
-    sections.push({
-      titre: `👷 Équipe — ${nbSal} salarié(s) × ${hSal}h × ${taux}€/h`,
-      items: [{ icon: '👷', nom: `MO salariés (${nbSal} pers.)`, ref: '', qte: (nbSal * hSal) + ' h total', prix: totalSal }]
-    });
-
-    // Mini-pelle
-    if (document.getElementById('pm-minipelle')?.checked) {
-      const hP = this.v('pm-h-pelle', 4);
-      const cP = this.v('pm-cout-pelle', 90);
-      coutMO += hP * cP;
-      sections.push({
-        titre: `🚜 Mini-pelle — ${hP}h × ${cP}€/h`,
-        items: [{ icon: '🚜', nom: 'Location mini-pelle + opérateur', ref: '', qte: hP + ' h', prix: hP * cP }]
-      });
-    }
-
-    // Sous-traitants
-    const stDefs = [
-      { cbId: 'pm-st1', valId: 'pm-forfait-st1', icon: '🪨', nom: 'Marbrier / Ardoise', def: 1500 },
-      { cbId: 'pm-st2', valId: 'pm-forfait-st2', icon: '⚡', nom: 'Électricien extérieur', def: 800 },
-      { cbId: 'pm-st3', valId: 'pm-forfait-st3', icon: '🚿', nom: 'Plombier extérieur', def: 600 },
-    ];
-    const stItems = [];
-    stDefs.forEach(st => {
-      if (document.getElementById(st.cbId)?.checked) {
-        const f = this.v(st.valId, st.def);
-        stItems.push({ icon: st.icon, nom: st.nom + ' (forfait)', ref: '', qte: '1 forfait', prix: f });
-        coutMat += f;
-      }
-    });
-    if (stItems.length) sections.push({ titre: '🤝 Sous-traitants', items: stItems });
-
-    if (!sections.length) return null;
-    return { sections, coutMat, coutMO, margeMat: 0, margeMO, surface: 0 };
-  },
 };
