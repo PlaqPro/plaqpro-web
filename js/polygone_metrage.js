@@ -506,7 +506,8 @@
         });
       });
 
-      this._container.addEventListener('click', event => {
+      document.addEventListener('click', event => {
+        if (!this._container || !this._container.contains(event.target)) return;
         const target = event.target.closest('[data-poly-action]');
         if (!target) return;
 
@@ -527,7 +528,8 @@
         if (action !== 'use-surface' && action !== 'reset') this._render();
       });
 
-      this._container.addEventListener('input', event => {
+      document.addEventListener('input', event => {
+        if (!this._container || !this._container.contains(event.target)) return;
         const target = event.target;
         const type = target.getAttribute('data-poly-field');
         const index = parseInt(target.getAttribute('data-index'), 10);
