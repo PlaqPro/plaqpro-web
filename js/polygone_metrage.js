@@ -61,6 +61,11 @@
       if (!cfg) return;
       if (shape === 'libre') {
         box.style.display = 'none';
+        const wrap = this._container.querySelector('#poly-canvas-wrap');
+        const panel = this._container.querySelector('[data-poly-panel="polygone"]');
+        if (wrap) { wrap.style.display = 'flex'; }
+        if (panel) { panel.style.display = 'none'; }
+        this._initCanvas();
         return;
       }
       box.innerHTML = cfg.html +
@@ -140,6 +145,19 @@
               </button>
             </div>
             <div id="poly-shape-inputs" style="display:none;flex-direction:column;gap:8px"></div>
+          </div>
+
+          <div id="poly-canvas-wrap" style="display:none;flex-direction:column;gap:10px">
+            <div style="font-size:.8rem;color:var(--text-secondary,#666)">
+              📍 Cliquez sur la grille pour poser vos points — la surface se trace automatiquement
+            </div>
+            <canvas id="poly-canvas" style="border:1px solid var(--border,#e2e8f0);border-radius:10px;cursor:crosshair;touch-action:none;width:100%;max-width:600px;height:320px;display:block"></canvas>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <button type="button" id="poly-canvas-undo" style="padding:7px 14px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:transparent;cursor:pointer;font-size:.85rem">↩ Annuler dernier point</button>
+              <button type="button" id="poly-canvas-reset" style="padding:7px 14px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:transparent;cursor:pointer;font-size:.85rem">🗑 Effacer tout</button>
+              <button type="button" id="poly-canvas-done" style="padding:7px 16px;border-radius:8px;border:none;background:var(--accent,#2563eb);color:#fff;font-weight:600;cursor:pointer;font-size:.85rem">✓ Terminer et calculer</button>
+              <span id="poly-canvas-info" style="font-size:.8rem;color:var(--text-secondary,#666)">0 point posé</span>
+            </div>
           </div>
 
           <div data-poly-panel="polygone">
@@ -243,6 +261,155 @@
       return total;
     },
 
+    _initCanvas() {
+      const canvas = this._container.querySelector('#poly-canvas');
+      if (!canvas) return;
+      this._canvas = canvas;
+      this._canvasPoints = [];
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width  = rect.width  * dpr;
+      canvas.height = rect.height * dpr;
+      this._ctx = canvas.getContext('2d');
+      this._ctx.scale(dpr, dpr);
+      this._cw = rect.width;
+      this._ch = rect.height;
+      this._drawCanvas();
+      canvas.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        const pt = this._canvasCoords(e);
+        this._canvasPoints.push(pt);
+        this._updateCanvasInfo();
+        this._drawCanvas();
+      });
+      canvas.addEventListener('pointermove', e => {
+        if (this._canvasPoints.length === 0) return;
+        this._drawCanvas(this._canvasCoords(e));
+      });
+      canvas.addEventListener('pointerleave', () => this._drawCanvas());
+      this._container.querySelector('#poly-canvas-undo').onclick = () => {
+        this._canvasPoints.pop();
+        this._updateCanvasInfo();
+        this._drawCanvas();
+      };
+      this._container.querySelector('#poly-canvas-reset').onclick = () => {
+        this._canvasPoints = [];
+        this._updateCanvasInfo();
+        this._drawCanvas();
+      };
+      this._container.querySelector('#poly-canvas-done').onclick = () => {
+        if (this._canvasPoints.length < 3) { App.toast('Posez au moins 3 points', 'warning'); return; }
+        this._points = this._canvasPoints.map(p => ({
+          x: Math.round(p.xm * 100) / 100,
+          y: Math.round(p.ym * 100) / 100
+        }));
+        this._container.querySelector('#poly-canvas-wrap').style.display = 'none';
+        this._container.querySelector('[data-poly-panel="polygone"]').style.display = '';
+        this._mode = 'polygone';
+        this._render();
+        App.toast('✅ Surface tracée — ' + this._points.length + ' points importés', 'success');
+      };
+    },
+
+    _canvasCoords(e) {
+      const rect = this._canvas.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      const margin = 30;
+      const scale = this._canvasScale || 1;
+      return {
+        px, py,
+        xm: Math.round((px - margin) / scale * 10) / 10,
+        ym: Math.round((py - margin) / scale * 10) / 10
+      };
+    },
+
+    _drawCanvas(preview) {
+      if (!this._ctx) return;
+      const ctx = this._ctx;
+      const W = this._cw, H = this._ch;
+      const margin = 30;
+      const pts = this._canvasPoints;
+      let maxM = 10;
+      if (pts.length > 0) {
+        const maxX = Math.max(...pts.map(p => p.xm));
+        const maxY = Math.max(...pts.map(p => p.ym));
+        maxM = Math.max(maxX + 2, maxY + 2, 5);
+      }
+      const scale = Math.min(W - margin * 2, H - margin * 2) / maxM;
+      this._canvasScale = scale;
+      const toX = m => margin + m * scale;
+      const toY = m => margin + m * scale;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card') || '#fff';
+      ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = 'rgba(148,163,184,.25)';
+      ctx.lineWidth = 1;
+      for (let m = 0; m <= maxM + 1; m++) {
+        const x = toX(m); const y = toY(m);
+        if (x <= W - margin) { ctx.beginPath(); ctx.moveTo(x, margin); ctx.lineTo(x, H - margin); ctx.stroke(); }
+        if (y <= H - margin) { ctx.beginPath(); ctx.moveTo(margin, y); ctx.lineTo(W - margin, y); ctx.stroke(); }
+      }
+      ctx.fillStyle = 'rgba(100,116,139,.7)';
+      ctx.font = '10px system-ui';
+      ctx.textAlign = 'center';
+      for (let m = 0; m <= maxM; m += 2) {
+        const x = toX(m);
+        if (x <= W - margin) ctx.fillText(m + 'm', x, H - margin + 14);
+      }
+      ctx.textAlign = 'right';
+      for (let m = 0; m <= maxM; m += 2) {
+        const y = toY(m);
+        if (y <= H - margin) ctx.fillText(m + 'm', margin - 4, y + 4);
+      }
+      if (pts.length === 0) return;
+      if (pts.length >= 3) {
+        ctx.beginPath();
+        ctx.moveTo(toX(pts[0].xm), toY(pts[0].ym));
+        pts.forEach(p => ctx.lineTo(toX(p.xm), toY(p.ym)));
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(37,99,235,.12)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(37,99,235,.6)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(toX(pts[0].xm), toY(pts[0].ym));
+        pts.forEach(p => ctx.lineTo(toX(p.xm), toY(p.ym)));
+        ctx.strokeStyle = 'rgba(37,99,235,.6)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      if (preview) {
+        const last = pts[pts.length - 1];
+        ctx.beginPath();
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(toX(last.xm), toY(last.ym));
+        ctx.lineTo(preview.px, preview.py);
+        ctx.strokeStyle = 'rgba(37,99,235,.4)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      pts.forEach((p, i) => {
+        ctx.beginPath();
+        ctx.arc(toX(p.xm), toY(p.ym), 5, 0, Math.PI * 2);
+        ctx.fillStyle = i === 0 ? '#16a34a' : '#2563eb';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+    },
+
+    _updateCanvasInfo() {
+      const el = this._container.querySelector('#poly-canvas-info');
+      if (!el) return;
+      const n = this._canvasPoints.length;
+      el.textContent = n === 0 ? '0 point posé' : n + ' point' + (n > 1 ? 's' : '') + ' posé' + (n > 1 ? 's' : '') + (n >= 3 ? ' — prêt à terminer' : '');
+    },
+
     reset() {
       this._mode = 'polygone';
       this._points = [];
@@ -253,6 +420,10 @@
         this._container.querySelectorAll('[data-shape]').forEach(b => b.style.border = '2px solid var(--border,#e2e8f0)');
         const box = this._container.querySelector('#poly-shape-inputs');
         if (box) box.style.display = 'none';
+        const wrap = this._container.querySelector('#poly-canvas-wrap');
+        if (wrap) wrap.style.display = 'none';
+        const panel = this._container.querySelector('[data-poly-panel="polygone"]');
+        if (panel) panel.style.display = '';
       }
       this._render();
     },
