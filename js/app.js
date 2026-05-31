@@ -1366,11 +1366,17 @@ const Pages = {
   metragePaysagisme() {
     const el = document.createElement('div'); el.className = 'page-content paysagisme-page';
     el.style.cssText = 'overflow:visible;min-width:0;width:100%;box-sizing:border-box;';
-    el.innerHTML = '<div class="page-header"><h1 class="page-title">📐 Métrages avancés</h1></div><div id="metrage-container" class="mt-16"></div>';
+    el.innerHTML = '<div class="page-header"><h1 class="page-title">📐 Métrages avancés</h1></div>' +
+      '<div id="metrage-container" class="mt-16"></div>' +
+      '<div id="polygone-container" class="mt-16"></div>';
     setTimeout(() => {
-      const container = document.getElementById('metrage-container');
       if (typeof MetragePaysagisme !== 'undefined') MetragePaysagisme.getHTML('metrage-container');
-      else if (container) container.innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+      else { const c = document.getElementById('metrage-container'); if (c) c.innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>'; }
+      if (typeof PolygoneMetrage !== 'undefined') PolygoneMetrage.init('polygone-container', {
+        onSurface(surface, perimetre) {
+          App.toast('✅ Surface polygonale : ' + surface.toFixed(2) + ' m² — Périmètre : ' + perimetre.toFixed(2) + ' ml', 'success');
+        }
+      });
     }, 0);
     return el;
   },
