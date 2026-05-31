@@ -330,7 +330,7 @@
       const py = e.clientY - rect.top;
       const margin = 30;
       const scale = this._canvasScale || 1;
-      const step = 0.5;
+      const step = 0.25;
       const xm = Math.max(0, Math.round((px - margin) / scale / step) * step);
       const ym = Math.max(0, Math.round((py - margin) / scale / step) * step);
       const pxSnap = margin + xm * scale;
@@ -357,11 +357,13 @@
       ctx.clearRect(0, 0, W, H);
       ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card') || '#fff';
       ctx.fillRect(0, 0, W, H);
-      for (let m = 0; m <= maxM + 1; m += 0.5) {
-        const x = toX(m); const y = toY(m);
-        const isMajor = m % 5 === 0;
-        ctx.strokeStyle = isMajor ? 'rgba(148,163,184,.45)' : 'rgba(148,163,184,.15)';
-        ctx.lineWidth = isMajor ? 1 : 0.5;
+      for (let m = 0; m <= maxM + 1; m += 0.25) {
+        const mR = Math.round(m * 100) / 100;
+        const x = toX(mR); const y = toY(mR);
+        const isMajor = mR % 5 === 0;
+        const isMid   = !isMajor && mR % 1 === 0;
+        ctx.strokeStyle = isMajor ? 'rgba(148,163,184,.5)' : isMid ? 'rgba(148,163,184,.25)' : 'rgba(148,163,184,.1)';
+        ctx.lineWidth   = isMajor ? 1 : isMid ? 0.5 : 0.3;
         if (x <= W - margin) { ctx.beginPath(); ctx.moveTo(x, margin); ctx.lineTo(x, H - margin); ctx.stroke(); }
         if (y <= H - margin) { ctx.beginPath(); ctx.moveTo(margin, y); ctx.lineTo(W - margin, y); ctx.stroke(); }
       }
