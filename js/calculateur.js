@@ -1063,7 +1063,7 @@ const Calc = {
   switchTab(tab, btn) {
     if (tab === 'pay-terrain' && typeof PolygoneMetrage !== 'undefined') {
       setTimeout(() => PolygoneMetrage.init('polygone-container', {
-        onSurface: (s) => { Calc._surfacePoly = s; Calc.compute(); }
+        onSurface: (s) => { Calc._surfacePoly = s; if (Calc.currentTab === 'pay-terrain') Calc.compute(); }
       }), 50);
     }
     this.currentTab = tab;
