@@ -275,10 +275,23 @@
       this._cw = rect.width;
       this._ch = rect.height;
       this._drawCanvas();
-      canvas.addEventListener('pointerdown', e => {
-        e.preventDefault();
+      canvas.addEventListener('click', e => {
         const pt = this._canvasCoords(e);
-        this._canvasPoints.push(pt);
+        const pts = this._canvasPoints;
+        if (pts.length >= 3) {
+          const dx = pt.xm - pts[0].xm;
+          const dy = pt.ym - pts[0].ym;
+          if (Math.sqrt(dx*dx + dy*dy) <= 1.5) {
+            this._points = pts.map(p => ({ x: p.xm, y: p.ym }));
+            this._container.querySelector('#poly-canvas-wrap').style.display = 'none';
+            this._container.querySelector('[data-poly-panel="polygone"]').style.display = '';
+            this._mode = 'polygone';
+            this._render();
+            App.toast('✅ Polygone fermé — ' + pts.length + ' points importés', 'success');
+            return;
+          }
+        }
+        pts.push(pt);
         this._updateCanvasInfo();
         this._drawCanvas();
       });
@@ -317,11 +330,11 @@
       const py = e.clientY - rect.top;
       const margin = 30;
       const scale = this._canvasScale || 1;
-      return {
-        px, py,
-        xm: Math.round((px - margin) / scale * 10) / 10,
-        ym: Math.round((py - margin) / scale * 10) / 10
-      };
+      const xm = Math.max(0, Math.round((px - margin) / scale));
+      const ym = Math.max(0, Math.round((py - margin) / scale));
+      const pxSnap = margin + xm * scale;
+      const pySnap = margin + ym * scale;
+      return { px: pxSnap, py: pySnap, xm, ym };
     },
 
     _drawCanvas(preview) {
@@ -381,7 +394,7 @@
         ctx.lineWidth = 2;
         ctx.stroke();
       }
-      if (preview) {
+      if (preview && pts.length > 0) {
         const last = pts[pts.length - 1];
         ctx.beginPath();
         ctx.setLineDash([5, 5]);
@@ -391,6 +404,21 @@
         ctx.lineWidth = 1.5;
         ctx.stroke();
         ctx.setLineDash([]);
+        if (pts.length >= 3) {
+          const dx = preview.xm - pts[0].xm;
+          const dy = preview.ym - pts[0].ym;
+          if (Math.sqrt(dx*dx + dy*dy) <= 1.5) {
+            ctx.beginPath();
+            ctx.arc(toX(pts[0].xm), toY(pts[0].ym), 10, 0, Math.PI * 2);
+            ctx.strokeStyle = '#16a34a';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+            ctx.fillStyle = '#16a34a';
+            ctx.font = 'bold 11px system-ui';
+            ctx.textAlign = 'left';
+            ctx.fillText('Cliquer pour fermer', toX(pts[0].xm) + 14, toY(pts[0].ym) + 4);
+          }
+        }
       }
       pts.forEach((p, i) => {
         ctx.beginPath();
