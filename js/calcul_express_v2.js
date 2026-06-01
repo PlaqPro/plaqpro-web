@@ -1,76 +1,305 @@
 /**
  * PlaqPro+ — Calcul Express V2
- * Point d entree unique : chantier → profil → ST → corps metiers → pieces → metrages → resultat
- * Architecture validee 02/06/2026
+ * Flux : chantier + client → profil → sous-traitants → corps métiers → pièces → métrages → résultat
+ * Architecture validée 02/06/2026
  * Copyright (c) 2026 Gabriel Khamassi — Saint-Priest (69)
  */
-
-/* global App, DB */
+/* global App, DB, BddV2 */
 
 const CalcExpressV2 = {
 
-  // ── Etat courant ──────────────────────────────────────────
-  _chantier:      null,
-  _profil:        null,   // particulier | pro | ao
+  // ── État ──────────────────────────────────────────────────
+  _containerId:   null,
+  _container:     null,
+  _etape:         null,
+  _chantier:      { nom: '', clientId: null, adresse: '' },
+  _profil:        null,
   _sousTraitants: [],
   _corpsActifs:   [],
-  _pieces:        [],     // [{ nom, corps, surface, ouvrages }]
-  _resultats:     [],
+  _pieces:        [],
+  _resultats:     {},
 
-  // ── Liste corps de metiers disponibles ────────────────────
+  // ── Corps disponibles ─────────────────────────────────────
   CORPS: [
-    { id: 'plaquisterie', label: 'Plaquisterie',  icone: '🧱' },
-    { id: 'peinture',     label: 'Peinture',       icone: '🎨' },
-    { id: 'electricite',  label: 'Electricite',    icone: '⚡' },
-    { id: 'plomberie',    label: 'Plomberie',      icone: '🔧' },
-    { id: 'maconnerie',   label: 'Maconnerie',     icone: '🏗' },
-    { id: 'paysagisme',   label: 'Paysagisme',     icone: '🌿' },
+    { id: 'plaquisterie', label: 'Plaquisterie', icone: '🧱' },
+    { id: 'peinture',     label: 'Peinture',     icone: '🎨' },
+    { id: 'electricite',  label: 'Électricité',  icone: '⚡' },
+    { id: 'plomberie',    label: 'Plomberie',    icone: '🔧' },
+    { id: 'maconnerie',   label: 'Maçonnerie',   icone: '🏗' },
+    { id: 'paysagisme',   label: 'Paysagisme',   icone: '🌿' },
   ],
 
-  // ── Pieces par profil ─────────────────────────────────────
+  // ── Pièces par profil ─────────────────────────────────────
   PIECES_PROFIL: {
-    particulier: ['Salon', 'Sejour', 'Cuisine', 'Chambre 1', 'Chambre 2',
-                  'Salle de bain', 'WC', 'Entree', 'Couloir', 'Garage'],
-    pro:         ['Bureau 1', 'Bureau 2', 'Salle de reunion', 'Hall',
-                  'Couloir', 'Depot', 'Local technique', 'Sanitaires'],
-    ao:          [], // genere depuis lots DPGF
+    particulier: ['Salon', 'Séjour', 'Cuisine', 'Chambre 1', 'Chambre 2',
+                  'Chambre 3', 'Salle de bain', 'WC', 'Entrée', 'Couloir', 'Garage', 'Buanderie'],
+    pro:         ['Bureau 1', 'Bureau 2', 'Bureau 3', 'Salle de réunion', 'Hall',
+                  'Couloir', 'Dépôt', 'Local technique', 'Sanitaires', 'Accueil', 'Espace commun'],
+    ao:          [],
   },
 
-  // ── Point d entree ────────────────────────────────────────
+  // ── Entrée ────────────────────────────────────────────────
   init(containerId) {
     this._containerId = containerId;
-    this._container = document.getElementById(containerId);
+    this._container   = document.getElementById(containerId);
     if (!this._container) return;
-    this._reset();
-    this._renderEtape('chantier');
-  },
-
-  _reset() {
-    this._chantier      = null;
+    this._chantier      = { nom: '', clientId: null, adresse: '' };
     this._profil        = null;
     this._sousTraitants = [];
     this._corpsActifs   = [];
     this._pieces        = [];
-    this._resultats     = [];
+    this._resultats     = {};
+    this._renderEtape('chantier');
   },
 
-  // ── Rendu etapes (a implementer) ─────────────────────────
+  // ── Dispatcher étapes ─────────────────────────────────────
   _renderEtape(etape) {
-    // TODO : etape chantier, profil, st, corps, pieces, metrage, resultat
+    this._etape = etape;
     if (!this._container) return;
-    this._container.innerHTML = '<p style="color:var(--text-secondary)">CalcExpressV2 — etape : ' + etape + '</p>';
+    const renders = {
+      chantier:      () => this._renderChantier(),
+      profil:        () => this._renderProfil(),
+      sousTraitants: () => this._renderSousTraitants(),
+      corps:         () => this._renderCorps(),
+    };
+    if (renders[etape]) renders[etape]();
   },
 
-  // ── Calcul ouvrage (moteur arriere-plan) ─────────────────
-  _calcOuvrage(codeOuvrage, quantite) {
-    // TODO : lire OUVRAGES_TYPES + OUVRAGES_COMPOSITION + MASTER_MATERIAUX
-    // Retourner { coutMat, coutMO, coutST, marge, prixVente, gain }
-    return null;
+  // ── Helpers UI ────────────────────────────────────────────
+  _html(h) { this._container.innerHTML = h; },
+
+  _esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   },
 
-  // ── Sous-total ────────────────────────────────────────────
-  _sousTotal() {
-    return this._resultats.reduce((acc, r) => acc + (r.gain || 0), 0);
+  _progressBar(etapeActive) {
+    const etapes = ['chantier','profil','sousTraitants','corps'];
+    const labels = ['Chantier','Profil','Sous-traitants','Travaux'];
+    const idx    = etapes.indexOf(etapeActive);
+    const steps  = labels.map((l, i) => {
+      const done   = i < idx;
+      const active = i === idx;
+      const color  = done || active ? 'var(--accent,#2563eb)' : 'var(--border,#ddd)';
+      const fw     = active ? '700' : done ? '600' : '400';
+      const op     = done || active ? '1' : '0.45';
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;opacity:${op}">
+        <div style="width:28px;height:28px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700">${done ? '✓' : i+1}</div>
+        <span style="font-size:11px;font-weight:${fw};color:var(--text-secondary,#666)">${l}</span>
+      </div>
+      ${i < labels.length-1 ? `<div style="flex:1;height:2px;background:${done ? 'var(--accent,#2563eb)' : 'var(--border,#ddd)'};margin-top:14px"></div>` : ''}`;
+    }).join('');
+    return `<div style="display:flex;align-items:flex-start;gap:0;margin-bottom:24px;padding:16px;background:var(--bg-secondary,#f8f9fa);border-radius:10px">${steps}</div>`;
+  },
+
+  _card(content) {
+    return `<div style="background:var(--bg-card,#fff);border:1px solid var(--border,#e2e8f0);border-radius:12px;padding:24px;margin-bottom:16px">${content}</div>`;
+  },
+
+  _btn(label, action, style) {
+    const s = style || 'primary';
+    const bg    = s === 'primary' ? 'var(--accent,#2563eb)' : 'transparent';
+    const color = s === 'primary' ? '#fff' : 'var(--text-main,#111)';
+    const border= s === 'primary' ? 'none' : '1px solid var(--border,#ddd)';
+    return `<button type="button" data-cex-action="${action}" style="padding:10px 22px;border-radius:8px;border:${border};background:${bg};color:${color};font-weight:600;cursor:pointer;font-size:.9rem">${label}</button>`;
+  },
+
+  // ── Étape 1 : Chantier + Client ───────────────────────────
+  _renderChantier() {
+    const clients = DB.getAll(DB.KEYS.clients).filter(c => c.actif !== false);
+    const options = clients.map(c =>
+      `<option value="${c.id}" ${this._chantier.clientId == c.id ? 'selected' : ''}>${this._esc(c.nom || c.raisonSociale || '')}</option>`
+    ).join('');
+
+    this._html(`
+      ${this._progressBar('chantier')}
+      ${this._card(`
+        <h2 style="margin:0 0 20px;font-size:1.1rem;font-weight:700">Nouveau chiffrage</h2>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div>
+            <label style="font-size:.85rem;font-weight:600;color:var(--text-secondary,#666);display:block;margin-bottom:6px">Nom du chantier *</label>
+            <input id="cex-chantier-nom" type="text" placeholder="ex : Rénovation villa Martin" value="${this._esc(this._chantier.nom)}"
+              style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border,#e2e8f0);font-size:.95rem;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:.85rem;font-weight:600;color:var(--text-secondary,#666);display:block;margin-bottom:6px">Client</label>
+            <select id="cex-client-id" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border,#e2e8f0);font-size:.95rem;box-sizing:border-box;background:var(--bg-card,#fff)">
+              <option value="">-- Sélectionner un client --</option>
+              ${options}
+            </select>
+            <button type="button" data-cex-action="nouveau-client" style="margin-top:8px;font-size:.8rem;color:var(--accent,#2563eb);background:none;border:none;cursor:pointer;padding:0">+ Nouveau client</button>
+          </div>
+          <div>
+            <label style="font-size:.85rem;font-weight:600;color:var(--text-secondary,#666);display:block;margin-bottom:6px">Adresse du chantier</label>
+            <input id="cex-chantier-adresse" type="text" placeholder="ex : 12 rue des Acacias, Lyon" value="${this._esc(this._chantier.adresse)}"
+              style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border,#e2e8f0);font-size:.95rem;box-sizing:border-box">
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:20px">
+          ${this._btn('Suivant →', 'chantier-suivant')}
+        </div>
+      `)}
+    `);
+    this._bind();
+  },
+
+  // ── Étape 2 : Profil ──────────────────────────────────────
+  _renderProfil() {
+    const profils = [
+      { id: 'particulier', label: 'Particulier',      icone: '🏠', desc: 'Maison, appartement, villa' },
+      { id: 'pro',         label: 'Pro / Entreprise',  icone: '🏢', desc: 'Bureaux, dépôts, locaux' },
+      { id: 'ao',          label: "Appel d'offres",    icone: '📋', desc: 'DPGF, marchés publics' },
+    ];
+    const cards = profils.map(p => {
+      const sel = this._profil === p.id;
+      return `<div data-cex-profil="${p.id}" style="flex:1;min-width:140px;padding:18px;border-radius:10px;border:2px solid ${sel ? 'var(--accent,#2563eb)' : 'var(--border,#e2e8f0)'};background:${sel ? 'rgba(37,99,235,.06)' : 'var(--bg-card,#fff)'};cursor:pointer;text-align:center;transition:border .15s">
+        <div style="font-size:2rem;margin-bottom:8px">${p.icone}</div>
+        <div style="font-weight:700;margin-bottom:4px">${p.label}</div>
+        <div style="font-size:.8rem;color:var(--text-secondary,#666)">${p.desc}</div>
+      </div>`;
+    }).join('');
+
+    this._html(`
+      ${this._progressBar('profil')}
+      ${this._card(`
+        <h2 style="margin:0 0 6px;font-size:1.1rem;font-weight:700">Type de chantier</h2>
+        <p style="margin:0 0 20px;font-size:.85rem;color:var(--text-secondary,#666)">Chantier : <strong>${this._esc(this._chantier.nom)}</strong></p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          ${cards}
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:20px">
+          ${this._btn('← Retour', 'profil-retour', 'secondary')}
+          ${this._btn('Suivant →', 'profil-suivant')}
+        </div>
+      `)}
+    `);
+    this._bind();
+  },
+
+  // ── Étape 3 : Sous-traitants ──────────────────────────────
+  _renderSousTraitants() {
+    const sts = DB.getAll(DB.KEYS.sousTraitants).filter(s => s.actif !== false);
+
+    const listeST = sts.map(s => {
+      const sel   = this._sousTraitants.includes(s.id);
+      const alert = !s.rcPro || !s.decennale;
+      return `<label style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;border:1px solid var(--border,#e2e8f0);cursor:pointer;background:var(--bg-card,#fff)">
+        <input type="checkbox" data-cex-st="${s.id}" ${sel ? 'checked' : ''} style="width:16px;height:16px;cursor:pointer">
+        <span style="flex:1;font-size:.9rem;font-weight:500">${this._esc(s.nom || s.raisonSociale || '')}</span>
+        ${alert ? '<span style="font-size:.75rem;color:#ef4444;font-weight:600">⚠️ RC/décennale manquante</span>' : '<span style="font-size:.75rem;color:#16a34a">✓ Assurances OK</span>'}
+        ${s.margePercent ? `<span style="font-size:.75rem;color:var(--text-secondary,#666)">${s.margePercent}% marge</span>` : ''}
+      </label>`;
+    }).join('');
+
+    this._html(`
+      ${this._progressBar('sousTraitants')}
+      ${this._card(`
+        <h2 style="margin:0 0 6px;font-size:1.1rem;font-weight:700">Sous-traitants</h2>
+        <p style="margin:0 0 16px;font-size:.85rem;color:var(--text-secondary,#666)">Faites-vous appel à des sous-traitants sur ce chantier ?</p>
+        ${sts.length === 0
+          ? '<p style="color:var(--text-secondary,#666);font-size:.9rem;margin:0 0 12px">Aucun sous-traitant enregistré.</p>'
+          : `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">${listeST}</div>`
+        }
+        <button type="button" data-cex-action="creer-st" style="font-size:.85rem;color:var(--accent,#2563eb);background:none;border:1px solid var(--accent,#2563eb);border-radius:6px;cursor:pointer;padding:6px 14px">+ Créer un sous-traitant</button>
+        <div style="display:flex;justify-content:space-between;margin-top:20px">
+          ${this._btn('← Retour', 'st-retour', 'secondary')}
+          ${this._btn('Suivant →', 'st-suivant')}
+        </div>
+      `)}
+    `);
+    this._bind();
+  },
+
+  // ── Étape 4 : Corps de métiers ────────────────────────────
+  _renderCorps() {
+    const cards = this.CORPS.map(c => {
+      const sel = this._corpsActifs.includes(c.id);
+      return `<div data-cex-corps="${c.id}" style="flex:1;min-width:130px;padding:16px;border-radius:10px;border:2px solid ${sel ? 'var(--accent,#2563eb)' : 'var(--border,#e2e8f0)'};background:${sel ? 'rgba(37,99,235,.06)' : 'var(--bg-card,#fff)'};cursor:pointer;text-align:center">
+        <div style="font-size:1.8rem;margin-bottom:6px">${c.icone}</div>
+        <div style="font-weight:600;font-size:.9rem">${c.label}</div>
+        ${sel ? '<div style="font-size:.75rem;color:var(--accent,#2563eb);margin-top:4px">✓ Sélectionné</div>' : ''}
+      </div>`;
+    }).join('');
+
+    const btnSuivant = this._corpsActifs.length > 0
+      ? this._btn('Commencer le chiffrage →', 'corps-suivant')
+      : '<button style="padding:10px 22px;border-radius:8px;border:none;background:var(--border,#ddd);color:var(--text-secondary,#999);font-weight:600;font-size:.9rem;cursor:not-allowed">Sélectionner au moins 1 corps</button>';
+
+    this._html(`
+      ${this._progressBar('corps')}
+      ${this._card(`
+        <h2 style="margin:0 0 6px;font-size:1.1rem;font-weight:700">Corps de métiers</h2>
+        <p style="margin:0 0 16px;font-size:.85rem;color:var(--text-secondary,#666)">Sélectionnez les travaux à chiffrer sur ce chantier</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+          ${cards}
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          ${this._btn('← Retour', 'corps-retour', 'secondary')}
+          ${btnSuivant}
+        </div>
+      `)}
+    `);
+    this._bind();
+  },
+
+  // ── Gestion événements ────────────────────────────────────
+  _bind() {
+    document.addEventListener('click', e => {
+      if (!this._container || !this._container.contains(e.target)) return;
+
+      // Actions boutons
+      const btn = e.target.closest('[data-cex-action]');
+      if (btn) {
+        const action = btn.dataset.cexAction;
+        if (action === 'chantier-suivant') {
+          const nom     = (this._container.querySelector('#cex-chantier-nom') || {}).value;
+          const client  = (this._container.querySelector('#cex-client-id') || {}).value;
+          const adresse = (this._container.querySelector('#cex-chantier-adresse') || {}).value;
+          if (!nom || !nom.trim()) { if (typeof App !== 'undefined' && App.toast) App.toast('Saisissez un nom de chantier', 'warning'); return; }
+          this._chantier = { nom: nom.trim(), clientId: client || null, adresse: (adresse || '').trim() };
+          this._renderEtape('profil');
+        }
+        if (action === 'profil-retour')  this._renderEtape('chantier');
+        if (action === 'profil-suivant') {
+          if (!this._profil) { if (typeof App !== 'undefined' && App.toast) App.toast('Choisissez un type de chantier', 'warning'); return; }
+          this._renderEtape('sousTraitants');
+        }
+        if (action === 'st-retour')  this._renderEtape('profil');
+        if (action === 'st-suivant') {
+          this._sousTraitants = [];
+          this._container.querySelectorAll('[data-cex-st]:checked').forEach(cb => {
+            this._sousTraitants.push(parseInt(cb.dataset.cexSt));
+          });
+          this._renderEtape('corps');
+        }
+        if (action === 'corps-retour')  this._renderEtape('sousTraitants');
+        if (action === 'corps-suivant') {
+          if (!this._corpsActifs.length) { if (typeof App !== 'undefined' && App.toast) App.toast('Sélectionnez au moins un corps de métier', 'warning'); return; }
+          if (typeof App !== 'undefined' && App.toast) App.toast('Chiffrage lancé — pièces à implémenter', 'success');
+        }
+        if (action === 'creer-st')       { if (typeof App !== 'undefined') App.navigate('sousTraitants'); }
+        if (action === 'nouveau-client') { if (typeof App !== 'undefined') App.navigate('clients'); }
+        return;
+      }
+
+      // Sélection profil
+      const profil = e.target.closest('[data-cex-profil]');
+      if (profil) {
+        this._profil = profil.dataset.cexProfil;
+        this._renderEtape('profil');
+        return;
+      }
+
+      // Toggle corps de métier
+      const corps = e.target.closest('[data-cex-corps]');
+      if (corps) {
+        const id  = corps.dataset.cexCorps;
+        const idx = this._corpsActifs.indexOf(id);
+        if (idx >= 0) this._corpsActifs.splice(idx, 1);
+        else this._corpsActifs.push(id);
+        this._renderCorps();
+        return;
+      }
+    });
   },
 
 };
