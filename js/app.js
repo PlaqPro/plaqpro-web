@@ -84,6 +84,7 @@ const App = {
       inscription:   () => Pages.inscription(),
       legal:         (params) => Pages.legal(params && params.section),
       quizMetiers:   () => Pages.quizMetiers(),
+      calcExpressV2: () => Pages.calcExpressV2(),
     };
 
     if (pages[page]) {
@@ -106,7 +107,8 @@ const App = {
       devis:     'Devis',
       produits:  'Catalogue fournisseurs',
       config:      'Configuration',
-      quizMetiers: '🎮 Quiz Métiers BTP',
+      quizMetiers:   '🎮 Quiz Métiers BTP',
+      calcExpressV2: '⚡ Nouveau chiffrage',
     };
     document.getElementById('topbar-title').textContent = titles[page] || page;
   },
@@ -1358,6 +1360,23 @@ const Pages = {
       const container = document.getElementById('materiel-container');
       if (typeof MaterielPaysagisme !== 'undefined') MaterielPaysagisme.getHTML('materiel-container');
       else if (container) container.innerHTML = '<p class="text-secondary">Module en cours de chargement…</p>';
+    }, 0);
+    return el;
+  },
+
+  // ── Calcul Express V2 ────────────────────────────────────
+  calcExpressV2() {
+    const el = document.createElement('div');
+    el.className = 'page-content paysagisme-page';
+    el.style.cssText = 'overflow:visible;min-width:0;width:100%;box-sizing:border-box;';
+    el.innerHTML = `
+      <div class="page-header">
+        <h1 class="page-title">⚡ Nouveau chiffrage</h1>
+      </div>
+      <div id="calc-express-v2-container" class="mt-16"></div>`;
+    setTimeout(() => {
+      if (typeof BddV2 !== 'undefined') BddV2.charger();
+      if (typeof CalcExpressV2 !== 'undefined') CalcExpressV2.init('calc-express-v2-container');
     }, 0);
     return el;
   },
