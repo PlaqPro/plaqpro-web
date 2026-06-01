@@ -26,7 +26,10 @@ const DB = {
     ratios:     'plaqpro_ratios',
     config:     'plaqpro_config',
     prospects:  'plaqpro_prospects',
-    sousTraitants: 'plaqpro_sous_traitants',
+    sousTraitants:        'plaqpro_sous_traitants',
+    masterMateriaux:      'plaqpro_master_materiaux',
+    ouvragesTypes:        'plaqpro_ouvrages_types',
+    ouvragesComposition:  'plaqpro_ouvrages_composition',
   },
 
   // Données paysagisme
