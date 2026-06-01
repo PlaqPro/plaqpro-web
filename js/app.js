@@ -116,6 +116,7 @@ const App = {
   // ── Sidebar ───────────────────────────────────────────────
   renderSidebar() {
     const nav = [
+      { page: 'calcExpressV2', icon: '<i class="ph ph-lightning"></i>', label: '⚡ Nouveau chiffrage' },
       { page: 'dashboard',   icon: '<i class="ph ph-squares-four"></i>', label: 'Tableau de bord' },
 
       { section: '👥 Gestion' },
@@ -135,7 +136,7 @@ const App = {
       { page: 'produits',    icon: '<i class="ph ph-package"></i>', label: 'Base produits' },
       { page: 'catalogueFournisseurs', icon: '<i class="ph ph-storefront"></i>', label: 'Catalogue fournisseurs' },
       { page: 'tarifs',      icon: '<i class="ph ph-coins"></i>', label: 'Mes prix de vente' },
-      { page: 'calcul',      icon: '<i class="ph ph-lightning"></i>', label: 'Calcul Express' },
+      { page: 'calcul',      icon: '<i class="ph ph-lightning"></i>', label: 'Calcul Express (ancien)' },
 
       { section: '📐 Techniques' },
       { page: 'acoustique',  icon: '<i class="ph ph-speaker-high"></i>', label: 'Acoustique' },
