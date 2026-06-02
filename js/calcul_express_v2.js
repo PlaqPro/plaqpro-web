@@ -99,9 +99,9 @@ const CalcExpressV2 = {
 
   _btn(label, action, style) {
     const s = style || 'primary';
-    const bg    = s === 'primary' ? 'var(--accent,#2563eb)' : 'transparent';
-    const color = s === 'primary' ? '#fff' : 'var(--text-main,#111)';
-    const border= s === 'primary' ? 'none' : '1px solid var(--border,#ddd)';
+    const bg    = s === 'primary' ? 'var(--accent,#2563eb)' : 'rgba(255,255,255,.12)';
+    const color = s === 'primary' ? '#fff' : '#fff';
+    const border= s === 'primary' ? 'none' : '1px solid rgba(255,255,255,.35)';
     return `<button type="button" data-cex-action="${action}" style="padding:10px 22px;border-radius:8px;border:${border};background:${bg};color:${color};font-weight:600;cursor:pointer;font-size:.9rem">${label}</button>`;
   },
 
