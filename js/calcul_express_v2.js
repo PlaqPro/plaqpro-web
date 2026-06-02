@@ -467,7 +467,7 @@ const CalcExpressV2 = {
   _renderTypeCorps() {
     const corpsId = this._corpsActifs[this._corpsEnCours];
     const corps   = this.CORPS.find(c => c.id === corpsId);
-    if (!['electricite','plomberie'].includes(corpsId)) {
+    if (!['electricite','plomberie','maconnerie'].includes(corpsId)) {
       this._renderEtape('pieces');
       return;
     }
