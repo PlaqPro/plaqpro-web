@@ -345,6 +345,16 @@ const DB = {
 // Initialiser les données de démo au premier chargement
 document.addEventListener('DOMContentLoaded', () => DB.initDemo());
 
+// Migration douce : clients et chantiers historiques sans type → particulier par défaut
+document.addEventListener('DOMContentLoaded', () => {
+  DB.getAll(DB.KEYS.clients).forEach(c => {
+    if (!c.type) DB.update(DB.KEYS.clients, c.id, { type: 'particulier' });
+  });
+  DB.getAll(DB.KEYS.chantiers).forEach(c => {
+    if (!c.type) DB.update(DB.KEYS.chantiers, c.id, { type: 'particulier' });
+  });
+});
+
 // ── Helper Groq : clé depuis localStorage ─────────────────────
 // Retourne { url, headers } ou null si aucune clé configurée
 function groqConfig() {
