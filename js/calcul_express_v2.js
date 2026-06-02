@@ -50,6 +50,7 @@ const CalcExpressV2 = {
     this._pieces        = [];
     this._resultats     = {};
     this._corpsEnCours  = 0;
+    this._pieceEnCours  = null;
     this._renderEtape('chantier');
   },
 
@@ -63,6 +64,7 @@ const CalcExpressV2 = {
       sousTraitants: () => this._renderSousTraitants(),
       corps:         () => this._renderCorps(),
       pieces:        () => this._renderPieces(),
+      metrage:       () => this._renderMetrage(),
     };
     if (renders[etape]) renders[etape]();
   },
@@ -75,8 +77,8 @@ const CalcExpressV2 = {
   },
 
   _progressBar(etapeActive) {
-    const etapes = ['chantier','profil','sousTraitants','corps','pieces'];
-    const labels = ['Chantier','Profil','Sous-traitants','Travaux','Pièces'];
+    const etapes = ['chantier','profil','sousTraitants','corps','pieces','metrage'];
+    const labels = ['Chantier','Profil','Sous-traitants','Travaux','Pièces','Métrage'];
     const idx    = etapes.indexOf(etapeActive);
     const steps  = labels.map((l, i) => {
       const done   = i < idx;
@@ -342,6 +344,96 @@ const CalcExpressV2 = {
     this._bind();
   },
 
+  // ── Étape 6 : Métrage par pièce ──────────────────────────
+  _renderMetrage() {
+    const p = this._pieceEnCours;
+    if (!p) { this._renderEtape('pieces'); return; }
+    const corps = this.CORPS.find(c => c.id === p.corps);
+    const mode  = p.mode || 'rectangle';
+
+    const btnMode = (id, label, icone) =>
+      `<button type="button" data-cex-mode="${id}" style="flex:1;padding:10px;border-radius:8px;border:2px solid ${mode===id?'var(--accent,#2563eb)':'var(--border,#e2e8f0)'};background:${mode===id?'rgba(37,99,235,.06)':'var(--bg-card,#1e2530)'};cursor:pointer;color:#fff;font-size:.85rem;font-weight:${mode===id?'700':'400'}">
+        <div style="font-size:1.3rem;margin-bottom:4px">${icone}</div>${label}
+      </button>`;
+
+    const champRect = `
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+        <div style="flex:1;min-width:120px">
+          <label style="font-size:.8rem;color:var(--text-secondary,#666);display:block;margin-bottom:4px">Longueur (m)</label>
+          <input id="cex-m-l" type="number" min="0" step="0.1" value="${p.longueur||''}" placeholder="ex: 5.5"
+            style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box">
+        </div>
+        <div style="flex:1;min-width:120px">
+          <label style="font-size:.8rem;color:var(--text-secondary,#666);display:block;margin-bottom:4px">Largeur (m)</label>
+          <input id="cex-m-w" type="number" min="0" step="0.1" value="${p.largeur||''}" placeholder="ex: 3.8"
+            style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box">
+        </div>
+      </div>
+      <div id="cex-m-preview" style="font-size:.9rem;color:var(--accent,#2563eb);font-weight:600;min-height:22px"></div>`;
+
+    const champL = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div><label style="font-size:.8rem;color:var(--text-secondary,#666);display:block;margin-bottom:4px">Longueur 1 (m)</label>
+          <input id="cex-m-l1" type="number" min="0" step="0.1" value="${p.l1||''}" placeholder="ex: 6" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box"></div>
+        <div><label style="font-size:.8rem;color:var(--text-secondary,#666);display:block;margin-bottom:4px">Largeur 1 (m)</label>
+          <input id="cex-m-w1" type="number" min="0" step="0.1" value="${p.w1||''}" placeholder="ex: 4" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box"></div>
+        <div><label style="font-size:.8rem;color:var(--text-secondary,#666);display:block;margin-bottom:4px">Longueur 2 (m)</label>
+          <input id="cex-m-l2" type="number" min="0" step="0.1" value="${p.l2||''}" placeholder="ex: 3" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box"></div>
+        <div><label style="font-size:.8rem;color:var(--text-secondary,#666);display:block;margin-bottom:4px">Largeur 2 (m)</label>
+          <input id="cex-m-w2" type="number" min="0" step="0.1" value="${p.w2||''}" placeholder="ex: 2" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box"></div>
+      </div>
+      <div id="cex-m-preview" style="font-size:.9rem;color:var(--accent,#2563eb);font-weight:600;min-height:22px"></div>`;
+
+    const champs = mode === 'forme-l' ? champL : champRect;
+
+    this._html(`
+      ${this._progressBar('metrage')}
+      ${this._card(`
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <span style="font-size:1.4rem">${corps ? corps.icone : ''}</span>
+          <div>
+            <h2 style="margin:0;font-size:1rem;font-weight:700">${this._esc(p.nom)}</h2>
+            <div style="font-size:.8rem;color:var(--text-secondary,#666)">${corps ? corps.label : ''}</div>
+          </div>
+          ${p.surface ? `<span style="margin-left:auto;font-size:.9rem;color:#16a34a;font-weight:700">${p.surface} m²</span>` : ''}
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          ${btnMode('rectangle','Rectangle','▬')}
+          ${btnMode('forme-l','Forme en L','⌐')}
+          ${btnMode('libre','Dessin libre','✏️')}
+        </div>
+        ${mode === 'libre'
+          ? `<p style="color:var(--text-secondary,#666);font-size:.85rem">Le canvas polygonal sera disponible ici — utilisez Rectangle ou Forme en L pour l'instant.</p>`
+          : champs}
+        <div style="display:flex;justify-content:space-between;margin-top:16px">
+          ${this._btn('← Retour', 'metrage-retour', 'secondary')}
+          ${this._btn('✓ Valider la surface', 'metrage-valider')}
+        </div>
+      `)}
+    `);
+
+    const preview = () => {
+      const el = this._container.querySelector('#cex-m-preview');
+      if (!el) return;
+      let s = 0;
+      if (mode === 'rectangle') {
+        const l = parseFloat((this._container.querySelector('#cex-m-l') || {}).value) || 0;
+        const w = parseFloat((this._container.querySelector('#cex-m-w') || {}).value) || 0;
+        s = Math.round(l * w * 100) / 100;
+      } else if (mode === 'forme-l') {
+        const l1 = parseFloat((this._container.querySelector('#cex-m-l1') || {}).value) || 0;
+        const w1 = parseFloat((this._container.querySelector('#cex-m-w1') || {}).value) || 0;
+        const l2 = parseFloat((this._container.querySelector('#cex-m-l2') || {}).value) || 0;
+        const w2 = parseFloat((this._container.querySelector('#cex-m-w2') || {}).value) || 0;
+        s = Math.round((l1 * w1 + l2 * w2) * 100) / 100;
+      }
+      el.textContent = s > 0 ? '→ Surface : ' + s + ' m²' : '';
+    };
+    this._container.querySelectorAll('input[type="number"]').forEach(i => i.addEventListener('input', preview));
+    preview();
+    this._bind();
+  },
+
   // ── Gestion événements ────────────────────────────────────
   _bind() {
     document.addEventListener('click', e => {
@@ -395,6 +487,29 @@ const CalcExpressV2 = {
         if (action === 'creer-st')       { if (typeof App !== 'undefined') App.navigate('sousTraitants'); }
         if (action === 'nouveau-client')   { if (typeof App !== 'undefined') App.navigate('clients'); }
         if (action === 'nouveau-chantier') { if (typeof App !== 'undefined') App.navigate('chantiers'); }
+        if (action === 'metrage-retour')  { this._renderEtape('pieces'); return; }
+        if (action === 'metrage-valider') {
+          const p    = this._pieceEnCours;
+          const mode = p ? (p.mode || 'rectangle') : 'rectangle';
+          let s = 0;
+          if (mode === 'rectangle') {
+            const l = parseFloat((this._container.querySelector('#cex-m-l') || {}).value) || 0;
+            const w = parseFloat((this._container.querySelector('#cex-m-w') || {}).value) || 0;
+            s = Math.round(l * w * 100) / 100;
+            if (p) { p.longueur = l; p.largeur = w; }
+          } else if (mode === 'forme-l') {
+            const l1 = parseFloat((this._container.querySelector('#cex-m-l1') || {}).value) || 0;
+            const w1 = parseFloat((this._container.querySelector('#cex-m-w1') || {}).value) || 0;
+            const l2 = parseFloat((this._container.querySelector('#cex-m-l2') || {}).value) || 0;
+            const w2 = parseFloat((this._container.querySelector('#cex-m-w2') || {}).value) || 0;
+            s = Math.round((l1 * w1 + l2 * w2) * 100) / 100;
+            if (p) { p.l1=l1; p.w1=w1; p.l2=l2; p.w2=w2; }
+          }
+          if (!s) { if (typeof App !== 'undefined' && App.toast) App.toast('Saisissez les dimensions', 'warning'); return; }
+          if (p) { p.surface = s; p.mode = mode; }
+          this._renderEtape('pieces');
+          return;
+        }
         if (action === 'pieces-retour')        this._renderEtape('corps');
         if (action === 'corps-precedent')      { this._corpsEnCours--; this._renderEtape('pieces'); }
         if (action === 'corps-suivant-pieces') { this._corpsEnCours++; this._renderEtape('pieces'); }
@@ -421,15 +536,28 @@ const CalcExpressV2 = {
         return;
       }
 
-      // Toggle pièce
+      // Sélection mode métrage
+      const modeBtn = e.target.closest('[data-cex-mode]');
+      if (modeBtn && this._pieceEnCours) {
+        this._pieceEnCours.mode = modeBtn.dataset.cexMode;
+        this._renderEtape('metrage');
+        return;
+      }
+
+      // Clic pièce → sélectionner + ouvrir métrage
       const piece = e.target.closest('[data-cex-piece]');
       if (piece) {
         const nom     = piece.dataset.cexPiece;
         const corpsId = this._corpsActifs[this._corpsEnCours];
         const idx     = this._pieces.findIndex(p => p.nom === nom && p.corps === corpsId);
-        if (idx >= 0) this._pieces.splice(idx, 1);
-        else this._pieces.push({ nom, corps: corpsId, surface: null });
-        this._renderEtape('pieces');
+        if (idx >= 0) {
+          this._pieceEnCours = this._pieces[idx];
+        } else {
+          const newPiece = { nom, corps: corpsId, surface: null, mode: 'rectangle' };
+          this._pieces.push(newPiece);
+          this._pieceEnCours = newPiece;
+        }
+        this._renderEtape('metrage');
         return;
       }
 
