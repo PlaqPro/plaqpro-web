@@ -159,7 +159,8 @@ const CalcExpressV2 = {
           </div>
           ${champsNouveaux}
         </div>
-        <div style="display:flex;justify-content:flex-end;margin-top:20px">
+        <div style="display:flex;justify-content:space-between;margin-top:20px">
+          ${this._btn('✕ Annuler', 'chantier-annuler', 'secondary')}
           ${this._btn('Suivant →', 'chantier-suivant')}
         </div>
       `)}
@@ -353,6 +354,7 @@ const CalcExpressV2 = {
           this._chantier = { nom, clientId: client || null, chantierId: null, adresse };
           this._renderEtape('profil');
         }
+        if (action === 'chantier-annuler') { if (typeof App !== 'undefined') App.navigate('dashboard'); return; }
         if (action === 'profil-retour')  this._renderEtape('chantier');
         if (action === 'profil-suivant') {
           if (!this._profil) { if (typeof App !== 'undefined' && App.toast) App.toast('Choisissez un type de chantier', 'warning'); return; }
