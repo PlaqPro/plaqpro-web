@@ -354,6 +354,14 @@ const CalcExpressV2 = {
         if (action === 'chantier-suivant') {
           const chantierId = (this._container.querySelector('#cex-chantier-id') || {}).value;
           if (chantierId) {
+            if (!this._profil) {
+              const cli = DB.getAll(DB.KEYS.clients).find(c => c.id == this._chantier.clientId);
+              if (cli && !cli.type) {
+                if (typeof App !== 'undefined' && App.toast) App.toast("⚠️ Ce client n'a pas de type renseigné — veuillez compléter sa fiche", 'warning');
+                setTimeout(() => { if (typeof App !== 'undefined') App.navigate('clients'); }, 1800);
+                return;
+              }
+            }
             this._renderEtape('profil');
             return;
           }
