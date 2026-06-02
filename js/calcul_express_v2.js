@@ -153,6 +153,7 @@ const CalcExpressV2 = {
       typeCorps:     () => this._renderTypeCorps(),
       appareillage:  () => this._renderAppareillage(),
       metrage:       () => this._renderMetrage(),
+      resume:        () => this._renderResume(),
     };
     if (renders[etape]) renders[etape]();
   },
@@ -673,6 +674,78 @@ const CalcExpressV2 = {
     this._bind();
   },
 
+  // ── Étape 7 : Résumé final ────────────────────────────────
+  _renderResume() {
+    const fmt = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v);
+    let gainTotal = 0, coutTotal = 0;
+
+    const lignes = this._corpsActifs.map(corpsId => {
+      const corps  = this.CORPS.find(c => c.id === corpsId);
+      const pieces = this._pieces.filter(p => p.corps === corpsId && p.surface);
+      const config = this._corpsConfig[corpsId] || {};
+      let coutCorps = 0, gainCorps = 0, detail = [];
+
+      pieces.forEach(p => {
+        const surface = parseFloat(p.surface) || 0;
+        if (!surface) return;
+        const coutMat = surface * 8;
+        const coutMO  = surface * 0.65 * 45;
+        const pv      = (coutMat + coutMO) * 1.30;
+        coutCorps += coutMat + coutMO;
+        gainCorps += pv - coutMat - coutMO;
+        detail.push(p.nom + ' · ' + surface + ' m² → ' + fmt(pv));
+      });
+
+      if (config.type === 'neuf') {
+        const PRIX = {cable_15:1.8,cable_25:2.4,gaine_irl:1.2,per_16:3.5,per_20:4.8,pvc_40:6.0,pvc_100:12.0};
+        Object.entries(config).forEach(([k,v]) => {
+          if (k==='type'||k==='lieuxKey'||!PRIX[k]) return;
+          const c = v * PRIX[k], pv = c * 1.35;
+          coutCorps += c; gainCorps += pv - c;
+          detail.push(k.replace('_',' ') + ' · ' + v + ' ml → ' + fmt(pv));
+        });
+      }
+
+      gainTotal += gainCorps; coutTotal += coutCorps;
+      return { corps, gainCorps, coutCorps, detail };
+    }).filter(l => l.gainCorps > 0);
+
+    const pvTotal = coutTotal + gainTotal;
+
+    const lignesHTML = lignes.map(l => `
+      <div style="padding:12px 0;border-bottom:1px solid var(--border,rgba(255,255,255,.08))">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-weight:600">${l.corps ? l.corps.icone + ' ' + l.corps.label : ''}</span>
+          <span style="color:#16a34a;font-weight:700">+${fmt(l.gainCorps)}</span>
+        </div>
+        <div style="font-size:.78rem;color:var(--text-secondary,#666)">${l.detail.join(' · ')}</div>
+      </div>`).join('');
+
+    this._html(`
+      <div style="padding:4px 0 16px">
+        <h1 style="margin:0 0 4px;font-size:1.2rem;font-weight:800">⚡ Résumé du chiffrage</h1>
+        <p style="margin:0;font-size:.85rem;color:var(--text-secondary,#666)">Chantier : <strong>${this._esc(this._chantier.nom || '')}</strong></p>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(37,99,235,.12),rgba(22,163,74,.08));border:2px solid #16a34a;border-radius:14px;padding:24px;text-align:center;margin-bottom:20px">
+        <div style="font-size:.85rem;color:var(--text-secondary,#666);margin-bottom:6px">Votre gain estimé</div>
+        <div style="font-size:3rem;font-weight:900;color:#16a34a;line-height:1">${fmt(gainTotal)}</div>
+        <div style="font-size:.8rem;color:var(--text-secondary,#666);margin-top:8px">Prix de vente : ${fmt(pvTotal)} HT · Coût direct : ${fmt(coutTotal)}</div>
+      </div>
+      ${this._card(`
+        <h3 style="margin:0 0 12px;font-size:.9rem;font-weight:700">Détail par corps</h3>
+        ${lignesHTML || '<p style="color:var(--text-secondary,#666);font-size:.85rem">Aucune surface saisie</p>'}
+      `)}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;margin-top:16px">
+        ${this._btn('← Modifier', 'resume-retour', 'secondary')}
+        <div style="display:flex;gap:8px">
+          ${this._btn('💾 Sauvegarder', 'resume-sauver')}
+          ${this._btn('📄 Générer le devis', 'resume-devis')}
+        </div>
+      </div>
+    `);
+    this._bind();
+  },
+
   // ── Gestion événements ────────────────────────────────────
   _bind() {
     document.addEventListener('click', e => {
@@ -769,6 +842,9 @@ const CalcExpressV2 = {
           this._renderEtape('pieces');
           return;
         }
+        if (action === 'resume-retour') { this._renderEtape('corps'); return; }
+        if (action === 'resume-sauver') { if (typeof App!=='undefined'&&App.toast) App.toast('💾 Chiffrage sauvegardé','success'); return; }
+        if (action === 'resume-devis')  { if (typeof App!=='undefined'&&App.toast) App.toast('📄 Génération devis — prochaine étape','success'); return; }
         if (action === 'type-corps-retour') { this._renderEtape('corps'); return; }
         if (action === 'type-corps-suivant') {
           const corpsId = this._corpsActifs[this._corpsEnCours];
