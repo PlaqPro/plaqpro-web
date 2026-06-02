@@ -330,6 +330,10 @@ const CalcExpressV2 = {
     const listePieces = this._getLieux(corps ? corps.id : '', this._profil);
     const piecesExistantes = this._pieces.filter(p => p.corps === corps.id);
 
+    const piecesPlaco = corps.id === 'peinture'
+      ? this._pieces.filter(p => p.corps === 'plaquisterie' && p.surface_sol)
+      : [];
+
     const items = listePieces.map(nom => {
       const sel = piecesExistantes.find(p => p.nom === nom);
       return `<div data-cex-piece="${this._esc(nom)}" style="padding:12px 16px;border-radius:8px;border:2px solid ${sel ? 'var(--accent,#2563eb)' : 'var(--border,#e2e8f0)'};background:${sel ? 'rgba(37,99,235,.06)' : 'var(--bg-card,#1e2530)'};cursor:pointer;display:flex;align-items:center;justify-content:space-between">
@@ -350,6 +354,14 @@ const CalcExpressV2 = {
           <span style="margin-left:auto;font-size:.8rem;color:var(--text-secondary,#666);background:var(--bg-secondary,#f8f9fa);padding:4px 10px;border-radius:20px">${progress}</span>
         </div>
         <p style="margin:0 0 16px;font-size:.85rem;color:var(--text-secondary,#666)">Sélectionnez les pièces à traiter — cliquez pour les métrager</p>
+        ${piecesPlaco.length > 0 ? `
+        <div style="background:rgba(37,99,235,.08);border:1px solid var(--accent,#2563eb);border-radius:8px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-size:.85rem;font-weight:600;color:var(--accent,#2563eb)">📐 Surfaces Plaquisterie disponibles</div>
+            <div style="font-size:.8rem;color:var(--text-secondary,#666)">${piecesPlaco.length} pièce${piecesPlaco.length>1?'s':''} avec métrages — importer pour pré-remplir</div>
+          </div>
+          <button type="button" data-cex-action="import-placo" style="padding:7px 14px;border-radius:7px;border:none;background:var(--accent,#2563eb);color:#fff;font-size:.8rem;font-weight:600;cursor:pointer">Importer les surfaces</button>
+        </div>` : ''}
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
           ${items}
         </div>
@@ -380,6 +392,7 @@ const CalcExpressV2 = {
         <div style="font-size:1.3rem;margin-bottom:4px">${icone}</div>${label}
       </button>`;
 
+    const isPlaco = p.corps === 'plaquisterie';
     const champRect = `
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px">
         <div style="flex:1;min-width:120px">
@@ -392,6 +405,12 @@ const CalcExpressV2 = {
           <input id="cex-m-w" type="number" min="0" step="0.1" value="${p.largeur||''}" placeholder="ex: 3.8"
             style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box">
         </div>
+        ${isPlaco ? `
+        <div style="flex:1;min-width:120px">
+          <label style="font-size:.8rem;color:#f59e0b;font-weight:700;display:block;margin-bottom:4px">Hauteur sous plafond (m) *</label>
+          <input id="cex-m-hsp" type="number" min="1.5" max="6" step="0.05" value="${p.hsp||2.50}" placeholder="ex: 2.50"
+            style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid #f59e0b;background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box">
+        </div>` : ''}
       </div>
       <div id="cex-m-preview" style="font-size:.9rem;color:var(--accent,#2563eb);font-weight:600;min-height:22px"></div>`;
 
@@ -441,9 +460,15 @@ const CalcExpressV2 = {
       if (!el) return;
       let s = 0;
       if (mode === 'rectangle') {
-        const l = parseFloat((this._container.querySelector('#cex-m-l') || {}).value) || 0;
-        const w = parseFloat((this._container.querySelector('#cex-m-w') || {}).value) || 0;
+        const l   = parseFloat((this._container.querySelector('#cex-m-l') || {}).value) || 0;
+        const w   = parseFloat((this._container.querySelector('#cex-m-w') || {}).value) || 0;
+        const hsp = parseFloat((this._container.querySelector('#cex-m-hsp') || {}).value) || 0;
         s = Math.round(l * w * 100) / 100;
+        if (hsp && l && w && el) {
+          const murs = Math.round((2*l + 2*w) * hsp * 100) / 100;
+          el.innerHTML = `→ Sol : ${s} m² · Murs : ${murs} m² · Plafond : ${s} m²`;
+          return;
+        }
       } else if (mode === 'forme-l') {
         const l1 = parseFloat((this._container.querySelector('#cex-m-l1') || {}).value) || 0;
         const w1 = parseFloat((this._container.querySelector('#cex-m-w1') || {}).value) || 0;
@@ -518,10 +543,18 @@ const CalcExpressV2 = {
           const mode = p ? (p.mode || 'rectangle') : 'rectangle';
           let s = 0;
           if (mode === 'rectangle') {
-            const l = parseFloat((this._container.querySelector('#cex-m-l') || {}).value) || 0;
-            const w = parseFloat((this._container.querySelector('#cex-m-w') || {}).value) || 0;
+            const l   = parseFloat((this._container.querySelector('#cex-m-l') || {}).value) || 0;
+            const w   = parseFloat((this._container.querySelector('#cex-m-w') || {}).value) || 0;
+            const hsp = parseFloat((this._container.querySelector('#cex-m-hsp') || {}).value) || 0;
             s = Math.round(l * w * 100) / 100;
-            if (p) { p.longueur = l; p.largeur = w; }
+            if (p) {
+              p.longueur = l; p.largeur = w;
+              if (hsp) {
+                p.hsp          = hsp;
+                p.surface_sol  = s;
+                p.surface_murs = Math.round((2 * l + 2 * w) * hsp * 100) / 100;
+              }
+            }
           } else if (mode === 'forme-l') {
             const l1 = parseFloat((this._container.querySelector('#cex-m-l1') || {}).value) || 0;
             const w1 = parseFloat((this._container.querySelector('#cex-m-w1') || {}).value) || 0;
@@ -532,6 +565,29 @@ const CalcExpressV2 = {
           }
           if (!s) { if (typeof App !== 'undefined' && App.toast) App.toast('Saisissez les dimensions', 'warning'); return; }
           if (p) { p.surface = s; p.mode = mode; }
+          this._renderEtape('pieces');
+          return;
+        }
+        if (action === 'import-placo') {
+          const piecesPlaco = this._pieces.filter(p => p.corps === 'plaquisterie' && p.surface_sol);
+          piecesPlaco.forEach(pp => {
+            const exist = this._pieces.find(p => p.corps === 'peinture' && p.nom === pp.nom);
+            if (!exist) {
+              this._pieces.push({
+                nom:          pp.nom,
+                corps:        'peinture',
+                surface:      pp.surface_sol,
+                surface_sol:  pp.surface_sol,
+                surface_murs: pp.surface_murs || 0,
+                hsp:          pp.hsp || 2.50,
+                longueur:     pp.longueur,
+                largeur:      pp.largeur,
+                mode:         'rectangle',
+                depuis_placo: true,
+              });
+            }
+          });
+          if (typeof App !== 'undefined' && App.toast) App.toast('✅ ' + piecesPlaco.length + ' pièce(s) importée(s) depuis Plaquisterie', 'success');
           this._renderEtape('pieces');
           return;
         }
