@@ -287,30 +287,36 @@ const CalcExpressV2 = {
 
   // ── Étape 4 : Corps de métiers ────────────────────────────
   _renderCorps() {
+    const traites = this._corpsActifs.filter(id =>
+      this._pieces.some(p => p.corps === id && p.surface)
+    );
     const cards = this.CORPS.map(c => {
-      const sel = this._corpsActifs.includes(c.id);
-      return `<div data-cex-corps="${c.id}" style="flex:1;min-width:130px;padding:16px;border-radius:10px;border:2px solid ${sel ? 'var(--accent,#2563eb)' : 'var(--border,#e2e8f0)'};background:${sel ? 'rgba(37,99,235,.06)' : 'var(--bg-card,#fff)'};cursor:pointer;text-align:center">
+      const traite = traites.includes(c.id);
+      return `<div data-cex-corps="${c.id}" style="flex:1;min-width:130px;padding:16px;border-radius:10px;border:2px solid ${traite ? '#16a34a' : 'var(--border,#e2e8f0)'};background:${traite ? 'rgba(22,163,74,.06)' : 'var(--bg-card,#1e2530)'};cursor:pointer;text-align:center;position:relative">
+        ${traite ? '<div style="position:absolute;top:8px;right:8px;color:#16a34a;font-size:1rem">✓</div>' : ''}
         <div style="font-size:1.8rem;margin-bottom:6px">${c.icone}</div>
         <div style="font-weight:600;font-size:.9rem">${c.label}</div>
-        ${sel ? '<div style="font-size:.75rem;color:var(--accent,#2563eb);margin-top:4px">✓ Sélectionné</div>' : ''}
+        <div style="font-size:.75rem;margin-top:4px;color:${traite ? '#16a34a' : 'var(--text-secondary,#666)'}">${traite ? 'Traité — cliquer pour modifier' : 'Cliquer pour chiffrer'}</div>
       </div>`;
     }).join('');
 
-    const btnSuivant = this._corpsActifs.length > 0
-      ? this._btn('Commencer le chiffrage →', 'corps-suivant')
-      : '<button style="padding:10px 22px;border-radius:8px;border:none;background:var(--border,#ddd);color:var(--text-secondary,#999);font-weight:600;font-size:.9rem;cursor:not-allowed">Sélectionner au moins 1 corps</button>';
+    const nbTraites = traites.length;
+    const btnTerminer = nbTraites > 0 ? this._btn('Terminer le devis →', 'corps-terminer') : '';
 
     this._html(`
       ${this._progressBar('corps')}
       ${this._card(`
         <h2 style="margin:0 0 6px;font-size:1.1rem;font-weight:700">Corps de métiers</h2>
-        <p style="margin:0 0 16px;font-size:.85rem;color:var(--text-secondary,#666)">Sélectionnez les travaux à chiffrer sur ce chantier</p>
+        <p style="margin:0 0 16px;font-size:.85rem;color:var(--text-secondary,#666)">Cliquez sur un corps pour saisir les métrages — revenez ici pour en chiffrer un autre</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
           ${cards}
         </div>
-        <div style="display:flex;justify-content:space-between">
+        <div style="display:flex;justify-content:space-between;align-items:center">
           ${this._btn('← Retour', 'corps-retour', 'secondary')}
-          ${btnSuivant}
+          <div style="display:flex;gap:8px;align-items:center">
+            ${nbTraites > 0 ? `<span style="font-size:.85rem;color:#16a34a">${nbTraites} corps traité${nbTraites>1?'s':''}</span>` : ''}
+            ${btnTerminer}
+          </div>
         </div>
       `)}
     `);
@@ -354,8 +360,7 @@ const CalcExpressV2 = {
         <div style="display:flex;justify-content:space-between">
           ${this._btn('← Retour', 'pieces-retour', 'secondary')}
           <div style="display:flex;gap:8px">
-            ${this._corpsEnCours > 0 ? this._btn('← Corps précédent', 'corps-precedent', 'secondary') : ''}
-            ${isLast ? this._btn('Voir le résumé →', 'pieces-terminer') : this._btn('Corps suivant →', 'corps-suivant-pieces')}
+            ${this._btn('↩ Retour corps de métiers', 'pieces-vers-corps')}
           </div>
         </div>
       `)}
@@ -497,7 +502,8 @@ const CalcExpressV2 = {
           });
           this._renderEtape('corps');
         }
-        if (action === 'corps-retour')  this._renderEtape('sousTraitants');
+        if (action === 'corps-retour')   this._renderEtape('sousTraitants');
+        if (action === 'corps-terminer') { this._renderEtape('resume'); return; }
         if (action === 'corps-suivant') {
           if (!this._corpsActifs.length) { if (typeof App !== 'undefined' && App.toast) App.toast('Sélectionnez au moins un corps de métier', 'warning'); return; }
           this._corpsEnCours = 0;
@@ -530,6 +536,7 @@ const CalcExpressV2 = {
           return;
         }
         if (action === 'pieces-retour')        this._renderEtape('corps');
+        if (action === 'pieces-vers-corps')    { this._renderEtape('corps'); return; }
         if (action === 'corps-precedent')      { this._corpsEnCours--; this._renderEtape('pieces'); }
         if (action === 'corps-suivant-pieces') { this._corpsEnCours++; this._renderEtape('pieces'); }
         if (action === 'pieces-terminer')      { if (typeof App !== 'undefined' && App.toast) App.toast('Résumé — à implémenter', 'success'); }
@@ -580,14 +587,13 @@ const CalcExpressV2 = {
         return;
       }
 
-      // Toggle corps de métier
+      // Clic corps → entrer directement dans les pièces
       const corps = e.target.closest('[data-cex-corps]');
       if (corps) {
-        const id  = corps.dataset.cexCorps;
-        const idx = this._corpsActifs.indexOf(id);
-        if (idx >= 0) this._corpsActifs.splice(idx, 1);
-        else this._corpsActifs.push(id);
-        this._renderCorps();
+        const id = corps.dataset.cexCorps;
+        if (!this._corpsActifs.includes(id)) this._corpsActifs.push(id);
+        this._corpsEnCours = this._corpsActifs.indexOf(id);
+        this._renderEtape('pieces');
         return;
       }
     });
