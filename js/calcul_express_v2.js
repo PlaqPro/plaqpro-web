@@ -119,9 +119,11 @@ const CalcExpressV2 = {
       `<option value="${c.id}" ${c.id == this._chantier.clientId ? 'selected' : ''}>${this._esc(c.nom || c.raisonSociale || '')}</option>`
     ).join('');
 
+    const clientExist = chanExist ? clients.find(c => c.id == chanExist.clientId) : null;
     const champsNouveaux = chanExist ? `
-      <div style="background:rgba(37,99,235,.06);border:1px solid var(--accent,#2563eb);border-radius:8px;padding:12px 16px;font-size:.9rem">
-        <div style="font-weight:700;margin-bottom:2px">${this._esc(chanExist.nom || chanExist.libelle || '')}</div>
+      <div style="background:rgba(37,99,235,.06);border:1px solid var(--accent,#2563eb);border-radius:8px;padding:12px 16px;font-size:.9rem;display:flex;flex-direction:column;gap:4px">
+        <div style="font-weight:700">${this._esc(chanExist.nom || chanExist.libelle || '')}</div>
+        ${clientExist ? `<div style="font-size:.85rem;color:var(--accent,#2563eb)">👤 ${this._esc(clientExist.nom || clientExist.raisonSociale || '')}</div>` : ''}
         <div style="color:var(--text-secondary,#666);font-size:.8rem">${this._esc(chanExist.adresse || chanExist.ville || '')}</div>
       </div>` : `
       <div>
@@ -155,7 +157,7 @@ const CalcExpressV2 = {
               <option value="">-- Nouveau chantier --</option>
               ${optChantier}
             </select>
-            <button type="button" data-cex-action="nouveau-chantier" style="margin-top:8px;font-size:.8rem;color:var(--accent,#2563eb);background:none;border:none;cursor:pointer;padding:0">+ Créer un chantier</button>
+            ${!chanExist ? `<button type="button" data-cex-action="nouveau-chantier" style="margin-top:8px;font-size:.8rem;color:var(--accent,#2563eb);background:none;border:none;cursor:pointer;padding:0">+ Créer un chantier</button>` : ''}
           </div>
           ${champsNouveaux}
         </div>
