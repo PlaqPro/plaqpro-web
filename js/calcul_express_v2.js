@@ -428,12 +428,22 @@ const CalcExpressV2 = {
         </div>
         <p style="margin:0 0 16px;font-size:.85rem;color:var(--text-secondary,#666)">Sélectionnez les pièces à traiter — cliquez pour les Métrage</p>
         ${piecesPlaco.length > 0 ? `
-        <div style="background:rgba(37,99,235,.08);border:1px solid var(--accent,#2563eb);border-radius:8px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-          <div>
-            <div style="font-size:.85rem;font-weight:600;color:var(--accent,#2563eb)">📐 Surfaces Plâtrerie disponibles</div>
-            <div style="font-size:.8rem;color:var(--text-secondary,#666)">${piecesPlaco.length} pièce${piecesPlaco.length>1?'s':''} avec métrages — importer pour pré-remplir</div>
+        <div style="background:rgba(37,99,235,.08);border:1px solid var(--accent,#2563eb);border-radius:8px;padding:12px 16px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div>
+              <div style="font-size:.85rem;font-weight:600;color:var(--accent,#2563eb)">📐 Surfaces Plâtrerie disponibles</div>
+              <div style="font-size:.8rem;color:var(--text-secondary,#666)">${piecesPlaco.length} pièce${piecesPlaco.length>1?'s':''} avec métrages</div>
+            </div>
+            <button type="button" data-cex-action="import-placo" style="padding:7px 14px;border-radius:7px;border:none;background:var(--accent,#2563eb);color:#fff;font-size:.8rem;font-weight:600;cursor:pointer">Importer</button>
           </div>
-          <button type="button" data-cex-action="import-placo" style="padding:7px 14px;border-radius:7px;border:none;background:var(--accent,#2563eb);color:#fff;font-size:.8rem;font-weight:600;cursor:pointer">Importer les surfaces</button>
+          <div style="font-size:.8rem;font-weight:600;color:var(--text-secondary,#666);margin-bottom:6px">Que peindre ?</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${['murs','plafond','murs_et_plafond'].map(opt => {
+              const labels = {murs:'Murs uniquement',plafond:'Plafond uniquement',murs_et_plafond:'Murs + Plafond'};
+              const sel = (this._corpsConfig['peinture']||{}).zone === opt;
+              return '<button type="button" data-cex-peinture-zone="' + opt + '" style="padding:6px 12px;border-radius:6px;border:2px solid ' + (sel?'var(--accent,#2563eb)':'var(--border,#e2e8f0)') + ';background:' + (sel?'rgba(37,99,235,.1)':'transparent') + ';color:#fff;font-size:.8rem;cursor:pointer">' + labels[opt] + '</button>';
+            }).join('')}
+          </div>
         </div>` : ''}
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
           ${items}
@@ -772,6 +782,13 @@ const CalcExpressV2 = {
             const t = this._corpsConfig[corpsId].type;
             this._corpsConfig[corpsId].lieuxKey = t === 'int' ? 'maconnerie_int' : 'maconnerie_ext';
           }
+          this._renderEtape('pieces');
+          return;
+        }
+        const zoneBtn = e.target.closest('[data-cex-peinture-zone]');
+        if (zoneBtn) {
+          if (!this._corpsConfig['peinture']) this._corpsConfig['peinture'] = {};
+          this._corpsConfig['peinture'].zone = zoneBtn.dataset.cexPeintureZone;
           this._renderEtape('pieces');
           return;
         }
