@@ -49,6 +49,7 @@ const CalcExpressV2 = {
     this._corpsActifs   = [];
     this._pieces        = [];
     this._resultats     = {};
+    this._corpsEnCours  = 0;
     this._renderEtape('chantier');
   },
 
@@ -61,6 +62,7 @@ const CalcExpressV2 = {
       profil:        () => this._renderProfil(),
       sousTraitants: () => this._renderSousTraitants(),
       corps:         () => this._renderCorps(),
+      pieces:        () => this._renderPieces(),
     };
     if (renders[etape]) renders[etape]();
   },
@@ -73,8 +75,8 @@ const CalcExpressV2 = {
   },
 
   _progressBar(etapeActive) {
-    const etapes = ['chantier','profil','sousTraitants','corps'];
-    const labels = ['Chantier','Profil','Sous-traitants','Travaux'];
+    const etapes = ['chantier','profil','sousTraitants','corps','pieces'];
+    const labels = ['Chantier','Profil','Sous-traitants','Travaux','Pièces'];
     const idx    = etapes.indexOf(etapeActive);
     const steps  = labels.map((l, i) => {
       const done   = i < idx;
@@ -253,6 +255,52 @@ const CalcExpressV2 = {
     this._bind();
   },
 
+  // ── Étape 5 : Pièces par corps de métier ─────────────────
+  _renderPieces() {
+    const corps = this.CORPS.find(c => c.id === this._corpsActifs[this._corpsEnCours]);
+    if (!corps) return;
+    const listePieces = this.PIECES_PROFIL[this._profil] || this.PIECES_PROFIL.particulier;
+    const piecesExistantes = this._pieces.filter(p => p.corps === corps.id);
+
+    const items = listePieces.map(nom => {
+      const sel = piecesExistantes.find(p => p.nom === nom);
+      return `<div data-cex-piece="${this._esc(nom)}" style="padding:12px 16px;border-radius:8px;border:2px solid ${sel ? 'var(--accent,#2563eb)' : 'var(--border,#e2e8f0)'};background:${sel ? 'rgba(37,99,235,.06)' : 'var(--bg-card,#1e2530)'};cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-weight:500;font-size:.9rem">${nom}</span>
+        ${sel ? `<span style="font-size:.8rem;color:var(--accent,#2563eb)">✓ ${sel.surface ? sel.surface + ' m²' : 'à métrager'}</span>` : ''}
+      </div>`;
+    }).join('');
+
+    const progress = `${this._corpsEnCours + 1} / ${this._corpsActifs.length}`;
+    const isLast   = this._corpsEnCours === this._corpsActifs.length - 1;
+
+    this._html(`
+      ${this._progressBar('pieces')}
+      ${this._card(`
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font-size:1.5rem">${corps.icone}</span>
+          <h2 style="margin:0;font-size:1.1rem;font-weight:700">${corps.label} — Pièces à chiffrer</h2>
+          <span style="margin-left:auto;font-size:.8rem;color:var(--text-secondary,#666);background:var(--bg-secondary,#f8f9fa);padding:4px 10px;border-radius:20px">${progress}</span>
+        </div>
+        <p style="margin:0 0 16px;font-size:.85rem;color:var(--text-secondary,#666)">Sélectionnez les pièces à traiter — cliquez pour les métrager</p>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+          ${items}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
+          <input id="cex-piece-libre" type="text" placeholder="Autre pièce / lieu..." style="flex:1;padding:9px 14px;border-radius:8px;border:1px solid var(--border,#e2e8f0);font-size:.9rem;background:var(--bg-card,#1e2530);color:var(--text-main,#fff)">
+          <button type="button" data-cex-action="piece-libre-add" style="padding:9px 16px;border-radius:8px;border:none;background:var(--accent,#2563eb);color:#fff;font-weight:600;cursor:pointer">+ Ajouter</button>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          ${this._btn('← Retour', 'pieces-retour', 'secondary')}
+          <div style="display:flex;gap:8px">
+            ${this._corpsEnCours > 0 ? this._btn('← Corps précédent', 'corps-precedent', 'secondary') : ''}
+            ${isLast ? this._btn('Voir le résumé →', 'pieces-terminer') : this._btn('Corps suivant →', 'corps-suivant-pieces')}
+          </div>
+        </div>
+      `)}
+    `);
+    this._bind();
+  },
+
   // ── Gestion événements ────────────────────────────────────
   _bind() {
     document.addEventListener('click', e => {
@@ -287,11 +335,27 @@ const CalcExpressV2 = {
         if (action === 'corps-retour')  this._renderEtape('sousTraitants');
         if (action === 'corps-suivant') {
           if (!this._corpsActifs.length) { if (typeof App !== 'undefined' && App.toast) App.toast('Sélectionnez au moins un corps de métier', 'warning'); return; }
-          if (typeof App !== 'undefined' && App.toast) App.toast('Chiffrage lancé — pièces à implémenter', 'success');
+          this._corpsEnCours = 0;
+          this._renderEtape('pieces');
         }
         if (action === 'creer-st')       { if (typeof App !== 'undefined') App.navigate('sousTraitants'); }
         if (action === 'nouveau-client')   { if (typeof App !== 'undefined') App.navigate('clients'); }
         if (action === 'nouveau-chantier') { if (typeof App !== 'undefined') App.navigate('chantiers'); }
+        if (action === 'pieces-retour')        this._renderEtape('corps');
+        if (action === 'corps-precedent')      { this._corpsEnCours--; this._renderEtape('pieces'); }
+        if (action === 'corps-suivant-pieces') { this._corpsEnCours++; this._renderEtape('pieces'); }
+        if (action === 'pieces-terminer')      { if (typeof App !== 'undefined' && App.toast) App.toast('Résumé — à implémenter', 'success'); }
+        if (action === 'piece-libre-add') {
+          const input = this._container.querySelector('#cex-piece-libre');
+          const val   = (input ? input.value : '').trim();
+          if (!val) return;
+          const corpsId = this._corpsActifs[this._corpsEnCours];
+          if (!this._pieces.find(p => p.nom === val && p.corps === corpsId)) {
+            this._pieces.push({ nom: val, corps: corpsId, surface: null });
+          }
+          if (input) input.value = '';
+          this._renderEtape('pieces');
+        }
         return;
       }
 
@@ -300,6 +364,18 @@ const CalcExpressV2 = {
       if (profil) {
         this._profil = profil.dataset.cexProfil;
         this._renderEtape('profil');
+        return;
+      }
+
+      // Toggle pièce
+      const piece = e.target.closest('[data-cex-piece]');
+      if (piece) {
+        const nom     = piece.dataset.cexPiece;
+        const corpsId = this._corpsActifs[this._corpsEnCours];
+        const idx     = this._pieces.findIndex(p => p.nom === nom && p.corps === corpsId);
+        if (idx >= 0) this._pieces.splice(idx, 1);
+        else this._pieces.push({ nom, corps: corpsId, surface: null });
+        this._renderEtape('pieces');
         return;
       }
 
