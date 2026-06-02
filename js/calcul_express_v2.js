@@ -88,7 +88,7 @@ const CalcExpressV2 = {
       </div>
       ${i < labels.length-1 ? `<div style="flex:1;height:2px;background:${done ? 'var(--accent,#2563eb)' : 'var(--border,#ddd)'};margin-top:14px"></div>` : ''}`;
     }).join('');
-    return `<div style="display:flex;align-items:flex-start;gap:0;margin-bottom:24px;padding:16px;background:var(--bg-secondary,#f8f9fa);border-radius:10px">${steps}</div>`;
+    return `<div style="display:flex;align-items:flex-start;gap:0;margin-bottom:24px;padding:16px;background:var(--bg-card,#1e2530);border:1px solid var(--border,#2a3240);border-radius:10px">${steps}</div>`;
   },
 
   _card(content) {
@@ -105,9 +105,13 @@ const CalcExpressV2 = {
 
   // ── Étape 1 : Chantier + Client ───────────────────────────
   _renderChantier() {
-    const clients = DB.getAll(DB.KEYS.clients).filter(c => c.actif !== false);
-    const options = clients.map(c =>
+    const clients  = DB.getAll(DB.KEYS.clients).filter(c => c.actif !== false);
+    const chantiers = DB.getAll(DB.KEYS.chantiers).filter(c => c.actif !== false);
+    const options  = clients.map(c =>
       `<option value="${c.id}" ${this._chantier.clientId == c.id ? 'selected' : ''}>${this._esc(c.nom || c.raisonSociale || '')}</option>`
+    ).join('');
+    const optionsChantier = chantiers.map(c =>
+      `<option value="${c.id}" ${this._chantier.chantierId == c.id ? 'selected' : ''}>${this._esc(c.nom || c.libelle || '')}</option>`
     ).join('');
 
     this._html(`
@@ -127,6 +131,14 @@ const CalcExpressV2 = {
               ${options}
             </select>
             <button type="button" data-cex-action="nouveau-client" style="margin-top:8px;font-size:.8rem;color:var(--accent,#2563eb);background:none;border:none;cursor:pointer;padding:0">+ Nouveau client</button>
+          </div>
+          <div>
+            <label style="font-size:.85rem;font-weight:600;color:var(--text-secondary,#666);display:block;margin-bottom:6px">Chantier existant</label>
+            <select id="cex-chantier-id" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border,#e2e8f0);font-size:.95rem;box-sizing:border-box;background:var(--bg-card,#fff)">
+              <option value="">-- Nouveau chantier --</option>
+              ${optionsChantier}
+            </select>
+            <button type="button" data-cex-action="nouveau-chantier" style="margin-top:8px;font-size:.8rem;color:var(--accent,#2563eb);background:none;border:none;cursor:pointer;padding:0">+ Créer un chantier</button>
           </div>
           <div>
             <label style="font-size:.85rem;font-weight:600;color:var(--text-secondary,#666);display:block;margin-bottom:6px">Adresse du chantier</label>
@@ -251,11 +263,12 @@ const CalcExpressV2 = {
       if (btn) {
         const action = btn.dataset.cexAction;
         if (action === 'chantier-suivant') {
-          const nom     = (this._container.querySelector('#cex-chantier-nom') || {}).value;
-          const client  = (this._container.querySelector('#cex-client-id') || {}).value;
-          const adresse = (this._container.querySelector('#cex-chantier-adresse') || {}).value;
+          const nom        = (this._container.querySelector('#cex-chantier-nom') || {}).value;
+          const client     = (this._container.querySelector('#cex-client-id') || {}).value;
+          const chantierId = (this._container.querySelector('#cex-chantier-id') || {}).value;
+          const adresse    = (this._container.querySelector('#cex-chantier-adresse') || {}).value;
           if (!nom || !nom.trim()) { if (typeof App !== 'undefined' && App.toast) App.toast('Saisissez un nom de chantier', 'warning'); return; }
-          this._chantier = { nom: nom.trim(), clientId: client || null, adresse: (adresse || '').trim() };
+          this._chantier = { nom: nom.trim(), clientId: client || null, chantierId: chantierId || null, adresse: (adresse || '').trim() };
           this._renderEtape('profil');
         }
         if (action === 'profil-retour')  this._renderEtape('chantier');
@@ -277,7 +290,8 @@ const CalcExpressV2 = {
           if (typeof App !== 'undefined' && App.toast) App.toast('Chiffrage lancé — pièces à implémenter', 'success');
         }
         if (action === 'creer-st')       { if (typeof App !== 'undefined') App.navigate('sousTraitants'); }
-        if (action === 'nouveau-client') { if (typeof App !== 'undefined') App.navigate('clients'); }
+        if (action === 'nouveau-client')   { if (typeof App !== 'undefined') App.navigate('clients'); }
+        if (action === 'nouveau-chantier') { if (typeof App !== 'undefined') App.navigate('chantiers'); }
         return;
       }
 
