@@ -178,10 +178,17 @@ const CalcExpressV2 = {
           this._chantier.nom      = ch.nom || ch.libelle || '';
           this._chantier.clientId = ch.clientId || null;
           this._chantier.adresse  = ch.adresse || ch.ville || '';
+          const cli = DB.getAll(DB.KEYS.clients).find(c => c.id == ch.clientId);
+          if (cli && cli.type) {
+            this._profil = cli.type === 'particulier' ? 'particulier' : 'pro';
+          } else {
+            this._profil = null;
+          }
         } else {
           this._chantier.nom      = '';
           this._chantier.clientId = null;
           this._chantier.adresse  = '';
+          this._profil            = null;
         }
         this._renderChantier();
       });
@@ -209,7 +216,8 @@ const CalcExpressV2 = {
       ${this._progressBar('profil')}
       ${this._card(`
         <h2 style="margin:0 0 6px;font-size:1.1rem;font-weight:700">Type de chantier</h2>
-        <p style="margin:0 0 20px;font-size:.85rem;color:var(--text-secondary,#666)">Chantier : <strong>${this._esc(this._chantier.nom)}</strong></p>
+        <p style="margin:0 0 8px;font-size:.85rem;color:var(--text-secondary,#666)">Chantier : <strong>${this._esc(this._chantier.nom)}</strong></p>
+        ${this._profil && this._chantier.chantierId ? `<div style="font-size:.8rem;color:#16a34a;margin-bottom:12px">✓ Type détecté depuis le client — vous pouvez modifier si besoin</div>` : ''}
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           ${cards}
         </div>
