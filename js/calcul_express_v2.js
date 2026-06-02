@@ -21,7 +21,7 @@ const CalcExpressV2 = {
 
   // ── Corps disponibles ─────────────────────────────────────
   CORPS: [
-    { id: 'plaquisterie', label: 'Plaquisterie', icone: '🧱' },
+    { id: 'plaquisterie', label: 'Plâtrerie', icone: '🧱' },
     { id: 'peinture',     label: 'Peinture',     icone: '🎨' },
     { id: 'electricite',  label: 'Électricité',  icone: '⚡' },
     { id: 'plomberie',    label: 'Plomberie',    icone: '🔧' },
@@ -402,7 +402,7 @@ const CalcExpressV2 = {
       const sel  = piecesExistantes.find(p => p.nom === nom);
       const info = sel ? (isUnite
         ? (sel.nbPoints ? sel.nbPoints + ' points' : 'à renseigner')
-        : (sel.surface ? sel.surface + ' m²' : 'à métrager')) : '';
+        : (sel.surface ? sel.surface + ' m²' : 'à Métrage')) : '';
       return `<div data-cex-piece="${this._esc(nom)}" style="padding:12px 16px;border-radius:8px;border:2px solid ${sel ? 'var(--accent,#2563eb)' : 'var(--border,#e2e8f0)'};background:${sel ? 'rgba(37,99,235,.06)' : 'var(--bg-card,#1e2530)'};cursor:pointer;display:flex;align-items:center;justify-content:space-between">
         <span style="font-weight:500;font-size:.9rem">${nom}</span>
         ${sel ? `<span style="font-size:.8rem;color:var(--accent,#2563eb)">✓ ${info}</span>` : ''}
@@ -420,11 +420,11 @@ const CalcExpressV2 = {
           <h2 style="margin:0;font-size:1.1rem;font-weight:700">${corps.label} — Pièces à chiffrer</h2>
           <span style="margin-left:auto;font-size:.8rem;color:var(--text-secondary,#666);background:var(--bg-secondary,#f8f9fa);padding:4px 10px;border-radius:20px">${progress}</span>
         </div>
-        <p style="margin:0 0 16px;font-size:.85rem;color:var(--text-secondary,#666)">Sélectionnez les pièces à traiter — cliquez pour les métrager</p>
+        <p style="margin:0 0 16px;font-size:.85rem;color:var(--text-secondary,#666)">Sélectionnez les pièces à traiter — cliquez pour les Métrage</p>
         ${piecesPlaco.length > 0 ? `
         <div style="background:rgba(37,99,235,.08);border:1px solid var(--accent,#2563eb);border-radius:8px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
           <div>
-            <div style="font-size:.85rem;font-weight:600;color:var(--accent,#2563eb)">📐 Surfaces Plaquisterie disponibles</div>
+            <div style="font-size:.85rem;font-weight:600;color:var(--accent,#2563eb)">📐 Surfaces Plâtrerie disponibles</div>
             <div style="font-size:.8rem;color:var(--text-secondary,#666)">${piecesPlaco.length} pièce${piecesPlaco.length>1?'s':''} avec métrages — importer pour pré-remplir</div>
           </div>
           <button type="button" data-cex-action="import-placo" style="padding:7px 14px;border-radius:7px;border:none;background:var(--accent,#2563eb);color:#fff;font-size:.8rem;font-weight:600;cursor:pointer">Importer les surfaces</button>
@@ -511,13 +511,13 @@ const CalcExpressV2 = {
 
     const sections = cats.map(cat => {
       const items = liste.filter(a => a.cat === cat).map(a => {
-        const q = quantites[a.id] || 0;
+        const q = parseInt(quantites[a.id]) || 0;
         return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border,rgba(255,255,255,.08))">
           <span style="font-size:1.1rem;width:24px">${a.icone}</span>
           <span style="flex:1;font-size:.9rem">${a.label}</span>
           <div style="display:flex;align-items:center;gap:6px">
             <button type="button" data-cex-app-moins="${a.id}" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border,#e2e8f0);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font-size:1rem;line-height:1">−</button>
-            <span id="cex-app-q-${a.id}" style="min-width:28px;text-align:center;font-weight:700;font-size:.95rem">${q}</span>
+            <span id="cex-app-q-${a.id}" style="min-width:28px;text-align:center;font-weight:700;font-size:.95rem;color:${q>0?'#16a34a':'#fff'}">${q}</span>
             <button type="button" data-cex-app-plus="${a.id}" style="width:28px;height:28px;border-radius:6px;border:none;background:var(--accent,#2563eb);color:#fff;cursor:pointer;font-size:1rem;line-height:1">+</button>
           </div>
         </div>`;
@@ -781,7 +781,7 @@ const CalcExpressV2 = {
               });
             }
           });
-          if (typeof App !== 'undefined' && App.toast) App.toast('✅ ' + piecesPlaco.length + ' pièce(s) importée(s) depuis Plaquisterie', 'success');
+          if (typeof App !== 'undefined' && App.toast) App.toast('✅ ' + piecesPlaco.length + ' pièce(s) importée(s) depuis Plâtrerie', 'success');
           this._renderEtape('pieces');
           return;
         }
