@@ -38,6 +38,66 @@ const CalcExpressV2 = {
     ao:          [],
   },
 
+  // ── Appareillage par corps (électricité + plomberie) ─────
+  APPAREILLAGE: {
+    electricite: [
+      { id:'prise_simple',    label:'Prise simple',            icone:'🔌', cat:'Prises' },
+      { id:'prise_double',    label:'Prise double',            icone:'🔌', cat:'Prises' },
+      { id:'prise_double_usb',label:'Prise double + USB',      icone:'🔌', cat:'Prises' },
+      { id:'prise_20a',       label:'Prise 20A (cuisine)',     icone:'🔌', cat:'Prises' },
+      { id:'prise_etanche',   label:'Prise étanche ext.',      icone:'🔌', cat:'Prises' },
+      { id:'prise_rj45',      label:'Prise RJ45',              icone:'🌐', cat:'Prises' },
+      { id:'inter_simple',    label:'Interrupteur simple',     icone:'💡', cat:'Commandes' },
+      { id:'inter_vv',        label:'Va-et-vient',             icone:'💡', cat:'Commandes' },
+      { id:'inter_double',    label:'Interrupteur double',     icone:'💡', cat:'Commandes' },
+      { id:'variateur',       label:'Variateur',               icone:'💡', cat:'Commandes' },
+      { id:'inter_etanche',   label:'Interrupteur étanche',    icone:'💡', cat:'Commandes' },
+      { id:'point_dcl',       label:'Point lumineux DCL',      icone:'🔆', cat:'Éclairage' },
+      { id:'spot_encastre',   label:'Spot encastré',           icone:'🔆', cat:'Éclairage' },
+      { id:'applique',        label:'Applique murale',         icone:'🔆', cat:'Éclairage' },
+      { id:'hublot_ext',      label:'Hublot extérieur',        icone:'🔆', cat:'Éclairage' },
+      { id:'tableau_13m',     label:'Tableau 13 modules',      icone:'⚡', cat:'Tableau' },
+      { id:'tableau_26m',     label:'Tableau 26 modules',      icone:'⚡', cat:'Tableau' },
+      { id:'disjoncteur',     label:'Disjoncteur différentiel',icone:'⚡', cat:'Tableau' },
+      { id:'vmc',             label:'VMC simple flux',         icone:'💨', cat:'Divers' },
+      { id:'chauffe_eau',     label:'Chauffe-eau électrique',  icone:'🌡', cat:'Divers' },
+    ],
+    plomberie: [
+      { id:'wc_standard',     label:'WC standard',             icone:'🚽', cat:'Sanitaires' },
+      { id:'wc_suspendu',     label:'WC suspendu',             icone:'🚽', cat:'Sanitaires' },
+      { id:'lavabo',          label:'Lavabo',                  icone:'🚿', cat:'Sanitaires' },
+      { id:'evier_1bac',      label:'Évier 1 bac',             icone:'🚿', cat:'Sanitaires' },
+      { id:'evier_2bacs',     label:'Évier 2 bacs',            icone:'🚿', cat:'Sanitaires' },
+      { id:'douche_receveur', label:'Receveur douche',         icone:'🚿', cat:'Sanitaires' },
+      { id:'douche_italienne',label:"Douche à l'italienne",    icone:'🚿', cat:'Sanitaires' },
+      { id:'baignoire',       label:'Baignoire',               icone:'🛁', cat:'Sanitaires' },
+      { id:'baignoire_balneo',label:'Baignoire balnéo',        icone:'🛁', cat:'Sanitaires' },
+      { id:'lave_linge',      label:'Arrivée lave-linge',      icone:'🔧', cat:'Raccordements' },
+      { id:'lave_vaisselle',  label:'Arrivée lave-vaisselle',  icone:'🔧', cat:'Raccordements' },
+      { id:'robinet_ext',     label:'Robinet extérieur',       icone:'🔧', cat:'Raccordements' },
+      { id:'mitigeur_lavabo', label:'Mitigeur lavabo',         icone:'🔧', cat:'Robinetterie' },
+      { id:'mitigeur_douche', label:'Mitigeur douche',         icone:'🔧', cat:'Robinetterie' },
+      { id:'mitigeur_evier',  label:'Mitigeur évier',          icone:'🔧', cat:'Robinetterie' },
+      { id:'nourrice',        label:'Nourrice distribution',   icone:'🔧', cat:'Divers' },
+      { id:'vanne_arret',     label:"Vanne d'arrêt",           icone:'🔧', cat:'Divers' },
+    ],
+  },
+
+  // ── Linéaires neuf par corps ──────────────────────────────
+  LINEAIRES: {
+    electricite: [
+      { id:'cable_15',  label:'Câble 1.5mm² (éclairage)', unite:'ml', placeholder:'ex: 80' },
+      { id:'cable_25',  label:'Câble 2.5mm² (prises)',    unite:'ml', placeholder:'ex: 120' },
+      { id:'gaine_irl', label:'Gaine IRL (optionnel)',    unite:'ml', placeholder:'ex: 60' },
+    ],
+    plomberie: [
+      { id:'per_16',    label:'Alimentation PER 16',      unite:'ml', placeholder:'ex: 25' },
+      { id:'per_20',    label:'Alimentation PER 20',      unite:'ml', placeholder:'ex: 15' },
+      { id:'pvc_40',    label:'Évacuation PVC 40',        unite:'ml', placeholder:'ex: 12' },
+      { id:'pvc_100',   label:'Évacuation PVC 100',       unite:'ml', placeholder:'ex: 8' },
+    ],
+  },
+
   // ── Lieux par corps de métier (prioritaire sur profil) ────
   LIEUX_CORPS: {
     paysagisme:  ['Jardin avant', 'Jardin arrière', 'Terrasse', 'Allée', 'Parking',
@@ -70,6 +130,7 @@ const CalcExpressV2 = {
     this._resultats     = {};
     this._corpsEnCours  = 0;
     this._pieceEnCours  = null;
+    this._corpsConfig   = {};
     this._renderEtape('chantier');
   },
 
@@ -83,6 +144,8 @@ const CalcExpressV2 = {
       sousTraitants: () => this._renderSousTraitants(),
       corps:         () => this._renderCorps(),
       pieces:        () => this._renderPieces(),
+      typeCorps:     () => this._renderTypeCorps(),
+      appareillage:  () => this._renderAppareillage(),
       metrage:       () => this._renderMetrage(),
     };
     if (renders[etape]) renders[etape]();
@@ -334,11 +397,15 @@ const CalcExpressV2 = {
       ? this._pieces.filter(p => p.corps === 'plaquisterie' && p.surface_sol)
       : [];
 
+    const isUnite = ['electricite','plomberie'].includes(corps.id);
     const items = listePieces.map(nom => {
-      const sel = piecesExistantes.find(p => p.nom === nom);
+      const sel  = piecesExistantes.find(p => p.nom === nom);
+      const info = sel ? (isUnite
+        ? (sel.nbPoints ? sel.nbPoints + ' points' : 'à renseigner')
+        : (sel.surface ? sel.surface + ' m²' : 'à métrager')) : '';
       return `<div data-cex-piece="${this._esc(nom)}" style="padding:12px 16px;border-radius:8px;border:2px solid ${sel ? 'var(--accent,#2563eb)' : 'var(--border,#e2e8f0)'};background:${sel ? 'rgba(37,99,235,.06)' : 'var(--bg-card,#1e2530)'};cursor:pointer;display:flex;align-items:center;justify-content:space-between">
         <span style="font-weight:500;font-size:.9rem">${nom}</span>
-        ${sel ? `<span style="font-size:.8rem;color:var(--accent,#2563eb)">✓ ${sel.surface ? sel.surface + ' m²' : 'à métrager'}</span>` : ''}
+        ${sel ? `<span style="font-size:.8rem;color:var(--accent,#2563eb)">✓ ${info}</span>` : ''}
       </div>`;
     }).join('');
 
@@ -374,6 +441,110 @@ const CalcExpressV2 = {
           <div style="display:flex;gap:8px">
             ${this._btn('↩ Retour corps de métiers', 'pieces-vers-corps')}
           </div>
+        </div>
+      `)}
+    `);
+    this._bind();
+  },
+
+  // ── Étape 5b : Type chantier corps (Réno/Neuf) + linéaires ─
+  _renderTypeCorps() {
+    const corpsId = this._corpsActifs[this._corpsEnCours];
+    const corps   = this.CORPS.find(c => c.id === corpsId);
+    if (!['electricite','plomberie'].includes(corpsId)) {
+      this._renderEtape('pieces');
+      return;
+    }
+    const typeActuel     = (this._corpsConfig[corpsId] || {}).type || null;
+    const lineaires      = this.LINEAIRES[corpsId] || [];
+    const configActuelle = this._corpsConfig[corpsId] || {};
+
+    const btnType = (id, label, icone, desc) =>
+      `<div data-cex-type-corps="${id}" style="flex:1;min-width:160px;padding:16px;border-radius:10px;border:2px solid ${typeActuel===id?'var(--accent,#2563eb)':'var(--border,#e2e8f0)'};background:${typeActuel===id?'rgba(37,99,235,.06)':'var(--bg-card,#1e2530)'};cursor:pointer;text-align:center">
+        <div style="font-size:1.6rem;margin-bottom:6px">${icone}</div>
+        <div style="font-weight:700;margin-bottom:4px">${label}</div>
+        <div style="font-size:.8rem;color:var(--text-secondary,#666)">${desc}</div>
+      </div>`;
+
+    const champsLineaires = typeActuel === 'neuf' ? `
+      <div style="margin-top:16px">
+        <div style="font-size:.85rem;font-weight:600;color:var(--text-secondary,#666);margin-bottom:10px">Linéaires (depuis votre relevé sur place)</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+          ${lineaires.map(l => `
+            <div>
+              <label style="font-size:.8rem;color:var(--text-secondary,#666);display:block;margin-bottom:4px">${l.label} (${l.unite})</label>
+              <input id="cex-lin-${l.id}" type="number" min="0" step="1" value="${configActuelle[l.id]||''}" placeholder="${l.placeholder}"
+                style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.9rem;box-sizing:border-box">
+            </div>`).join('')}
+        </div>
+      </div>` : '';
+
+    this._html(`
+      ${this._progressBar('pieces')}
+      ${this._card(`
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <span style="font-size:1.4rem">${corps ? corps.icone : ''}</span>
+          <h2 style="margin:0;font-size:1.1rem;font-weight:700">${corps ? corps.label : ''} — Type de travaux</h2>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px">
+          ${btnType('reno', 'Rénovation', '🔄', 'Remplacement appareillage existant')}
+          ${btnType('neuf', 'Neuf / Création', '🆕', 'Câblage complet + appareillage')}
+        </div>
+        ${champsLineaires}
+        <div style="display:flex;justify-content:space-between;margin-top:20px">
+          ${this._btn('← Retour', 'type-corps-retour', 'secondary')}
+          ${typeActuel ? this._btn('Suivant — Sélectionner les pièces →', 'type-corps-suivant') : '<span style="font-size:.85rem;color:var(--text-secondary,#666)">Choisissez un type pour continuer</span>'}
+        </div>
+      `)}
+    `);
+    this._bind();
+  },
+
+  // ── Étape 6b : Appareillage par pièce (élec/plomberie) ───
+  _renderAppareillage() {
+    const p = this._pieceEnCours;
+    if (!p) { this._renderEtape('pieces'); return; }
+    const corps     = this.CORPS.find(c => c.id === p.corps);
+    const liste     = this.APPAREILLAGE[p.corps] || [];
+    const quantites = p.quantites || {};
+    const cats      = [...new Set(liste.map(a => a.cat))];
+
+    const sections = cats.map(cat => {
+      const items = liste.filter(a => a.cat === cat).map(a => {
+        const q = quantites[a.id] || 0;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border,rgba(255,255,255,.08))">
+          <span style="font-size:1.1rem;width:24px">${a.icone}</span>
+          <span style="flex:1;font-size:.9rem">${a.label}</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button type="button" data-cex-app-moins="${a.id}" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border,#e2e8f0);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font-size:1rem;line-height:1">−</button>
+            <span id="cex-app-q-${a.id}" style="min-width:28px;text-align:center;font-weight:700;font-size:.95rem">${q}</span>
+            <button type="button" data-cex-app-plus="${a.id}" style="width:28px;height:28px;border-radius:6px;border:none;background:var(--accent,#2563eb);color:#fff;cursor:pointer;font-size:1rem;line-height:1">+</button>
+          </div>
+        </div>`;
+      }).join('');
+      return `<div style="margin-bottom:16px">
+        <div style="font-size:.8rem;font-weight:700;color:var(--text-secondary,#666);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">${cat}</div>
+        ${items}
+      </div>`;
+    }).join('');
+
+    const total = Object.values(quantites).reduce((s, v) => s + v, 0);
+
+    this._html(`
+      ${this._progressBar('metrage')}
+      ${this._card(`
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <span style="font-size:1.4rem">${corps ? corps.icone : ''}</span>
+          <div>
+            <h2 style="margin:0;font-size:1rem;font-weight:700">${this._esc(p.nom)}</h2>
+            <div style="font-size:.8rem;color:var(--text-secondary,#666)">${corps ? corps.label : ''}</div>
+          </div>
+          ${total > 0 ? `<span style="margin-left:auto;font-size:.9rem;color:#16a34a;font-weight:700">${total} point${total>1?'s':''}</span>` : ''}
+        </div>
+        <div style="max-height:400px;overflow-y:auto">${sections}</div>
+        <div style="display:flex;justify-content:space-between;margin-top:16px">
+          ${this._btn('← Retour', 'app-retour', 'secondary')}
+          ${this._btn('✓ Valider', 'app-valider')}
         </div>
       `)}
     `);
@@ -537,6 +708,17 @@ const CalcExpressV2 = {
         if (action === 'creer-st')       { if (typeof App !== 'undefined') App.navigate('sousTraitants'); }
         if (action === 'nouveau-client')   { if (typeof App !== 'undefined') App.navigate('clients'); }
         if (action === 'nouveau-chantier') { if (typeof App !== 'undefined') App.navigate('chantiers'); }
+        if (action === 'app-retour')  { this._renderEtape('pieces'); return; }
+        if (action === 'app-valider') {
+          const p = this._pieceEnCours;
+          if (p) {
+            const total = Object.values(p.quantites || {}).reduce((s,v) => s+v, 0);
+            p.nbPoints = total;
+            p.surface  = total;
+          }
+          this._renderEtape('pieces');
+          return;
+        }
         if (action === 'metrage-retour')  { this._renderEtape('pieces'); return; }
         if (action === 'metrage-valider') {
           const p    = this._pieceEnCours;
@@ -565,6 +747,18 @@ const CalcExpressV2 = {
           }
           if (!s) { if (typeof App !== 'undefined' && App.toast) App.toast('Saisissez les dimensions', 'warning'); return; }
           if (p) { p.surface = s; p.mode = mode; }
+          this._renderEtape('pieces');
+          return;
+        }
+        if (action === 'type-corps-retour') { this._renderEtape('corps'); return; }
+        if (action === 'type-corps-suivant') {
+          const corpsId = this._corpsActifs[this._corpsEnCours];
+          const lin = this.LINEAIRES[corpsId] || [];
+          lin.forEach(l => {
+            const val = parseFloat((this._container.querySelector('#cex-lin-' + l.id) || {}).value) || 0;
+            if (!this._corpsConfig[corpsId]) this._corpsConfig[corpsId] = {};
+            if (val) this._corpsConfig[corpsId][l.id] = val;
+          });
           this._renderEtape('pieces');
           return;
         }
@@ -618,6 +812,29 @@ const CalcExpressV2 = {
         return;
       }
 
+      // Boutons +/- appareillage
+      const btnPlus  = e.target.closest('[data-cex-app-plus]');
+      const btnMoins = e.target.closest('[data-cex-app-moins]');
+      if ((btnPlus || btnMoins) && this._pieceEnCours) {
+        const id = btnPlus ? btnPlus.dataset.cexAppPlus : btnMoins.dataset.cexAppMoins;
+        if (!this._pieceEnCours.quantites) this._pieceEnCours.quantites = {};
+        const q = this._pieceEnCours.quantites[id] || 0;
+        this._pieceEnCours.quantites[id] = btnPlus ? q + 1 : Math.max(0, q - 1);
+        const el = this._container.querySelector('#cex-app-q-' + id);
+        if (el) el.textContent = this._pieceEnCours.quantites[id];
+        return;
+      }
+
+      // Sélection type corps (réno/neuf)
+      const typeCorps = e.target.closest('[data-cex-type-corps]');
+      if (typeCorps) {
+        const corpsId = this._corpsActifs[this._corpsEnCours];
+        if (!this._corpsConfig[corpsId]) this._corpsConfig[corpsId] = {};
+        this._corpsConfig[corpsId].type = typeCorps.dataset.cexTypeCorps;
+        this._renderEtape('typeCorps');
+        return;
+      }
+
       // Sélection mode métrage
       const modeBtn = e.target.closest('[data-cex-mode]');
       if (modeBtn && this._pieceEnCours) {
@@ -639,17 +856,25 @@ const CalcExpressV2 = {
           this._pieces.push(newPiece);
           this._pieceEnCours = newPiece;
         }
-        this._renderEtape('metrage');
+        if (['electricite','plomberie'].includes(this._pieceEnCours.corps)) {
+          this._renderEtape('appareillage');
+        } else {
+          this._renderEtape('metrage');
+        }
         return;
       }
 
-      // Clic corps → entrer directement dans les pièces
+      // Clic corps → typeCorps si élec/plomberie, sinon pièces directement
       const corps = e.target.closest('[data-cex-corps]');
       if (corps) {
         const id = corps.dataset.cexCorps;
         if (!this._corpsActifs.includes(id)) this._corpsActifs.push(id);
         this._corpsEnCours = this._corpsActifs.indexOf(id);
-        this._renderEtape('pieces');
+        if (['electricite','plomberie'].includes(id)) {
+          this._renderEtape('typeCorps');
+        } else {
+          this._renderEtape('pieces');
+        }
         return;
       }
     });
