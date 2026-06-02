@@ -785,13 +785,6 @@ const CalcExpressV2 = {
           this._renderEtape('pieces');
           return;
         }
-        const zoneBtn = e.target.closest('[data-cex-peinture-zone]');
-        if (zoneBtn) {
-          if (!this._corpsConfig['peinture']) this._corpsConfig['peinture'] = {};
-          this._corpsConfig['peinture'].zone = zoneBtn.dataset.cexPeintureZone;
-          this._renderEtape('pieces');
-          return;
-        }
         if (action === 'import-placo') {
           const piecesPlaco = this._pieces.filter(p => p.corps === 'plaquisterie' && p.surface_sol);
           piecesPlaco.forEach(pp => {
@@ -831,6 +824,15 @@ const CalcExpressV2 = {
           if (input) input.value = '';
           this._renderEtape('pieces');
         }
+        return;
+      }
+
+      // Zone peinture (hors bloc btn)
+      const zoneBtn = e.target.closest('[data-cex-peinture-zone]');
+      if (zoneBtn) {
+        if (!this._corpsConfig['peinture']) this._corpsConfig['peinture'] = {};
+        this._corpsConfig['peinture'].zone = zoneBtn.dataset.cexPeintureZone;
+        this._renderEtape('pieces');
         return;
       }
 
@@ -882,7 +884,7 @@ const CalcExpressV2 = {
         if (idx >= 0) {
           this._pieceEnCours = this._pieces[idx];
         } else {
-          const newPiece = { nom, corps: corpsId, surface: null, mode: 'rectangle' };
+          const newPiece = { nom, corps: corpsId, surface: null, mode: 'rectangle', quantites: {} };
           this._pieces.push(newPiece);
           this._pieceEnCours = newPiece;
         }
