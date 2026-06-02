@@ -103,8 +103,10 @@ const CalcExpressV2 = {
     paysagisme:  ['Jardin avant', 'Jardin arrière', 'Terrasse', 'Allée', 'Parking',
                   'Massif fleuri', 'Pelouse', 'Haie', 'Clôture', 'Bassin / pièce d\'eau',
                   'Potager', 'Aire de jeux', 'Talus', 'Zone boisée'],
-    maconnerie:  ['Façade', 'Mur pignon', 'Mur mitoyen', 'Clôture', 'Fondations',
-                  'Dalle terrasse', 'Escalier extérieur', 'Perron', 'Cave', 'Sous-sol'],
+    maconnerie_int: ['Cloison briques', 'Cloison brique de verre', 'Mur porteur intérieur',
+                     'Enduit intérieur', 'Chape béton', 'Dalle béton', 'Linteau', 'Arc'],
+    maconnerie_ext: ['Façade', 'Mur pignon', 'Mur mitoyen', 'Clôture', 'Muret',
+                     'Fondations', 'Dalle terrasse', 'Escalier extérieur', 'Perron', 'Cave'],
     electricite: ['Tableau principal', 'Tableau secondaire', 'Cuisine', 'Salle de bain',
                   'Chambre 1', 'Chambre 2', 'Salon', 'Garage', 'Extérieur', 'Cave'],
     plomberie:   ['Cuisine', 'Salle de bain 1', 'Salle de bain 2', 'WC', 'Buanderie',
@@ -113,6 +115,10 @@ const CalcExpressV2 = {
 
   // ── Obtenir la liste de lieux pour un corps + profil ──────
   _getLieux(corpsId, profil) {
+    if (corpsId === 'maconnerie') {
+      const key = (this._corpsConfig[corpsId] || {}).lieuxKey || 'maconnerie_ext';
+      return this.LIEUX_CORPS[key] || [];
+    }
     if (this.LIEUX_CORPS[corpsId]) return this.LIEUX_CORPS[corpsId];
     return this.PIECES_PROFIL[profil] || this.PIECES_PROFIL.particulier;
   },
@@ -466,6 +472,8 @@ const CalcExpressV2 = {
         <div style="font-size:.8rem;color:var(--text-secondary,#666)">${desc}</div>
       </div>`;
 
+    const choixMaconnerie = corpsId === 'maconnerie';
+    const titreType = choixMaconnerie ? 'Maçonnerie — Type' : corps ? corps.label + ' — Type de travaux' : 'Type de travaux';
     const champsLineaires = typeActuel === 'neuf' ? `
       <div style="margin-top:16px">
         <div style="font-size:.85rem;font-weight:600;color:var(--text-secondary,#666);margin-bottom:10px">Linéaires (depuis votre relevé sur place)</div>
@@ -487,8 +495,9 @@ const CalcExpressV2 = {
           <h2 style="margin:0;font-size:1.1rem;font-weight:700">${corps ? corps.label : ''} — Type de travaux</h2>
         </div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px">
-          ${btnType('reno', 'Rénovation', '🔄', 'Remplacement appareillage existant')}
-          ${btnType('neuf', 'Neuf / Création', '🆕', 'Câblage complet + appareillage')}
+          ${choixMaconnerie
+            ? btnType('int', 'Intérieure', '🏠', 'Cloisons, enduits, dalles, linteaux') + btnType('ext', 'Extérieure', '🏗', 'Façades, murs, clôtures, fondations')
+            : btnType('reno', 'Rénovation', '🔄', 'Remplacement appareillage existant') + btnType('neuf', 'Neuf / Création', '🆕', 'Câblage complet + appareillage')}
         </div>
         ${champsLineaires}
         <div style="display:flex;justify-content:space-between;margin-top:20px">
@@ -753,12 +762,16 @@ const CalcExpressV2 = {
         if (action === 'type-corps-retour') { this._renderEtape('corps'); return; }
         if (action === 'type-corps-suivant') {
           const corpsId = this._corpsActifs[this._corpsEnCours];
+          if (!this._corpsConfig[corpsId]) this._corpsConfig[corpsId] = {};
           const lin = this.LINEAIRES[corpsId] || [];
           lin.forEach(l => {
             const val = parseFloat((this._container.querySelector('#cex-lin-' + l.id) || {}).value) || 0;
-            if (!this._corpsConfig[corpsId]) this._corpsConfig[corpsId] = {};
             if (val) this._corpsConfig[corpsId][l.id] = val;
           });
+          if (corpsId === 'maconnerie') {
+            const t = this._corpsConfig[corpsId].type;
+            this._corpsConfig[corpsId].lieuxKey = t === 'int' ? 'maconnerie_int' : 'maconnerie_ext';
+          }
           this._renderEtape('pieces');
           return;
         }
@@ -870,7 +883,7 @@ const CalcExpressV2 = {
         const id = corps.dataset.cexCorps;
         if (!this._corpsActifs.includes(id)) this._corpsActifs.push(id);
         this._corpsEnCours = this._corpsActifs.indexOf(id);
-        if (['electricite','plomberie'].includes(id)) {
+        if (['electricite','plomberie','maconnerie'].includes(id)) {
           this._renderEtape('typeCorps');
         } else {
           this._renderEtape('pieces');
