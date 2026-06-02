@@ -38,6 +38,25 @@ const CalcExpressV2 = {
     ao:          [],
   },
 
+  // ── Lieux par corps de métier (prioritaire sur profil) ────
+  LIEUX_CORPS: {
+    paysagisme:  ['Jardin avant', 'Jardin arrière', 'Terrasse', 'Allée', 'Parking',
+                  'Massif fleuri', 'Pelouse', 'Haie', 'Clôture', 'Bassin / pièce d\'eau',
+                  'Potager', 'Aire de jeux', 'Talus', 'Zone boisée'],
+    maconnerie:  ['Façade', 'Mur pignon', 'Mur mitoyen', 'Clôture', 'Fondations',
+                  'Dalle terrasse', 'Escalier extérieur', 'Perron', 'Cave', 'Sous-sol'],
+    electricite: ['Tableau principal', 'Tableau secondaire', 'Cuisine', 'Salle de bain',
+                  'Chambre 1', 'Chambre 2', 'Salon', 'Garage', 'Extérieur', 'Cave'],
+    plomberie:   ['Cuisine', 'Salle de bain 1', 'Salle de bain 2', 'WC', 'Buanderie',
+                  'Cave', 'Garage', 'Extérieur', 'Chaufferie'],
+  },
+
+  // ── Obtenir la liste de lieux pour un corps + profil ──────
+  _getLieux(corpsId, profil) {
+    if (this.LIEUX_CORPS[corpsId]) return this.LIEUX_CORPS[corpsId];
+    return this.PIECES_PROFIL[profil] || this.PIECES_PROFIL.particulier;
+  },
+
   // ── Entrée ────────────────────────────────────────────────
   init(containerId) {
     this._containerId = containerId;
@@ -302,7 +321,7 @@ const CalcExpressV2 = {
   _renderPieces() {
     const corps = this.CORPS.find(c => c.id === this._corpsActifs[this._corpsEnCours]);
     if (!corps) return;
-    const listePieces = this.PIECES_PROFIL[this._profil] || this.PIECES_PROFIL.particulier;
+    const listePieces = this._getLieux(corps ? corps.id : '', this._profil);
     const piecesExistantes = this._pieces.filter(p => p.corps === corps.id);
 
     const items = listePieces.map(nom => {
