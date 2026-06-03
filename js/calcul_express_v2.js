@@ -921,12 +921,7 @@ const CalcExpressV2 = {
             if (corpsId === 'electricite' || corpsId === 'plomberie') {
               const configLin = this._corpsConfig[corpsId] || {};
               if (configLin.type === 'neuf') {
-                const PRIX_ML = {
-                  cable_15:1.8, cable_25:2.4, cable_6:1.2,
-                  gaine_irl:1.2, gaine_icta:0.9,
-                  per_16:3.5, per_20:4.2, per_25:5.5,
-                  pvc_40:2.8, pvc_100:5.5, pvc_125:7.2,
-                };
+                const PRIX_ML = {cable_15:1.8,cable_25:2.4,gaine_irl:1.2,per_16:3.5,per_20:4.8,pvc_40:6.0,pvc_100:12.0};
                 Object.entries(configLin).forEach(([k, v]) => {
                   if (k === 'type' || k === 'lieuxKey' || !PRIX_ML[k] || !v) return;
                   const qteML = parseFloat(v) || 0;
