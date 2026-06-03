@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PlaqPro+ — Calcul Express V2
  * Flux : chantier + client → profil → sous-traitants → corps métiers → pièces → métrages → résultat
  * Architecture validée 02/06/2026
@@ -738,6 +738,7 @@ const CalcExpressV2 = {
     }).filter(l => l.gainCorps > 0);
 
     const pvTotal = coutTotal + gainTotal;
+    this._lastResume = { corpsData: lignes, coutTotal, gainTotal, pvTotal };
 
     const lignesHTML = lignes.map(l => `
       <div style="padding:12px 0;border-bottom:1px solid var(--border,rgba(255,255,255,.08))">
@@ -870,7 +871,25 @@ const CalcExpressV2 = {
           return;
         }
         if (action === 'resume-retour') { this._renderEtape('corps'); return; }
-        if (action === 'resume-sauver') { if (typeof App!=='undefined'&&App.toast) App.toast('💾 Chiffrage sauvegardé','success'); return; }
+        if (action === 'resume-sauver') {
+          const chiffrage = {
+            id:          'chiffrage_' + Date.now(),
+            date:        new Date().toISOString(),
+            chantier:    this._chantier    || {},
+            corpsActifs: this._corpsActifs || [],
+            pieces:      this._pieces      || [],
+            resume:      this._lastResume  || {},
+          };
+          try {
+            const liste = JSON.parse(localStorage.getItem('plaqpro_chiffrages') || '[]');
+            liste.unshift(chiffrage);
+            localStorage.setItem('plaqpro_chiffrages', JSON.stringify(liste));
+            if (typeof App !== 'undefined' && App.toast) App.toast('💾 Chiffrage sauvegardé', 'success');
+          } catch(e) {
+            if (typeof App !== 'undefined' && App.toast) App.toast('Erreur sauvegarde', 'error');
+          }
+          return;
+        }
         if (action === 'resume-devis') {
           if (!this._corpsActifs || !this._corpsActifs.length) {
             if (typeof App !== 'undefined' && App.toast) App.toast('Aucun corps actif à devis', 'warning'); return;
