@@ -1,4 +1,4 @@
-﻿/**
+/**
  * PlaqPro+ — Logiciel de gestion pour artisans BTP
  * Copyright (c) 2026 Gabriel Khamassi — Saint-Priest (69)
  * Tous droits reserves — All rights reserved
@@ -19,7 +19,7 @@ const AssistantIA = {
   _history: [],
 
 
-  SYSTEM: `Tu es un assistant conseil en plaquisterie et peinture intégré dans PlaqPro+.
+  SYSTEM: `Tu es un assistant conseil en Plâtrerie et peinture intégré dans PlaqPro+.
 Tu réponds aux questions sur les matériaux, normes DTU, conseils de pose, et choix de produits.
 IMPORTANT : Tu ne calcules JAMAIS de quantités toi-même. Pour tout calcul de plaques, rails, peinture ou autres quantités, tu dis toujours : 'Utilisez le Calcul Express de PlaqPro+ pour obtenir un résultat précis avec les bons ratios professionnels.'
 Tu réponds en français, de façon courte et pratique.`,
@@ -84,7 +84,7 @@ Tu réponds en français, de façon courte et pratique.`,
       <div id="ia-messages">
         <div class="ia-msg ia-msg-bot">
           <div class="ia-bubble">
-            Bonjour ! Je suis votre assistant conseil en plaquisterie.<br>
+            Bonjour ! Je suis votre assistant conseil en Plâtrerie.<br>
             Posez-moi vos questions sur les matériaux, normes DTU ou techniques de pose. 💬
             <div style="background:rgba(245,158,11,0.08);border:0.5px solid rgba(245,158,11,0.3);border-radius:8px;padding:10px 14px;font-size:11px;color:#f59e0b;margin-top:8px;line-height:1.6">
 ⚠️ <strong>Assistant d'aide à la décision</strong> — Les suggestions fournies sont indicatives et doivent être vérifiées par un professionnel qualifié. PlaqPro+ ne saurait être tenu responsable des décisions prises sur la base de ces informations.

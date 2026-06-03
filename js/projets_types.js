@@ -1,4 +1,4 @@
-﻿/**
+/**
  * PlaqPro+ — Logiciel de gestion pour artisans BTP
  * Copyright (c) 2026 Gabriel Khamassi — Saint-Priest (69)
  * Tous droits reserves — All rights reserved
@@ -24,7 +24,7 @@ var ProjetsTypes = {
         { key: 'surface', label: 'Surface', unite: 'm²', defaut: 6, min: 2, max: 50 }
       ],
       couleur: '#4F8EF7',
-      tags: ['Plaquisterie', 'Carrelage', 'Sanitaire'],
+      tags: ['Plâtrerie', 'Carrelage', 'Sanitaire'],
       lignes: function(d) {
         var s = d.surface || 6;
         var ht = s * 2.5;
@@ -54,7 +54,7 @@ var ProjetsTypes = {
         { key: 'cloisons',  label: 'Longueur cloisons', unite: 'ml', defaut: 12, min: 4,  max: 200 }
       ],
       couleur: '#A78BFA',
-      tags: ['Plaquisterie', 'Faux-plafond', 'Électricité'],
+      tags: ['Plâtrerie', 'Faux-plafond', 'Électricité'],
       lignes: function(d) {
         var s = d.surface || 30;
         var cl = d.cloisons || 12;
@@ -84,7 +84,7 @@ var ProjetsTypes = {
         { key: 'cloisons',  label: 'Longueur cloisons', unite: 'ml', defaut: 20, min: 8,  max: 100 }
       ],
       couleur: '#2DD4A0',
-      tags: ['Plaquisterie', 'Peinture', 'Électricité'],
+      tags: ['Plâtrerie', 'Peinture', 'Électricité'],
       lignes: function(d) {
         var s = d.surface || 65;
         var cl = d.cloisons || 20;
@@ -140,7 +140,7 @@ var ProjetsTypes = {
         { key: 'cloisons', label: 'Longueur cloisons', unite: 'ml', defaut: 25, min: 5,  max: 300  }
       ],
       couleur: '#F75B5B',
-      tags: ['Plaquisterie', 'Faux-plafond', 'Électricité'],
+      tags: ['Plâtrerie', 'Faux-plafond', 'Électricité'],
       lignes: function(d) {
         var s = d.surface || 80;
         var cl = d.cloisons || 25;
@@ -194,7 +194,7 @@ var ProjetsTypes = {
         { key: 'surface', label: 'Surface', unite: 'm²', defaut: 14, min: 6, max: 100 }
       ],
       couleur: '#F7A64F',
-      tags: ['Plaquisterie', 'Peinture', 'Sol'],
+      tags: ['Plâtrerie', 'Peinture', 'Sol'],
       lignes: function(d) {
         var s = d.surface || 14;
         var perim = Math.ceil(Math.sqrt(s) * 4);
@@ -246,7 +246,7 @@ var ProjetsTypes = {
         { key: 'cloisons', label: 'Longueur cloisons', unite: 'ml', defaut: 12, min: 4,  max: 60  }
       ],
       couleur: '#60C8FF',
-      tags: ['Plaquisterie', 'Peinture', 'Électricité'],
+      tags: ['Plâtrerie', 'Peinture', 'Électricité'],
       lignes: function(d) {
         var s = d.surface || 42;
         var cl = d.cloisons || 12;
@@ -279,7 +279,7 @@ var ProjetsTypes = {
         { key: 'nbSdb',    label: 'Nb salles de bain', unite: 'u',  defaut: 2,   min: 1,  max: 5   }
       ],
       couleur: '#F75B5B',
-      tags: ['Plaquisterie', 'Isolation', 'Électricité', 'Plomberie'],
+      tags: ['Plâtrerie', 'Isolation', 'Électricité', 'Plomberie'],
       lignes: function(d) {
         var s = d.surface || 110;
         var cl = d.cloisons || 35;
@@ -315,7 +315,7 @@ var ProjetsTypes = {
         { key: 'surface', label: 'Surface', unite: 'm²', defaut: 16, min: 6, max: 80 }
       ],
       couleur: '#A78BFA',
-      tags: ['Plaquisterie', 'Peinture', 'Sol'],
+      tags: ['Plâtrerie', 'Peinture', 'Sol'],
       lignes: function(d) {
         var s = d.surface || 16;
         var perim = Math.ceil(Math.sqrt(s)*4);
@@ -344,7 +344,7 @@ var ProjetsTypes = {
         { key: 'cloisons', label: 'Longueur cloisons', unite: 'ml', defaut: 20, min: 5,  max: 150 }
       ],
       couleur: '#2DD4A0',
-      tags: ['Plaquisterie', 'Acoustique', 'Électricité'],
+      tags: ['Plâtrerie', 'Acoustique', 'Électricité'],
       lignes: function(d) {
         var s = d.surface || 60;
         var cl = d.cloisons || 20;
@@ -374,7 +374,7 @@ var ProjetsTypes = {
         { key: 'surface', label: 'Surface', unite: 'm²', defaut: 25, min: 10, max: 100 }
       ],
       couleur: '#F7A64F',
-      tags: ['Isolation', 'Plaquisterie', 'Électricité'],
+      tags: ['Isolation', 'Plâtrerie', 'Électricité'],
       lignes: function(d) {
         var s = d.surface || 25;
         var perim = Math.ceil(Math.sqrt(s)*4);

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * PlaqPro+ — Logiciel de gestion pour artisans BTP
  * Copyright (c) 2026 Gabriel Khamassi — Saint-Priest (69)
  * Tous droits reserves — All rights reserved
@@ -285,13 +285,13 @@ const CATALOGUE = [
   { ref:'TERRE_VEG',    fam:'Extérieur', sfam:'Paysagisme',    nom:'Terre végétale 40 L (sac)',                  unite:'sac', prix:5.20,   rend:null, tags:['terre','végétale','40L','plantation','paysagisme'] },
 
   // ══════════════════════════════════════════════════════════
-  //  PRESTATIONS PLAQUISTERIE (Pareto — ce que l'artisan facture)
+  //  PRESTATIONS Plâtrerie (Pareto — ce que l'artisan facture)
   // ══════════════════════════════════════════════════════════
-  { ref:'MO_CLOIS',    fam:'Prestations Plaquisterie', sfam:'Cloison',   nom:'Pose cloison M48 BA13 (au ml)',          unite:'ml',   prix:35.00,  rend:null, tags:['prestation','cloison','plaquiste','pose','m48','ba13'] },
-  { ref:'PREST_PLAF',  fam:'Prestations Plaquisterie', sfam:'Plafond',   nom:'Pose plafond suspendu (au m²)',          unite:'m2',   prix:28.00,  rend:null, tags:['prestation','plafond','suspendu','faux plafond','pose'] },
-  { ref:'MO_DOUB',     fam:'Prestations Plaquisterie', sfam:'Doublage',  nom:'Pose doublage (au m²)',                  unite:'m2',   prix:22.00,  rend:null, tags:['prestation','doublage','isolation','plaquiste','pose'] },
-  { ref:'PREST_JOINT', fam:'Prestations Plaquisterie', sfam:'Jointage',  nom:'Jointage + finition placo (au m²)',     unite:'m2',   prix:18.00,  rend:null, tags:['prestation','jointage','finition','placo','bande','enduit'] },
-  { ref:'MO_DEMO',     fam:'Prestations Plaquisterie', sfam:'Démolition',nom:'Démolition cloison (au m²)',             unite:'m2',   prix:15.00,  rend:null, tags:['prestation','demolition','cloison','depose'] },
+  { ref:'MO_CLOIS',    fam:'Prestations Plâtrerie', sfam:'Cloison',   nom:'Pose cloison M48 BA13 (au ml)',          unite:'ml',   prix:35.00,  rend:null, tags:['prestation','cloison','plaquiste','pose','m48','ba13'] },
+  { ref:'PREST_PLAF',  fam:'Prestations Plâtrerie', sfam:'Plafond',   nom:'Pose plafond suspendu (au m²)',          unite:'m2',   prix:28.00,  rend:null, tags:['prestation','plafond','suspendu','faux plafond','pose'] },
+  { ref:'MO_DOUB',     fam:'Prestations Plâtrerie', sfam:'Doublage',  nom:'Pose doublage (au m²)',                  unite:'m2',   prix:22.00,  rend:null, tags:['prestation','doublage','isolation','plaquiste','pose'] },
+  { ref:'PREST_JOINT', fam:'Prestations Plâtrerie', sfam:'Jointage',  nom:'Jointage + finition placo (au m²)',     unite:'m2',   prix:18.00,  rend:null, tags:['prestation','jointage','finition','placo','bande','enduit'] },
+  { ref:'MO_DEMO',     fam:'Prestations Plâtrerie', sfam:'Démolition',nom:'Démolition cloison (au m²)',             unite:'m2',   prix:15.00,  rend:null, tags:['prestation','demolition','cloison','depose'] },
 
   // ══════════════════════════════════════════════════════════
   //  PRESTATIONS PEINTURE
@@ -479,7 +479,7 @@ const FAMILLES = [...new Set(CATALOGUE.map(p => p.fam))];
 // ── Enseignes valides par famille de produit ───────────────────
 // Règle métier : montrer uniquement les distributeurs pertinents
 const ENSEIGNES_PAR_FAMILLE = {
-  // Plâtrerie / plaquisterie
+  // Plâtrerie / Plâtrerie
   'Plaque plâtre':      ['LM','PDB','BD','BM','GED','CHAU','BCO','PRO','GIR','LPI','PP','BGM','TF','RP','SGD','PLA','KNF','SIN','ISV'],
   'Carreau plâtre':     ['LM','PDB','BD','BM','GED','CHAU','BCO','PRO','GIR','LPI','PP','BGM','TF','SGD','PLA','KNF','SIN'],
   'Ossature métal':     ['LM','PDB','BD','BM','GED','CHAU','BCO','PRO','GIR','LPI','PP','BGM','TF','LEG','DC','SGD'],
@@ -507,7 +507,7 @@ const ENSEIGNES_PAR_FAMILLE = {
   // Main d'œuvre : pas d'enseigne fournisseur
   "Main d'oeuvre":      [],
   // Prestations (même logique que la famille matériaux correspondante)
-  'Prestations Plaquisterie': ['LM','PDB','BD','BM','GED','CHAU','BCO','PRO','GIR','LPI','PP','BGM','TF','SGD'],
+  'Prestations Plâtrerie': ['LM','PDB','BD','BM','GED','CHAU','BCO','PRO','GIR','LPI','PP','BGM','TF','SGD'],
   'Prestations Peinture':     ['LM','BD','BM','PP','GED','GIR','BCO','BGM'],
   'Prestations Électricité':  ['REX','SON','WUR','LM','BD','LEG','DC'],
   'Prestations Plomberie':    ['PP','CHAU','BCO','REX','SON','LM','BD','LAR'],
@@ -756,7 +756,7 @@ const ProdMoteur = {
       'Peinture': '🎨', 'Accessoire peinture': '🖌', 'Revêtement sol': '🪵',
       'Carrelage': '🔲', 'Porte intérieure': '🚪', 'Menuiserie ext.': '🪟',
       "Main d'oeuvre": '👷',
-      'Prestations Plaquisterie': '💼', 'Prestations Peinture': '💼',
+      'Prestations Plâtrerie': '💼', 'Prestations Peinture': '💼',
       'Prestations Électricité': '💼', 'Prestations Plomberie': '💼',
       'Prestations Maçonnerie': '💼', 'Prestations Carrelage': '💼',
       'Prestations Sol': '💼', 'Prestations Extérieur': '💼',
@@ -774,7 +774,7 @@ const ProdMoteur = {
       'Revêtement sol': '#C4A45A', 'Carrelage': '#5AC4C4',
       'Porte intérieure': '#C4845A', 'Menuiserie ext.': '#5AC48C',
       "Main d'oeuvre": '#A0A0F7',
-      'Prestations Plaquisterie': '#2DD4A0', 'Prestations Peinture': '#2DD4A0',
+      'Prestations Plâtrerie': '#2DD4A0', 'Prestations Peinture': '#2DD4A0',
       'Prestations Électricité': '#2DD4A0', 'Prestations Plomberie': '#2DD4A0',
       'Prestations Maçonnerie': '#2DD4A0', 'Prestations Carrelage': '#2DD4A0',
       'Prestations Sol': '#2DD4A0', 'Prestations Extérieur': '#2DD4A0',

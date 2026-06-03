@@ -1,4 +1,4 @@
-﻿// Quiz Métiers BTP — 8 corps de métier, 4 niveaux, 50+ questions, IA illimitée
+// Quiz Métiers BTP — 8 corps de métier, 4 niveaux, 50+ questions, IA illimitée
 'use strict';
 
 const QM_DATA = {
@@ -29,7 +29,7 @@ const QM_DATA = {
         { q: "Quelle vis est utilisée pour fixer la BA13 sur l'ossature métallique ?", r: "Vis TF 25 mm", opts: ["Vis TF 25 mm","Vis TB 35 mm","Vis bois 40 mm","Vis Ø6×50"] },
         { q: "Quel produit applique-t-on sur les joints entre plaques ?", r: "Enduit de jointement", opts: ["Plâtre poudre","Enduit de jointement","Colle carrelage","Mortier colle"] },
         { q: "La bande à joints sert à :", r: "Renforcer et masquer le joint entre plaques", opts: ["Isoler phoniquement","Renforcer et masquer le joint entre plaques","Fixer les plaques","Protéger les arêtes"] },
-        { q: "Qu'est-ce qu'un rail en plaquisterie ?", r: "Le profil horizontal de sol et plafond", opts: ["Un profil vertical","Le profil horizontal de sol et plafond","Une pièce de jonction","Un outil de fixation"] },
+        { q: "Qu'est-ce qu'un rail en Plâtrerie ?", r: "Le profil horizontal de sol et plafond", opts: ["Un profil vertical","Le profil horizontal de sol et plafond","Une pièce de jonction","Un outil de fixation"] },
         { q: "Quelle plaque utilise-t-on dans les pièces humides (salle de bain) ?", r: "Plaque hydrofuge (verte)", opts: ["BA13 standard","Plaque hydrofuge (verte)","Plaque coupe-feu","Plaque phonique"] },
         { q: "Quelle est la hauteur standard d'une cloison de distribution ?", r: "2,50 m (hauteur sous plafond)", opts: ["2,00 m","2,50 m (hauteur sous plafond)","3,00 m","1,80 m"] },
         { q: "Quel isolant est le plus couramment placé dans les cloisons ?", r: "Laine de roche ou laine de verre", opts: ["Polystyrène expansé","Laine de roche ou laine de verre","Liège","Polyuréthane"] },

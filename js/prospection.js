@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  PLAQPRO WEB — Prospection IA (Permis de construire)
 //  prospection.js
 // ============================================================
@@ -624,7 +624,7 @@ var Prospection = {
     const _gcMsg = groqConfig();
     try {
       if (!_gcMsg) throw new Error('no-proxy');
-      const prompt = `Tu es un commercial pour "${config.nomEntreprise || 'PlaqPro+'}", entreprise de plaquisterie et peinture. Rédige un message de prospection professionnel et chaleureux (120-150 mots maximum) pour contacter ${p.nomPetitionnaire || 'un propriétaire'} qui a un projet de ${(p.typeLabel || 'travaux').toLowerCase()}${p.surface ? ` de ${p.surface} m²` : ''} au ${p.adresse}. Utilise le vouvoiement. Propose un devis gratuit. Ne mentionne pas explicitement un "permis de construire". Signe avec "${config.nomEntreprise || 'Notre équipe'}"${config.telephone ? ' et le téléphone ' + config.telephone : ''}.`;
+      const prompt = `Tu es un commercial pour "${config.nomEntreprise || 'PlaqPro+'}", entreprise de Plâtrerie et peinture. Rédige un message de prospection professionnel et chaleureux (120-150 mots maximum) pour contacter ${p.nomPetitionnaire || 'un propriétaire'} qui a un projet de ${(p.typeLabel || 'travaux').toLowerCase()}${p.surface ? ` de ${p.surface} m²` : ''} au ${p.adresse}. Utilise le vouvoiement. Propose un devis gratuit. Ne mentionne pas explicitement un "permis de construire". Signe avec "${config.nomEntreprise || 'Notre équipe'}"${config.telephone ? ' et le téléphone ' + config.telephone : ''}.`;
       const r = await fetch(_gcMsg.url, {
         method:  'POST',
         headers: _gcMsg.headers,
@@ -639,7 +639,7 @@ var Prospection = {
       msg = d.choices?.[0]?.message?.content?.trim() || '';
       if (!msg) throw new Error('Réponse vide');
     } catch(e) {
-      msg = `Bonjour ${p.nomPetitionnaire || 'Madame, Monsieur'},\n\nNous avons eu connaissance de votre projet de ${(p.typeLabel || 'travaux').toLowerCase()} au ${p.adresse} et nous serions ravis de vous accompagner dans vos travaux d'aménagement intérieur.\n\nSpécialistes en plaquisterie et peinture depuis plusieurs années, nous intervenons sur${p.surface ? ` des surfaces de ${p.surface} m²` : ' tous types de chantiers'} avec sérieux et réactivité.\n\nNous vous proposons un devis gratuit et sans engagement. N'hésitez pas à nous contacter.\n\nCordialement,\n${config.nomEntreprise || 'Notre équipe'}\n${config.telephone || ''} — ${config.email || ''}`;
+      msg = `Bonjour ${p.nomPetitionnaire || 'Madame, Monsieur'},\n\nNous avons eu connaissance de votre projet de ${(p.typeLabel || 'travaux').toLowerCase()} au ${p.adresse} et nous serions ravis de vous accompagner dans vos travaux d'aménagement intérieur.\n\nSpécialistes en Plâtrerie et peinture depuis plusieurs années, nous intervenons sur${p.surface ? ` des surfaces de ${p.surface} m²` : ' tous types de chantiers'} avec sérieux et réactivité.\n\nNous vous proposons un devis gratuit et sans engagement. N'hésitez pas à nous contacter.\n\nCordialement,\n${config.nomEntreprise || 'Notre équipe'}\n${config.telephone || ''} — ${config.email || ''}`;
     }
 
     const newBody = document.createElement('div');

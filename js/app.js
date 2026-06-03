@@ -1,4 +1,4 @@
-﻿/**
+/**
  * PlaqPro+ — Logiciel de gestion pour artisans BTP
  * Copyright (c) 2026 Gabriel Khamassi — Saint-Priest (69)
  * Tous droits reserves — All rights reserved
@@ -59,6 +59,7 @@ const App = {
       chiffrageRecap:      (params) => CalcExpressRecap.afficherRecap('app-content', params && params.id),
       dashboardChiffrages:   ()       => DashboardChiffrages.render('app-content'),
       comparateurChiffrages: ()       => CalcExpressComparateur.render('app-content'),
+      listeAchatV2:          ()       => ListeAchatV2.render('app-content', [], [], {}),
       produits:   () => Pages.produits(),
       catalogueFournisseurs: () => Pages.catalogueFournisseurs(),
       config:     () => Pages.config(),
@@ -1617,7 +1618,7 @@ const Pages = {
               <label class="form-label">Type d'interventions principal</label>
               <select id="cfg-type-interv" class="form-control" style="margin-top:8px">
                 <option value="multi" ${(profil.typeInterv||'multi')==='multi'?'selected':''}>Multi-travaux (couteau suisse)</option>
-                <option value="placo" ${profil.typeInterv==='placo'?'selected':''}>Plaquisterie / Peinture</option>
+                <option value="placo" ${profil.typeInterv==='placo'?'selected':''}>Plâtrerie / Peinture</option>
                 <option value="renov" ${profil.typeInterv==='renov'?'selected':''}>Rénovation complète</option>
                 <option value="neuf"  ${profil.typeInterv==='neuf'?'selected':''}>Construction neuve</option>
               </select>

@@ -676,7 +676,7 @@ const CalcExpressV2 = {
 
   // ── Mapping corps → BDD V2 ───────────────────────────────
   CORPS_BDD: {
-    plaquisterie: { label: 'Plaquisterie', ouvrageDefaut: 'OUV_CLOISON_BA13_M48' },
+    plaquisterie: { label: 'Plâtrerie', ouvrageDefaut: 'OUV_CLOISON_BA13_M48' },
     peinture:     { label: 'Peinture',     ouvrageDefaut: 'OUV_PEINTURE_MURS_2_COUCHES' },
     electricite:  { label: 'Electricite',  ouvrageDefaut: null },
     plomberie:    { label: 'Plomberie',    ouvrageDefaut: null },
@@ -769,8 +769,10 @@ const CalcExpressV2 = {
         <div style="display:flex;gap:8px">
           ${this._btn('💾 Sauvegarder', 'resume-sauver')}
           ${this._btn('📄 Générer le devis', 'resume-devis')}
+          ${this._btn("🛒 Liste d'achat", 'resume-achat')}
         </div>
       </div>
+      <div id="cex-resume-container" style="margin-top:16px"></div>
     `);
     this._bind();
   },
@@ -952,6 +954,14 @@ const CalcExpressV2 = {
             App.navigate('devis_complet');
           } else if (typeof App !== 'undefined' && App.toast) {
             App.toast('DevisMulti prêt — navigation indisponible', 'warning');
+          }
+          return;
+        }
+        if (action === 'resume-achat') {
+          if (typeof ListeAchatV2 !== 'undefined') {
+            ListeAchatV2.render('cex-resume-container', this._pieces, this._corpsActifs, this._corpsConfig);
+          } else {
+            if (typeof App !== 'undefined' && App.toast) App.toast('Module liste achat non disponible', 'warning');
           }
           return;
         }
