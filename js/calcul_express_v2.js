@@ -18,6 +18,7 @@ const CalcExpressV2 = {
   _corpsActifs:   [],
   _pieces:        [],
   _resultats:     {},
+  _bindController: null,
 
   // ── Corps disponibles ─────────────────────────────────────
   CORPS: [
@@ -157,6 +158,8 @@ const CalcExpressV2 = {
     this._corpsActifs   = [];
     this._pieces        = [];
     this._resultats     = {};
+    if (this._bindController) this._bindController.abort();
+    this._bindController = null;
     this._corpsEnCours  = 0;
     this._pieceEnCours  = null;
     this._corpsConfig   = {};
@@ -881,6 +884,11 @@ const CalcExpressV2 = {
 
   // ── Gestion événements ────────────────────────────────────
   _bind() {
+    // Annuler le listener précédent s'il existe
+    if (this._bindController) this._bindController.abort();
+    this._bindController = new AbortController();
+    const signal = this._bindController.signal;
+
     document.addEventListener('click', e => {
       if (!this._container || !this._container.contains(e.target)) return;
 
@@ -1264,7 +1272,7 @@ const CalcExpressV2 = {
         }
         return;
       }
-    });
+    }, { signal });
   },
 
 };
