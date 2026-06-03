@@ -917,7 +917,33 @@ const CalcExpressV2 = {
                 sec.lignes[sec.lignes.length - 1].prix = surf > 0 ? Math.round(r.prixVente / surf) : 0;
               }
             });
-            // Linéaires neuf : TODO session suivante — structure _lineaires à définir
+            // Linéaires neuf élec/plomberie
+            if (corpsId === 'electricite' || corpsId === 'plomberie') {
+              const configLin = this._corpsConfig[corpsId] || {};
+              if (configLin.type === 'neuf') {
+                const PRIX_ML = {
+                  cable_15:1.8, cable_25:2.4, cable_6:1.2,
+                  gaine_irl:1.2, gaine_icta:0.9,
+                  per_16:3.5, per_20:4.2, per_25:5.5,
+                  pvc_40:2.8, pvc_100:5.5, pvc_125:7.2,
+                };
+                Object.entries(configLin).forEach(([k, v]) => {
+                  if (k === 'type' || k === 'lieuxKey' || !PRIX_ML[k] || !v) return;
+                  const qteML = parseFloat(v) || 0;
+                  if (!qteML) return;
+                  const prixU = Math.round(PRIX_ML[k] * 1.35);
+                  const label = k.replace(/_/g, ' ');
+                  DevisMulti._ajouterSectionAvecSurface(
+                    corpsId, corps.icone || '🔧', corps.label,
+                    qteML, 'ml', label
+                  );
+                  const sec3 = DevisMulti._state.sections.find(s => s.key === corpsId);
+                  if (sec3 && sec3.lignes.length) {
+                    sec3.lignes[sec3.lignes.length - 1].prix = prixU;
+                  }
+                });
+              }
+            }
           });
           if (typeof App !== 'undefined' && App.navigate) {
             App.navigate('devis_complet');
