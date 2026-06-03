@@ -871,7 +871,39 @@ const CalcExpressV2 = {
         }
         if (action === 'resume-retour') { this._renderEtape('corps'); return; }
         if (action === 'resume-sauver') { if (typeof App!=='undefined'&&App.toast) App.toast('💾 Chiffrage sauvegardé','success'); return; }
-        if (action === 'resume-devis')  { if (typeof App!=='undefined'&&App.toast) App.toast('📄 Génération devis — prochaine étape','success'); return; }
+        if (action === 'resume-devis') {
+          if (!this._corpsActifs || !this._corpsActifs.length) {
+            if (typeof App !== 'undefined' && App.toast) App.toast('Aucun corps actif à devis', 'warning'); return;
+          }
+          DevisMulti._state = DevisMulti._newState();
+          DevisMulti._state.clientId   = (this._chantier && this._chantier.clientId)   || '';
+          DevisMulti._state.chantierId = (this._chantier && this._chantier.chantierId) || '';
+          DevisMulti._state.objet      = 'Chiffrage ' + ((this._chantier && this._chantier.nom) || 'sans nom');
+          this._corpsActifs.forEach(corpsId => {
+            const corps = this.CORPS.find(c => c.id === corpsId);
+            if (!corps) return;
+            const pcs = (this._pieces || []).filter(p => p.corps === corpsId && parseFloat(p.surface) > 0);
+            pcs.forEach(p => {
+              const surf = parseFloat(p.surface);
+              const r    = this._calcCorps(corpsId, surf);
+              const designation = p.nom + (p.hsp ? ' (HSP ' + p.hsp + 'm)' : '');
+              DevisMulti._ajouterSectionAvecSurface(
+                corpsId, corps.icone || '🔧', corps.label,
+                surf, 'm²', designation
+              );
+              const sec = DevisMulti._state.sections.find(s => s.key === corpsId);
+              if (sec && sec.lignes.length) {
+                sec.lignes[sec.lignes.length - 1].prix = surf > 0 ? Math.round(r.prixVente / surf) : 0;
+              }
+            });
+          });
+          if (typeof App !== 'undefined' && App.navigate) {
+            App.navigate('devis');
+          } else if (typeof App !== 'undefined' && App.toast) {
+            App.toast('DevisMulti prêt — navigation indisponible', 'warning');
+          }
+          return;
+        }
         if (action === 'type-corps-retour') { this._renderEtape('corps'); return; }
         if (action === 'type-corps-suivant') {
           const corpsId = this._corpsActifs[this._corpsEnCours];
