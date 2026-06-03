@@ -172,6 +172,7 @@
   <script src="js/dashboard_chiffrages.js"></script>
   <script src="js/calcul_express_pdf.js"></script>
   <script src="js/calcul_express_share.js"></script>
+  <script src="js/calcul_express_comparateur.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js" integrity="sha384-VDbnsk/qjpIVHPQMkJiROI+vW/7cw0k8TFYVLUabm7EWoLEDwcXh09XQ6gQ86Y0B" crossorigin="anonymous" defer></script>
   <script src="js/email_devis.js"></script>
   <script src="js/signature.js"></script>
@@ -353,6 +354,7 @@
         historiqueChiffrages:  function()       { return HistoriqueChiffrages.render('app-content'); },
         chiffrageRecap:        function(params) { return CalcExpressRecap.afficherRecap('app-content', params && params.id); },
         dashboardChiffrages:   function()       { return DashboardChiffrages.render('app-content'); },
+        comparateurChiffrages: function()       { return CalcExpressComparateur.render('app-content'); },
         factures:      function() { return Pages.factures(); },
         projets_types: function() { return Pages.projetsTypes(); },
         liste_achat: function() { return Pages.listeAchat(params); },
