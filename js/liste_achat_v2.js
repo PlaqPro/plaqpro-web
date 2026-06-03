@@ -129,6 +129,32 @@
     bloc._map[key].totalHT = bloc._map[key].qte * bloc._map[key].prixUnitaire;
   }
 
+  function genererListeDepuisStructure(pieces, corpsActifs, corpsConfig) {
+    if (!bddDisponible()) return { parCorps: {}, totalGeneral: 0, erreur: 'BddV2 non disponible' };
+
+    var result = { parCorps: {}, totalGeneral: 0 };
+    var lignes = CalcExpressStructure.buildLignes(pieces, corpsActifs, corpsConfig) || [];
+
+    lignes.forEach(function(ligne) {
+      if (!ligne || !ligne.corps) return;
+      var bloc = ensureCorps(result, ligne.corps);
+      if (ligne.corpsLabel) bloc.label = ligne.corpsLabel;
+      (ligne.materiaux || []).forEach(function(materiau) {
+        addLine(
+          result,
+          ligne.corps,
+          materiau.codeMat,
+          materiau.designation,
+          materiau.qte,
+          materiau.unite,
+          materiau.prixAchat
+        );
+      });
+    });
+
+    return finaliser(result);
+  }
+
   function addComposition(result, corpsId, ouvrageCode, quantite) {
     if (!ouvrageCode || !quantite) return;
     var composition = BddV2.getComposition(ouvrageCode) || [];
@@ -219,42 +245,49 @@
     '</section>';
   }
 
+  function genererListeFallback(pieces, corpsActifs, corpsConfig) {
+    if (!bddDisponible()) return { parCorps: {}, totalGeneral: 0, erreur: 'BddV2 non disponible' };
+
+    var result = { parCorps: {}, totalGeneral: 0 };
+    var allPieces = Array.isArray(pieces) ? pieces : [];
+    var corps = Array.isArray(corpsActifs) ? corpsActifs : [];
+    var configs = corpsConfig || {};
+
+    corps.forEach(function(corpsId) {
+      ensureCorps(result, corpsId);
+      var mapping = CORPS_BDD[corpsId];
+      if (mapping) {
+        allPieces
+          .filter(function(piece) { return piece && piece.corps === corpsId && Number(piece.surface) > 0; })
+          .forEach(function(piece) { addComposition(result, corpsId, mapping.ouvrage, Number(piece.surface) || 0); });
+      }
+      if (corpsId === 'electricite' || corpsId === 'plomberie') {
+        allPieces
+          .filter(function(piece) { return piece && piece.corps === corpsId; })
+          .forEach(function(piece) {
+            var quantites = piece.quantites || {};
+            Object.keys(quantites).forEach(function(key) {
+              addComposition(result, corpsId, QUANTITES_OUV[key], Number(quantites[key]) || 0);
+            });
+          });
+        var config = configs[corpsId] || {};
+        Object.keys(config).forEach(function(key) {
+          if (key === 'type' || key === 'lieuxKey' || !PRIX_ML[key]) return;
+          var info = PRIX_ML[key];
+          addLine(result, corpsId, key, info.designation, Number(config[key]) || 0, info.unite, info.prix);
+        });
+      }
+    });
+
+    return finaliser(result);
+  }
+
   window.ListeAchatV2 = {
     genererListe: function(pieces, corpsActifs, corpsConfig) {
-      if (!bddDisponible()) return { parCorps: {}, totalGeneral: 0, erreur: 'BddV2 non disponible' };
-
-      var result = { parCorps: {}, totalGeneral: 0 };
-      var allPieces = Array.isArray(pieces) ? pieces : [];
-      var corps = Array.isArray(corpsActifs) ? corpsActifs : [];
-      var configs = corpsConfig || {};
-
-      corps.forEach(function(corpsId) {
-        ensureCorps(result, corpsId);
-        var mapping = CORPS_BDD[corpsId];
-        if (mapping) {
-          allPieces
-            .filter(function(piece) { return piece && piece.corps === corpsId && Number(piece.surface) > 0; })
-            .forEach(function(piece) { addComposition(result, corpsId, mapping.ouvrage, Number(piece.surface) || 0); });
-        }
-        if (corpsId === 'electricite' || corpsId === 'plomberie') {
-          allPieces
-            .filter(function(piece) { return piece && piece.corps === corpsId; })
-            .forEach(function(piece) {
-              var quantites = piece.quantites || {};
-              Object.keys(quantites).forEach(function(key) {
-                addComposition(result, corpsId, QUANTITES_OUV[key], Number(quantites[key]) || 0);
-              });
-            });
-          var config = configs[corpsId] || {};
-          Object.keys(config).forEach(function(key) {
-            if (key === 'type' || key === 'lieuxKey' || !PRIX_ML[key]) return;
-            var info = PRIX_ML[key];
-            addLine(result, corpsId, key, info.designation, Number(config[key]) || 0, info.unite, info.prix);
-          });
-        }
-      });
-
-      return finaliser(result);
+      if (typeof CalcExpressStructure !== 'undefined' && CalcExpressStructure.buildLignes) {
+        return genererListeDepuisStructure(pieces, corpsActifs, corpsConfig);
+      }
+      return genererListeFallback(pieces, corpsActifs, corpsConfig);
     },
 
     render: function(containerId, pieces, corpsActifs, corpsConfig) {
