@@ -31,8 +31,9 @@ const CalcExpressV2 = {
 
   // ── Pièces par profil ─────────────────────────────────────
   PIECES_PROFIL: {
-    particulier: ['Salon', 'Séjour', 'Cuisine', 'Chambre 1', 'Chambre 2',
-                  'Chambre 3', 'Salle de bain', 'WC', 'Entrée', 'Couloir', 'Garage', 'Buanderie'],
+    particulier: ['Buanderie', 'Cave', 'Chambre 1', 'Chambre 2', 'Chambre 3',
+                  'Couloir', 'Cuisine', 'Entrée', 'Garage', 'Salon',
+                  'Salle de bain', 'Séjour', 'WC'],
     pro:         ['Bureau 1', 'Bureau 2', 'Bureau 3', 'Salle de réunion', 'Hall',
                   'Couloir', 'Dépôt', 'Local technique', 'Sanitaires', 'Accueil', 'Espace commun'],
     ao:          [],
@@ -100,21 +101,22 @@ const CalcExpressV2 = {
 
   // ── Lieux par corps de métier (prioritaire sur profil) ────
   LIEUX_CORPS: {
-    paysagisme:  ['Jardin avant', 'Jardin arrière', 'Terrasse', 'Allée', 'Parking',
-                  'Massif fleuri', 'Pelouse', 'Haie', 'Clôture', 'Bassin / pièce d\'eau',
-                  'Potager', 'Aire de jeux', 'Talus', 'Zone boisée'],
+    paysagisme:  ['Aire de jeux', 'Allée', 'Bassin / pièce d\'eau', 'Clôture',
+                  'Haie', 'Jardin arrière', 'Jardin avant', 'Massif fleuri',
+                  'Parking', 'Pelouse', 'Potager', 'Talus', 'Terrasse', 'Zone boisée'],
     maconnerie_int: {
-      pieces: ['Salon', 'Séjour', 'Chambre', 'Cuisine', 'Salle de bain', 'Entrée', 'Couloir'],
+      pieces: ['Chambre', 'Couloir', 'Cuisine', 'Entrée', 'Salle de bain', 'Salon', 'Séjour'],
       prestations: ['Cloison briques', 'Cloison brique de verre', 'Mur porteur', 'Doublage'],
     },
     maconnerie_ext: {
-      zones: ['Façade', 'Mur pignon', 'Mur de clôture', 'Soubassement', 'Terrasse béton'],
+      zones: ['Façade', 'Mur de clôture', 'Mur pignon', 'Soubassement', 'Terrasse béton'],
       prestations: ['Enduit façade', 'Ravalement', 'Parpaing', 'Brique de parement'],
     },
-    electricite: ['Tableau principal', 'Tableau secondaire', 'Cuisine', 'Salle de bain',
-                  'Chambre 1', 'Chambre 2', 'Salon', 'Garage', 'Extérieur', 'Cave'],
-    plomberie:   ['Cuisine', 'Salle de bain 1', 'Salle de bain 2', 'WC', 'Buanderie',
-                  'Cave', 'Garage', 'Extérieur', 'Chaufferie'],
+    electricite: ['Cave', 'Chambre 1', 'Chambre 2', 'Cuisine', 'Extérieur',
+                  'Garage', 'Salle de bain', 'Salon', 'Séjour', 'Tableau principal',
+                  'Tableau secondaire'],
+    plomberie:   ['Buanderie', 'Cave', 'Chaufferie', 'Cuisine', 'Extérieur',
+                  'Garage', 'Salle de bain 1', 'Salle de bain 2', 'WC'],
   },
 
   // ── Obtenir la liste de lieux pour un corps + profil ──────
@@ -603,6 +605,11 @@ const CalcExpressV2 = {
           </div>
           ${total > 0 ? `<span style="margin-left:auto;font-size:.9rem;color:#16a34a;font-weight:700">${total} point${total>1?'s':''}</span>` : ''}
         </div>
+        <div style="background:var(--accent,#4f8ef7);border-radius:10px;padding:12px;margin-bottom:16px">
+          <p style="color:#fff;margin:0;font-size:14px">
+            ⚡ Saisissez le nombre de points par type. Le total sera calculé automatiquement.
+          </p>
+        </div>
         <div style="max-height:400px;overflow-y:auto">${sections}</div>
         <div style="display:flex;justify-content:space-between;margin-top:16px">
           ${this._btn('← Retour', 'app-retour', 'secondary')}
@@ -663,16 +670,16 @@ const CalcExpressV2 = {
 
     const champs = mode === 'forme-l' ? champL : champRect;
     const champPaysagisme = p.corps === 'paysagisme' ? `
-      <div style="margin-top:12px">
-        <p style="font-size:13px;color:var(--text-muted,#888);margin-bottom:8px">
-          Choisissez d'abord la prestation à réaliser sur ce lieu.
+      <div style="background:var(--accent,#4f8ef7);border-radius:10px;padding:14px;margin-bottom:16px">
+        <p style="font-weight:700;color:#fff;margin:0 0 10px 0">
+          🌿 Quelle prestation sur ce lieu ?
         </p>
-        <label style="font-size:.8rem;color:var(--text-secondary,#666);display:block;margin-bottom:4px">Tâche paysagisme</label>
-        <select id="cex-pays-tache" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box">
-          <option value="OUV_GAZON_ROULEAU" ${p.tachePaysagisme === 'OUV_GAZON_ROULEAU' ? 'selected' : ''}>🌱 Gazon en rouleau</option>
-          <option value="OUV_TERRASSE_BETON_DESACTIVE" ${p.tachePaysagisme === 'OUV_TERRASSE_BETON_DESACTIVE' ? 'selected' : ''}>🪨 Terrasse béton désactivé</option>
-          <option value="OUV_MASSIF_PAILLAGE" ${p.tachePaysagisme === 'OUV_MASSIF_PAILLAGE' ? 'selected' : ''}>🌺 Massif paillage</option>
-          <option value="OUV_BORDURE_JARDIN" ${p.tachePaysagisme === 'OUV_BORDURE_JARDIN' ? 'selected' : ''}>▪ Bordure jardin</option>
+        <select id="cex-pays-tache" style="width:100%;padding:10px;border-radius:8px;background:#fff;color:#222;border:none;font-size:15px">
+          <option value="">-- Choisir une prestation --</option>
+          <option value="OUV_BORDURE_JARDIN" ${(p.tachePaysagisme||'')==='OUV_BORDURE_JARDIN'?'selected':''}>▪ Bordure jardin</option>
+          <option value="OUV_GAZON_ROULEAU" ${(p.tachePaysagisme||'')==='OUV_GAZON_ROULEAU'?'selected':''}>🌱 Gazon en rouleau</option>
+          <option value="OUV_MASSIF_PAILLAGE" ${(p.tachePaysagisme||'')==='OUV_MASSIF_PAILLAGE'?'selected':''}>🌺 Massif paillage</option>
+          <option value="OUV_TERRASSE_BETON_DESACTIVE" ${(p.tachePaysagisme||'')==='OUV_TERRASSE_BETON_DESACTIVE'?'selected':''}>🪨 Terrasse béton désactivé</option>
         </select>
       </div>` : '';
 
@@ -698,7 +705,7 @@ const CalcExpressV2 = {
           : champs}
         <div style="display:flex;justify-content:space-between;margin-top:16px">
           ${this._btn('← Retour', 'metrage-retour', 'secondary')}
-          ${this._btn('✓ Valider la surface', 'metrage-valider')}
+          ${this._btn('✓ Valider la surface', 'metrage-valider').replace('<button ', '<button id="cex-metrage-valider" ')}
         </div>
       `)}
     `);
@@ -728,6 +735,14 @@ const CalcExpressV2 = {
     };
     this._container.querySelectorAll('input[type="number"]').forEach(i => i.addEventListener('input', preview));
     preview();
+    const btnValider = this._container.querySelector('#cex-metrage-valider');
+    if (p.corps === 'paysagisme') {
+      const sel = this._container.querySelector('#cex-pays-tache');
+      if (btnValider && sel) {
+        btnValider.disabled = !sel.value;
+        sel.addEventListener('change', () => { btnValider.disabled = !sel.value; });
+      }
+    }
     this._bind();
   },
 
@@ -789,7 +804,10 @@ const CalcExpressV2 = {
         if (estElecPlomb) {
           const quantites = p.quantites || {};
           const nbPoints = Object.values(quantites).reduce((s,v) => s+(parseFloat(v)||0), 0);
-          if (!nbPoints) return;
+          if (!nbPoints) {
+            detail.push(p.nom + ' · ⚠️ aucun point saisi');
+            return;
+          }
           const r = this._calcCorps(corpsId, nbPoints, p);
           coutCorps += r.coutMat + r.coutMO;
           gainCorps += r.gain;
