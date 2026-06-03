@@ -664,6 +664,9 @@ const CalcExpressV2 = {
     const champs = mode === 'forme-l' ? champL : champRect;
     const champPaysagisme = p.corps === 'paysagisme' ? `
       <div style="margin-top:12px">
+        <p style="font-size:13px;color:var(--text-muted,#888);margin-bottom:8px">
+          Choisissez d'abord la prestation à réaliser sur ce lieu.
+        </p>
         <label style="font-size:.8rem;color:var(--text-secondary,#666);display:block;margin-bottom:4px">Tâche paysagisme</label>
         <select id="cex-pays-tache" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box">
           <option value="OUV_GAZON_ROULEAU" ${p.tachePaysagisme === 'OUV_GAZON_ROULEAU' ? 'selected' : ''}>🌱 Gazon en rouleau</option>
@@ -684,6 +687,7 @@ const CalcExpressV2 = {
           </div>
           ${p.surface ? `<span style="margin-left:auto;font-size:.9rem;color:#16a34a;font-weight:700">${p.surface} m²</span>` : ''}
         </div>
+        ${champPaysagisme}
         <div style="display:flex;gap:8px;margin-bottom:16px">
           ${btnMode('rectangle','Rectangle','▬')}
           ${btnMode('forme-l','Forme en L','⌐')}
@@ -692,7 +696,6 @@ const CalcExpressV2 = {
         ${mode === 'libre'
           ? `<p style="color:var(--text-secondary,#666);font-size:.85rem">Le canvas polygonal sera disponible ici — utilisez Rectangle ou Forme en L pour l'instant.</p>`
           : champs}
-        ${champPaysagisme}
         <div style="display:flex;justify-content:space-between;margin-top:16px">
           ${this._btn('← Retour', 'metrage-retour', 'secondary')}
           ${this._btn('✓ Valider la surface', 'metrage-valider')}
@@ -780,12 +783,28 @@ const CalcExpressV2 = {
       let coutCorps = 0, gainCorps = 0, detail = [];
 
       pieces.forEach(p => {
+        const estElecPlomb = (corpsId === 'electricite' || corpsId === 'plomberie');
+
+        // Pour élec/plomberie : utiliser quantites{} directement
+        if (estElecPlomb) {
+          const quantites = p.quantites || {};
+          const nbPoints = Object.values(quantites).reduce((s,v) => s+(parseFloat(v)||0), 0);
+          if (!nbPoints) return;
+          const r = this._calcCorps(corpsId, nbPoints, p);
+          coutCorps += r.coutMat + r.coutMO;
+          gainCorps += r.gain;
+          const uniteAff = ' pts';
+          detail.push(p.nom + ' · ' + nbPoints + uniteAff + ' → ' + fmt(r.prixVente));
+          return;
+        }
+
+        // Autres corps : surface normale
         const surface = parseFloat(p.surface) || 0;
         if (!surface) return;
-        const r  = this._calcCorps(corpsId, surface, p);
+        const r = this._calcCorps(corpsId, surface, p);
         coutCorps += r.coutMat + r.coutMO;
         gainCorps += r.gain;
-        const uniteAff = (corpsId === 'electricite' || corpsId === 'plomberie') ? ' pts' : ' m²';
+        const uniteAff = ' m²';
         detail.push(p.nom + (p.prestation ? ' · ' + p.prestation : '') + ' · ' + surface + uniteAff + ' → ' + fmt(r.prixVente));
       });
 
@@ -978,9 +997,17 @@ const CalcExpressV2 = {
           this._corpsActifs.forEach(corpsId => {
             const corps = this.CORPS.find(c => c.id === corpsId);
             if (!corps) return;
-            const pcs = (this._pieces || []).filter(p => p.corps === corpsId && parseFloat(p.surface) > 0);
+            const pcs = (this._pieces || []).filter(p => {
+              if (p.corps !== corpsId) return false;
+              if (corpsId === 'electricite' || corpsId === 'plomberie') {
+                return Object.values(p.quantites || {}).reduce((s,v) => s+(parseFloat(v)||0), 0) > 0;
+              }
+              return parseFloat(p.surface) > 0;
+            });
             pcs.forEach(p => {
-              const surf = parseFloat(p.surface);
+              const surf = (corpsId === 'electricite' || corpsId === 'plomberie')
+                ? Object.values(p.quantites || {}).reduce((s,v) => s+(parseFloat(v)||0), 0)
+                : parseFloat(p.surface);
               const r    = this._calcCorps(corpsId, surf, p);
               const designation = p.nom + (p.prestation ? ' - ' + p.prestation : '') + (p.hsp ? ' (HSP ' + p.hsp + 'm)' : '');
               const uniteDevis = (corpsId === 'electricite' || corpsId === 'plomberie') ? 'u' : 'm²';
