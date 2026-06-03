@@ -917,7 +917,7 @@ const CalcExpressV2 = {
             });
           });
           if (typeof App !== 'undefined' && App.navigate) {
-            App.navigate('devis');
+            App.navigate('devisMulti');
           } else if (typeof App !== 'undefined' && App.toast) {
             App.toast('DevisMulti prêt — navigation indisponible', 'warning');
           }
@@ -966,14 +966,14 @@ const CalcExpressV2 = {
         if (action === 'pieces-vers-corps')    { this._renderEtape('corps'); return; }
         if (action === 'corps-precedent')      { this._corpsEnCours--; this._renderEtape('pieces'); }
         if (action === 'corps-suivant-pieces') { this._corpsEnCours++; this._renderEtape('pieces'); }
-        if (action === 'pieces-terminer')      { if (typeof App !== 'undefined' && App.toast) App.toast('Résumé — à implémenter', 'success'); }
+        if (action === 'pieces-terminer')      { this._renderEtape('resume'); return; }
         if (action === 'piece-libre-add') {
           const input = this._container.querySelector('#cex-piece-libre');
           const val   = (input ? input.value : '').trim();
           if (!val) return;
           const corpsId = this._corpsActifs[this._corpsEnCours];
           if (!this._pieces.find(p => p.nom === val && p.corps === corpsId)) {
-            this._pieces.push({ nom: val, corps: corpsId, surface: null });
+            this._pieces.push({ nom: val, corps: corpsId, surface: null, quantites: {} });
           }
           if (input) input.value = '';
           this._renderEtape('pieces');

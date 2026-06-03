@@ -54,6 +54,7 @@ const App = {
       peinture:   () => Pages.peinture(params),
       devisIntelligent: (params) => Pages.devisIntelligent(params),
       devis:      () => Pages.devis(params),
+      devisMulti: () => DevisMulti.render(),
       produits:   () => Pages.produits(),
       catalogueFournisseurs: () => Pages.catalogueFournisseurs(),
       config:     () => Pages.config(),
