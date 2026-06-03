@@ -620,6 +620,16 @@ const CalcExpressV2 = {
       <div id="cex-m-preview" style="font-size:.9rem;color:var(--accent,#2563eb);font-weight:600;min-height:22px"></div>`;
 
     const champs = mode === 'forme-l' ? champL : champRect;
+    const champPaysagisme = p.corps === 'paysagisme' ? `
+      <div style="margin-top:12px">
+        <label style="font-size:.8rem;color:var(--text-secondary,#666);display:block;margin-bottom:4px">Tâche paysagisme</label>
+        <select id="cex-pays-tache" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box">
+          <option value="OUV_GAZON_ROULEAU" ${p.tachePaysagisme === 'OUV_GAZON_ROULEAU' ? 'selected' : ''}>🌱 Gazon en rouleau</option>
+          <option value="OUV_TERRASSE_BETON_DESACTIVE" ${p.tachePaysagisme === 'OUV_TERRASSE_BETON_DESACTIVE' ? 'selected' : ''}>🪨 Terrasse béton désactivé</option>
+          <option value="OUV_MASSIF_PAILLAGE" ${p.tachePaysagisme === 'OUV_MASSIF_PAILLAGE' ? 'selected' : ''}>🌺 Massif paillage</option>
+          <option value="OUV_BORDURE_JARDIN" ${p.tachePaysagisme === 'OUV_BORDURE_JARDIN' ? 'selected' : ''}>▪ Bordure jardin</option>
+        </select>
+      </div>` : '';
 
     this._html(`
       ${this._progressBar('metrage')}
@@ -640,6 +650,7 @@ const CalcExpressV2 = {
         ${mode === 'libre'
           ? `<p style="color:var(--text-secondary,#666);font-size:.85rem">Le canvas polygonal sera disponible ici — utilisez Rectangle ou Forme en L pour l'instant.</p>`
           : champs}
+        ${champPaysagisme}
         <div style="display:flex;justify-content:space-between;margin-top:16px">
           ${this._btn('← Retour', 'metrage-retour', 'secondary')}
           ${this._btn('✓ Valider la surface', 'metrage-valider')}
@@ -682,11 +693,16 @@ const CalcExpressV2 = {
     electricite:  { label: 'Electricite',  ouvrageDefaut: null },
     plomberie:    { label: 'Plomberie',    ouvrageDefaut: null },
     maconnerie:   { label: 'Maconnerie',   ouvrageDefaut: 'OUV_MUR_PARPAING_20' },
-    paysagisme:   { label: 'Paysagisme',   ouvrageDefaut: 'OUV_GAZON_ROULEAU' },
+    paysagisme:   { label: 'Paysagisme',   ouvrageDefaut: null },
   },
 
   // ── Calcul prix réel via BddV2 (fallback forfait) ────────
-  _calcCorps(corpsId, surface) {
+  _calcCorps(corpsId, surface, piece) {
+    if (corpsId === 'paysagisme' && piece && piece.tachePaysagisme) {
+      if (typeof BddV2 !== 'undefined' && BddV2.estChargee()) {
+        return BddV2.calcPrixVente(piece.tachePaysagisme, surface);
+      }
+    }
     const bdd = this.CORPS_BDD[corpsId];
     if (!bdd || !bdd.ouvrageDefaut) {
       const coutMat   = surface * 8;
@@ -718,7 +734,7 @@ const CalcExpressV2 = {
       pieces.forEach(p => {
         const surface = parseFloat(p.surface) || 0;
         if (!surface) return;
-        const r  = this._calcCorps(corpsId, surface);
+        const r  = this._calcCorps(corpsId, surface, p);
         coutCorps += r.coutMat + r.coutMO;
         gainCorps += r.gain;
         const uniteAff = (corpsId === 'electricite' || corpsId === 'plomberie') ? ' pts' : ' m²';
@@ -839,6 +855,9 @@ const CalcExpressV2 = {
             const total = Object.values(p.quantites || {}).reduce((s,v) => s+v, 0);
             p.nbPoints = total;
             p.surface  = total;
+            if (p.corps === 'paysagisme') {
+              p.tachePaysagisme = (document.getElementById('cex-pays-tache') || {}).value || 'OUV_GAZON_ROULEAU';
+            }
           }
           this._renderEtape('pieces');
           return;
@@ -870,7 +889,13 @@ const CalcExpressV2 = {
             if (p) { p.l1=l1; p.w1=w1; p.l2=l2; p.w2=w2; }
           }
           if (!s) { if (typeof App !== 'undefined' && App.toast) App.toast('Saisissez les dimensions', 'warning'); return; }
-          if (p) { p.surface = s; p.mode = mode; }
+          if (p) {
+            p.surface = s;
+            p.mode = mode;
+            if (p.corps === 'paysagisme') {
+              p.tachePaysagisme = (document.getElementById('cex-pays-tache') || {}).value || 'OUV_GAZON_ROULEAU';
+            }
+          }
           this._renderEtape('pieces');
           return;
         }
@@ -908,7 +933,7 @@ const CalcExpressV2 = {
             const pcs = (this._pieces || []).filter(p => p.corps === corpsId && parseFloat(p.surface) > 0);
             pcs.forEach(p => {
               const surf = parseFloat(p.surface);
-              const r    = this._calcCorps(corpsId, surf);
+              const r    = this._calcCorps(corpsId, surf, p);
               const designation = p.nom + (p.hsp ? ' (HSP ' + p.hsp + 'm)' : '');
               const uniteDevis = (corpsId === 'electricite' || corpsId === 'plomberie') ? 'u' : 'm²';
               const nbLignesAvant = (() => {
