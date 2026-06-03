@@ -583,7 +583,8 @@ const CalcExpressV2 = {
         <div style="font-size:1.3rem;margin-bottom:4px">${icone}</div>${label}
       </button>`;
 
-    const isPlaco = p.corps === 'plaquisterie';
+    const isPlaco   = p.corps === 'plaquisterie';
+    const needsHSP  = isPlaco || (p.corps === 'maconnerie' && (this._corpsConfig['maconnerie'] || {}).lieuxKey === 'maconnerie_int');
     const champRect = `
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px">
         <div style="flex:1;min-width:120px">
@@ -596,7 +597,7 @@ const CalcExpressV2 = {
           <input id="cex-m-w" type="number" min="0" step="0.1" value="${p.largeur||''}" placeholder="ex: 3.8"
             style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box">
         </div>
-        ${isPlaco ? `
+        ${needsHSP ? `
         <div style="flex:1;min-width:120px">
           <label style="font-size:.8rem;color:#f59e0b;font-weight:700;display:block;margin-bottom:4px">Hauteur sous plafond (m) *</label>
           <input id="cex-m-hsp" type="number" min="1.5" max="6" step="0.05" value="${p.hsp||2.50}" placeholder="ex: 2.50"
