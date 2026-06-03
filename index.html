@@ -166,6 +166,7 @@
   <script src="js/mode_chantier.js"></script>
   <script src="js/projets_types.js"></script>
   <script src="js/devis_multi.js"></script>
+  <script src="js/historique_chiffrages.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js" integrity="sha384-VDbnsk/qjpIVHPQMkJiROI+vW/7cw0k8TFYVLUabm7EWoLEDwcXh09XQ6gQ86Y0B" crossorigin="anonymous" defer></script>
   <script src="js/email_devis.js"></script>
   <script src="js/signature.js"></script>
@@ -343,7 +344,8 @@
         dpgf:          function() { return Pages.dpgf(); },
         devisIntelligent: function() { return Pages.devisIntelligent(params); },
         devis:         function() { return Pages.devis(params); },
-        devis_complet: function() { return Pages.devisComplet(); },
+        devis_complet:         function() { return Pages.devisComplet(); },
+        historiqueChiffrages:  function() { return HistoriqueChiffrages.render('app-content'); },
         factures:      function() { return Pages.factures(); },
         projets_types: function() { return Pages.projetsTypes(); },
         liste_achat: function() { return Pages.listeAchat(params); },
