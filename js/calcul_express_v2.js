@@ -674,6 +674,35 @@ const CalcExpressV2 = {
     this._bind();
   },
 
+  // ── Mapping corps → BDD V2 ───────────────────────────────
+  CORPS_BDD: {
+    plaquisterie: { label: 'Plaquisterie', ouvrageDefaut: 'OUV_CLOISON_BA13_M48' },
+    peinture:     { label: 'Peinture',     ouvrageDefaut: 'OUV_PEINTURE_MURS_2_COUCHES' },
+    electricite:  { label: 'Electricite',  ouvrageDefaut: null },
+    plomberie:    { label: 'Plomberie',    ouvrageDefaut: null },
+    maconnerie:   { label: 'Maconnerie',   ouvrageDefaut: 'OUV_MUR_PARPAING_20' },
+    paysagisme:   { label: 'Paysagisme',   ouvrageDefaut: 'OUV_GAZON_ROULEAU' },
+  },
+
+  // ── Calcul prix réel via BddV2 (fallback forfait) ────────
+  _calcCorps(corpsId, surface) {
+    const bdd = this.CORPS_BDD[corpsId];
+    if (!bdd || !bdd.ouvrageDefaut) {
+      const coutMat   = surface * 8;
+      const coutMO    = surface * 0.65 * 45;
+      const prixVente = (coutMat + coutMO) * 1.30;
+      return { coutMat, coutMO, prixVente, gain: prixVente - coutMat - coutMO };
+    }
+    if (typeof BddV2 === 'undefined' || !BddV2.estChargee()) {
+      console.warn('[CalcExpressV2] BddV2 non chargée — forfait pour', bdd.ouvrageDefaut);
+      const coutMat   = surface * 8;
+      const coutMO    = surface * 0.65 * 45;
+      const prixVente = (coutMat + coutMO) * 1.30;
+      return { coutMat, coutMO, prixVente, gain: prixVente - coutMat - coutMO };
+    }
+    return BddV2.calcPrixVente(bdd.ouvrageDefaut, surface);
+  },
+
   // ── Étape 7 : Résumé final ────────────────────────────────
   _renderResume() {
     const fmt = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v);
@@ -688,12 +717,10 @@ const CalcExpressV2 = {
       pieces.forEach(p => {
         const surface = parseFloat(p.surface) || 0;
         if (!surface) return;
-        const coutMat = surface * 8;
-        const coutMO  = surface * 0.65 * 45;
-        const pv      = (coutMat + coutMO) * 1.30;
-        coutCorps += coutMat + coutMO;
-        gainCorps += pv - coutMat - coutMO;
-        detail.push(p.nom + ' · ' + surface + ' m² → ' + fmt(pv));
+        const r  = this._calcCorps(corpsId, surface);
+        coutCorps += r.coutMat + r.coutMO;
+        gainCorps += r.gain;
+        detail.push(p.nom + ' · ' + surface + ' m² → ' + fmt(r.prixVente));
       });
 
       if (config.type === 'neuf') {
