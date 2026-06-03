@@ -1,4 +1,4 @@
-﻿/**
+/**
  * PlaqPro+ — Calcul Express V2
  * Flux : chantier + client → profil → sous-traitants → corps métiers → pièces → métrages → résultat
  * Architecture validée 02/06/2026
@@ -917,7 +917,7 @@ const CalcExpressV2 = {
             });
           });
           if (typeof App !== 'undefined' && App.navigate) {
-            App.navigate('devisMulti');
+            App.navigate('devis_complet');
           } else if (typeof App !== 'undefined' && App.toast) {
             App.toast('DevisMulti prêt — navigation indisponible', 'warning');
           }

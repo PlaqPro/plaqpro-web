@@ -30,6 +30,7 @@ const DB = {
     masterMateriaux:      'plaqpro_master_materiaux',
     ouvragesTypes:        'plaqpro_ouvrages_types',
     ouvragesComposition:  'plaqpro_ouvrages_composition',
+    chiffrages:           'plaqpro_chiffrages',
   },
 
   // Données paysagisme
