@@ -720,7 +720,8 @@ const CalcExpressV2 = {
         const r  = this._calcCorps(corpsId, surface);
         coutCorps += r.coutMat + r.coutMO;
         gainCorps += r.gain;
-        detail.push(p.nom + ' · ' + surface + ' m² → ' + fmt(r.prixVente));
+        const uniteAff = (corpsId === 'electricite' || corpsId === 'plomberie') ? ' pts' : ' m²';
+        detail.push(p.nom + ' · ' + surface + uniteAff + ' → ' + fmt(r.prixVente));
       });
 
       if (config.type === 'neuf') {
@@ -906,15 +907,17 @@ const CalcExpressV2 = {
               const surf = parseFloat(p.surface);
               const r    = this._calcCorps(corpsId, surf);
               const designation = p.nom + (p.hsp ? ' (HSP ' + p.hsp + 'm)' : '');
+              const uniteDevis = (corpsId === 'electricite' || corpsId === 'plomberie') ? 'u' : 'm²';
               DevisMulti._ajouterSectionAvecSurface(
                 corpsId, corps.icone || '🔧', corps.label,
-                surf, 'm²', designation
+                surf, uniteDevis, designation
               );
               const sec = DevisMulti._state.sections.find(s => s.key === corpsId);
               if (sec && sec.lignes.length) {
                 sec.lignes[sec.lignes.length - 1].prix = surf > 0 ? Math.round(r.prixVente / surf) : 0;
               }
             });
+            // Linéaires neuf : TODO session suivante — structure _lineaires à définir
           });
           if (typeof App !== 'undefined' && App.navigate) {
             App.navigate('devis_complet');
