@@ -3,7 +3,7 @@
 
   const CORPS_META = {
     platrerie: { label: 'Plâtrerie', ouvrageCode: 'OUV_CLOISON_BA13_M48', unite: 'm²' },
-    plaquisterie: { label: 'Plaquisterie', ouvrageCode: 'OUV_CLOISON_BA13_M48', unite: 'm²' },
+    plaquisterie: { label: 'Plâtrerie', ouvrageCode: 'OUV_CLOISON_BA13_M48', unite: 'm²' },
     peinture: { label: 'Peinture', ouvrageCode: 'OUV_PEINTURE_MURS_2_COUCHES', unite: 'm²' },
     maconnerie: { label: 'Maçonnerie', ouvrageCode: 'OUV_MUR_PARPAING_20', unite: 'm²' },
     paysagisme: { label: 'Paysagisme', ouvrageCode: 'OUV_GAZON_ROULEAU', unite: 'm²' },
