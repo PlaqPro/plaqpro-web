@@ -908,13 +908,17 @@ const CalcExpressV2 = {
               const r    = this._calcCorps(corpsId, surf);
               const designation = p.nom + (p.hsp ? ' (HSP ' + p.hsp + 'm)' : '');
               const uniteDevis = (corpsId === 'electricite' || corpsId === 'plomberie') ? 'u' : 'm²';
+              const nbLignesAvant = (() => {
+                const s = DevisMulti._state.sections.find(s => s.key === corpsId);
+                return s ? s.lignes.length : 0;
+              })();
               DevisMulti._ajouterSectionAvecSurface(
                 corpsId, corps.icone || '🔧', corps.label,
                 surf, uniteDevis, designation
               );
               const sec = DevisMulti._state.sections.find(s => s.key === corpsId);
-              if (sec && sec.lignes.length) {
-                sec.lignes[sec.lignes.length - 1].prix = surf > 0 ? Math.round(r.prixVente / surf) : 0;
+              if (sec && sec.lignes.length > nbLignesAvant) {
+                sec.lignes[nbLignesAvant].prix = surf > 0 ? Math.round(r.prixVente / surf) : 0;
               }
             });
             // Linéaires neuf élec/plomberie
@@ -928,13 +932,17 @@ const CalcExpressV2 = {
                   if (!qteML) return;
                   const prixU = Math.round(PRIX_ML[k] * 1.35);
                   const label = k.replace(/_/g, ' ');
+                  const nbAvantLin = (() => {
+                    const s = DevisMulti._state.sections.find(s => s.key === corpsId);
+                    return s ? s.lignes.length : 0;
+                  })();
                   DevisMulti._ajouterSectionAvecSurface(
                     corpsId, corps.icone || '🔧', corps.label,
                     qteML, 'ml', label
                   );
                   const sec3 = DevisMulti._state.sections.find(s => s.key === corpsId);
-                  if (sec3 && sec3.lignes.length) {
-                    sec3.lignes[sec3.lignes.length - 1].prix = prixU;
+                  if (sec3 && sec3.lignes.length > nbAvantLin) {
+                    sec3.lignes[nbAvantLin].prix = prixU;
                   }
                 });
               }
