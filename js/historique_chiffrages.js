@@ -189,11 +189,18 @@
   window.HistoriqueChiffrages = {
     render: function(containerId) {
       var container = document.getElementById(containerId);
-      if (!container) return;
+      if (!container) {
+        // Fallback : chercher le vrai container de l'app
+        container = document.getElementById('content') ||
+                    document.getElementById('main-content') ||
+                    document.querySelector('.content') ||
+                    document.body;
+      }
+      if (!container) return document.createTextNode('');
       var items = getAll();
       if (!items.length) {
         renderEmpty(container);
-        return;
+        return document.createTextNode('');
       }
       var exportBar = '<div style="display:flex;gap:8px;margin-bottom:16px">'
         + '<button onclick="ChiffragesExport.exportCSV()" style="padding:8px 16px;border-radius:8px;background:var(--accent,#4f8ef7);color:#fff;border:none;cursor:pointer">⬇ Export CSV</button>'
@@ -208,6 +215,7 @@
           if (action === 'load') loadItem(id);
         });
       });
+      return document.createTextNode('');
     },
   };
 })();

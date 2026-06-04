@@ -104,7 +104,14 @@
     render: function(containerId) {
       this._containerId = containerId;
       var container = document.getElementById(containerId);
-      if (!container) return;
+      if (!container) {
+        // Fallback : chercher le vrai container de l'app
+        container = document.getElementById('content') ||
+                    document.getElementById('main-content') ||
+                    document.querySelector('.content') ||
+                    document.body;
+      }
+      if (!container) return document.createTextNode('');
 
       var devis = [];
       if (typeof DevisMulti !== 'undefined' && typeof DevisMulti.lister === 'function') {
@@ -134,6 +141,7 @@
             ? '<div class="ld-empty">Aucun devis pour ce statut</div>'
             : '<div class="ld-grid">' + visibles.map(this._cardHtml).join('') + '</div>'))
         + '</div>';
+      return document.createTextNode('');
     },
 
     filtrer: function(statut) {

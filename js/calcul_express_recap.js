@@ -96,18 +96,25 @@
   window.CalcExpressRecap = {
     afficherRecap: function(containerId, chiffrageId) {
       var container = document.getElementById(containerId);
-      if (!container) return;
+      if (!container) {
+        // Fallback : chercher le vrai container de l'app
+        container = document.getElementById('content') ||
+                    document.getElementById('main-content') ||
+                    document.querySelector('.content') ||
+                    document.body;
+      }
+      if (!container) return document.createTextNode('');
       var all = getAll();
       if (!all.length) {
         renderEmpty(container);
-        return;
+        return document.createTextNode('');
       }
       var chiffrage = chiffrageId
         ? all.find(function(item) { return String(item.id || '') === String(chiffrageId); })
         : all[0];
       if (!chiffrage) {
         renderEmpty(container);
-        return;
+        return document.createTextNode('');
       }
 
       var chantier = chiffrage.chantier || {};
@@ -139,6 +146,7 @@
             '<button type="button" onclick="history.back()" style="padding:8px 16px;border-radius:8px;background:transparent;color:var(--text,#111);border:1px solid var(--border,#e5e7eb);cursor:pointer">Retour</button>' +
           '</div>' +
         '</div>';
+      return document.createTextNode('');
     },
   };
 })();

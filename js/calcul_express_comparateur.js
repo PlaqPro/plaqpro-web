@@ -121,12 +121,19 @@
   window.CalcExpressComparateur = {
     render: function(containerId) {
       var container = document.getElementById(containerId);
-      if (!container) return;
+      if (!container) {
+        // Fallback : chercher le vrai container de l'app
+        container = document.getElementById('content') ||
+                    document.getElementById('main-content') ||
+                    document.querySelector('.content') ||
+                    document.body;
+      }
+      if (!container) return document.createTextNode('');
 
       var items = getAll();
       if (items.length < 2) {
         renderMessage(container, 'Ajoutez au moins 2 chiffrages pour comparer');
-        return;
+        return document.createTextNode('');
       }
 
       var firstId = String(items[0].id || '');
@@ -157,6 +164,7 @@
         }
         result.innerHTML = buildTable(a, b);
       });
+      return document.createTextNode('');
     },
   };
 })();

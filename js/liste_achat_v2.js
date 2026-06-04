@@ -292,11 +292,18 @@
 
     render: function(containerId, pieces, corpsActifs, corpsConfig) {
       var container = document.getElementById(containerId);
-      if (!container) return;
+      if (!container) {
+        // Fallback : chercher le vrai container de l'app
+        container = document.getElementById('content') ||
+                    document.getElementById('main-content') ||
+                    document.querySelector('.content') ||
+                    document.body;
+      }
+      if (!container) return document.createTextNode('');
       var data = this.genererListe(pieces, corpsActifs, corpsConfig);
       if (data.erreur) {
         container.innerHTML = '<div style="padding:18px;border-radius:8px;background:var(--card-bg,var(--bg-card,#fff));color:var(--text,#111)">BddV2 non disponible</div>';
-        return;
+        return document.createTextNode('');
       }
       var corpsIds = Object.keys(data.parCorps).filter(function(corpsId) {
         return data.parCorps[corpsId].lignes.length > 0;
@@ -315,6 +322,7 @@
       container.innerHTML = html;
       var exportBtn = container.querySelector('[data-lav2-export]');
       if (exportBtn) exportBtn.addEventListener('click', function() { exportCSV(data); });
+      return document.createTextNode('');
     },
   };
 })();

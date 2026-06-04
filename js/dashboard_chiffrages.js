@@ -63,12 +63,19 @@
   window.DashboardChiffrages = {
     render: function(containerId) {
       var container = document.getElementById(containerId);
-      if (!container) return;
+      if (!container) {
+        // Fallback : chercher le vrai container de l'app
+        container = document.getElementById('content') ||
+                    document.getElementById('main-content') ||
+                    document.querySelector('.content') ||
+                    document.body;
+      }
+      if (!container) return document.createTextNode('');
 
       var items = getAll();
       if (!items.length) {
         container.innerHTML = '<div style="background:var(--card-bg,var(--bg-card,#fff));color:var(--text,#111);border:1px solid var(--border,#e5e7eb);border-radius:8px;padding:20px">Aucune donnée</div>';
-        return;
+        return document.createTextNode('');
       }
 
       var caTotal = items.reduce(function(sum, item) {
@@ -90,6 +97,7 @@
           '<h3 style="margin:0 0 10px;font-size:1rem;color:var(--text,#111)">Top 3 chantiers</h3>' +
           topRows(items) +
         '</div>';
+      return document.createTextNode('');
     },
   };
 })();
