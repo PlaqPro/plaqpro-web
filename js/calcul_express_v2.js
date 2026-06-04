@@ -148,6 +148,14 @@ const CalcExpressV2 = {
     'Talus':                ['OUV_TALUS_ENGAZONNEMENT','OUV_HAIE_PLANTATION','OUV_TERRASSEMENT_PREP'],
     'Terrasse':             ['OUV_TERRASSE_BETON_DESACTIVE','OUV_ALLEE_DALLAGE','OUV_BORDURE_JARDIN'],
     'Zone boisée':          ['OUV_HAIE_PLANTATION','OUV_TERRASSEMENT_PREP','OUV_MASSIF_PAILLAGE'],
+    'Terrasse extérieure':      ['OUV_TERRASSE_BETON_DESACTIVE','OUV_ALLEE_DALLAGE','OUV_BORDURE_JARDIN'],
+    'Aire de stationnement':    ['OUV_PARKING_STABILISE','OUV_ALLEE_DALLAGE','OUV_TERRASSEMENT_PREP'],
+    'Clôture périmétrique':     ['OUV_CLOTURE_BETON','OUV_CLOTURE_BOIS','OUV_HAIE_PLANTATION'],
+    'Espace vert commun':       ['OUV_GAZON_ROULEAU','OUV_MASSIF_PAILLAGE','OUV_TERRASSEMENT_PREP'],
+    'Façade végétalisée':       ['OUV_HAIE_PLANTATION','OUV_MASSIF_PAILLAGE','OUV_TERRASSEMENT_PREP'],
+    'Accès principal':          ['OUV_ALLEE_GRAVIERS','OUV_ALLEE_DALLAGE','OUV_BORDURE_JARDIN'],
+    'Zone de livraison':        ['OUV_PARKING_STABILISE','OUV_ALLEE_DALLAGE','OUV_TERRASSEMENT_PREP'],
+    'Zone de stockage extérieur':['OUV_DALLE_BETON_12CM','OUV_TERRASSEMENT_PREP','OUV_PARKING_STABILISE'],
   },
 
   // ── Obtenir la liste de lieux pour un corps + profil ──────
@@ -791,6 +799,23 @@ const CalcExpressV2 = {
       </div>
       <div id="cex-m-preview" style="font-size:.9rem;color:var(--accent,#2563eb);font-weight:600;min-height:22px"></div>`;
 
+    const champLibre = mode === 'libre' ? `
+      <div style="margin-top:12px">
+        <p style="font-size:13px;color:var(--text-muted,#888);margin-bottom:8px">
+          Cliquez pour poser des points. Double-clic pour fermer la forme.
+        </p>
+        <canvas id="cex-canvas-libre" width="340" height="260"
+          style="border:2px solid var(--accent,#4f8ef7);border-radius:8px;background:var(--card-bg,#1e1e2e);cursor:crosshair;touch-action:none">
+        </canvas>
+        <p style="font-size:13px;margin-top:8px">
+          Surface calculée : <strong id="cex-canvas-surface">${p.surface && p.mode === 'libre' ? p.surface + ' m²' : '0 m²'}</strong>
+          <button type="button" id="cex-canvas-reset"
+            style="margin-left:12px;padding:4px 10px;border-radius:6px;background:transparent;border:1px solid var(--border,rgba(255,255,255,.2));color:var(--text-muted,#888);cursor:pointer;font-size:12px">
+            Effacer
+          </button>
+        </p>
+        <input type="hidden" id="cex-surface-libre" value="${p.surface && p.mode === 'libre' ? p.surface : 0}">
+      </div>` : '';
     const champs = mode === 'forme-l' ? champL : champRect;
     const prestsPays = p.corps === 'paysagisme'
       ? (this.PRESTATIONS_PAYSAGISME[p.nom] || ['OUV_GAZON_ROULEAU'])
@@ -803,8 +828,8 @@ const CalcExpressV2 = {
       : '';
 
     const champPaysagisme = p.corps === 'paysagisme' ? `
-      <div style="background:var(--accent,#4f8ef7);border-radius:10px;padding:14px;margin-bottom:16px">
-        <p style="font-weight:700;color:#fff;margin:0 0 10px 0">🌿 Prestation sur ${this._esc(p.nom)}</p>
+      <div style="background:var(--card-bg,#1e1e2e);border:1px solid var(--accent,#4f8ef7);border-radius:10px;padding:14px;margin-bottom:16px">
+        <p style="font-weight:700;color:var(--accent,#4f8ef7);margin:0 0 10px 0">🌿 Prestation sur ${this._esc(p.nom)}</p>
         <select id="cex-pays-tache" style="width:100%;padding:10px;border-radius:8px;background:#fff;color:#222;border:none;font-size:15px">
           <option value="">-- Choisir --</option>
           ${prestsPays}
@@ -832,9 +857,7 @@ const CalcExpressV2 = {
           ${btnMode('forme-l','Forme en L','⌐')}
           ${btnMode('libre','Dessin libre','✏️')}
         </div>
-        ${mode === 'libre'
-          ? `<p style="color:var(--text-secondary,#666);font-size:.85rem">Le canvas polygonal sera disponible ici — utilisez Rectangle ou Forme en L pour l'instant.</p>`
-          : champs}
+        ${mode === 'libre' ? champLibre : champs}
       `)}
     `);
 
@@ -872,6 +895,91 @@ const CalcExpressV2 = {
       }
     }
     this._bind();
+    const canvas = this._container.querySelector('#cex-canvas-libre');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      let points = [];
+      let closed = false;
+
+      const draw = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (!points.length) return;
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        points.forEach(pt => ctx.lineTo(pt.x, pt.y));
+        if (closed) ctx.closePath();
+        ctx.strokeStyle = '#4f8ef7';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        if (closed) {
+          ctx.fillStyle = 'rgba(79,142,247,0.15)';
+          ctx.fill();
+        }
+        points.forEach(pt => {
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+          ctx.fillStyle = '#4f8ef7';
+          ctx.fill();
+        });
+      };
+
+      const calcSurface = () => {
+        if (points.length < 3) return 0;
+        let area = 0;
+        for (let i = 0; i < points.length; i++) {
+          const j = (i + 1) % points.length;
+          area += points[i].x * points[j].y;
+          area -= points[j].x * points[i].y;
+        }
+        const scale = 10 / 340;
+        return Math.abs(area / 2) * scale * scale;
+      };
+
+      const getPos = e => {
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches ? e.touches[0] : e;
+        return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+      };
+
+      canvas.addEventListener('click', e => {
+        if (closed) return;
+        points.push(getPos(e));
+        draw();
+      });
+
+      canvas.addEventListener('dblclick', () => {
+        if (points.length < 3) return;
+        closed = true;
+        const surf = calcSurface().toFixed(1);
+        draw();
+        const el = this._container.querySelector('#cex-canvas-surface');
+        if (el) el.textContent = surf + ' m²';
+        const inp = this._container.querySelector('#cex-surface-libre');
+        if (inp) inp.value = surf;
+        if (this._pieceEnCours) this._pieceEnCours.surface = parseFloat(surf);
+      });
+
+      canvas.addEventListener('touchstart', e => {
+        e.preventDefault();
+        if (closed) return;
+        points.push(getPos(e));
+        draw();
+      }, { passive: false });
+
+      const resetBtn = this._container.querySelector('#cex-canvas-reset');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          points = [];
+          closed = false;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          const el = this._container.querySelector('#cex-canvas-surface');
+          if (el) el.textContent = '0 m²';
+          const inp = this._container.querySelector('#cex-surface-libre');
+          if (inp) inp.value = '0';
+          if (this._pieceEnCours) this._pieceEnCours.surface = 0;
+        });
+      }
+    }
   },
 
   // ── Mapping corps → BDD V2 ───────────────────────────────
@@ -1134,6 +1242,13 @@ const CalcExpressV2 = {
             const w2 = parseFloat((this._container.querySelector('#cex-m-w2') || {}).value) || 0;
             s = Math.round((l1 * w1 + l2 * w2) * 100) / 100;
             if (p) { p.l1=l1; p.w1=w1; p.l2=l2; p.w2=w2; }
+          } else if (mode === 'libre') {
+            const inp = this._container.querySelector('#cex-surface-libre');
+            s = inp && parseFloat(inp.value) > 0 ? parseFloat(inp.value) : 0;
+            if (p && s > 0) {
+              p.surface = s;
+              p.mode = 'libre';
+            }
           }
           if (!s) { if (typeof App !== 'undefined' && App.toast) App.toast('Saisissez les dimensions', 'warning'); return; }
           if (p) {
