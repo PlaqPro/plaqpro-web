@@ -120,6 +120,23 @@ const CalcExpressV2 = {
                   'Garage', 'Salle de bain 1', 'Salle de bain 2', 'WC'],
   },
 
+  PRESTATIONS_PAYSAGISME: {
+    'Aire de jeux':         ['OUV_AIRE_JEUX_SOL','OUV_GAZON_ROULEAU','OUV_TERRASSEMENT_PREP'],
+    'Allée':                ['OUV_ALLEE_GRAVIERS','OUV_ALLEE_DALLAGE','OUV_BORDURE_JARDIN'],
+    "Bassin / pièce d'eau": ['OUV_BASSIN_PREFAB','OUV_TERRASSEMENT_PREP'],
+    'Clôture':              ['OUV_CLOTURE_BETON','OUV_CLOTURE_BOIS','OUV_HAIE_PLANTATION'],
+    'Haie':                 ['OUV_HAIE_PLANTATION','OUV_TERRASSEMENT_PREP'],
+    'Jardin arrière':       ['OUV_GAZON_ROULEAU','OUV_MASSIF_PAILLAGE','OUV_TERRASSEMENT_PREP','OUV_BORDURE_JARDIN'],
+    'Jardin avant':         ['OUV_GAZON_ROULEAU','OUV_MASSIF_PAILLAGE','OUV_TERRASSEMENT_PREP','OUV_BORDURE_JARDIN'],
+    'Massif fleuri':        ['OUV_MASSIF_PAILLAGE','OUV_BORDURE_JARDIN','OUV_TERRASSEMENT_PREP'],
+    'Parking':              ['OUV_PARKING_STABILISE','OUV_ALLEE_DALLAGE','OUV_TERRASSE_BETON_DESACTIVE'],
+    'Pelouse':              ['OUV_GAZON_ROULEAU','OUV_TERRASSEMENT_PREP','OUV_TALUS_ENGAZONNEMENT'],
+    'Potager':              ['OUV_POTAGER_CARRE','OUV_TERRASSEMENT_PREP','OUV_BORDURE_JARDIN'],
+    'Talus':                ['OUV_TALUS_ENGAZONNEMENT','OUV_HAIE_PLANTATION','OUV_TERRASSEMENT_PREP'],
+    'Terrasse':             ['OUV_TERRASSE_BETON_DESACTIVE','OUV_ALLEE_DALLAGE','OUV_BORDURE_JARDIN'],
+    'Zone boisée':          ['OUV_HAIE_PLANTATION','OUV_TERRASSEMENT_PREP','OUV_MASSIF_PAILLAGE'],
+  },
+
   // ── Obtenir la liste de lieux pour un corps + profil ──────
   _getLieux(corpsId, profil) {
     if (corpsId === 'maconnerie') {
@@ -672,17 +689,22 @@ const CalcExpressV2 = {
       <div id="cex-m-preview" style="font-size:.9rem;color:var(--accent,#2563eb);font-weight:600;min-height:22px"></div>`;
 
     const champs = mode === 'forme-l' ? champL : champRect;
+    const prestsPays = p.corps === 'paysagisme'
+      ? (this.PRESTATIONS_PAYSAGISME[p.nom] || ['OUV_GAZON_ROULEAU'])
+          .map(code => {
+            const ouv = (typeof BddV2 !== 'undefined' && BddV2.estChargee()) ? BddV2.getOuvrage(code) : null;
+            const label = ouv ? ouv.designation : code;
+            const sel = (p.tachePaysagisme||'') === code ? 'selected' : '';
+            return `<option value="${code}" ${sel}>${this._esc(label)}</option>`;
+          }).join('')
+      : '';
+
     const champPaysagisme = p.corps === 'paysagisme' ? `
       <div style="background:var(--accent,#4f8ef7);border-radius:10px;padding:14px;margin-bottom:16px">
-        <p style="font-weight:700;color:#fff;margin:0 0 10px 0">
-          🌿 Quelle prestation sur ce lieu ?
-        </p>
+        <p style="font-weight:700;color:#fff;margin:0 0 10px 0">🌿 Prestation sur ${this._esc(p.nom)}</p>
         <select id="cex-pays-tache" style="width:100%;padding:10px;border-radius:8px;background:#fff;color:#222;border:none;font-size:15px">
-          <option value="">-- Choisir une prestation --</option>
-          <option value="OUV_BORDURE_JARDIN" ${(p.tachePaysagisme||'')==='OUV_BORDURE_JARDIN'?'selected':''}>▪ Bordure jardin</option>
-          <option value="OUV_GAZON_ROULEAU" ${(p.tachePaysagisme||'')==='OUV_GAZON_ROULEAU'?'selected':''}>🌱 Gazon en rouleau</option>
-          <option value="OUV_MASSIF_PAILLAGE" ${(p.tachePaysagisme||'')==='OUV_MASSIF_PAILLAGE'?'selected':''}>🌺 Massif paillage</option>
-          <option value="OUV_TERRASSE_BETON_DESACTIVE" ${(p.tachePaysagisme||'')==='OUV_TERRASSE_BETON_DESACTIVE'?'selected':''}>🪨 Terrasse béton désactivé</option>
+          <option value="">-- Choisir --</option>
+          ${prestsPays}
         </select>
       </div>` : '';
 

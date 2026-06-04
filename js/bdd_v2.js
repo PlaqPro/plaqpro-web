@@ -32,7 +32,9 @@ const BddV2 = {
   },
 
   getOuvrage(code) {
-    return DB.getAll(DB.KEYS.ouvragesTypes).find(o => o.code === code) || null;
+    return DB.getAll(DB.KEYS.ouvragesTypes).find(o => o.code === code)
+      || OUVRAGES_TYPES_DATA.find(o => o.code === code)
+      || null;
   },
 
   getComposition(codeOuvrage) {
@@ -50,6 +52,8 @@ const BddV2 = {
   // ── Calcul coût matière d un ouvrage pour 1 unité ────────
   calcCoutMatiere(codeOuvrage) {
     const compo = this.getComposition(codeOuvrage);
+    const ouv = this.getOuvrage(codeOuvrage);
+    if (!compo.length && ouv && Number.isFinite(ouv.cout_mat)) return ouv.cout_mat;
     return compo.reduce((total, ligne) => {
       const qte   = ligne.quantite_unitaire || 0;
       const perte = ligne.perte || 0;
@@ -62,6 +66,7 @@ const BddV2 = {
   calcCoutMO(codeOuvrage) {
     const ouv = this.getOuvrage(codeOuvrage);
     if (!ouv) return 0;
+    if (Number.isFinite(ouv.cout_mo)) return ouv.cout_mo;
     return (ouv.temps_mo_unitaire_h || 0) * (ouv.taux_horaire_ht || 0);
   },
 
@@ -71,8 +76,8 @@ const BddV2 = {
     if (!ouv || !quantite) return { coutMat: 0, coutMO: 0, prixVente: 0, gain: 0 };
     const coutMat  = this.calcCoutMatiere(codeOuvrage) * quantite;
     const coutMO   = this.calcCoutMO(codeOuvrage) * quantite;
-    const margeMat = ouv.marge_materiaux || 0.3;
-    const margeMO  = ouv.marge_mo || 0.35;
+    const margeMat = Number.isFinite(ouv.marge_materiaux) ? ouv.marge_materiaux : (Number.isFinite(ouv.marge_mat) ? ouv.marge_mat - 1 : 0.3);
+    const margeMO  = Number.isFinite(ouv.marge_mo) ? ouv.marge_mo : 0.35;
     const prixVente = coutMat * (1 + margeMat) + coutMO * (1 + margeMO);
     const gain      = prixVente - coutMat - coutMO;
     return { coutMat, coutMO, prixVente, gain };
@@ -110,6 +115,17 @@ const OUVRAGES_TYPES_DATA = [
   { code:'OUV_GAZON_ROULEAU',          corps_metier:'Paysagisme',   lot_devis:'Lot 09 - Paysagisme',   famille:'Vegetal',     designation:'Gazon en rouleau pose',                 unite:'m²', temps_mo_unitaire_h:0.14, taux_horaire_ht:42, marge_materiaux:0.25, marge_mo:0.35, tva:0.10, actif:true },
   { code:'OUV_MASSIF_PAILLAGE',        corps_metier:'Paysagisme',   lot_devis:'Lot 09 - Paysagisme',   famille:'Massifs',     designation:'Massif plante avec paillage',           unite:'m²', temps_mo_unitaire_h:0.35, taux_horaire_ht:42, marge_materiaux:0.25, marge_mo:0.35, tva:0.10, actif:true },
   { code:'OUV_BORDURE_JARDIN',         corps_metier:'Paysagisme',   lot_devis:'Lot 09 - Paysagisme',   famille:'Bordures',    designation:'Bordure de jardin posee',               unite:'ml', temps_mo_unitaire_h:0.18, taux_horaire_ht:42, marge_materiaux:0.25, marge_mo:0.35, tva:0.10, actif:true },
+  { code:'OUV_CLOTURE_BETON',          designation:'Clôture béton + grillage',       corps_metier:'Paysagisme', unite:'ml', cout_mat:45,  cout_mo:35,  marge_mat:1.3, marge_mo:1.4, actif:true },
+  { code:'OUV_CLOTURE_BOIS',           designation:'Clôture bois panneaux',          corps_metier:'Paysagisme', unite:'ml', cout_mat:55,  cout_mo:30,  marge_mat:1.3, marge_mo:1.4, actif:true },
+  { code:'OUV_HAIE_PLANTATION',        designation:'Plantation haie arbustive',      corps_metier:'Paysagisme', unite:'ml', cout_mat:25,  cout_mo:20,  marge_mat:1.3, marge_mo:1.4, actif:true },
+  { code:'OUV_ALLEE_GRAVIERS',         designation:'Allée graviers sur géotextile',  corps_metier:'Paysagisme', unite:'m²', cout_mat:18,  cout_mo:15,  marge_mat:1.3, marge_mo:1.4, actif:true },
+  { code:'OUV_ALLEE_DALLAGE',          designation:'Allée dallage béton',            corps_metier:'Paysagisme', unite:'m²', cout_mat:45,  cout_mo:35,  marge_mat:1.3, marge_mo:1.4, actif:true },
+  { code:'OUV_TALUS_ENGAZONNEMENT',    designation:'Talus engazonnement fixation',   corps_metier:'Paysagisme', unite:'m²', cout_mat:12,  cout_mo:18,  marge_mat:1.3, marge_mo:1.4, actif:true },
+  { code:'OUV_BASSIN_PREFAB',          designation:'Bassin préfabriqué posé',        corps_metier:'Paysagisme', unite:'u',  cout_mat:380, cout_mo:180, marge_mat:1.3, marge_mo:1.4, actif:true },
+  { code:'OUV_POTAGER_CARRE',          designation:'Carré potager bois + terre',     corps_metier:'Paysagisme', unite:'u',  cout_mat:120, cout_mo:80,  marge_mat:1.3, marge_mo:1.4, actif:true },
+  { code:'OUV_AIRE_JEUX_SOL',          designation:'Sol aire de jeux copeaux',       corps_metier:'Paysagisme', unite:'m²', cout_mat:22,  cout_mo:15,  marge_mat:1.3, marge_mo:1.4, actif:true },
+  { code:'OUV_PARKING_STABILISE',      designation:'Parking stabilisé gravier',      corps_metier:'Paysagisme', unite:'m²', cout_mat:28,  cout_mo:20,  marge_mat:1.3, marge_mo:1.4, actif:true },
+  { code:'OUV_TERRASSEMENT_PREP',      designation:'Terrassement préparation sol',   corps_metier:'Paysagisme', unite:'m²', cout_mat:8,   cout_mo:22,  marge_mat:1.3, marge_mo:1.4, actif:true },
 ];
 
 // ── Données OUVRAGES_COMPOSITION (recettes) ───────────────
