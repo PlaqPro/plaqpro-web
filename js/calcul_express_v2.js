@@ -1,6 +1,6 @@
-/**
+﻿/**
  * PlaqPro+ — Calcul Express V2
- * Flux : chantier + client → profil → sous-traitants → corps métiers → pièces → métrages → résultat
+ * Flux : chantier + client → profil → sous-traitants → corps métiers → pièces → Métrage → résultat
  * Architecture validée 02/06/2026
  * Copyright (c) 2026 Gabriel Khamassi — Saint-Priest (69)
  */
@@ -219,6 +219,13 @@ const CalcExpressV2 = {
     this._containerId = containerId;
     this._container   = document.getElementById(containerId);
     if (!this._container) return;
+    if (this._chiffrageCharge) {
+      if (this._bindController) this._bindController.abort();
+      this._bindController = null;
+      this._renderEtape('resume');
+      this._chiffrageCharge = false;
+      return;
+    }
     this._chantier      = { nom: '', clientId: null, adresse: '' };
     this._profil        = null;
     this._sousTraitants = [];
@@ -231,6 +238,30 @@ const CalcExpressV2 = {
     this._pieceEnCours  = null;
     this._corpsConfig   = {};
     this._renderEtape('chantier');
+  },
+
+  chargerChiffrage(chiffrageId) {
+    const liste = JSON.parse(localStorage.getItem('plaqpro_chiffrages') || '[]');
+    const c = chiffrageId
+      ? liste.find(x => x.id === chiffrageId)
+      : liste[0];
+    if (!c) return false;
+    // Restaurer l'état complet
+    this._chantier    = c.chantier    || { nom:'', clientId:null, adresse:'' };
+    this._corpsActifs = c.corpsActifs || [];
+    this._pieces      = (c.pieces     || []).map(p => ({
+      ...p,
+      quantites: p.quantites || {},
+    }));
+    this._lastResume  = c.resume      || {};
+    if (c.devisId && !this._lastResume.devisId) this._lastResume.devisId = c.devisId;
+    this._profil      = c.profil      || 'particulier';
+    this._corpsConfig = c.corpsConfig || {};
+    // Démarrer à l'étape résumé pour review
+    this._corpsEnCours = 0;
+    this._etapeEnCours = 'resume';
+    this._chiffrageCharge = true;
+    return true;
   },
 
   // ── Dispatcher étapes ─────────────────────────────────────
@@ -466,7 +497,7 @@ const CalcExpressV2 = {
       ${this._progressBar('corps')}
       ${this._card(`
         <h2 style="margin:0 0 6px;font-size:1.1rem;font-weight:700">Corps de métiers</h2>
-        <p style="margin:0 0 16px;font-size:.85rem;color:var(--text-secondary,#666)">Cliquez sur un corps pour saisir les métrages — revenez ici pour en chiffrer un autre</p>
+        <p style="margin:0 0 16px;font-size:.85rem;color:var(--text-secondary,#666)">Cliquez sur un corps pour saisir les Métrage — revenez ici pour en chiffrer un autre</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
           ${cards}
         </div>
@@ -543,7 +574,7 @@ const CalcExpressV2 = {
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
             <div>
               <div style="font-size:.85rem;font-weight:600;color:var(--accent,#2563eb)">📐 Surfaces Plâtrerie disponibles</div>
-              <div style="font-size:.8rem;color:var(--text-secondary,#666)">${piecesPlaco.length} pièce${piecesPlaco.length>1?'s':''} avec métrages</div>
+              <div style="font-size:.8rem;color:var(--text-secondary,#666)">${piecesPlaco.length} pièce${piecesPlaco.length>1?'s':''} avec Métrage</div>
             </div>
             <button type="button" data-cex-action="import-placo" style="padding:7px 14px;border-radius:7px;border:none;background:var(--accent,#2563eb);color:#fff;font-size:.8rem;font-weight:600;cursor:pointer">Importer</button>
           </div>
@@ -1095,6 +1126,8 @@ const CalcExpressV2 = {
             date:        new Date().toISOString(),
             chantier:    this._chantier    || {},
             corpsActifs: this._corpsActifs || [],
+            corpsConfig: this._corpsConfig || {},
+            profil:      this._profil      || 'particulier',
             pieces:      this._pieces      || [],
             resume:      this._lastResume  || {},
           };
@@ -1182,9 +1215,37 @@ const CalcExpressV2 = {
               DevisMulti._state.chantierId = this._chantier.id || this._chantier.chantierId || '';
             }
           }
+          const devisIdExistant = this._lastResume && this._lastResume.devisId;
+          if (devisIdExistant) {
+            if (!confirm('Êtes-vous sûr de remplacer l\'ancien devis ? Cette action est irréversible.')) {
+              return;
+            }
+            // Supprimer l'ancien devis avant d'en créer un nouveau
+            const liste = JSON.parse(localStorage.getItem(DB.KEYS.devis) || '[]')
+              .filter(d => String(d.id) !== String(devisIdExistant));
+            localStorage.setItem(DB.KEYS.devis, JSON.stringify(liste));
+          }
           const idDevis = DevisMulti.enregistrerSilencieux();
           if (idDevis) {
             DevisMulti._state._devisId = idDevis;
+            this._lastResume = this._lastResume || {};
+            this._lastResume.devisId = idDevis;
+            const chiffrageSource = {
+              id:          'chiffrage_' + Date.now(),
+              date:        new Date().toISOString(),
+              devisId:     idDevis,
+              chantier:    this._chantier    || {},
+              corpsActifs: this._corpsActifs || [],
+              corpsConfig: this._corpsConfig || {},
+              profil:      this._profil      || 'particulier',
+              pieces:      this._pieces      || [],
+              resume:      this._lastResume  || {},
+            };
+            try {
+              const liste = JSON.parse(localStorage.getItem('plaqpro_chiffrages') || '[]');
+              liste.unshift(chiffrageSource);
+              localStorage.setItem('plaqpro_chiffrages', JSON.stringify(liste));
+            } catch(e) {}
             if (typeof App !== 'undefined' && App.toast) App.toast('✅ Devis enregistré — visible dans Devis', 'success');
           } else {
             // Diagnostic précis

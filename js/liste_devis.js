@@ -165,6 +165,7 @@
         + '<div class="ld-total">' + fmtEuro.format(parseFloat(devis.totalHT) || 0) + ' HT</div>'
         + '<div class="ld-actions">'
         + '<button class="ld-btn primary" onclick="ListeDevis.modifier(' + id + ')">✏️ Modifier</button>'
+        + '<button onclick="ListeDevis.modifierChiffrage(\'' + id + '\')" style="padding:8px 14px;border-radius:8px;background:var(--warning,#f59e0b);color:#fff;border:none;cursor:pointer;font-size:13px">🔧 Modifier le chiffrage</button>'
         + '<button class="ld-btn" onclick="ListeDevis.imprimer(' + id + ')">🖨 Imprimer</button>'
         + '<button class="ld-btn" onclick="ListeDevis.valider(' + id + ')">✅ Valider</button>'
         + '<button class="ld-btn danger" onclick="ListeDevis.supprimer(' + id + ')">🗑 Supprimer</button>'
@@ -177,6 +178,22 @@
         App.navigate('devis_complet');
       } else if (typeof App !== 'undefined' && App.toast) {
         App.toast('Devis introuvable', 'error');
+      }
+    },
+
+    modifierChiffrage: function(devisId) {
+      // Trouver le chiffrage lié au devis
+      var chiffrages = JSON.parse(localStorage.getItem('plaqpro_chiffrages') || '[]');
+      var c = chiffrages.find(function(x) { return String(x.devisId) === String(devisId); }) || chiffrages[0];
+      if (!c) {
+        if (typeof App !== 'undefined' && App.toast) {
+          App.toast('⚠️ Chiffrage source introuvable', 'warning');
+        }
+        return;
+      }
+      if (typeof CalcExpressV2 !== 'undefined') {
+        CalcExpressV2.chargerChiffrage(c.id);
+        App.navigate('calcExpressV2');
       }
     },
 
