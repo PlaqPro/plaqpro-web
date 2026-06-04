@@ -35,8 +35,21 @@ const CalcExpressV2 = {
     particulier: ['Buanderie', 'Cave', 'Chambre 1', 'Chambre 2', 'Chambre 3',
                   'Couloir', 'Cuisine', 'Entrée', 'Garage', 'Salon',
                   'Salle de bain', 'Séjour', 'WC'],
-    pro:         ['Bureau 1', 'Bureau 2', 'Bureau 3', 'Salle de réunion', 'Hall',
-                  'Couloir', 'Dépôt', 'Local technique', 'Sanitaires', 'Accueil', 'Espace commun'],
+    pro: [
+      'Accueil',
+      'Bureau',
+      'Couloir',
+      'Dépôt',
+      'Espace commun',
+      'Espace pause',
+      'Hall',
+      'Local informatique',
+      'Local technique',
+      'Salle de conférence',
+      'Salle de réunion',
+      'Sanitaires',
+      'Show-room',
+    ],
     ao:          [],
   },
 
@@ -142,6 +155,28 @@ const CalcExpressV2 = {
     if (corpsId === 'maconnerie') {
       const key = (this._corpsConfig[corpsId] || {}).lieuxKey || 'maconnerie_ext';
       return this.LIEUX_CORPS[key] || [];
+    }
+    if (corpsId === 'electricite') {
+      return profil === 'pro'
+        ? ['Accueil', 'Bureau', 'Couloir', 'Dépôt', 'Espace commun', 'Espace pause',
+           'Hall', 'Local informatique', 'Local technique', 'Salle de conférence',
+           'Salle de réunion', 'Sanitaires', 'Show-room', 'Tableau divisionnaire',
+           'Tableau général']
+        : this.LIEUX_CORPS.electricite;
+    }
+    if (corpsId === 'plomberie') {
+      return profil === 'pro'
+        ? ['Espace pause', 'Local technique', 'Sanitaires hommes',
+           'Sanitaires femmes', 'Sanitaires PMR', 'Salle de pause',
+           'Cuisine professionnelle', 'Buanderie', 'Local nettoyage']
+        : this.LIEUX_CORPS.plomberie;
+    }
+    if (corpsId === 'paysagisme') {
+      return profil === 'pro'
+        ? ['Accès principal', 'Aire de stationnement', 'Clôture périmétrique',
+           'Espace vert commun', 'Façade végétalisée', 'Parking',
+           'Terrasse extérieure', 'Zone de livraison', 'Zone de stockage extérieur']
+        : this.LIEUX_CORPS.paysagisme;
     }
     if (this.LIEUX_CORPS[corpsId]) return this.LIEUX_CORPS[corpsId];
     return this.PIECES_PROFIL[profil] || this.PIECES_PROFIL.particulier;
@@ -864,6 +899,24 @@ const CalcExpressV2 = {
     const pvTotal = coutTotal + gainTotal;
     this._lastResume = { corpsData: lignes, coutTotal, gainTotal, pvTotal };
 
+    // Synthèse automatique pour analyse IA
+    const lignesTexte = (lignes || []).map(l => {
+      const corpsId = l.corps && l.corps.id ? l.corps.id : '';
+      const corpsLabel = l.corps && l.corps.label ? l.corps.label : corpsId;
+      const unite = (corpsId === 'electricite' || corpsId === 'plomberie') ? 'pts' : 'm²';
+      return corpsLabel + ' — ' + l.detail.join(', ') + ' (' + unite + ')';
+    });
+    const profil = this._profil || 'particulier';
+    const typeChantier = (this._corpsConfig || {});
+    const synthese = [
+      'Chiffrage ' + (profil === 'pro' ? 'professionnel' : 'particulier'),
+      'Corps de métiers : ' + (this._corpsActifs || []).join(', '),
+      ...lignesTexte,
+      'Prix vente estimé HT : ' + pvTotal.toFixed(0) + ' €',
+      'Gain estimé : ' + gainTotal.toFixed(0) + ' €',
+    ].join('. ');
+    this._lastResume.synthese = synthese;
+
     const lignesHTML = lignes.map(l => `
       <div style="padding:12px 0;border-bottom:1px solid var(--border,rgba(255,255,255,.08))">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
@@ -1101,6 +1154,26 @@ const CalcExpressV2 = {
               }
             }
           });
+          // Enregistrer le devis automatiquement
+          try {
+            const stateAvantEnregistrement = JSON.parse(JSON.stringify(DevisMulti._state));
+            const nbDevisAvant = (DB.getAll(DB.KEYS.devis) || []).length;
+            const idDevis = DevisMulti.enregistrer();
+            const listeDevis = DB.getAll(DB.KEYS.devis) || [];
+            const devisCree = listeDevis.length > nbDevisAvant ? listeDevis[listeDevis.length - 1] : null;
+            DevisMulti._state = stateAvantEnregistrement;
+            DevisMulti._state._devisId = idDevis || (devisCree ? devisCree.id : null);
+            if (typeof App !== 'undefined' && App.toast) {
+              App.toast('✅ Devis enregistré', 'success');
+            }
+          } catch(e) {
+            if (typeof App !== 'undefined' && App.toast) {
+              App.toast('⚠️ Erreur enregistrement devis', 'error');
+            }
+          }
+          if (typeof AssistantIA !== 'undefined' && this._lastResume && this._lastResume.synthese) {
+            AssistantIA.setSynthese && AssistantIA.setSynthese(this._lastResume.synthese);
+          }
           if (typeof App !== 'undefined' && App.navigate) {
             App.navigate('devis_complet');
           } else if (typeof App !== 'undefined' && App.toast) {
