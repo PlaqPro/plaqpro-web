@@ -29,10 +29,6 @@
     </div>
     <div id="sidebar-nav"></div>
     <div class="sidebar-footer">
-      <a class="nav-item" href="#" onclick="App.navigate('config');return false;">
-        <span class="nav-icon">⚙️</span><span>Configuration</span>
-      </a>
-      <div style="height:1px;background:var(--border);margin:6px 8px"></div>
       <!-- Pause café -->
       <a class="nav-item" href="#" onclick="PauseCafe.show();return false;"
          style="color:#D4956A;font-size:12px" title="Pause café ☕">
@@ -205,15 +201,15 @@
 
       { section: '📄 Commercial' },
       { page: 'listeDevis', icon: '📄', label: 'Devis' },
+      { page: 'historiqueChiffrages', icon: '📊', label: 'Historique chiffrages' },
       { page: 'factures',    icon: '<i class="ph ph-receipt"></i>', label: 'Factures' },
       { page: 'dpgf',        icon: '<i class="ph ph-bank"></i>', label: 'Appels d\'offres' },
       { page: 'prospection', icon: '<i class="ph ph-map-pin"></i>', label: 'Prospection IA' },
 
-      { section: '🔧 Outils' },
+      { section: '🔧 Chiffrage & Prix' },
       { page: 'produits',    icon: '<i class="ph ph-package"></i>', label: 'Base produits' },
       { page: 'catalogueFournisseurs', icon: '<i class="ph ph-storefront"></i>', label: 'Catalogue fournisseurs' },
       { page: 'tarifs',      icon: '<i class="ph ph-coins"></i>', label: 'Mes prix de vente' },
-      { page: 'calculateur', icon: '<i class="ph ph-lightning"></i>', label: 'Calcul Express' },
 
       { section: '🌿 Paysagisme & Extérieur' },
       { page: 'paysagisme',          icon: '<i class="ph ph-tree"></i>',           label: 'Paysagisme' },
@@ -240,9 +236,6 @@
       { page: 'chargesCouts', icon: '<i class="ph ph-calculator"></i>', label: 'Mes charges & coûts' },
       { page: 'config',      icon: '<i class="ph ph-gear"></i>', label: 'Configuration' },
       { page: 'legal',       icon: '<i class="ph ph-scales"></i>', label: 'Mentions légales' },
-
-      { section: '🎮 Formation' },
-      { page: 'quizMetiers', icon: '<i class="ph ph-game-controller"></i>', label: 'Quiz Métiers BTP' },
     ];
 
     const sidebar = document.getElementById('sidebar-nav');
