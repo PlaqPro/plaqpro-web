@@ -155,13 +155,18 @@ const CalcExpressV2 = {
     if (corpsId === 'maconnerie') {
       if (profil === 'pro') {
         const key = (this._corpsConfig[corpsId] || {}).lieuxKey || 'maconnerie_ext';
-        const listePro = key === 'maconnerie_int'
-          ? ['Cage d\'escalier', 'Cloison de séparation', 'Couloir', 'Hall d\'entrée',
-             'Local technique', 'Mur coupe-feu', 'Mur porteur', 'Sas d\'entrée']
-          : ['Bardage façade', 'Clôture périmétrique', 'Dalle extérieure',
-             'Façade principale', 'Mur de soutènement', 'Portail entrée',
-             'Quai de chargement', 'Voirie interne'];
-        return listePro;
+        return key === 'maconnerie_int'
+          ? {
+              pieces: ['Cage d\'escalier', 'Cloison de séparation', 'Couloir', 'Hall d\'entrée',
+                       'Local technique', 'Mur coupe-feu', 'Mur porteur', 'Sas d\'entrée'],
+              prestations: ['Cloison briques', 'Cloison brique de verre', 'Mur porteur', 'Doublage'],
+            }
+          : {
+              zones: ['Bardage façade', 'Clôture périmétrique', 'Dalle extérieure',
+                      'Façade principale', 'Mur de soutènement', 'Portail entrée',
+                      'Quai de chargement', 'Voirie interne'],
+              prestations: ['Enduit façade', 'Ravalement', 'Parpaing', 'Brique de parement'],
+            };
       }
       const key = (this._corpsConfig[corpsId] || {}).lieuxKey || 'maconnerie_ext';
       return this.LIEUX_CORPS[key] || [];
@@ -496,7 +501,7 @@ const CalcExpressV2 = {
       const sel  = piecesExistantes.find(p => p.nom === nom);
       const info = sel ? (isUnite
         ? (sel.nbPoints ? sel.nbPoints + ' points' : 'à renseigner')
-        : (sel.surface ? sel.surface + ' m²' : 'à Métrage')) : '';
+        : (sel.surface ? sel.surface + ' m²' : 'à métrer')) : '';
       if (isMaconnerie) {
         const ouvert = this._pieceMaconnerieSelection === nom;
         const selectPrestation = ouvert ? `
@@ -957,8 +962,8 @@ const CalcExpressV2 = {
       <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;margin-top:16px">
         ${this._btn('← Modifier', 'resume-retour', 'secondary')}
         <div style="display:flex;gap:8px">
-          ${this._btn('💾 Sauvegarder', 'resume-sauver')}
-          ${this._btn('📄 Générer le devis', 'resume-devis')}
+          ${this._btn('💾 Sauvegarder le chiffrage', 'resume-sauver')}
+          ${this._btn('📄 Générer et enregistrer le devis', 'resume-devis')}
           ${this._btn("🛒 Liste d'achat", 'resume-achat')}
         </div>
       </div>
@@ -1097,7 +1102,7 @@ const CalcExpressV2 = {
             const liste = JSON.parse(localStorage.getItem('plaqpro_chiffrages') || '[]');
             liste.unshift(chiffrage);
             localStorage.setItem('plaqpro_chiffrages', JSON.stringify(liste));
-            if (typeof App !== 'undefined' && App.toast) App.toast('💾 Chiffrage sauvegardé', 'success');
+            if (typeof App !== 'undefined' && App.toast) App.toast('💾 Chiffrage sauvegardé (pas le devis)', 'success');
           } catch(e) {
             if (typeof App !== 'undefined' && App.toast) App.toast('Erreur sauvegarde', 'error');
           }
@@ -1168,14 +1173,29 @@ const CalcExpressV2 = {
               }
             }
           });
-          // Enregistrer le devis automatiquement
           // Enregistrer silencieusement sans reset ni navigation
+          const stateAvant = DevisMulti._state;
+          if (!stateAvant.clientId) {
+            // Tenter de récupérer clientId depuis this._chantier
+            if (this._chantier && this._chantier.clientId) {
+              DevisMulti._state.clientId   = this._chantier.clientId;
+              DevisMulti._state.chantierId = this._chantier.id || this._chantier.chantierId || '';
+            }
+          }
           const idDevis = DevisMulti.enregistrerSilencieux();
           if (idDevis) {
             DevisMulti._state._devisId = idDevis;
-            if (typeof App !== 'undefined' && App.toast) App.toast('✅ Devis enregistré', 'success');
+            if (typeof App !== 'undefined' && App.toast) App.toast('✅ Devis enregistré — visible dans Devis', 'success');
           } else {
-            if (typeof App !== 'undefined' && App.toast) App.toast('⚠️ Devis vide — rien à enregistrer', 'warning');
+            // Diagnostic précis
+            const s = DevisMulti._state;
+            const nbLignes = (s.sections||[]).reduce((t,sec)=>t+(sec.lignes||[]).length,0);
+            const msg = !s.clientId ? '⚠️ Client manquant — devis non enregistré'
+                      : !nbLignes   ? '⚠️ Devis vide — aucune ligne'
+                      : '⚠️ Erreur enregistrement devis';
+            if (typeof App !== 'undefined' && App.toast) App.toast(msg, 'error');
+            // Ne pas naviguer si échec
+            return;
           }
           if (typeof AssistantIA !== 'undefined' && this._lastResume && this._lastResume.synthese) {
             AssistantIA.setSynthese && AssistantIA.setSynthese(this._lastResume.synthese);
