@@ -288,6 +288,10 @@ const QM_DATA = {
 };
 
 // ── Rendu ─────────────────────────────────────────────────────────────────────
+function _qmEsc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 Pages.quizMetiers = function() {
   const state = JSON.parse(localStorage.getItem('plaqpro_quiz_metiers') || '{}');
   const div = document.createElement('div');
@@ -454,8 +458,8 @@ window.QM = {
         </div>
         <div style="display:flex;flex-direction:column;gap:10px" id="qm-opts">
           ${opts.map((o, i) => `
-            <button onclick="QM.repondre(${JSON.stringify(o)}, this)" id="qm-opt-${i}" style="background:var(--bg-secondary);border:2px solid var(--border);border-radius:var(--radius-lg);padding:12px 16px;text-align:left;cursor:pointer;font-size:.9rem;transition:all .15s;color:var(--text-primary)">
-              ${o}
+            <button onclick="QM.repondre(this.dataset.choix, this)" data-choix="${_qmEsc(o)}" id="qm-opt-${i}" style="background:var(--bg-secondary);border:2px solid var(--border);border-radius:var(--radius-lg);padding:12px 16px;text-align:left;cursor:pointer;font-size:.9rem;transition:all .15s;color:var(--text-primary)">
+              ${_qmEsc(o)}
             </button>
           `).join('')}
         </div>
