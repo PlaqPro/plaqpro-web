@@ -241,10 +241,9 @@ const CalcExpressV2 = {
 
   // ── Étape 1 : Chantier + Client ───────────────────────────
   _renderChantier() {
-    const clients    = DB.getAll(DB.KEYS.clients).filter(c => c.actif !== false);
+    const clients    = (typeof DB.getClients === 'function' ? DB.getClients() : DB.getAll(DB.KEYS.clients)).filter(c => c.actif !== false);
     const chantiers  = DB.getAll(DB.KEYS.chantiers).filter(c => c.actif !== false);
     const chantierId = this._chantier.chantierId;
-    const chanExist  = chantiers.find(c => c.id == chantierId);
 
     const optChantier = chantiers.map(c =>
       `<option value="${c.id}" ${c.id == chantierId ? 'selected' : ''}>${this._esc(c.nom || c.libelle || '')}</option>`
@@ -253,78 +252,75 @@ const CalcExpressV2 = {
       `<option value="${c.id}" ${c.id == this._chantier.clientId ? 'selected' : ''}>${this._esc(c.nom || c.raisonSociale || '')}</option>`
     ).join('');
 
-    const clientExist = chanExist ? clients.find(c => c.id == chanExist.clientId) : null;
-    const champsNouveaux = chanExist ? `
-      <div style="background:rgba(37,99,235,.06);border:1px solid var(--accent,#2563eb);border-radius:8px;padding:12px 16px;font-size:.9rem;display:flex;flex-direction:column;gap:4px">
-        <div style="font-weight:700">${this._esc(chanExist.nom || chanExist.libelle || '')}</div>
-        ${clientExist ? `<div style="font-size:.85rem;color:var(--accent,#2563eb)">👤 ${this._esc(clientExist.nom || clientExist.raisonSociale || '')}</div>` : ''}
-        <div style="color:var(--text-secondary,#666);font-size:.8rem">${this._esc(chanExist.adresse || chanExist.ville || '')}</div>
-      </div>` : `
-      <div>
-        <label style="font-size:.85rem;font-weight:600;color:var(--text-secondary,#666);display:block;margin-bottom:6px">Client *</label>
-        <select id="cex-client-id" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border,#e2e8f0);font-size:.95rem;box-sizing:border-box;background:var(--bg-card,#1e2530);color:var(--text-main,#fff)">
-          <option value="">-- Sélectionner un client --</option>
-          ${optClient}
-        </select>
-        <button type="button" data-cex-action="nouveau-client" style="margin-top:8px;font-size:.8rem;color:var(--accent,#2563eb);background:none;border:none;cursor:pointer;padding:0">+ Nouveau client</button>
-      </div>
-      <div>
-        <label style="font-size:.85rem;font-weight:600;color:var(--text-secondary,#666);display:block;margin-bottom:6px">Nom du chantier *</label>
-        <input id="cex-chantier-nom" type="text" placeholder="ex : Rénovation villa Martin" value="${this._esc(this._chantier.nom)}"
-          style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border,#e2e8f0);font-size:.95rem;box-sizing:border-box;background:var(--bg-card,#1e2530);color:var(--text-main,#fff)">
-      </div>
-      <div>
-        <label style="font-size:.85rem;font-weight:600;color:var(--text-secondary,#666);display:block;margin-bottom:6px">Adresse</label>
-        <input id="cex-chantier-adresse" type="text" placeholder="ex : 12 rue des Acacias, Lyon" value="${this._esc(this._chantier.adresse)}"
-          style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border,#e2e8f0);font-size:.95rem;box-sizing:border-box;background:var(--bg-card,#1e2530);color:var(--text-main,#fff)">
+    const inputStyle = 'width:100%;padding:11px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font-size:.95rem;box-sizing:border-box;outline:none';
+    const row = (label, field) => `
+      <div style="display:grid;grid-template-columns:minmax(130px,30%) 1fr;gap:16px;align-items:center">
+        <label style="font-size:.9rem;font-weight:650;color:#fff">${label}</label>
+        <div>${field}</div>
       </div>`;
 
     this._html(`
-      ${this._progressBar('chantier')}
-      ${this._card(`
-        <h2 style="margin:0 0 16px;font-size:1.1rem;font-weight:700">Nouveau chiffrage</h2>
-        <div style="display:flex;flex-direction:column;gap:14px">
-          <div>
-            <label style="font-size:.85rem;font-weight:600;color:var(--text-secondary,#666);display:block;margin-bottom:6px">Chantier existant</label>
+      <div style="background:var(--bg,#0f0f1a);padding:24px;border-radius:0;color:#fff">
+        <h2 style="margin:0 0 22px;font-size:1.15rem;font-weight:750;color:#fff">Nouveau chiffrage</h2>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          ${row('Chantier existant', `
+            <div style="display:flex;gap:12px;align-items:center">
             <select id="cex-chantier-id"
-              style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border,#e2e8f0);font-size:.95rem;box-sizing:border-box;background:var(--bg-card,#1e2530);color:var(--text-main,#fff)">
+              style="${inputStyle}">
               <option value="">-- Nouveau chantier --</option>
               ${optChantier}
             </select>
-            ${!chanExist ? `<button type="button" data-cex-action="nouveau-chantier" style="margin-top:8px;font-size:.8rem;color:var(--accent,#2563eb);background:none;border:none;cursor:pointer;padding:0">+ Créer un chantier</button>` : ''}
-          </div>
-          ${champsNouveaux}
+              <button type="button" data-cex-action="nouveau-chantier" style="white-space:nowrap;font-size:.85rem;color:var(--accent,#22d3ee);background:none;border:none;cursor:pointer;padding:0">+ Créer un chantier</button>
+            </div>
+          `)}
+          ${row('Client *', `
+            <div style="display:flex;gap:12px;align-items:center">
+              <select id="cex-client-select" style="${inputStyle}">
+                <option value="">-- Sélectionner un client --</option>
+                ${optClient}
+              </select>
+              <button type="button" data-cex-action="nouveau-client" style="white-space:nowrap;font-size:.85rem;color:var(--accent,#22d3ee);background:none;border:none;cursor:pointer;padding:0">+ Nouveau client</button>
+            </div>
+          `)}
+          ${row('Nom du chantier *', `
+            <input id="cex-nom-chantier" type="text" placeholder="ex : Rénovation villa Martin" value="${this._esc(this._chantier.nom)}" style="${inputStyle}">
+          `)}
+          ${row('Adresse', `
+            <input id="cex-adresse" type="text" placeholder="ex : 12 rue des Acacias, Lyon" value="${this._esc(this._chantier.adresse)}" style="${inputStyle}">
+          `)}
         </div>
-        <div style="display:flex;justify-content:space-between;margin-top:20px">
+        <div style="display:flex;justify-content:space-between;margin-top:24px">
           ${this._btn('✕ Annuler', 'chantier-annuler', 'secondary')}
           ${this._btn('Suivant →', 'chantier-suivant')}
         </div>
-      `)}
+      </div>
     `);
 
     const sel = this._container.querySelector('#cex-chantier-id');
     if (sel) {
       sel.addEventListener('change', () => {
         const id = sel.value;
-        const ch = DB.getAll(DB.KEYS.chantiers).find(c => c.id == id);
+        const ch = id ? DB.getChantier(parseInt(id)) : null;
         this._chantier.chantierId = id || null;
         if (ch) {
           this._chantier.nom      = ch.nom || ch.libelle || '';
           this._chantier.clientId = ch.clientId || null;
           this._chantier.adresse  = ch.adresse || ch.ville || '';
-          const cli = DB.getAll(DB.KEYS.clients).find(c => c.id == ch.clientId);
+          const clientSelect = document.getElementById('cex-client-select');
+          const nomInput     = document.getElementById('cex-nom-chantier');
+          const adresseInput = document.getElementById('cex-adresse');
+          if (clientSelect) clientSelect.value = ch.clientId || '';
+          if (nomInput) nomInput.value = ch.nom || ch.libelle || '';
+          if (adresseInput) adresseInput.value = ch.adresse || ch.ville || '';
+          const cli = DB.getClient(parseInt(ch.clientId));
           if (cli && cli.type) {
             this._profil = cli.type === 'particulier' ? 'particulier' : 'pro';
           } else {
             this._profil = null;
           }
         } else {
-          this._chantier.nom      = '';
-          this._chantier.clientId = null;
-          this._chantier.adresse  = '';
-          this._profil            = null;
+          this._chantier.chantierId = null;
         }
-        this._renderChantier();
       });
     }
     this._bind();
@@ -920,10 +916,19 @@ const CalcExpressV2 = {
         const action = btn.dataset.cexAction;
         if (action === 'chantier-suivant') {
           const chantierId = (this._container.querySelector('#cex-chantier-id') || {}).value;
+          const nom     = ((this._container.querySelector('#cex-nom-chantier') || {}).value || '').trim();
+          const client  = (this._container.querySelector('#cex-client-select') || {}).value;
+          const adresse = ((this._container.querySelector('#cex-adresse') || {}).value || '').trim();
+          if (!client) { if (typeof App !== 'undefined' && App.toast) App.toast('Sélectionnez un client', 'warning'); return; }
+          if (!nom) { if (typeof App !== 'undefined' && App.toast) App.toast('Saisissez un nom de chantier', 'warning'); return; }
+          const cliSelectionne = DB.getClient(parseInt(client));
+          this._profil = cliSelectionne && cliSelectionne.type
+            ? (cliSelectionne.type === 'particulier' ? 'particulier' : 'pro')
+            : null;
           if (chantierId) {
+            this._chantier = { nom, clientId: client || null, chantierId, adresse };
             if (!this._profil) {
-              const cli = DB.getAll(DB.KEYS.clients).find(c => c.id == this._chantier.clientId);
-              if (cli && !cli.type) {
+              if (cliSelectionne && !cliSelectionne.type) {
                 if (typeof App !== 'undefined' && App.toast) App.toast("⚠️ Ce client n'a pas de type renseigné — veuillez compléter sa fiche", 'warning');
                 setTimeout(() => { if (typeof App !== 'undefined') App.navigate('clients'); }, 1800);
                 return;
@@ -932,11 +937,8 @@ const CalcExpressV2 = {
             this._renderEtape('profil');
             return;
           }
-          const nom     = ((this._container.querySelector('#cex-chantier-nom') || {}).value || '').trim();
-          const client  = (this._container.querySelector('#cex-client-id') || {}).value;
-          const adresse = ((this._container.querySelector('#cex-chantier-adresse') || {}).value || '').trim();
-          if (!nom) { if (typeof App !== 'undefined' && App.toast) App.toast('Saisissez un nom de chantier', 'warning'); return; }
-          this._chantier = { nom, clientId: client || null, chantierId: null, adresse };
+          const nouveau = DB.addChantier({ nom, clientId: parseInt(client), adresse });
+          this._chantier = { nom, clientId: client || null, chantierId: nouveau ? nouveau.id : null, adresse };
           this._renderEtape('profil');
         }
         if (action === 'chantier-annuler') { if (typeof App !== 'undefined') App.navigate('dashboard'); return; }
