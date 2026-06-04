@@ -24,6 +24,15 @@ Tu réponds aux questions sur les matériaux, normes DTU, conseils de pose, et c
 IMPORTANT : Tu ne calcules JAMAIS de quantités toi-même. Pour tout calcul de plaques, rails, peinture ou autres quantités, tu dis toujours : 'Utilisez le Calcul Express de PlaqPro+ pour obtenir un résultat précis avec les bons ratios professionnels.'
 Tu réponds en français, de façon courte et pratique.`,
 
+  setSynthese(texte) {
+    try { sessionStorage.setItem('plaqpro_synthese_chiffrage', texte); } catch(e) {}
+    // Si un champ description existe dans l'UI, le remplir
+    const champ = document.getElementById('assistant-description') ||
+                  document.getElementById('ia-description') ||
+                  document.querySelector('[data-ia-description]');
+    if (champ) champ.value = texte;
+  },
+
   // ── Initialisation ────────────────────────────────────────
   init() {
     this._injectStyles();

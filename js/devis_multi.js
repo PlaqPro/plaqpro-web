@@ -986,6 +986,46 @@ Règles importantes :
     App.navigate('devis');
   },
 
+  enregistrerSilencieux: function() {
+    var state = DevisMulti._state;
+    if (!state.clientId) return null;
+    var sections = state.sections || [];
+    var lignes = [];
+    sections.forEach(function(sec) {
+      lignes.push({ _header:true, designation: sec.titre, icon: sec.icon, tva: sec.tva });
+      (sec.lignes || []).forEach(function(l) {
+        lignes.push({
+          ref: l.ref || '', designation: l.designation || '',
+          unite: l.unite || '', quantite: parseFloat(l.qte) || 0,
+          prixHT: parseFloat(l.prix) || 0,
+          totalHT: (parseFloat(l.qte)||0) * (parseFloat(l.prix)||0),
+          tva: sec.tva || 20,
+        });
+      });
+    });
+    if (!lignes.filter(function(l) { return !l._header; }).length) return null;
+    var totalHT = lignes.filter(function(l) { return !l._header; }).reduce(function(s, l) { return s + l.totalHT; }, 0);
+    var tva = parseFloat(state.tva) || 20;
+    var devis = {
+      numero:     'DEV-' + Date.now(),
+      objet:      state.objet || 'Devis',
+      clientId:   state.clientId || '',
+      chantierId: state.chantierId || '',
+      date:       new Date().toISOString().slice(0,10),
+      validite:   state.validite || '',
+      statut:     'Brouillon',
+      lignes:     lignes,
+      totalHT:    totalHT,
+      tva:        tva,
+      totalTTC:   totalHT * (1 + tva/100),
+      montantTVA: totalHT * tva/100,
+      notes:      state.notes || '',
+    };
+    var result = DB.addDevis(devis);
+    // Ne pas réinitialiser _state, ne pas naviguer
+    return result ? (result.id || devis.numero) : null;
+  },
+
   lister: function() {
     return DB.getAll(DB.KEYS.devis) || [];
   },

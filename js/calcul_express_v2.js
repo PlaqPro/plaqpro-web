@@ -153,6 +153,16 @@ const CalcExpressV2 = {
   // ── Obtenir la liste de lieux pour un corps + profil ──────
   _getLieux(corpsId, profil) {
     if (corpsId === 'maconnerie') {
+      if (profil === 'pro') {
+        const key = (this._corpsConfig[corpsId] || {}).lieuxKey || 'maconnerie_ext';
+        const listePro = key === 'maconnerie_int'
+          ? ['Cage d\'escalier', 'Cloison de séparation', 'Couloir', 'Hall d\'entrée',
+             'Local technique', 'Mur coupe-feu', 'Mur porteur', 'Sas d\'entrée']
+          : ['Bardage façade', 'Clôture périmétrique', 'Dalle extérieure',
+             'Façade principale', 'Mur de soutènement', 'Portail entrée',
+             'Quai de chargement', 'Voirie interne'];
+        return listePro;
+      }
       const key = (this._corpsConfig[corpsId] || {}).lieuxKey || 'maconnerie_ext';
       return this.LIEUX_CORPS[key] || [];
     }
@@ -916,6 +926,10 @@ const CalcExpressV2 = {
       'Gain estimé : ' + gainTotal.toFixed(0) + ' €',
     ].join('. ');
     this._lastResume.synthese = synthese;
+    // Stocker pour que l'assistant IA puisse la lire
+    try {
+      sessionStorage.setItem('plaqpro_synthese_chiffrage', synthese);
+    } catch(e) {}
 
     const lignesHTML = lignes.map(l => `
       <div style="padding:12px 0;border-bottom:1px solid var(--border,rgba(255,255,255,.08))">
@@ -1155,30 +1169,19 @@ const CalcExpressV2 = {
             }
           });
           // Enregistrer le devis automatiquement
-          try {
-            const stateAvantEnregistrement = JSON.parse(JSON.stringify(DevisMulti._state));
-            const nbDevisAvant = (DB.getAll(DB.KEYS.devis) || []).length;
-            const idDevis = DevisMulti.enregistrer();
-            const listeDevis = DB.getAll(DB.KEYS.devis) || [];
-            const devisCree = listeDevis.length > nbDevisAvant ? listeDevis[listeDevis.length - 1] : null;
-            DevisMulti._state = stateAvantEnregistrement;
-            DevisMulti._state._devisId = idDevis || (devisCree ? devisCree.id : null);
-            if (typeof App !== 'undefined' && App.toast) {
-              App.toast('✅ Devis enregistré', 'success');
-            }
-          } catch(e) {
-            if (typeof App !== 'undefined' && App.toast) {
-              App.toast('⚠️ Erreur enregistrement devis', 'error');
-            }
+          // Enregistrer silencieusement sans reset ni navigation
+          const idDevis = DevisMulti.enregistrerSilencieux();
+          if (idDevis) {
+            DevisMulti._state._devisId = idDevis;
+            if (typeof App !== 'undefined' && App.toast) App.toast('✅ Devis enregistré', 'success');
+          } else {
+            if (typeof App !== 'undefined' && App.toast) App.toast('⚠️ Devis vide — rien à enregistrer', 'warning');
           }
           if (typeof AssistantIA !== 'undefined' && this._lastResume && this._lastResume.synthese) {
             AssistantIA.setSynthese && AssistantIA.setSynthese(this._lastResume.synthese);
           }
-          if (typeof App !== 'undefined' && App.navigate) {
-            App.navigate('devis_complet');
-          } else if (typeof App !== 'undefined' && App.toast) {
-            App.toast('DevisMulti prêt — navigation indisponible', 'warning');
-          }
+          // Naviguer vers devis_complet pour visualiser
+          if (typeof App !== 'undefined' && App.navigate) App.navigate('devis_complet');
           return;
         }
         if (action === 'resume-achat') {
