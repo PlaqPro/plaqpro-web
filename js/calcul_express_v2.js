@@ -250,10 +250,19 @@ const CalcExpressV2 = {
     // Restaurer l'état complet
     this._chantier    = c.chantier    || { nom:'', clientId:null, adresse:'' };
     this._corpsActifs = c.corpsActifs || [];
-    this._pieces      = (c.pieces     || []).map(p => ({
-      ...p,
-      quantites: p.quantites || {},
-    }));
+    this._pieces      = (c.pieces     || []).map(p => {
+      const piece = {
+        ...p,
+        quantites: p.quantites || {},
+      };
+      if ((piece.corps === 'electricite' || piece.corps === 'plomberie') &&
+          parseFloat(piece.surface) > 0 &&
+          (!piece.quantites || !Object.keys(piece.quantites).length)) {
+        piece.quantites = { _total: piece.surface };
+        piece.nbPoints = piece.surface;
+      }
+      return piece;
+    });
     this._lastResume  = c.resume      || {};
     if (c.devisId && !this._lastResume.devisId) this._lastResume.devisId = c.devisId;
     this._profil      = c.profil      || 'particulier';
@@ -1191,7 +1200,23 @@ const CalcExpressV2 = {
                 ? Object.values(p.quantites || {}).reduce((s,v) => s+(parseFloat(v)||0), 0)
                 : parseFloat(p.surface);
               const r    = this._calcCorps(corpsId, surf, p);
-              const designation = p.nom + (p.prestation ? ' - ' + p.prestation : '') + (p.hsp ? ' (HSP ' + p.hsp + 'm)' : '');
+              const dims = [];
+              if (p.longueur && p.largeur) dims.push(p.longueur + 'm × ' + p.largeur + 'm');
+              if (p.hsp) dims.push('HSP ' + p.hsp + 'm');
+              if (p.prestation) dims.push(p.prestation);
+              if (p.tachePaysagisme && typeof BddV2 !== 'undefined') {
+                const ouv = BddV2.getOuvrage(p.tachePaysagisme);
+                if (ouv) dims.push(ouv.designation);
+              }
+              const estElecPlomb = (corpsId === 'electricite' || corpsId === 'plomberie');
+              if (estElecPlomb && p.quantites) {
+                const details = Object.entries(p.quantites)
+                  .filter(([k,v]) => v > 0)
+                  .map(([k,v]) => k.replace(/_/g,' ') + ' ×' + v)
+                  .join(', ');
+                if (details) dims.push(details);
+              }
+              const designation = p.nom + (dims.length ? ' — ' + dims.join(' | ') : '');
               const uniteDevis = (corpsId === 'electricite' || corpsId === 'plomberie') ? 'u' : 'm²';
               const nbLignesAvant = (() => {
                 const s = DevisMulti._state.sections.find(s => s.key === corpsId);
@@ -1204,6 +1229,17 @@ const CalcExpressV2 = {
               const sec = DevisMulti._state.sections.find(s => s.key === corpsId);
               if (sec && sec.lignes.length > nbLignesAvant) {
                 sec.lignes[nbLignesAvant].prix = surf > 0 ? Math.round(r.prixVente / surf) : 0;
+              }
+              if (r.coutMat > 0 || r.coutMO > 0) {
+                DevisMulti._ajouterSectionAvecSurface(
+                  corpsId, '', '',
+                  1, 'forfait',
+                  '  └ Dont mat. ' + fmt(r.coutMat) + ' + MO ' + fmt(r.coutMO)
+                );
+                const secD = DevisMulti._state.sections.find(s => s.key === corpsId);
+                if (secD && secD.lignes.length) {
+                  secD.lignes[secD.lignes.length - 1].prix = 0;
+                }
               }
             });
             // Linéaires neuf élec/plomberie
@@ -1410,8 +1446,12 @@ const CalcExpressV2 = {
       if (typeCorps) {
         const corpsId = this._corpsActifs[this._corpsEnCours];
         if (!this._corpsConfig[corpsId]) this._corpsConfig[corpsId] = {};
-        this._corpsConfig[corpsId].type = typeCorps.dataset.cexTypeCorps;
-        this._renderEtape('typeCorps');
+        const choix = typeCorps.dataset.cexTypeCorps;
+        this._corpsConfig[corpsId].type = choix;
+        if (corpsId === 'maconnerie') {
+          this._corpsConfig[corpsId].lieuxKey = choix === 'int' ? 'maconnerie_int' : 'maconnerie_ext';
+        }
+        this._renderEtape('pieces');
         return;
       }
 
