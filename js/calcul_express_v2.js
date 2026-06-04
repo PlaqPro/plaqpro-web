@@ -237,6 +237,7 @@ const CalcExpressV2 = {
     this._corpsEnCours  = 0;
     this._pieceEnCours  = null;
     this._corpsConfig   = {};
+    this._chiffrageEnModification = false;
     this._renderEtape('chantier');
   },
 
@@ -261,6 +262,7 @@ const CalcExpressV2 = {
     this._corpsEnCours = 0;
     this._etapeEnCours = 'resume';
     this._chiffrageCharge = true;
+    this._chiffrageEnModification = true;
     return true;
   },
 
@@ -526,13 +528,30 @@ const CalcExpressV2 = {
       ? this._pieces.filter(p => p.corps === 'plaquisterie' && p.surface_sol)
       : [];
 
-    const isUnite = ['electricite','plomberie'].includes(corps.id);
+    const corpsId = corps.id;
+    const isUnite = ['electricite','plomberie'].includes(corpsId);
     const isMaconnerie = corps.id === 'maconnerie';
     const items = listePieces.map(nom => {
       const sel  = piecesExistantes.find(p => p.nom === nom);
-      const info = sel ? (isUnite
-        ? (sel.nbPoints ? sel.nbPoints + ' points' : 'à renseigner')
-        : (sel.surface ? sel.surface + ' m²' : 'à métrer')) : '';
+      const p = sel || {};
+      const estElecPlomb = (corpsId === 'electricite' || corpsId === 'plomberie');
+      const nbPts = estElecPlomb
+        ? Object.values(p.quantites || {}).reduce((s,v) => s + (parseInt(v) || 0), 0)
+        : 0;
+      const dejaFait = (parseFloat(p.surface) || 0) > 0 || (parseFloat(p.nbPoints) || 0) > 0 || nbPts > 0;
+      const valeurAffichee = estElecPlomb
+        ? (nbPts > 0 ? nbPts + ' pts' : '')
+        : ((parseFloat(p.surface) || 0) > 0 ? p.surface + ' m²' : '');
+      const badge = valeurAffichee
+        ? `<span style="background:var(--success,#22c55e);color:#fff;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:8px">✅ ${valeurAffichee}</span>`
+        : '';
+      const prestBadge = p.prestation
+        ? `<span style="background:var(--accent,#4f8ef7);color:#fff;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:4px">${this._esc(p.prestation)}</span>`
+        : '';
+      const tacheBadge = p.tachePaysagisme && typeof BddV2 !== 'undefined'
+        ? `<span style="background:var(--accent,#4f8ef7);color:#fff;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:4px">${this._esc(((BddV2.getOuvrage(p.tachePaysagisme) || { designation: p.tachePaysagisme }).designation))}</span>`
+        : '';
+      const badges = badge + prestBadge + tacheBadge;
       if (isMaconnerie) {
         const ouvert = this._pieceMaconnerieSelection === nom;
         const selectPrestation = ouvert ? `
@@ -545,15 +564,15 @@ const CalcExpressV2 = {
           </div>` : '';
         return `<div style="padding:12px 16px;border-radius:8px;border:2px solid ${sel ? 'var(--accent,#2563eb)' : 'var(--border,#e2e8f0)'};background:${sel ? 'rgba(37,99,235,.06)' : 'var(--bg-card,#1e2530)'}">
           <div data-cex-piece="${this._esc(nom)}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between">
-            <span style="font-weight:500;font-size:.9rem">${nom}</span>
-            ${sel ? `<span style="font-size:.8rem;color:var(--accent,#2563eb)">✓ ${sel.prestation || info}</span>` : '<span style="font-size:.8rem;color:var(--text-secondary,#666)">Choisir prestation</span>'}
+            <span style="font-weight:500;font-size:.9rem;display:flex;align-items:center;flex-wrap:wrap">${nom}${badges}</span>
+            ${sel || dejaFait ? '<span style="font-size:.8rem;color:var(--accent,#2563eb)">✓</span>' : '<span style="font-size:.8rem;color:var(--text-secondary,#666)">Choisir prestation</span>'}
           </div>
           ${selectPrestation}
         </div>`;
       }
       return `<div data-cex-piece="${this._esc(nom)}" style="padding:12px 16px;border-radius:8px;border:2px solid ${sel ? 'var(--accent,#2563eb)' : 'var(--border,#e2e8f0)'};background:${sel ? 'rgba(37,99,235,.06)' : 'var(--bg-card,#1e2530)'};cursor:pointer;display:flex;align-items:center;justify-content:space-between">
-        <span style="font-weight:500;font-size:.9rem">${nom}</span>
-        ${sel ? `<span style="font-size:.8rem;color:var(--accent,#2563eb)">✓ ${info}</span>` : ''}
+        <span style="font-weight:500;font-size:.9rem;display:flex;align-items:center;flex-wrap:wrap">${nom}${badges}</span>
+        ${sel || dejaFait ? '<span style="font-size:.8rem;color:var(--accent,#2563eb)">✓</span>' : ''}
       </div>`;
     }).join('');
 
@@ -563,10 +582,14 @@ const CalcExpressV2 = {
     this._html(`
       ${this._progressBar('pieces')}
       ${this._card(`
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <div style="position:sticky;top:0;z-index:10;background:var(--bg,#0f0f1a);padding:12px 16px;border-bottom:1px solid var(--border,rgba(255,255,255,.1));display:flex;align-items:center;gap:10px;margin:-16px -16px 16px">
           <span style="font-size:1.5rem">${corps.icone}</span>
           <h2 style="margin:0;font-size:1.1rem;font-weight:700">${corps.label} — Pièces à chiffrer</h2>
           <span style="margin-left:auto;font-size:.8rem;color:var(--text-secondary,#666);background:var(--bg-secondary,#f8f9fa);padding:4px 10px;border-radius:20px">${progress}</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+            ${this._btn('← Retour', 'pieces-retour', 'secondary')}
+            ${this._btn('↩ Retour corps de métiers', 'pieces-vers-corps')}
+          </div>
         </div>
         <p style="margin:0 0 16px;font-size:.85rem;color:var(--text-secondary,#666)">Sélectionnez les pièces à traiter — cliquez pour les Métrage</p>
         ${piecesPlaco.length > 0 ? `
@@ -593,12 +616,6 @@ const CalcExpressV2 = {
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
           <input id="cex-piece-libre" type="text" placeholder="Autre pièce / lieu..." style="flex:1;padding:9px 14px;border-radius:8px;border:1px solid var(--border,#e2e8f0);font-size:.9rem;background:var(--bg-card,#1e2530);color:var(--text-main,#fff)">
           <button type="button" data-cex-action="piece-libre-add" style="padding:9px 16px;border-radius:8px;border:none;background:var(--accent,#2563eb);color:#fff;font-weight:600;cursor:pointer">+ Ajouter</button>
-        </div>
-        <div style="display:flex;justify-content:space-between">
-          ${this._btn('← Retour', 'pieces-retour', 'secondary')}
-          <div style="display:flex;gap:8px">
-            ${this._btn('↩ Retour corps de métiers', 'pieces-vers-corps')}
-          </div>
         </div>
       `)}
     `);
@@ -642,9 +659,13 @@ const CalcExpressV2 = {
     this._html(`
       ${this._progressBar('pieces')}
       ${this._card(`
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div style="position:sticky;top:0;z-index:10;background:var(--bg,#0f0f1a);padding:12px 16px;border-bottom:1px solid var(--border,rgba(255,255,255,.1));display:flex;align-items:center;gap:10px;margin:-16px -16px 16px">
           <span style="font-size:1.4rem">${corps ? corps.icone : ''}</span>
           <h2 style="margin:0;font-size:1.1rem;font-weight:700">${corps ? corps.label : ''} — Type de travaux</h2>
+          <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+            ${this._btn('← Retour', 'type-corps-retour', 'secondary')}
+            ${typeActuel ? this._btn('Suivant — Sélectionner les pièces →', 'type-corps-suivant') : '<span style="font-size:.85rem;color:var(--text-secondary,#666);align-self:center">Choisissez un type pour continuer</span>'}
+          </div>
         </div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px">
           ${choixMaconnerie
@@ -652,10 +673,6 @@ const CalcExpressV2 = {
             : btnType('reno', 'Rénovation', '🔄', 'Remplacement appareillage existant') + btnType('neuf', 'Neuf / Création', '🆕', 'Câblage complet + appareillage')}
         </div>
         ${champsLineaires}
-        <div style="display:flex;justify-content:space-between;margin-top:20px">
-          ${this._btn('← Retour', 'type-corps-retour', 'secondary')}
-          ${typeActuel ? this._btn('Suivant — Sélectionner les pièces →', 'type-corps-suivant') : '<span style="font-size:.85rem;color:var(--text-secondary,#666)">Choisissez un type pour continuer</span>'}
-        </div>
       `)}
     `);
     this._bind();
@@ -694,13 +711,17 @@ const CalcExpressV2 = {
     this._html(`
       ${this._progressBar('metrage')}
       ${this._card(`
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div style="position:sticky;top:0;z-index:10;background:var(--bg,#0f0f1a);padding:12px 16px;border-bottom:1px solid var(--border,rgba(255,255,255,.1));display:flex;align-items:center;gap:10px;margin:-16px -16px 16px">
           <span style="font-size:1.4rem">${corps ? corps.icone : ''}</span>
           <div>
             <h2 style="margin:0;font-size:1rem;font-weight:700">${this._esc(p.nom)}</h2>
             <div style="font-size:.8rem;color:var(--text-secondary,#666)">${corps ? corps.label : ''}${p.prestation ? ' · ' + this._esc(p.prestation) : ''}</div>
           </div>
           ${total > 0 ? `<span style="margin-left:auto;font-size:.9rem;color:#16a34a;font-weight:700">${total} point${total>1?'s':''}</span>` : ''}
+          <div style="${total > 0 ? '' : 'margin-left:auto;'}display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+            ${this._btn('← Retour', 'app-retour', 'secondary')}
+            ${this._btn('✓ Valider', 'app-valider')}
+          </div>
         </div>
         <div style="background:var(--accent,#4f8ef7);border-radius:10px;padding:12px;margin-bottom:16px">
           <p style="color:#fff;margin:0;font-size:14px">
@@ -708,10 +729,6 @@ const CalcExpressV2 = {
           </p>
         </div>
         <div style="max-height:400px;overflow-y:auto">${sections}</div>
-        <div style="display:flex;justify-content:space-between;margin-top:16px">
-          ${this._btn('← Retour', 'app-retour', 'secondary')}
-          ${this._btn('✓ Valider', 'app-valider')}
-        </div>
       `)}
     `);
     this._bind();
@@ -746,7 +763,7 @@ const CalcExpressV2 = {
         ${needsHSP ? `
         <div style="flex:1;min-width:120px">
           <label style="font-size:.8rem;color:#f59e0b;font-weight:700;display:block;margin-bottom:4px">Hauteur sous plafond (m) *</label>
-          <input id="cex-m-hsp" type="number" min="1.5" max="6" step="0.05" value="${p.hsp||2.50}" placeholder="ex: 2.50"
+          <input id="cex-m-hsp" type="number" min="1.5" max="6" step="0.05" value="${p.hsp||''}" placeholder="ex: 2.50"
             style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid #f59e0b;background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box">
         </div>` : ''}
       </div>
@@ -788,13 +805,17 @@ const CalcExpressV2 = {
     this._html(`
       ${this._progressBar('metrage')}
       ${this._card(`
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div style="position:sticky;top:0;z-index:10;background:var(--bg,#0f0f1a);padding:12px 16px;border-bottom:1px solid var(--border,rgba(255,255,255,.1));display:flex;align-items:center;gap:10px;margin:-16px -16px 16px">
           <span style="font-size:1.4rem">${corps ? corps.icone : ''}</span>
           <div>
             <h2 style="margin:0;font-size:1rem;font-weight:700">${this._esc(p.nom)}</h2>
             <div style="font-size:.8rem;color:var(--text-secondary,#666)">${corps ? corps.label : ''}</div>
           </div>
           ${p.surface ? `<span style="margin-left:auto;font-size:.9rem;color:#16a34a;font-weight:700">${p.surface} m²</span>` : ''}
+          <div style="${p.surface ? '' : 'margin-left:auto;'}display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+            ${this._btn('← Retour', 'metrage-retour', 'secondary')}
+            ${this._btn('✓ Valider la surface', 'metrage-valider').replace('<button ', '<button id="cex-metrage-valider" ')}
+          </div>
         </div>
         ${champPaysagisme}
         <div style="display:flex;gap:8px;margin-bottom:16px">
@@ -805,10 +826,6 @@ const CalcExpressV2 = {
         ${mode === 'libre'
           ? `<p style="color:var(--text-secondary,#666);font-size:.85rem">Le canvas polygonal sera disponible ici — utilisez Rectangle ou Forme en L pour l'instant.</p>`
           : champs}
-        <div style="display:flex;justify-content:space-between;margin-top:16px">
-          ${this._btn('← Retour', 'metrage-retour', 'secondary')}
-          ${this._btn('✓ Valider la surface', 'metrage-valider').replace('<button ', '<button id="cex-metrage-valider" ')}
-        </div>
       `)}
     `);
 
@@ -838,10 +855,10 @@ const CalcExpressV2 = {
     this._container.querySelectorAll('input[type="number"]').forEach(i => i.addEventListener('input', preview));
     preview();
     const btnValider = this._container.querySelector('#cex-metrage-valider');
-    if (p.corps === 'paysagisme') {
+    if (btnValider) {
       const sel = this._container.querySelector('#cex-pays-tache');
-      if (btnValider && sel) {
-        btnValider.disabled = !sel.value;
+      btnValider.disabled = p.corps === 'paysagisme' && (!sel || !sel.value);
+      if (p.corps === 'paysagisme' && sel) {
         sel.addEventListener('change', () => { btnValider.disabled = !sel.value; });
       }
     }
@@ -974,6 +991,7 @@ const CalcExpressV2 = {
           <span style="color:#16a34a;font-weight:700">+${fmt(l.gainCorps)}</span>
         </div>
         <div style="font-size:.78rem;color:var(--text-secondary,#666)">${l.detail.join(' · ')}</div>
+        ${this._chiffrageEnModification && l.corps && l.corps.id ? `<button type="button" data-cex-action="modifier-corps" data-corps="${l.corps.id}" style="font-size:12px;padding:4px 10px;border-radius:6px;background:transparent;border:1px solid var(--border,rgba(255,255,255,.2));color:var(--text-muted,#888);cursor:pointer;margin-top:4px">✏️ Modifier ce corps</button>` : ''}
       </div>`).join('');
 
     this._html(`
@@ -1120,6 +1138,15 @@ const CalcExpressV2 = {
           return;
         }
         if (action === 'resume-retour') { this._renderEtape('corps'); return; }
+        if (action === 'modifier-corps') {
+          const corpsId = btn.dataset.corps;
+          const idx = this._corpsActifs.indexOf(corpsId);
+          if (idx !== -1) {
+            this._corpsEnCours = idx;
+            this._renderEtape('pieces');
+          }
+          return;
+        }
         if (action === 'resume-sauver') {
           const chiffrage = {
             id:          'chiffrage_' + Date.now(),
