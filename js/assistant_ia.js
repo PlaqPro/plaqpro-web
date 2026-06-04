@@ -27,7 +27,8 @@ Tu réponds en français, de façon courte et pratique.`,
   setSynthese(texte) {
     try { sessionStorage.setItem('plaqpro_synthese_chiffrage', texte); } catch(e) {}
     // Si un champ description existe dans l'UI, le remplir
-    const champ = document.getElementById('assistant-description') ||
+    const champ = document.getElementById('ia-input') ||
+                  document.getElementById('assistant-description') ||
                   document.getElementById('ia-description') ||
                   document.querySelector('[data-ia-description]');
     if (champ) champ.value = texte;
@@ -103,6 +104,7 @@ Tu réponds en français, de façon courte et pratique.`,
       </div>
 
       <div id="ia-input-row">
+        <div id="ia-hint" style="display:none"></div>
         <textarea id="ia-input" placeholder="Ex: Quelle vis utiliser pour du BA13 sur ossature ?" rows="1"
           onkeydown="AssistantIA._onKey(event)"></textarea>
         <button id="ia-send-btn" onclick="AssistantIA.send()">
@@ -131,6 +133,20 @@ Tu réponds en français, de façon courte et pratique.`,
     btn.innerHTML = this._open ? '✕' : '🤖';
     if (this._open) {
       this._checkGroq();
+      try {
+        const synthese = sessionStorage.getItem('plaqpro_synthese_chiffrage');
+        if (synthese) {
+          const inp = document.getElementById('ia-input');
+          if (inp && !inp.value) inp.value = synthese;
+          if (inp && inp.value === synthese) {
+            const hint = document.getElementById('ia-hint');
+            if (hint) {
+              hint.textContent = '💡 Synthèse de votre chiffrage pré-remplie — posez vos questions ou lancez l\'analyse';
+              hint.style.display = 'block';
+            }
+          }
+        }
+      } catch(e) {}
       setTimeout(() => document.getElementById('ia-input')?.focus(), 200);
     }
   },
@@ -396,11 +412,18 @@ Tu réponds en français, de façon courte et pratique.`,
       @keyframes ia-dot { 0%,80%,100%{transform:scale(0.8);opacity:0.4} 40%{transform:scale(1.1);opacity:1} }
 
       #ia-input-row {
-        display: flex; align-items: flex-end; gap: 8px;
+        display: grid; grid-template-columns: 1fr 38px; align-items: flex-end; gap: 8px;
         padding: 10px 12px;
         border-top: 1px solid var(--ia-border);
         background: rgba(255,255,255,0.02);
         flex-shrink: 0;
+      }
+      #ia-hint {
+        grid-column: 1 / -1;
+        color: var(--ia-accent);
+        font-size: 11px;
+        line-height: 1.35;
+        padding: 0 2px 2px;
       }
       #ia-input {
         flex: 1; background: rgba(255,255,255,0.06);
