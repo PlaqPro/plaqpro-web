@@ -542,7 +542,7 @@ const CalcExpressV2 = {
     const piecesExistantes = this._pieces.filter(p => p.corps === corps.id);
 
     const piecesPlaco = corps.id === 'peinture'
-      ? this._pieces.filter(p => p.corps === 'plaquisterie' && p.surface_sol)
+      ? this._pieces.filter(p => p.corps === 'plaquisterie' && (p.surface_sol || p.surface))
       : [];
 
     const corpsId = corps.id;
@@ -1468,15 +1468,15 @@ const CalcExpressV2 = {
           return;
         }
         if (action === 'import-placo') {
-          const piecesPlaco = this._pieces.filter(p => p.corps === 'plaquisterie' && p.surface_sol);
+          const piecesPlaco = this._pieces.filter(p => p.corps === 'plaquisterie' && (p.surface_sol || p.surface));
           piecesPlaco.forEach(pp => {
             const exist = this._pieces.find(p => p.corps === 'peinture' && p.nom === pp.nom);
             if (!exist) {
               this._pieces.push({
                 nom:          pp.nom,
                 corps:        'peinture',
-                surface:      pp.surface_sol,
-                surface_sol:  pp.surface_sol,
+                surface:      pp.surface_sol || pp.surface || 0,
+                surface_sol:  pp.surface_sol || pp.surface || 0,
                 surface_murs: pp.surface_murs || 0,
                 hsp:          pp.hsp || 2.50,
                 longueur:     pp.longueur,
