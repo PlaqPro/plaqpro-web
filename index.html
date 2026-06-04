@@ -166,6 +166,7 @@
   <script src="js/mode_chantier.js"></script>
   <script src="js/projets_types.js"></script>
   <script src="js/devis_multi.js"></script>
+  <script src="js/liste_devis.js"></script>
   <script src="js/historique_chiffrages.js"></script>
   <script src="js/chiffrages_export.js"></script>
   <script src="js/calcul_express_recap.js"></script>
@@ -203,7 +204,7 @@
       { page: 'calendrier',  icon: '<i class="ph ph-calendar"></i>', label: 'Calendrier' },
 
       { section: '📄 Commercial' },
-      { page: 'devisIntelligent', icon: '📄', label: 'Devis' },
+      { page: 'listeDevis', icon: '📄', label: 'Devis' },
       { page: 'factures',    icon: '<i class="ph ph-receipt"></i>', label: 'Factures' },
       { page: 'dpgf',        icon: '<i class="ph ph-bank"></i>', label: 'Appels d\'offres' },
       { page: 'prospection', icon: '<i class="ph ph-map-pin"></i>', label: 'Prospection IA' },
@@ -354,6 +355,7 @@
         devisIntelligent: function() { return Pages.devisIntelligent(params); },
         devis:         function() { return Pages.devis(params); },
         devis_complet:         function() { return Pages.devisComplet(); },
+        listeDevis:            function() { return ListeDevis.render('app-content'); },
         historiqueChiffrages:  function()       { return HistoriqueChiffrages.render('app-content'); },
         chiffrageRecap:        function(params) { return CalcExpressRecap.afficherRecap('app-content', params && params.id); },
         dashboardChiffrages:   function()       { return DashboardChiffrages.render('app-content'); },

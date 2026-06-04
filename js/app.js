@@ -55,6 +55,7 @@ const App = {
       devisIntelligent: (params) => Pages.devisIntelligent(params),
       devis:      () => Pages.devis(params),
       devisMulti:           () => DevisMulti.render(),
+      listeDevis:           () => ListeDevis.render('app-content'),
       historiqueChiffrages: () => HistoriqueChiffrages.render('app-content'),
       chiffrageRecap:      (params) => CalcExpressRecap.afficherRecap('app-content', params && params.id),
       dashboardChiffrages:   ()       => DashboardChiffrages.render('app-content'),

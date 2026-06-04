@@ -986,6 +986,65 @@ Règles importantes :
     App.navigate('devis');
   },
 
+  lister: function() {
+    return DB.getAll(DB.KEYS.devis) || [];
+  },
+
+  charger: function(devisId) {
+    var liste = DevisMulti.lister();
+    var id = parseInt(devisId);
+    var devis = liste.find(function(d) { return d.id === id; });
+    if (!devis) return false;
+
+    // Reconstruire _state depuis le devis sauvegardé
+    DevisMulti._state = DevisMulti._newState();
+    DevisMulti._state.clientId   = devis.clientId   || '';
+    DevisMulti._state.chantierId = devis.chantierId || '';
+    DevisMulti._state.objet      = devis.objet      || '';
+    DevisMulti._state.date       = devis.date       || '';
+    DevisMulti._state.validite   = devis.validite   || '';
+    DevisMulti._state.notes      = devis.notes      || '';
+    DevisMulti._state.tva        = devis.tva        || 20;
+    DevisMulti._state._devisId   = devis.id;
+
+    // Reconstruire sections depuis lignes aplaties
+    var secCourante = null;
+    (devis.lignes || []).forEach(function(l) {
+      if (l._header) {
+        secCourante = {
+          key:    l.designation || 'section',
+          icon:   l.icon || '',
+          titre:  l.designation || '',
+          tva:    l.tva || 10,
+          lignes: [],
+          sid:    DevisMulti._uid()
+        };
+        DevisMulti._state.sections.push(secCourante);
+      } else if (secCourante) {
+        secCourante.lignes.push({
+          id:          DevisMulti._uid(),
+          ref:         l.ref         || '',
+          designation: l.designation || '',
+          unite:       l.unite       || '',
+          qte:         l.quantite    || 0,
+          prix:        l.prixHT      || 0,
+        });
+      }
+    });
+    return true;
+  },
+
+  mettreAJourStatut: function(devisId, statut) {
+    var liste = DB.getAll(DB.KEYS.devis) || [];
+    var id = parseInt(devisId);
+    var idx = liste.findIndex(function(d) { return d.id === id; });
+    if (idx === -1) return false;
+    liste[idx].statut = statut;
+    liste[idx].updatedAt = new Date().toISOString();
+    localStorage.setItem(DB.KEYS.devis, JSON.stringify(liste));
+    return true;
+  },
+
   // ── Impression A4 ─────────────────────────────────────────
   imprimer: function() {
     var state  = DevisMulti._state;
