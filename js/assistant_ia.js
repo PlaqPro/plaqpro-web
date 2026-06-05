@@ -322,12 +322,12 @@ Tu réponds en français, de façon courte et pratique.`,
       }
 
       #ia-toggle-btn {
-        position: fixed; bottom: 28px; right: 88px; z-index: 5;
-        width: 54px; height: 54px; border-radius: 50%;
-        background: linear-gradient(135deg, #5B9BFF, #3B7DE8);
-        border: 1px solid rgba(79,142,247,0.4);
-        box-shadow: 0 6px 24px rgba(79,142,247,0.45);
-        font-size: 22px; cursor: pointer;
+        position: fixed; top: 8px; right: 160px; bottom: auto; z-index: 5;
+        width: 36px; height: 36px; border-radius: 50%;
+        background: var(--card-bg, #1e1e2e);
+        border: 1px solid var(--border, rgba(255,255,255,.15));
+        box-shadow: none;
+        font-size: 18px; cursor: pointer;
         display: flex; align-items: center; justify-content: center;
         transition: all 0.2s ease;
       }
@@ -448,7 +448,7 @@ Tu réponds en français, de façon courte et pratique.`,
 
       @media (max-width: 480px) {
         #ia-window { width: calc(100vw - 20px); right: 10px; bottom: 80px; }
-        #ia-toggle-btn { right: 16px; bottom: 16px; }
+        #ia-toggle-btn { top: 8px; right: 16px; bottom: auto; }
       }
     `;
     document.head.appendChild(s);
