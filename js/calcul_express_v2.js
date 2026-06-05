@@ -809,11 +809,17 @@ const CalcExpressV2 = {
         </canvas>
         <p style="font-size:13px;margin-top:8px">
           Surface calculée : <strong id="cex-canvas-surface">${p.surface && p.mode === 'libre' ? p.surface + ' m²' : '0 m²'}</strong>
+        </p>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button type="button" id="cex-canvas-fermer"
+            style="padding:8px 16px;border-radius:8px;background:var(--accent,#4f8ef7);color:#fff;border:none;cursor:pointer;flex:1">
+            ✓ Fermer la forme
+          </button>
           <button type="button" id="cex-canvas-reset"
-            style="margin-left:12px;padding:4px 10px;border-radius:6px;background:transparent;border:1px solid var(--border,rgba(255,255,255,.2));color:var(--text-muted,#888);cursor:pointer;font-size:12px">
+            style="padding:8px 12px;border-radius:8px;background:transparent;border:1px solid var(--border,rgba(255,255,255,.2));color:var(--text-muted,#888);cursor:pointer">
             Effacer
           </button>
-        </p>
+        </div>
         <input type="hidden" id="cex-surface-libre" value="${p.surface && p.mode === 'libre' ? p.surface : 0}">
       </div>` : '';
     const champs = mode === 'forme-l' ? champL : champRect;
@@ -935,6 +941,22 @@ const CalcExpressV2 = {
         return Math.abs(area / 2) * scale * scale;
       };
 
+      const fermerForme = () => {
+        closed = true;
+        const surf = calcSurface().toFixed(1);
+        draw();
+        const el = this._container.querySelector('#cex-canvas-surface');
+        if (el) el.textContent = surf + ' m²';
+        const inp = this._container.querySelector('#cex-surface-libre');
+        if (inp) inp.value = surf;
+        if (this._pieceEnCours) this._pieceEnCours.surface = parseFloat(surf);
+        const fermerBtn = this._container.querySelector('#cex-canvas-fermer');
+        if (fermerBtn) {
+          fermerBtn.textContent = '✅ Forme fermée — ' + surf + ' m²';
+          fermerBtn.disabled = true;
+        }
+      };
+
       const getPos = e => {
         const rect = canvas.getBoundingClientRect();
         const touch = e.touches ? e.touches[0] : e;
@@ -949,22 +971,38 @@ const CalcExpressV2 = {
 
       canvas.addEventListener('dblclick', () => {
         if (points.length < 3) return;
-        closed = true;
-        const surf = calcSurface().toFixed(1);
-        draw();
-        const el = this._container.querySelector('#cex-canvas-surface');
-        if (el) el.textContent = surf + ' m²';
-        const inp = this._container.querySelector('#cex-surface-libre');
-        if (inp) inp.value = surf;
-        if (this._pieceEnCours) this._pieceEnCours.surface = parseFloat(surf);
+        fermerForme();
       });
 
       canvas.addEventListener('touchstart', e => {
         e.preventDefault();
         if (closed) return;
         points.push(getPos(e));
+        if (points.length >= 3) {
+          const first = points[0];
+          const last = points[points.length - 1];
+          const dist = Math.sqrt(Math.pow(last.x - first.x, 2) + Math.pow(last.y - first.y, 2));
+          if (dist < 30) {
+            points.pop();
+            fermerForme();
+            return;
+          }
+        }
         draw();
       }, { passive: false });
+
+      const fermerBtn = this._container.querySelector('#cex-canvas-fermer');
+      if (fermerBtn) {
+        fermerBtn.addEventListener('click', () => {
+          if (points.length < 3) {
+            if (typeof App !== 'undefined' && App.toast) {
+              App.toast('Posez au moins 3 points pour fermer la forme', 'warning');
+            }
+            return;
+          }
+          fermerForme();
+        });
+      }
 
       const resetBtn = this._container.querySelector('#cex-canvas-reset');
       if (resetBtn) {
@@ -977,6 +1015,11 @@ const CalcExpressV2 = {
           const inp = this._container.querySelector('#cex-surface-libre');
           if (inp) inp.value = '0';
           if (this._pieceEnCours) this._pieceEnCours.surface = 0;
+          const fermerBtn = this._container.querySelector('#cex-canvas-fermer');
+          if (fermerBtn) {
+            fermerBtn.textContent = '✓ Fermer la forme';
+            fermerBtn.disabled = false;
+          }
         });
       }
     }
