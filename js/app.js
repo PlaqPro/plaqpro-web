@@ -368,16 +368,10 @@ const Pages = {
     const mois = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
     const dateStr = jours[aujourd_hui.getDay()] + ' ' + aujourd_hui.getDate() + ' ' + mois[aujourd_hui.getMonth()] + ' ' + aujourd_hui.getFullYear();
     const prenom = (config.nomEntreprise || 'Gabriel').split(' ')[0];
-    const modeSimple = localStorage.getItem('plaqpro_mode') !== 'expert';
 
-    // Calcul widgets
     const devis = DB.devis || [];
     const factures = DB.factures || [];
     const chantiers = DB.chantiers || [];
-    const relances = devis.filter(d => {
-      if (d.statut !== 'Envoyé') return false;
-      return (aujourd_hui - new Date(d.date)) / 86400000 >= 7;
-    });
     const impayes = factures.filter(f => {
       if (f.statut === 'Payée' || f.statut === 'Annulée') return false;
       return f.dateEcheance && new Date(f.dateEcheance) < aujourd_hui;
@@ -391,31 +385,24 @@ const Pages = {
       return d.getMonth() === moisCourant && d.getFullYear() === anneeCourante;
     }).reduce((s,f) => s + (parseFloat(f.totalHT)||0), 0);
     const fmt = n => new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(n);
-
-    // Recherche globale
-    const MODULES_RECHERCHE = [
-      { label:'Faire un devis', keys:['devis','chiffrage','prix'], page:'devisIntelligent', icon:'📄' },
-      { label:'Nouveau chantier', keys:['chantier','travaux','projet'], page:'chantiers', icon:'🏗' },
-      { label:'Mes factures', keys:['facture','paiement','encaissement'], page:'factures', icon:'🧾' },
-      { label:'Mes clients', keys:['client','contact','particulier'], page:'clients', icon:'👤' },
-      { label:'Métrés', keys:['métré','mesure','surface','m2'], page:'metrages', icon:'📐' },
-      { label:'Base produits — prix et matériaux', keys:['produit','matériau','prix achat','catalogue'], page:'produits', icon:'📦' },
-      { label:'Catalogue fournisseurs', keys:['fournisseur','point.p','bricoman','commander'], page:'catalogueFournisseurs', icon:'🏪' },
-      { label:'Mes prix de vente', keys:['tarif','prix vente','grille'], page:'tarifs', icon:'💶' },
-      { label:'Appels d\'offres — importer un DPGF', keys:['dpgf','appel offres','marché public'], page:'dpgf', icon:'🏛' },
-      { label:'Sous-traitants', keys:['sous-traitant','st','contrat'], page:'sousTraitants', icon:'🤝' },
-      { label:'Acoustique', keys:['acoustique','son','décibel','db'], page:'acoustique', icon:'🔊' },
-      { label:'Résistance au feu', keys:['feu','coupe-feu','ei','ef'], page:'resistanceFeu', icon:'🔥' },
-      { label:'Isolation thermique', keys:['thermique','isolation','r value'], page:'thermique', icon:'🌡️' },
-      { label:'Câblage électrique — section câble', keys:['câble','électrique','section','mm2'], page:'sectionCable', icon:'⚡' },
-      { label:'Charge plancher — Eurocode', keys:['charge','plancher','eurocode','structure'], page:'charges', icon:'⚖️' },
-      { label:'Linteau', keys:['linteau','portée','poutre'], page:'linteau', icon:'🌉' },
-      { label:'Quiz Métiers BTP', keys:['quiz','formation','question','apprendre'], page:'quizMetiers', icon:'🎮' },
-      { label:'Mes charges & coûts — prix horaire', keys:['charges','coûts','horaire','rentabilité'], page:'chargesCouts', icon:'💰' },
-      { label:'Mon compte', keys:['compte','profil','clé groq','ia'], page:'monCompte', icon:'👤' },
-      { label:'Prospection IA — permis de construire', keys:['prospection','permis','construire','client'], page:'prospection', icon:'🎯' },
-      { label:'Calcul Express', keys:['calcul','rapide','express','quantité'], page:'calcul', icon:'⚡' },
-    ];
+    const fmtDate = d => {
+      if (!d) return '—';
+      try { return new Date(String(d).split('T')[0]).toLocaleDateString('fr-FR'); } catch(e) { return '—'; }
+    };
+    const devisBrouillons = devis.filter(d => (d.statut || 'Brouillon') === 'Brouillon');
+    const montantBrouillons = devisBrouillons.reduce((s,d) => s + (parseFloat(d.totalHT) || 0), 0);
+    const derniereFacture = [...factures]
+      .filter(f => f.date)
+      .sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+    const prochainRdv = [...chantiers]
+      .filter(c => c.dateDebut && new Date(c.dateDebut) >= new Date(aujourd_hui.toDateString()))
+      .sort((a,b) => new Date(a.dateDebut) - new Date(b.dateDebut))[0];
+    const chantiersRecents = [...chantiersEnCours]
+      .sort((a,b) => new Date(b.updatedAt || b.dateDebut || b.date || 0) - new Date(a.updatedAt || a.dateDebut || a.date || 0))
+      .slice(0, 3);
+    const montantDevisChantier = chantierId => devis
+      .filter(d => String(d.chantierId || '') === String(chantierId || ''))
+      .reduce((s,d) => s + (parseFloat(d.totalHT) || 0), 0);
 
     div.innerHTML = '';
 
@@ -427,48 +414,14 @@ const Pages = {
         .db-header { margin-bottom: 24px; }
         .db-greeting { font-size: 22px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 2px; }
         .db-date { font-size: 13px; color: var(--text-tertiary); }
-        .db-actions { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
-        @media(max-width:700px){ .db-actions { grid-template-columns: 1fr 1fr; } }
-        .db-action { background: var(--bg-secondary); border: 1px solid var(--border);
-          border-radius: var(--radius-lg); padding: 20px 16px; cursor: pointer;
-          text-align: center; transition: all .2s; display: flex; flex-direction: column;
-          align-items: center; gap: 10px; }
-        .db-action:hover { transform: translateY(-3px); border-color: var(--accent); }
-        .db-action.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-        .db-action.primary:hover { opacity: .9; }
-        .db-action-icon { font-size: 32px; line-height: 1; }
-        .db-action-label { font-size: 13px; font-weight: 700; }
-        .db-action-desc { font-size: 11px; opacity: .7; }
         .db-widgets { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 24px; }
         @media(max-width:700px){ .db-widgets { grid-template-columns: 1fr; } }
         .db-widget { background: var(--bg-secondary); border: 1px solid var(--border);
-          border-radius: var(--radius-lg); padding: 18px; cursor: pointer; transition: all .15s; }
-        .db-widget:hover { border-color: var(--accent); }
+          border-radius: var(--radius-lg); padding: 18px; }
         .db-widget-label { font-size: 11px; font-weight: 700; text-transform: uppercase;
           letter-spacing: .07em; color: var(--text-tertiary); margin-bottom: 8px; }
         .db-widget-val { font-size: 28px; font-weight: 900; letter-spacing: -.03em; margin-bottom: 4px; }
         .db-widget-desc { font-size: 12px; color: var(--text-tertiary); }
-        .db-search { position: relative; margin-bottom: 24px; }
-        .db-search input { width: 100%; padding: 14px 16px 14px 44px;
-          background: var(--bg-secondary); border: 1px solid var(--border);
-          border-radius: var(--radius-lg); color: var(--text-primary); font-size: 15px;
-          transition: border-color .15s; box-sizing: border-box; }
-        .db-search input:focus { outline: none; border-color: var(--accent); }
-        .db-search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-          font-size: 18px; color: var(--text-tertiary); pointer-events: none; }
-        .db-search-results { position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-          background: var(--bg-secondary); border: 1px solid var(--border);
-          border-radius: var(--radius-lg); z-index: 100; overflow: hidden;
-          box-shadow: 0 8px 32px rgba(0,0,0,.3); }
-        .db-search-item { padding: 12px 16px; cursor: pointer; display: flex;
-          align-items: center; gap: 12px; font-size: 14px; transition: background .1s; }
-        .db-search-item:hover { background: rgba(79,142,247,0.08); }
-        .db-mode-toggle { display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
-          font-size: 12px; color: var(--text-tertiary); }
-        .db-mode-btn { padding: 4px 12px; border-radius: 980px; border: 1px solid var(--border);
-          background: var(--bg-secondary); color: var(--text-secondary); font-size: 12px;
-          font-weight: 600; cursor: pointer; transition: all .15s; }
-        .db-mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
         .db-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase;
           letter-spacing: .08em; color: var(--text-tertiary); margin-bottom: 12px;
           padding-bottom: 6px; border-bottom: 1px solid var(--border); }
@@ -477,16 +430,15 @@ const Pages = {
           border-radius: var(--radius-md); padding: 12px 16px; display: flex;
           align-items: center; justify-content: space-between; cursor: pointer;
           transition: border-color .15s; font-size: 13px; }
-        .db-chantier-item:hover { border-color: var(--accent); }
         .db-save-indicator { font-size: 11px; color: #10b981; text-align: right;
           margin-bottom: 8px; }
+        .db-info-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px; }
+        @media(max-width:900px){ .db-info-grid { grid-template-columns:1fr; } }
       `;
       document.head.appendChild(s);
     }
 
     // ── RENDER ──
-    const searchId = 'db-search-' + Date.now();
-
     div.innerHTML = `
       <div class="db-save-indicator">💾 Sauvegarde automatique — ${aujourd_hui.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}</div>
 
@@ -494,53 +446,12 @@ const Pages = {
         <div class="db-greeting">Bonjour ${prenom} 👋</div>
         <div class="db-date">${dateStr}</div>
       </div>
-
-      <!-- MODE SIMPLE / EXPERT -->
-      <div class="db-mode-toggle">
-        <span>Mode :</span>
-        <button class="db-mode-btn ${modeSimple ? 'active' : ''}" onclick="DB_UX.setMode('simple')">Simple</button>
-        <button class="db-mode-btn ${!modeSimple ? 'active' : ''}" onclick="DB_UX.setMode('expert')">Expert</button>
-        ${!modeSimple ? '<span style="color:var(--accent);font-size:11px">— Tous les modules visibles</span>' : '<span>— Fonctions essentielles</span>'}
-      </div>
-
-      <!-- RECHERCHE GLOBALE -->
-      <div class="db-search">
-        <span class="db-search-icon">🔍</span>
-        <input type="text" id="${searchId}" placeholder="Que voulez-vous faire ? (devis, facture, cloison...)"
-          oninput="DB_UX.rechercher(this.value, '${searchId}')"
-          onblur="setTimeout(()=>DB_UX.clearSearch('${searchId}'),200)">
-        <div id="${searchId}-results" class="db-search-results" style="display:none"></div>
-      </div>
-
-      <!-- 4 GRANDES ACTIONS -->
-      <div class="db-section-title">Actions rapides</div>
-      <div class="db-actions">
-        <button class="db-action primary" onclick="App.navigate('devisIntelligent')">
-          <span class="db-action-icon">📄</span>
-          <span class="db-action-label">Faire un devis</span>
-          <span class="db-action-desc">Depuis un chantier</span>
-        </button>
-        <button class="db-action" onclick="Pages.modalNouveauChantier()">
-          <span class="db-action-icon">🏗</span>
-          <span class="db-action-label">Nouveau chantier</span>
-          <span class="db-action-desc">Intérieur ou extérieur</span>
-        </button>
-        <button class="db-action" onclick="App.navigate('calculateur')">
-          <span class="db-action-icon">📐</span>
-          <span class="db-action-label">Calculer</span>
-          <span class="db-action-desc">Quantités & matériaux</span>
-        </button>
-        <button class="db-action ${relances.length > 0 ? 'primary' : ''}" onclick="App.navigate('devis')">
-          <span class="db-action-icon">${relances.length > 0 ? '🔔' : '✅'}</span>
-          <span class="db-action-label">Relances${relances.length > 0 ? ' (' + relances.length + ')' : ''}</span>
-          <span class="db-action-desc">${relances.length > 0 ? 'Devis sans réponse' : 'Tout est à jour'}</span>
-        </button>
-      </div>
+      <div id="meteo-dashboard-slot"></div>
 
       <!-- WIDGETS KPI -->
       <div class="db-section-title">Vue d'ensemble</div>
       <div class="db-widgets">
-        <div class="db-widget" onclick="App.navigate('factures')"
+        <div class="db-widget"
           style="${impayes.length > 0 ? 'border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.04)' : ''}">
           <div class="db-widget-label">💸 Impayés</div>
           <div class="db-widget-val" style="color:${impayes.length > 0 ? '#ef4444' : '#10b981'}">
@@ -548,103 +459,82 @@ const Pages = {
           </div>
           <div class="db-widget-desc">${impayes.length > 0 ? fmt(impayes.reduce((s,f)=>s+(parseFloat(f.totalTTC)||0),0)) + ' € TTC en attente' : 'Aucune facture en retard'}</div>
         </div>
-        <div class="db-widget" onclick="App.navigate('factures')">
+        <div class="db-widget">
           <div class="db-widget-label">📈 CA ce mois</div>
           <div class="db-widget-val" style="color:var(--accent)">${fmt(caMois)} €</div>
           <div class="db-widget-desc">Facturé en ${mois[moisCourant]} ${anneeCourante}</div>
         </div>
-        <div class="db-widget" onclick="App.navigate('chantiers')">
-          <div class="db-widget-label">🏗 Chantiers</div>
+        <div class="db-widget">
+          <div class="db-widget-label">🏗 Chantiers actifs</div>
           <div class="db-widget-val">${chantiersEnCours.length}</div>
           <div class="db-widget-desc">En cours · ${chantiers.length} au total</div>
         </div>
       </div>
 
+      <div class="db-section-title">Informations utiles</div>
+      <div class="db-info-grid">
+        <div class="db-widget">
+          <div class="db-widget-label">📄 Devis en attente</div>
+          <div class="db-widget-val">${devisBrouillons.length}</div>
+          <div class="db-widget-desc">${fmt(montantBrouillons)} € HT en brouillon</div>
+        </div>
+        <div class="db-widget">
+          <div class="db-widget-label">🧾 Dernière facture</div>
+          <div class="db-widget-val">${derniereFacture ? fmt(parseFloat(derniereFacture.totalHT || derniereFacture.totalTTC || 0)) + ' €' : '—'}</div>
+          <div class="db-widget-desc">${derniereFacture ? fmtDate(derniereFacture.date) : 'Aucune facture émise'}</div>
+        </div>
+        <div class="db-widget">
+          <div class="db-widget-label">📅 Prochain RDV</div>
+          <div class="db-widget-val" style="font-size:20px">${prochainRdv ? fmtDate(prochainRdv.dateDebut) : '—'}</div>
+          <div class="db-widget-desc">${prochainRdv ? (prochainRdv.nom || prochainRdv.titre || 'Chantier') : 'Aucun rendez-vous prévu'}</div>
+        </div>
+      </div>
+
       <!-- CHANTIERS EN COURS -->
-      ${chantiersEnCours.length > 0 ? `
+      ${chantiersRecents.length > 0 ? `
         <div class="db-section-title" style="margin-top:8px">Chantiers en cours</div>
         <div class="db-chantiers">
-          ${chantiersEnCours.slice(0,3).map(c => {
+          ${chantiersRecents.map(c => {
             const cl = DB.getClient(c.clientId);
-            return '<div class="db-chantier-item" onclick="App.navigate(\'metrages\',{chantierId:' + c.id + '})">' +
+            const montant = montantDevisChantier(c.id);
+            return '<div class="db-chantier-item">' +
               '<div>' +
                 '<div style="font-weight:700">' + c.nom + '</div>' +
                 '<div style="font-size:11px;color:var(--text-tertiary)">' + (cl?.nom||'—') + ' · ' + (c.adresse||'—') + '</div>' +
               '</div>' +
-              '<div style="display:flex;gap:8px;align-items:center">' +
-                '<span style="font-size:11px;color:var(--text-tertiary)">' + (c.typeChantier==='exterieur'?'🌿 Ext.':'🏠 Int.') + '</span>' +
-                '<button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();App.navigate(\'devisIntelligent\',{chantierId:' + c.id + '})">📄 Devis</button>' +
+              '<div style="text-align:right">' +
+                '<div style="font-size:11px;color:var(--text-tertiary)">' + (c.statut || 'En cours') + '</div>' +
+                '<div style="font-size:13px;font-weight:700;color:var(--text-primary)">' + (montant ? fmt(montant) + ' € HT' : 'Aucun devis') + '</div>' +
               '</div>' +
             '</div>';
           }).join('')}
-          ${chantiersEnCours.length > 3 ? '<div style="text-align:center;font-size:12px;color:var(--accent);padding:8px;cursor:pointer" onclick="App.navigate(\'chantiers\')">Voir tous les chantiers (' + chantiersEnCours.length + ') →</div>' : ''}
         </div>
       ` : `
         <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;text-align:center;margin-top:8px">
           <div style="font-size:32px;margin-bottom:10px">🏗</div>
           <div style="font-size:14px;font-weight:700;margin-bottom:6px">Aucun chantier en cours</div>
-          <div style="font-size:12px;color:var(--text-tertiary);margin-bottom:16px">Commencez par créer un client, puis un chantier</div>
-          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-            <button class="btn btn-secondary" onclick="App.navigate('clients')">👤 Ajouter un client</button>
-            <button class="btn btn-primary" onclick="Pages.modalNouveauChantier()">🏗 Créer un chantier</button>
-          </div>
+          <div style="font-size:12px;color:var(--text-tertiary)">Aucun chantier actif à afficher.</div>
         </div>
       `}
 
-      <!-- MODE EXPERT : modules avancés -->
-      ${!modeSimple ? `
-        <div class="db-section-title" style="margin-top:24px">Outils avancés</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
-          ${[
-            {icon:'🏪',label:'Catalogue fournisseurs',page:'catalogueFournisseurs'},
-            {icon:'📦',label:'Base produits',page:'produits'},
-            {icon:'🤖',label:'Prospection IA',page:'prospection'},
-            {icon:'🏛',label:'Appels d\'offres',page:'dpgf'},
-            {icon:'🔊',label:'Acoustique',page:'acoustique'},
-            {icon:'🌡️',label:'Thermique',page:'thermique'},
-            {icon:'🔥',label:'Résistance feu',page:'resistanceFeu'},
-            {icon:'⚡',label:'Câblage',page:'sectionCable'},
-            {icon:'⚖️',label:'Charge plancher',page:'charges'},
-            {icon:'🎮',label:'Quiz Métiers',page:'quizMetiers'},
-          ].map(m =>
-            '<button onclick="App.navigate(\'' + m.page + '\')" style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 10px;cursor:pointer;text-align:center;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:6px" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--border)\'">' +
-              '<span style="font-size:24px">' + m.icon + '</span>' +
-              '<span style="font-size:11px;font-weight:600;color:var(--text-secondary)">' + m.label + '</span>' +
-            '</button>'
-          ).join('')}
-        </div>
-      ` : ''}
+      <div style="text-align:center;margin-top:24px">
+        <button onclick="App.navigate('calcExpressV2')"
+          style="padding:12px 32px;border-radius:10px;background:var(--accent,#4f8ef7);color:#fff;border:none;cursor:pointer;font-size:15px;font-weight:600">
+          ⚡ Nouveau chiffrage
+        </button>
+      </div>
     `;
 
-    // ── Contrôleur Dashboard ──
-    window.DB_UX = {
-      setMode(mode) {
-        localStorage.setItem('plaqpro_mode', mode);
-        App.navigate('dashboard');
-      },
-      rechercher(q, id) {
-        const res = document.getElementById(id + '-results');
-        if (!res) return;
-        if (!q || q.length < 2) { res.style.display = 'none'; return; }
-        const ql = q.toLowerCase();
-        const matches = MODULES_RECHERCHE.filter(m =>
-          m.label.toLowerCase().includes(ql) ||
-          m.keys.some(k => k.includes(ql))
-        ).slice(0, 6);
-        if (!matches.length) { res.style.display = 'none'; return; }
-        res.style.display = 'block';
-        res.innerHTML = matches.map(m =>
-          '<div class="db-search-item" onclick="App.navigate(\'' + m.page + '\')">' +
-            '<span style="font-size:20px">' + m.icon + '</span>' +
-            '<span>' + m.label + '</span>' +
-          '</div>'
-        ).join('');
-      },
-      clearSearch(id) {
-        const res = document.getElementById(id + '-results');
-        if (res) res.style.display = 'none';
+    setTimeout(() => {
+      const slot = document.getElementById('meteo-dashboard-slot');
+      if (!slot || typeof Meteo === 'undefined') return;
+      if (Meteo._data) {
+        slot.innerHTML = '';
+        slot.appendChild(Meteo.renderCard());
+      } else {
+        Meteo.refresh();
       }
-    };
+    }, 0);
 
     return div;
   },
