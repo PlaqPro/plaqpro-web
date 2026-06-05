@@ -231,8 +231,15 @@
         '<td style="text-align:right;font-weight:700">' + esc(fmtPrix(ligne.totalHT)) + '</td>' +
       '</tr>';
     }).join('');
+    var forfaitOnly = bloc.lignes.length > 0 && bloc.lignes.every(function(ligne) {
+      return ligne.code && String(ligne.code).indexOf('FORFAIT_') === 0;
+    });
+    var titreCorps = esc(bloc.label);
+    if (forfaitOnly) {
+      titreCorps += ' <span style="font-size:11px;color:var(--text-muted,#888)">(coût forfaitaire — détail à enrichir)</span>';
+    }
     return '<section style="background:var(--card-bg,var(--bg-card,#fff));border:1px solid var(--border,#e5e7eb);border-radius:8px;padding:14px;margin-bottom:14px;color:var(--text,#111)">' +
-      '<h3 style="margin:0 0 10px;color:var(--accent,#4f8ef7)">' + esc(bloc.label) + '</h3>' +
+      '<h3 style="margin:0 0 10px;color:var(--accent,#4f8ef7)">' + titreCorps + '</h3>' +
       '<table style="width:100%;border-collapse:collapse"><thead><tr>' +
         '<th style="text-align:left;padding:8px;border-bottom:1px solid var(--border,#e5e7eb)">Ref</th>' +
         '<th style="text-align:left;padding:8px;border-bottom:1px solid var(--border,#e5e7eb)">Designation</th>' +

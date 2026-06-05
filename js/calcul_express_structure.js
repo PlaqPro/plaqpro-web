@@ -74,16 +74,29 @@
     return BddV2.getOuvrage(ouvrageCode) || null;
   }
 
-  function lireComposition(ouvrageCode, qteMetier) {
+  function lireComposition(ouvrageCode, qteMetier, coutMat, corpsLabel) {
     if (!ouvrageCode || typeof BddV2.getComposition !== 'function') return [];
 
     const composition = BddV2.getComposition(ouvrageCode) || [];
+    if (!composition.length) {
+      const coutForfait = nombre(coutMat);
+      if (coutForfait <= 0) return [];
+      return [{
+        codeMat: 'FORFAIT_' + ouvrageCode,
+        designation: 'Fournitures ' + (corpsLabel || designationDepuisCode(ouvrageCode)),
+        qte: 1,
+        unite: 'forfait',
+        prixAchat: Math.round(coutForfait),
+        totalAchat: Math.round(coutForfait),
+      }];
+    }
+
     return composition.map(function (item) {
       const codeMat = item.codeMat || item.code_materiau || item.code || '';
       const materiau = codeMat && typeof BddV2.getMateriau === 'function'
         ? (BddV2.getMateriau(codeMat) || {})
         : {};
-      const qteParUnite = nombre(item.qteParUnite || item.quantite_unitaire || item.qte || 0);
+      const qteParUnite = nombre(item.qteParUnite || item.qte_par_unite || item.quantite_unitaire || item.qte || 1);
       const perte = nombre(item.perte || 0);
       const qte = qteParUnite * qteMetier * (1 + perte);
       const prixAchat = nombre(materiau.prixAchat || materiau.pu_ht || item.prixAchat || item.pu_ht || 0);
@@ -104,20 +117,22 @@
     const calc = typeof BddV2.calcPrixVente === 'function'
       ? (BddV2.calcPrixVente(ouvrageCode, qte) || {})
       : {};
+    const corpsLabel = labelCorps(corps);
+    const coutMat = nombre(calc.coutMat);
 
     return {
       corps: corps,
-      corpsLabel: labelCorps(corps),
+      corpsLabel: corpsLabel,
       piece: pieceNom || '',
       ouvrageCode: ouvrageCode,
       designation: ouvrage.designation || designationDepuisCode(ouvrageCode),
       qte: qte,
       unite: ouvrage.unite || uniteFallback || 'u',
-      coutMat: nombre(calc.coutMat),
+      coutMat: coutMat,
       coutMO: nombre(calc.coutMO),
       prixVente: nombre(calc.prixVente),
       gain: nombre(calc.gain),
-      materiaux: lireComposition(ouvrageCode, qte),
+      materiaux: lireComposition(ouvrageCode, qte, coutMat, corpsLabel),
     };
   }
 
