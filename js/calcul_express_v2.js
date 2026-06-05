@@ -804,22 +804,19 @@ const CalcExpressV2 = {
         <p style="font-size:13px;color:var(--text-muted,#888);margin-bottom:8px">
           Cliquez pour poser des points. Double-clic pour fermer la forme.
         </p>
-        <canvas id="cex-canvas-libre" width="340" height="260"
-          style="border:2px solid var(--accent,#4f8ef7);border-radius:8px;background:var(--card-bg,#1e1e2e);cursor:crosshair;touch-action:none">
+        <canvas id="cex-canvas-libre" width="680" height="400"
+          style="width:100%;max-width:680px;height:400px;border:2px solid var(--accent,#4f8ef7);border-radius:8px;background:var(--card-bg,#1e1e2e);cursor:crosshair;touch-action:none">
         </canvas>
-        <p style="font-size:13px;margin-top:8px">
-          Surface calculée : <strong id="cex-canvas-surface">${p.surface && p.mode === 'libre' ? p.surface + ' m²' : '0 m²'}</strong>
-        </p>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button type="button" id="cex-canvas-fermer"
-            style="padding:8px 16px;border-radius:8px;background:var(--accent,#4f8ef7);color:#fff;border:none;cursor:pointer;flex:1">
-            ✓ Fermer la forme
-          </button>
-          <button type="button" id="cex-canvas-reset"
-            style="padding:8px 12px;border-radius:8px;background:transparent;border:1px solid var(--border,rgba(255,255,255,.2));color:var(--text-muted,#888);cursor:pointer">
-            Effacer
-          </button>
+        <div id="cex-canvas-mesure"
+          style="font-size:12px;color:var(--accent,#4f8ef7);margin-top:6px;min-height:18px;text-align:right">
         </div>
+        <p style="font-size:13px;margin-top:8px">
+          Surface calculée : <strong id="cex-canvas-surface">${p.surface && p.mode === 'libre' ? (Math.round(p.surface * 100) / 100).toFixed(2) + ' m²' : '0.00 m²'}</strong>
+        </p>
+        <button type="button" id="cex-canvas-reset"
+          style="margin-top:8px;padding:4px 10px;border-radius:6px;background:transparent;border:1px solid var(--border,rgba(255,255,255,.2));color:var(--text-muted,#888);cursor:pointer;font-size:12px">
+            Effacer
+        </button>
         <input type="hidden" id="cex-surface-libre" value="${p.surface && p.mode === 'libre' ? p.surface : 0}">
       </div>` : '';
     const champs = mode === 'forme-l' ? champL : champRect;
@@ -907,8 +904,33 @@ const CalcExpressV2 = {
       let points = [];
       let closed = false;
 
+      const drawGrid = () => {
+        const GRID = canvas.width / 10;
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctx.lineWidth = 0.5;
+        for (let x = 0; x <= canvas.width; x += GRID) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+          ctx.stroke();
+        }
+        for (let y = 0; y <= canvas.height; y += GRID) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+          ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.font = '9px sans-serif';
+        for (let i = 1; i <= 9; i++) {
+          ctx.fillText(i + 'm', i * GRID + 2, 10);
+          ctx.fillText(i + 'm', 2, i * GRID - 2);
+        }
+      };
+
       const draw = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGrid();
         if (!points.length) return;
         ctx.beginPath();
         ctx.moveTo(points[0].x, points[0].y);
@@ -937,30 +959,19 @@ const CalcExpressV2 = {
           area += points[i].x * points[j].y;
           area -= points[j].x * points[i].y;
         }
-        const scale = 10 / 340;
+        const scale = 10 / canvas.width;
         return Math.abs(area / 2) * scale * scale;
-      };
-
-      const fermerForme = () => {
-        closed = true;
-        const surf = calcSurface().toFixed(1);
-        draw();
-        const el = this._container.querySelector('#cex-canvas-surface');
-        if (el) el.textContent = surf + ' m²';
-        const inp = this._container.querySelector('#cex-surface-libre');
-        if (inp) inp.value = surf;
-        if (this._pieceEnCours) this._pieceEnCours.surface = parseFloat(surf);
-        const fermerBtn = this._container.querySelector('#cex-canvas-fermer');
-        if (fermerBtn) {
-          fermerBtn.textContent = '✅ Forme fermée — ' + surf + ' m²';
-          fermerBtn.disabled = true;
-        }
       };
 
       const getPos = e => {
         const rect = canvas.getBoundingClientRect();
         const touch = e.touches ? e.touches[0] : e;
-        return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+          x: (touch.clientX - rect.left) * scaleX,
+          y: (touch.clientY - rect.top) * scaleY,
+        };
       };
 
       canvas.addEventListener('click', e => {
@@ -971,38 +982,31 @@ const CalcExpressV2 = {
 
       canvas.addEventListener('dblclick', () => {
         if (points.length < 3) return;
-        fermerForme();
+        closed = true;
+        const surf = (Math.round(calcSurface() * 100) / 100).toFixed(2);
+        draw();
+        const el = this._container.querySelector('#cex-canvas-surface');
+        if (el) el.textContent = surf + ' m²';
+        const inp = this._container.querySelector('#cex-surface-libre');
+        if (inp) inp.value = surf;
+        if (this._pieceEnCours) this._pieceEnCours.surface = parseFloat(surf);
       });
 
       canvas.addEventListener('touchstart', e => {
         e.preventDefault();
         if (closed) return;
         points.push(getPos(e));
-        if (points.length >= 3) {
-          const first = points[0];
-          const last = points[points.length - 1];
-          const dist = Math.sqrt(Math.pow(last.x - first.x, 2) + Math.pow(last.y - first.y, 2));
-          if (dist < 30) {
-            points.pop();
-            fermerForme();
-            return;
-          }
-        }
         draw();
       }, { passive: false });
 
-      const fermerBtn = this._container.querySelector('#cex-canvas-fermer');
-      if (fermerBtn) {
-        fermerBtn.addEventListener('click', () => {
-          if (points.length < 3) {
-            if (typeof App !== 'undefined' && App.toast) {
-              App.toast('Posez au moins 3 points pour fermer la forme', 'warning');
-            }
-            return;
-          }
-          fermerForme();
-        });
-      }
+      canvas.addEventListener('mousemove', e => {
+        const pos = getPos(e);
+        const scale = 10 / canvas.width;
+        const mesure = this._container.querySelector('#cex-canvas-mesure');
+        if (mesure) {
+          mesure.textContent = 'Curseur : ' + (pos.x * scale).toFixed(2) + ' m × ' + (pos.y * scale).toFixed(2) + ' m';
+        }
+      });
 
       const resetBtn = this._container.querySelector('#cex-canvas-reset');
       if (resetBtn) {
@@ -1010,18 +1014,15 @@ const CalcExpressV2 = {
           points = [];
           closed = false;
           ctx.clearRect(0, 0, canvas.width, canvas.height);
+          drawGrid();
           const el = this._container.querySelector('#cex-canvas-surface');
-          if (el) el.textContent = '0 m²';
+          if (el) el.textContent = '0.00 m²';
           const inp = this._container.querySelector('#cex-surface-libre');
           if (inp) inp.value = '0';
           if (this._pieceEnCours) this._pieceEnCours.surface = 0;
-          const fermerBtn = this._container.querySelector('#cex-canvas-fermer');
-          if (fermerBtn) {
-            fermerBtn.textContent = '✓ Fermer la forme';
-            fermerBtn.disabled = false;
-          }
         });
       }
+      drawGrid();
     }
   },
 
