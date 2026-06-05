@@ -1032,8 +1032,13 @@ const CalcExpressV2 = {
           const dy = (mousePos.y - last.y) * scale;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist > 0.05) {
-            const mx = (last.x + mousePos.x) / 2;
-            const my = (last.y + mousePos.y) / 2;
+            const dxp = mousePos.x - last.x;
+            const dyp = mousePos.y - last.y;
+            const len = Math.sqrt(dxp * dxp + dyp * dyp) || 1;
+            const nx = -dyp / len;
+            const ny = dxp / len;
+            const mx = (last.x + mousePos.x) / 2 + nx * 20;
+            const my = (last.y + mousePos.y) / 2 + ny * 20 - 8;
             const label = fmtDist(dist);
             ctx.font = 'bold 11px sans-serif';
             const tw = ctx.measureText(label).width;
@@ -1090,12 +1095,23 @@ const CalcExpressV2 = {
       };
 
       const snap = pos => {
-        const SNAP_PX = mToP() / 100;
-        const gx = Math.round(pos.x / SNAP_PX) * SNAP_PX;
-        const gy = Math.round(pos.y / SNAP_PX) * SNAP_PX;
+        const SNAP_5CM = mToP() / 20;
+        const SNAP_1CM = mToP() / 100;
+        let gx = Math.round(pos.x / SNAP_5CM) * SNAP_5CM;
+        let gy = Math.round(pos.y / SNAP_5CM) * SNAP_5CM;
+        const SNAP_10CM = mToP() / 10;
+        const rx = Math.round(pos.x / SNAP_10CM) * SNAP_10CM;
+        const ry = Math.round(pos.y / SNAP_10CM) * SNAP_10CM;
+        if (Math.abs(pos.x - rx) < SNAP_1CM * 3) gx = rx;
+        if (Math.abs(pos.y - ry) < SNAP_1CM * 3) gy = ry;
+        const SNAP_1M = mToP();
+        const mx1 = Math.round(pos.x / SNAP_1M) * SNAP_1M;
+        const my1 = Math.round(pos.y / SNAP_1M) * SNAP_1M;
+        if (Math.abs(pos.x - mx1) < SNAP_1CM * 5) gx = mx1;
+        if (Math.abs(pos.y - my1) < SNAP_1CM * 5) gy = my1;
         if (points.length >= 3) {
           const distFirst = Math.sqrt(Math.pow(pos.x - points[0].x, 2) + Math.pow(pos.y - points[0].y, 2));
-          if (distFirst < SNAP_PX * 8) return { x: points[0].x, y: points[0].y, snapFirst: true };
+          if (distFirst < SNAP_1CM * 8) return { x: points[0].x, y: points[0].y, snapFirst: true };
         }
         return { x: gx, y: gy };
       };
