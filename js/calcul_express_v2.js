@@ -804,6 +804,20 @@ const CalcExpressV2 = {
         <p style="font-size:13px;color:var(--text-muted,#888);margin-bottom:8px">
           Cliquez pour poser des points. Double-clic pour fermer la forme.
         </p>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+          <label style="font-size:12px;color:var(--text-muted,#888)">Zone réelle :</label>
+          <select id="cex-canvas-zone"
+            style="padding:4px 8px;border-radius:6px;background:var(--card-bg,#1e1e2e);color:var(--text,#fff);border:1px solid var(--border,rgba(255,255,255,.15));font-size:12px">
+            <option value="3">3m × 2m</option>
+            <option value="5">5m × 3m</option>
+            <option value="8">8m × 5m</option>
+            <option value="12">12m × 7m</option>
+            <option value="20">20m × 12m</option>
+            <option value="22" selected>22m × 10m</option>
+            <option value="30">30m × 20m</option>
+          </select>
+          <span style="font-size:11px;color:var(--text-muted,#666)">1 carreau = 10cm · snap 1cm</span>
+        </div>
         <canvas id="cex-canvas-libre" width="680" height="400"
           style="width:100%;max-width:680px;height:400px;border:2px solid var(--accent,#4f8ef7);border-radius:8px;background:var(--card-bg,#1e1e2e);cursor:crosshair;touch-action:none">
         </canvas>
@@ -904,47 +918,66 @@ const CalcExpressV2 = {
       let points = [];
       let closed = false;
       let mousePos = null;
-      const GRID = canvas.width / 20;
-      const SNAP_DIST = 15;
+      const zoneSelect = this._container.querySelector('#cex-canvas-zone');
+      let ZONE_M = zoneSelect ? parseFloat(zoneSelect.value) : 22;
+      const mToP = () => canvas.width / ZONE_M;
+      const pToM = () => ZONE_M / canvas.width;
 
       const drawGrid = () => {
+        const step10cm = canvas.width / ZONE_M / 10;
+        const step1m = canvas.width / ZONE_M;
+        ctx.strokeStyle = 'rgba(255,255,255,0.04)';
         ctx.lineWidth = 0.5;
-        for (let x = 0; x <= canvas.width; x += GRID) {
-          const i = Math.round(x / GRID);
-          ctx.strokeStyle = i % 2 === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)';
+        for (let x = 0; x <= canvas.width; x += step10cm) {
           ctx.beginPath();
           ctx.moveTo(x, 0);
           ctx.lineTo(x, canvas.height);
           ctx.stroke();
         }
-        for (let y = 0; y <= canvas.height; y += GRID) {
-          const i = Math.round(y / GRID);
-          ctx.strokeStyle = i % 2 === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)';
+        for (let y = 0; y <= canvas.height; y += step10cm) {
           ctx.beginPath();
           ctx.moveTo(0, y);
           ctx.lineTo(canvas.width, y);
           ctx.stroke();
         }
-        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 1;
+        for (let x = 0; x <= canvas.width; x += step1m) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+          ctx.stroke();
+        }
+        for (let y = 0; y <= canvas.height; y += step1m) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+          ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
         ctx.font = '9px sans-serif';
-        for (let i = 1; i <= 19; i++) {
-          const label = (i * 0.5) % 1 === 0 ? (i * 0.5) + 'm' : '';
-          if (label) {
-            ctx.fillText(label, i * GRID + 2, 10);
-            ctx.fillText(label, 2, i * GRID - 2);
-          }
+        for (let i = 1; i <= Math.floor(ZONE_M); i++) {
+          ctx.fillText(i + 'm', i * step1m + 2, 10);
+        }
+        for (let i = 1; i <= Math.floor(canvas.height / step1m); i++) {
+          ctx.fillText(i + 'm', 2, i * step1m - 2);
         }
       };
 
+      const fmtDist = metres => {
+        if (metres < 0.995) return Math.round(metres * 100) + ' cm';
+        return metres.toFixed(2) + ' m';
+      };
+
       const drawSegmentLabel = (a, b) => {
-        const scale = 10 / canvas.width;
+        const scale = pToM();
         const dx = (b.x - a.x) * scale;
         const dy = (b.y - a.y) * scale;
-        const dist = Math.sqrt(dx * dx + dy * dy).toFixed(2);
+        const dist = Math.sqrt(dx * dx + dy * dy);
         const mx = (a.x + b.x) / 2;
         const my = (a.y + b.y) / 2 - 8;
         ctx.font = '10px sans-serif';
-        const label = dist + 'm';
+        const label = fmtDist(dist);
         const tw = ctx.measureText(label).width;
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.fillRect(mx - tw / 2 - 3, my - 12, tw + 6, 16);
@@ -994,14 +1027,14 @@ const CalcExpressV2 = {
           ctx.stroke();
           ctx.setLineDash([]);
 
-          const scale = 10 / canvas.width;
+          const scale = pToM();
           const dx = (mousePos.x - last.x) * scale;
           const dy = (mousePos.y - last.y) * scale;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist > 0.05) {
             const mx = (last.x + mousePos.x) / 2;
             const my = (last.y + mousePos.y) / 2;
-            const label = dist.toFixed(2) + ' m';
+            const label = fmtDist(dist);
             ctx.font = 'bold 11px sans-serif';
             const tw = ctx.measureText(label).width;
             ctx.fillStyle = 'rgba(0,0,0,0.7)';
@@ -1035,14 +1068,14 @@ const CalcExpressV2 = {
 
       const calcSurface = () => {
         if (points.length < 3) return 0;
+        const scale = pToM();
         let area = 0;
         for (let i = 0; i < points.length; i++) {
           const j = (i + 1) % points.length;
           area += points[i].x * points[j].y;
           area -= points[j].x * points[i].y;
         }
-        const scale = 10 / canvas.width;
-        return Math.abs(area / 2) * scale * scale;
+        return Math.round(Math.abs(area / 2) * scale * scale * 100) / 100;
       };
 
       const getPos = e => {
@@ -1057,15 +1090,14 @@ const CalcExpressV2 = {
       };
 
       const snap = pos => {
-        const gx = Math.round(pos.x / GRID) * GRID;
-        const gy = Math.round(pos.y / GRID) * GRID;
-        const distGrid = Math.sqrt(Math.pow(pos.x - gx, 2) + Math.pow(pos.y - gy, 2));
+        const SNAP_PX = mToP() / 100;
+        const gx = Math.round(pos.x / SNAP_PX) * SNAP_PX;
+        const gy = Math.round(pos.y / SNAP_PX) * SNAP_PX;
         if (points.length >= 3) {
           const distFirst = Math.sqrt(Math.pow(pos.x - points[0].x, 2) + Math.pow(pos.y - points[0].y, 2));
-          if (distFirst < SNAP_DIST * 2) return { x: points[0].x, y: points[0].y, snapFirst: true };
+          if (distFirst < SNAP_PX * 8) return { x: points[0].x, y: points[0].y, snapFirst: true };
         }
-        if (distGrid < SNAP_DIST) return { x: gx, y: gy };
-        return pos;
+        return { x: gx, y: gy };
       };
 
       const listenerOpts = this._bindController ? { signal: this._bindController.signal } : undefined;
@@ -1108,10 +1140,27 @@ const CalcExpressV2 = {
         draw();
         const mesure = this._container.querySelector('#cex-canvas-mesure');
         if (mesure) {
-          const scale = 10 / canvas.width;
-          mesure.textContent = 'Curseur : ' + (mousePos.x * scale).toFixed(2) + ' m × ' + (mousePos.y * scale).toFixed(2) + ' m';
+          const scale = pToM();
+          mesure.textContent = fmtDist(mousePos.x * scale) + ' × ' + fmtDist(mousePos.y * scale);
         }
       }, listenerOpts);
+
+      if (zoneSelect) {
+        zoneSelect.addEventListener('change', () => {
+          ZONE_M = parseFloat(zoneSelect.value);
+          points = [];
+          closed = false;
+          mousePos = null;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          drawGrid();
+          const mesure = this._container.querySelector('#cex-canvas-mesure');
+          if (mesure) mesure.textContent = '';
+          const elSurf = this._container.querySelector('#cex-canvas-surface');
+          if (elSurf) elSurf.textContent = '0 m²';
+          const inp = this._container.querySelector('#cex-surface-libre');
+          if (inp) inp.value = '0';
+        }, listenerOpts);
+      }
 
       const resetBtn = this._container.querySelector('#cex-canvas-reset');
       if (resetBtn) {
