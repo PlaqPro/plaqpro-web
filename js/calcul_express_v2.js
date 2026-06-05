@@ -903,15 +903,22 @@ const CalcExpressV2 = {
     };
     this._container.querySelectorAll('input[type="number"]').forEach(i => i.addEventListener('input', preview));
     preview();
+    this._bind();
     const btnValider = this._container.querySelector('#cex-metrage-valider');
     if (btnValider) {
       const sel = this._container.querySelector('#cex-pays-tache');
-      btnValider.disabled = p.corps === 'paysagisme' && (!sel || !sel.value);
+      const signal = this._bindController.signal;
       if (p.corps === 'paysagisme' && sel) {
-        sel.addEventListener('change', () => { btnValider.disabled = !sel.value; });
+        const valeurInitiale = p.tachePaysagisme || '';
+        sel.value = valeurInitiale;
+        btnValider.disabled = !valeurInitiale;
+        sel.addEventListener('change', () => {
+          btnValider.disabled = !sel.value;
+        }, { signal });
+      } else {
+        btnValider.disabled = false;
       }
     }
-    this._bind();
     const canvas = this._container.querySelector('#cex-canvas-libre');
     if (canvas) {
       const ctx = canvas.getContext('2d');
