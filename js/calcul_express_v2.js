@@ -1246,6 +1246,33 @@ const CalcExpressV2 = {
     return BddV2.calcPrixVente(bdd.ouvrageDefaut, surface);
   },
 
+  _getUniteOuvrage(corpsId, piece) {
+    if (corpsId === 'electricite' || corpsId === 'plomberie') return 'u';
+    if (corpsId === 'paysagisme' && piece && piece.tachePaysagisme && typeof BddV2 !== 'undefined') {
+      const ouvrage = BddV2.getOuvrage(piece.tachePaysagisme);
+      if (ouvrage && ouvrage.unite) return ouvrage.unite;
+    }
+    return 'm²';
+  },
+
+  _getQuantiteDevis(corpsId, piece) {
+    if (!piece) return 0;
+    if (corpsId === 'electricite' || corpsId === 'plomberie') {
+      return Object.values(piece.quantites || {}).reduce((s, v) => s + (parseFloat(v) || 0), 0);
+    }
+    const unite = this._getUniteOuvrage(corpsId, piece);
+    if (corpsId === 'paysagisme' && unite === 'ml') {
+      const longueur = parseFloat(piece.longueur) || 0;
+      const largeur = parseFloat(piece.largeur) || 0;
+      const perimetre = parseFloat(piece.perimetre) || 0;
+      return perimetre || longueur || largeur || parseFloat(piece.surface) || 0;
+    }
+    if (corpsId === 'paysagisme' && unite === 'u') {
+      return parseFloat(piece.nbPoints) || parseFloat(piece.quantite) || 1;
+    }
+    return parseFloat(piece.surface) || 0;
+  },
+
   // ── Étape 7 : Résumé final ────────────────────────────────
   _renderResume() {
     const fmt = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v);
@@ -1276,14 +1303,14 @@ const CalcExpressV2 = {
           return;
         }
 
-        // Autres corps : surface normale
-        const surface = parseFloat(p.surface) || 0;
-        if (!surface) return;
-        const r = this._calcCorps(corpsId, surface, p);
+        // Autres corps : quantite selon l'unite de l'ouvrage
+        const quantite = this._getQuantiteDevis(corpsId, p);
+        if (!quantite) return;
+        const r = this._calcCorps(corpsId, quantite, p);
         coutCorps += r.coutMat + r.coutMO;
         gainCorps += r.gain;
-        const uniteAff = ' m²';
-        detail.push(p.nom + (p.prestation ? ' · ' + p.prestation : '') + ' · ' + surface + uniteAff + ' → ' + fmt(r.prixVente));
+        const uniteAff = ' ' + this._getUniteOuvrage(corpsId, p);
+        detail.push(p.nom + (p.prestation ? ' · ' + p.prestation : '') + ' · ' + quantite + uniteAff + ' → ' + fmt(r.prixVente));
       });
 
       if (config.type === 'neuf') {
@@ -1368,6 +1395,7 @@ const CalcExpressV2 = {
     if (this._bindController) this._bindController.abort();
     this._bindController = new AbortController();
     const signal = this._bindController.signal;
+    const fmt = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v || 0);
 
     document.addEventListener('click', e => {
       if (!this._container || !this._container.contains(e.target)) return;
@@ -1535,10 +1563,8 @@ const CalcExpressV2 = {
               return parseFloat(p.surface) > 0;
             });
             pcs.forEach(p => {
-              const surf = (corpsId === 'electricite' || corpsId === 'plomberie')
-                ? Object.values(p.quantites || {}).reduce((s,v) => s+(parseFloat(v)||0), 0)
-                : parseFloat(p.surface);
-              const r    = this._calcCorps(corpsId, surf, p);
+              const quantiteDevis = this._getQuantiteDevis(corpsId, p);
+              const r    = this._calcCorps(corpsId, quantiteDevis, p);
               const dims = [];
               if (p.longueur && p.largeur) dims.push(p.longueur + 'm × ' + p.largeur + 'm');
               if (p.hsp) dims.push('HSP ' + p.hsp + 'm');
@@ -1556,18 +1582,18 @@ const CalcExpressV2 = {
                 if (details) dims.push(details);
               }
               const designation = p.nom + (dims.length ? ' — ' + dims.join(' | ') : '');
-              const uniteDevis = (corpsId === 'electricite' || corpsId === 'plomberie') ? 'u' : 'm²';
+              const uniteDevis = this._getUniteOuvrage(corpsId, p);
               const nbLignesAvant = (() => {
                 const s = DevisMulti._state.sections.find(s => s.key === corpsId);
                 return s ? s.lignes.length : 0;
               })();
               DevisMulti._ajouterSectionAvecSurface(
                 corpsId, corps.icone || '🔧', corps.label,
-                surf, uniteDevis, designation
+                quantiteDevis, uniteDevis, designation
               );
               const sec = DevisMulti._state.sections.find(s => s.key === corpsId);
               if (sec && sec.lignes.length > nbLignesAvant) {
-                sec.lignes[nbLignesAvant].prix = surf > 0 ? Math.round(r.prixVente / surf) : 0;
+                sec.lignes[nbLignesAvant].prix = quantiteDevis > 0 ? Math.round(r.prixVente / quantiteDevis) : 0;
               }
               if (r.coutMat > 0 || r.coutMO > 0) {
                 DevisMulti._ajouterSectionAvecSurface(
