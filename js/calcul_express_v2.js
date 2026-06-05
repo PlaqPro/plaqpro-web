@@ -903,18 +903,23 @@ const CalcExpressV2 = {
       const ctx = canvas.getContext('2d');
       let points = [];
       let closed = false;
+      let mousePos = null;
+      const GRID = canvas.width / 20;
+      const SNAP_DIST = 15;
 
       const drawGrid = () => {
-        const GRID = canvas.width / 10;
-        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
         ctx.lineWidth = 0.5;
         for (let x = 0; x <= canvas.width; x += GRID) {
+          const i = Math.round(x / GRID);
+          ctx.strokeStyle = i % 2 === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)';
           ctx.beginPath();
           ctx.moveTo(x, 0);
           ctx.lineTo(x, canvas.height);
           ctx.stroke();
         }
         for (let y = 0; y <= canvas.height; y += GRID) {
+          const i = Math.round(y / GRID);
+          ctx.strokeStyle = i % 2 === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)';
           ctx.beginPath();
           ctx.moveTo(0, y);
           ctx.lineTo(canvas.width, y);
@@ -922,33 +927,110 @@ const CalcExpressV2 = {
         }
         ctx.fillStyle = 'rgba(255,255,255,0.2)';
         ctx.font = '9px sans-serif';
-        for (let i = 1; i <= 9; i++) {
-          ctx.fillText(i + 'm', i * GRID + 2, 10);
-          ctx.fillText(i + 'm', 2, i * GRID - 2);
+        for (let i = 1; i <= 19; i++) {
+          const label = (i * 0.5) % 1 === 0 ? (i * 0.5) + 'm' : '';
+          if (label) {
+            ctx.fillText(label, i * GRID + 2, 10);
+            ctx.fillText(label, 2, i * GRID - 2);
+          }
         }
+      };
+
+      const drawSegmentLabel = (a, b) => {
+        const scale = 10 / canvas.width;
+        const dx = (b.x - a.x) * scale;
+        const dy = (b.y - a.y) * scale;
+        const dist = Math.sqrt(dx * dx + dy * dy).toFixed(2);
+        const mx = (a.x + b.x) / 2;
+        const my = (a.y + b.y) / 2 - 8;
+        ctx.font = '10px sans-serif';
+        const label = dist + 'm';
+        const tw = ctx.measureText(label).width;
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(mx - tw / 2 - 3, my - 12, tw + 6, 16);
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, mx, my);
+        ctx.textAlign = 'left';
       };
 
       const draw = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawGrid();
-        if (!points.length) return;
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        points.forEach(pt => ctx.lineTo(pt.x, pt.y));
-        if (closed) ctx.closePath();
-        ctx.strokeStyle = '#4f8ef7';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        if (closed) {
-          ctx.fillStyle = 'rgba(79,142,247,0.15)';
-          ctx.fill();
-        }
-        points.forEach(pt => {
+        if (points.length) {
           ctx.beginPath();
-          ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
-          ctx.fillStyle = '#4f8ef7';
-          ctx.fill();
-        });
+          ctx.moveTo(points[0].x, points[0].y);
+          points.forEach(pt => ctx.lineTo(pt.x, pt.y));
+          if (closed) ctx.closePath();
+          ctx.strokeStyle = '#4f8ef7';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          if (closed) {
+            ctx.fillStyle = 'rgba(79,142,247,0.15)';
+            ctx.fill();
+          }
+          points.forEach(pt => {
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#4f8ef7';
+            ctx.fill();
+          });
+          for (let i = 0; i < points.length - 1; i++) {
+            drawSegmentLabel(points[i], points[i + 1]);
+          }
+          if (closed && points.length > 1) {
+            drawSegmentLabel(points[points.length - 1], points[0]);
+          }
+        }
+
+        if (!closed && mousePos && points.length > 0) {
+          const last = points[points.length - 1];
+          ctx.beginPath();
+          ctx.moveTo(last.x, last.y);
+          ctx.lineTo(mousePos.x, mousePos.y);
+          ctx.strokeStyle = 'rgba(79,142,247,0.5)';
+          ctx.setLineDash([5, 5]);
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          const scale = 10 / canvas.width;
+          const dx = (mousePos.x - last.x) * scale;
+          const dy = (mousePos.y - last.y) * scale;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist > 0.05) {
+            const mx = (last.x + mousePos.x) / 2;
+            const my = (last.y + mousePos.y) / 2;
+            const label = dist.toFixed(2) + ' m';
+            ctx.font = 'bold 11px sans-serif';
+            const tw = ctx.measureText(label).width;
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(mx - tw / 2 - 4, my - 14, tw + 8, 18);
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, mx, my - 2);
+            ctx.textAlign = 'left';
+          }
+          if (mousePos.snapFirst) {
+            ctx.beginPath();
+            ctx.arc(points[0].x, points[0].y, 10, 0, Math.PI * 2);
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+        }
+      };
+
+      const fermerForme = () => {
+        closed = true;
+        mousePos = null;
+        const surf = (Math.round(calcSurface() * 100) / 100).toFixed(2);
+        draw();
+        const el = this._container.querySelector('#cex-canvas-surface');
+        if (el) el.textContent = surf + ' m²';
+        const inp = this._container.querySelector('#cex-surface-libre');
+        if (inp) inp.value = surf;
+        if (this._pieceEnCours) this._pieceEnCours.surface = parseFloat(surf);
       };
 
       const calcSurface = () => {
@@ -974,53 +1056,79 @@ const CalcExpressV2 = {
         };
       };
 
+      const snap = pos => {
+        const gx = Math.round(pos.x / GRID) * GRID;
+        const gy = Math.round(pos.y / GRID) * GRID;
+        const distGrid = Math.sqrt(Math.pow(pos.x - gx, 2) + Math.pow(pos.y - gy, 2));
+        if (points.length >= 3) {
+          const distFirst = Math.sqrt(Math.pow(pos.x - points[0].x, 2) + Math.pow(pos.y - points[0].y, 2));
+          if (distFirst < SNAP_DIST * 2) return { x: points[0].x, y: points[0].y, snapFirst: true };
+        }
+        if (distGrid < SNAP_DIST) return { x: gx, y: gy };
+        return pos;
+      };
+
+      const listenerOpts = this._bindController ? { signal: this._bindController.signal } : undefined;
+      const touchOpts = this._bindController ? { passive: false, signal: this._bindController.signal } : { passive: false };
+
       canvas.addEventListener('click', e => {
         if (closed) return;
-        points.push(getPos(e));
+        const raw = getPos(e);
+        const pos = snap(raw);
+        if (pos.snapFirst && points.length >= 3) {
+          fermerForme();
+          return;
+        }
+        points.push({ x: pos.x, y: pos.y });
         draw();
-      });
+      }, listenerOpts);
 
       canvas.addEventListener('dblclick', () => {
         if (points.length < 3) return;
-        closed = true;
-        const surf = (Math.round(calcSurface() * 100) / 100).toFixed(2);
-        draw();
-        const el = this._container.querySelector('#cex-canvas-surface');
-        if (el) el.textContent = surf + ' m²';
-        const inp = this._container.querySelector('#cex-surface-libre');
-        if (inp) inp.value = surf;
-        if (this._pieceEnCours) this._pieceEnCours.surface = parseFloat(surf);
-      });
+        fermerForme();
+      }, listenerOpts);
 
       canvas.addEventListener('touchstart', e => {
         e.preventDefault();
         if (closed) return;
-        points.push(getPos(e));
+        const raw = getPos(e);
+        const pos = snap(raw);
+        if (pos.snapFirst && points.length >= 3) {
+          fermerForme();
+          return;
+        }
+        points.push({ x: pos.x, y: pos.y });
         draw();
-      }, { passive: false });
+      }, touchOpts);
 
       canvas.addEventListener('mousemove', e => {
-        const pos = getPos(e);
-        const scale = 10 / canvas.width;
+        if (closed) return;
+        const raw = getPos(e);
+        mousePos = snap(raw);
+        draw();
         const mesure = this._container.querySelector('#cex-canvas-mesure');
         if (mesure) {
-          mesure.textContent = 'Curseur : ' + (pos.x * scale).toFixed(2) + ' m × ' + (pos.y * scale).toFixed(2) + ' m';
+          const scale = 10 / canvas.width;
+          mesure.textContent = 'Curseur : ' + (mousePos.x * scale).toFixed(2) + ' m × ' + (mousePos.y * scale).toFixed(2) + ' m';
         }
-      });
+      }, listenerOpts);
 
       const resetBtn = this._container.querySelector('#cex-canvas-reset');
       if (resetBtn) {
         resetBtn.addEventListener('click', () => {
           points = [];
           closed = false;
+          mousePos = null;
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           drawGrid();
           const el = this._container.querySelector('#cex-canvas-surface');
           if (el) el.textContent = '0.00 m²';
           const inp = this._container.querySelector('#cex-surface-libre');
           if (inp) inp.value = '0';
+          const mesure = this._container.querySelector('#cex-canvas-mesure');
+          if (mesure) mesure.textContent = '';
           if (this._pieceEnCours) this._pieceEnCours.surface = 0;
-        });
+        }, listenerOpts);
       }
       drawGrid();
     }
