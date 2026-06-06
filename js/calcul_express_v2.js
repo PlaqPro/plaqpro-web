@@ -93,8 +93,17 @@ const CalcExpressV2 = {
       { id:'mitigeur_lavabo', label:'Mitigeur lavabo',         icone:'🔧', cat:'Robinetterie' },
       { id:'mitigeur_douche', label:'Mitigeur douche',         icone:'🔧', cat:'Robinetterie' },
       { id:'mitigeur_evier',  label:'Mitigeur évier',          icone:'🔧', cat:'Robinetterie' },
+      { id:'vasque',          label:'Vasque',                  icone:'🚿', cat:'Sanitaires' },
+      { id:'robinetterie_cuisine', label:'Robinetterie cuisine', icone:'🔧', cat:'Robinetterie' },
+      { id:'robinetterie_sdb', label:'Robinetterie SDB',       icone:'🔧', cat:'Robinetterie' },
+      { id:'robinetterie_wc', label:'Robinetterie WC',         icone:'🔧', cat:'Robinetterie' },
       { id:'cumulus',         label:'Cumulus',                  icone:'🌡', cat:'Divers' },
       { id:'vmc',             label:'VMC',                      icone:'💨', cat:'Divers' },
+      { id:'seche_serviette', label:'Sèche-serviette',          icone:'🌡', cat:'Divers' },
+      { id:'arrivee_eau',     label:"Arrivée d'eau",           icone:'🔧', cat:'Extérieur' },
+      { id:'evacuation_ep',   label:'Évacuation EP',            icone:'🔧', cat:'Extérieur' },
+      { id:'regard',          label:'Regard',                   icone:'🔧', cat:'Extérieur' },
+      { id:'pompe_arrosage',  label:'Pompe arrosage',           icone:'🔧', cat:'Extérieur' },
       { id:'nourrice',        label:'Nourrice distribution',   icone:'🔧', cat:'Divers' },
       { id:'vanne_arret',     label:"Vanne d'arrêt",           icone:'🔧', cat:'Divers' },
     ],
@@ -182,12 +191,14 @@ const CalcExpressV2 = {
       return this.LIEUX_CORPS[key] || [];
     }
     if (corpsId === 'electricite') {
-      return profil === 'pro'
-        ? ['Accueil', 'Bureau', 'Couloir', 'Dépôt', 'Espace commun', 'Espace pause',
-           'Hall', 'Local informatique', 'Local technique', 'Salle de conférence',
-           'Salle de réunion', 'Sanitaires', 'Show-room', 'Tableau divisionnaire',
-           'Tableau général']
-        : this.LIEUX_CORPS.electricite;
+      const piecesChantier = this._dedupeBy(
+        (this._pieces || [])
+          .filter(p => p && p.nom && p.corps !== 'electricite')
+          .map(p => p.nom),
+        nom => String(nom || '').trim().toLowerCase()
+      );
+      if (piecesChantier.length) return piecesChantier;
+      return this._dedupeBy(this.PIECES_PROFIL[profil] || this.PIECES_PROFIL.particulier, nom => String(nom || '').trim().toLowerCase());
     }
     if (corpsId === 'plomberie') {
       return profil === 'pro'
@@ -330,19 +341,49 @@ const CalcExpressV2 = {
     const liste = this.APPAREILLAGE[corpsId] || [];
     if (corpsId !== 'plomberie') return this._dedupeBy(liste, a => a.id);
     const nom = String(nomPiece || '').toLowerCase();
-    let ids = null;
-    if (nom.includes('cuisine')) {
-      ids = ['evier_1bac','evier_2bacs','lave_vaisselle','mitigeur_evier','cumulus','vmc'];
-    } else if (nom.includes('salle de bain') || nom.includes('sanitaire')) {
-      ids = ['baignoire','baignoire_balneo','douche_receveur','douche_italienne','lavabo','mitigeur_lavabo','mitigeur_douche','cumulus','vmc'];
-    } else if (nom.includes('wc')) {
-      ids = ['wc_standard','wc_suspendu','robinet_ext'];
-    } else if (nom.includes('buanderie')) {
-      ids = ['lave_linge','evier_1bac','evier_2bacs','mitigeur_evier'];
-    }
-    if (!ids) return this._dedupeBy(liste, a => a.id);
+    const mappings = [
+      { match: n => n.includes('cuisine'), ids: ['evier_1bac','evier_2bacs','robinetterie_cuisine','lave_vaisselle','cumulus','vmc'] },
+      { match: n => n.includes('salle de bain') || n.includes('sanitaire'), ids: ['baignoire','douche_italienne','douche_receveur','vasque','robinetterie_sdb','cumulus','vmc','seche_serviette'] },
+      { match: n => n.includes('wc'), ids: ['wc_standard','wc_suspendu','robinetterie_wc'] },
+      { match: n => n.includes('buanderie'), ids: ['lave_linge','evier_1bac','robinetterie_cuisine','cumulus'] },
+      { match: n => n.includes('extérieur') || n.includes('exterieur'), ids: ['robinet_ext','arrivee_eau','evacuation_ep','regard','pompe_arrosage'] },
+    ];
+    const mapping = mappings.find(m => m.match(nom));
+    if (!mapping) return this._dedupeBy(liste, a => a.id);
+    const ids = mapping.ids;
     const allowed = new Set(ids);
     return this._dedupeBy(liste.filter(a => allowed.has(a.id)), a => a.id);
+  },
+
+  _isOuvrageHaiePlantation(piece, code) {
+    const id = String(code || (piece && piece.tachePaysagisme) || '').toUpperCase();
+    return id.includes('HAIE') || id.includes('PLANTATION');
+  },
+
+  _getEssencesHaie() {
+    return [
+      { id:'cypres_leyland', label:'Cyprès de Leyland', espacement:0.6 },
+      { id:'thuya', label:'Thuya', espacement:0.5 },
+      { id:'laurier_palme', label:'Laurier palme', espacement:0.8 },
+      { id:'photinia', label:'Photinia', espacement:0.7 },
+      { id:'bambou', label:'Bambou', espacement:0.5 },
+      { id:'autre', label:'Autre', espacement:0.6 },
+    ];
+  },
+
+  _getEssenceHaie(id) {
+    return this._getEssencesHaie().find(e => e.id === id) || this._getEssencesHaie().find(e => e.id === 'autre');
+  },
+
+  _getTypeMetragePaysagisme(piece, code) {
+    if (this._isOuvrageHaiePlantation(piece, code)) return 'haie';
+    const testPiece = Object.assign({}, piece || {});
+    if (code) testPiece.tachePaysagisme = code;
+    const unite = String(this._getUniteOuvrage('paysagisme', testPiece) || '').toLowerCase();
+    if (unite === 'ml') return 'ml';
+    if (unite === 'u') return 'u';
+    if (unite === 'm3' || unite === 'm³' || unite.includes('³')) return 'm3';
+    return 'm2';
   },
 
   _progressBar(etapeActive) {
@@ -365,7 +406,7 @@ const CalcExpressV2 = {
   },
 
   _card(content) {
-    return `<div style="background:var(--bg-card,#fff);border:1px solid var(--border,#e2e8f0);border-radius:12px;padding:24px;margin-bottom:16px">${content}</div>`;
+    return `<div style="background:var(--bg-card,#fff);border:1px solid var(--border,#e2e8f0);border-radius:12px;padding:24px;margin-bottom:16px;overflow:hidden;overflow-y:hidden">${content}</div>`;
   },
 
   _btn(label, action, style) {
@@ -796,7 +837,7 @@ const CalcExpressV2 = {
             ⚡ Saisissez le nombre de points par type. Le total sera calculé automatiquement.
           </p>
         </div>
-        <div style="max-height:400px;overflow-y:auto">${sections}</div>
+        <div style="overflow-y:hidden">${sections}</div>
       `)}
     `);
     this._bind();
@@ -819,24 +860,24 @@ const CalcExpressV2 = {
     const isPlaco   = p.corps === 'plaquisterie';
     const needsHSP  = isPlaco || (p.corps === 'maconnerie' && (this._corpsConfig['maconnerie'] || {}).lieuxKey === 'maconnerie_int');
     const paysCodeActuel = p.tachePaysagisme || '';
-    const isPaysLineaire = p.corps === 'paysagisme' && this._isOuvrageLineaire('paysagisme', p, paysCodeActuel);
+    const typePaysActuel = p.corps === 'paysagisme' ? this._getTypeMetragePaysagisme(p, paysCodeActuel) : 'm2';
+    const fieldWrap = (id, label, inputHtml, visible) => `
+        <div id="${id}" style="flex:1;min-width:120px;display:${visible ? 'block' : 'none'}">
+          <label style="font-size:.8rem;color:var(--text-secondary,#666);display:block;margin-bottom:4px">${label}</label>
+          ${inputHtml}
+        </div>`;
+    const inputStyle = 'width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box';
+    const essencesOptions = this._getEssencesHaie().map(e =>
+      `<option value="${e.id}" ${(p.essenceHaie || 'autre') === e.id ? 'selected' : ''}>${this._esc(e.label)} — ${e.espacement}m</option>`
+    ).join('');
     const champRect = `
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px">
-        <div style="flex:1;min-width:120px">
-          <label style="font-size:.8rem;color:var(--text-secondary,#666);display:block;margin-bottom:4px">Longueur (m)</label>
-          <input id="cex-m-l" type="number" min="0" step="0.1" value="${p.longueur||''}" placeholder="ex: 5.5"
-            style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box">
-        </div>
-        <div style="flex:1;min-width:120px">
-          <label style="font-size:.8rem;color:var(--text-secondary,#666);display:block;margin-bottom:4px">Largeur (m)</label>
-          <input id="cex-m-w" type="number" min="0" step="0.1" value="${p.largeur||''}" placeholder="ex: 3.8"
-            style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box">
-        </div>
-        <div id="cex-pays-hauteur-wrap" style="flex:1;min-width:120px;display:${isPaysLineaire ? 'block' : 'none'}">
-          <label style="font-size:.8rem;color:var(--text-secondary,#666);display:block;margin-bottom:4px">Hauteur (m)</label>
-          <input id="cex-pays-hauteur" type="number" min="0" step="0.1" value="${p.hauteurPaysage||''}" placeholder="ex: 1.8"
-            style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box">
-        </div>
+        ${fieldWrap('cex-m-l-wrap', 'Longueur (m)', `<input id="cex-m-l" type="number" min="0" step="0.1" value="${p.longueur||''}" placeholder="ex: 5.5" style="${inputStyle}">`, p.corps !== 'paysagisme' || !['u'].includes(typePaysActuel))}
+        ${fieldWrap('cex-m-w-wrap', 'Largeur (m)', `<input id="cex-m-w" type="number" min="0" step="0.1" value="${p.largeur||''}" placeholder="ex: 3.8" style="${inputStyle}">`, p.corps !== 'paysagisme' || ['m2','m3'].includes(typePaysActuel))}
+        ${fieldWrap('cex-pays-hauteur-wrap', 'Hauteur (m)', `<input id="cex-pays-hauteur" type="number" min="0" step="0.1" value="${p.hauteurPaysage||''}" placeholder="ex: 1.8" style="${inputStyle}">`, p.corps === 'paysagisme' && typePaysActuel === 'ml')}
+        ${fieldWrap('cex-pays-essence-wrap', 'Essence', `<select id="cex-pays-essence" style="${inputStyle}">${essencesOptions}</select>`, p.corps === 'paysagisme' && typePaysActuel === 'haie')}
+        ${fieldWrap('cex-pays-quantite-wrap', 'Quantité', `<input id="cex-pays-quantite" type="number" min="0" step="1" value="${p.quantite||p.nbPoints||''}" placeholder="ex: 1" style="${inputStyle}">`, p.corps === 'paysagisme' && typePaysActuel === 'u')}
+        ${fieldWrap('cex-pays-profondeur-wrap', 'Profondeur (m)', `<input id="cex-pays-profondeur" type="number" min="0" step="0.1" value="${p.profondeur||''}" placeholder="ex: 0.3" style="${inputStyle}">`, p.corps === 'paysagisme' && typePaysActuel === 'm3')}
         ${needsHSP ? `
         <div style="flex:1;min-width:120px">
           <label style="font-size:.8rem;color:#f59e0b;font-weight:700;display:block;margin-bottom:4px">Hauteur sous plafond (m) *</label>
@@ -946,14 +987,33 @@ const CalcExpressV2 = {
         const l   = parseFloat((this._container.querySelector('#cex-m-l') || {}).value) || 0;
         const w   = parseFloat((this._container.querySelector('#cex-m-w') || {}).value) || 0;
         const hp  = parseFloat((this._container.querySelector('#cex-pays-hauteur') || {}).value) || 0;
+        const qte = parseFloat((this._container.querySelector('#cex-pays-quantite') || {}).value) || 0;
+        const prof = parseFloat((this._container.querySelector('#cex-pays-profondeur') || {}).value) || 0;
         const hsp = parseFloat((this._container.querySelector('#cex-m-hsp') || {}).value) || 0;
         const selPays = this._container.querySelector('#cex-pays-tache');
-        const lineaire = p.corps === 'paysagisme' && selPays && this._isOuvrageLineaire('paysagisme', p, selPays.value);
-        s = lineaire ? Math.round(l * Math.max(1, hp || 1) * 100) / 100 : Math.round(l * w * 100) / 100;
-        if (lineaire) {
+        const typePays = p.corps === 'paysagisme' ? this._getTypeMetragePaysagisme(p, selPays ? selPays.value : '') : 'm2';
+        if (p.corps === 'paysagisme' && typePays === 'haie') {
+          const essence = this._getEssenceHaie((this._container.querySelector('#cex-pays-essence') || {}).value || 'autre');
+          s = l > 0 ? Math.ceil(l / essence.espacement) : 0;
+          el.textContent = s > 0 ? '→ ' + s + ' plant' + (s > 1 ? 's' : '') + ' (' + essence.label + ', ' + essence.espacement + 'm)' : '';
+          return;
+        }
+        if (p.corps === 'paysagisme' && typePays === 'ml') {
+          s = Math.round(l * (hp || 1) * 100) / 100;
           el.textContent = l > 0 ? '→ Linéaire : ' + l + ' ml' + (hp > 0 ? ' × hauteur ' + hp + ' m = ' + s + ' ml' : '') : '';
           return;
         }
+        if (p.corps === 'paysagisme' && typePays === 'u') {
+          s = qte;
+          el.textContent = s > 0 ? '→ Quantité : ' + s + ' u' : '';
+          return;
+        }
+        if (p.corps === 'paysagisme' && typePays === 'm3') {
+          s = Math.round(l * w * prof * 100) / 100;
+          el.textContent = s > 0 ? '→ Volume : ' + s + ' m³' : '';
+          return;
+        }
+        s = Math.round(l * w * 100) / 100;
         if (hsp && l && w && el) {
           const murs = Math.round((2*l + 2*w) * hsp * 100) / 100;
           el.innerHTML = `→ Sol : ${s} m² · Murs : ${murs} m² · Plafond : ${s} m²`;
@@ -969,6 +1029,7 @@ const CalcExpressV2 = {
       el.textContent = s > 0 ? '→ Surface : ' + s + ' m²' : '';
     };
     this._container.querySelectorAll('input[type="number"]').forEach(i => i.addEventListener('input', preview));
+    this._container.querySelectorAll('select').forEach(i => i.addEventListener('change', preview));
     preview();
     this._bind();
     const btnValider = this._container.querySelector('#cex-metrage-valider');
@@ -980,10 +1041,9 @@ const CalcExpressV2 = {
         sel.value = valeurInitiale;
         btnValider.disabled = !valeurInitiale;
         sel.addEventListener('change', () => {
-          const hauteurWrap = this._container.querySelector('#cex-pays-hauteur-wrap');
-          if (hauteurWrap) hauteurWrap.style.display = this._isOuvrageLineaire('paysagisme', p, sel.value) ? 'block' : 'none';
+          p.tachePaysagisme = sel.value;
           btnValider.disabled = !sel.value;
-          preview();
+          this._renderEtape('metrage');
         }, { signal });
       } else {
         btnValider.disabled = false;
@@ -1318,6 +1378,7 @@ const CalcExpressV2 = {
 
   _getUniteOuvrage(corpsId, piece) {
     if (corpsId === 'electricite' || corpsId === 'plomberie') return 'u';
+    if (corpsId === 'paysagisme' && this._isOuvrageHaiePlantation(piece)) return 'u';
     if (corpsId === 'paysagisme' && piece && piece.tachePaysagisme && typeof BddV2 !== 'undefined') {
       const ouvrage = BddV2.getOuvrage(piece.tachePaysagisme);
       if (ouvrage && ouvrage.unite) return ouvrage.unite;
@@ -1331,6 +1392,11 @@ const CalcExpressV2 = {
       return Object.values(piece.quantites || {}).reduce((s, v) => s + (parseFloat(v) || 0), 0);
     }
     const unite = this._getUniteOuvrage(corpsId, piece);
+    if (corpsId === 'paysagisme' && this._isOuvrageHaiePlantation(piece)) {
+      const longueur = parseFloat(piece.longueur) || 0;
+      const essence = this._getEssenceHaie(piece.essenceHaie || 'autre');
+      return longueur > 0 ? Math.ceil(longueur / essence.espacement) : 0;
+    }
     if (corpsId === 'paysagisme' && unite === 'ml') {
       const longueur = parseFloat(piece.longueur) || 0;
       const largeur = parseFloat(piece.largeur) || 0;
@@ -1341,6 +1407,9 @@ const CalcExpressV2 = {
     }
     if (corpsId === 'paysagisme' && unite === 'u') {
       return parseFloat(piece.nbPoints) || parseFloat(piece.quantite) || 1;
+    }
+    if (corpsId === 'paysagisme' && (unite === 'm³' || unite === 'm3')) {
+      return parseFloat(piece.surface) || 0;
     }
     return parseFloat(piece.surface) || 0;
   },
@@ -1549,13 +1618,31 @@ const CalcExpressV2 = {
             const l   = parseFloat((this._container.querySelector('#cex-m-l') || {}).value) || 0;
             const w   = parseFloat((this._container.querySelector('#cex-m-w') || {}).value) || 0;
             const hp  = parseFloat((this._container.querySelector('#cex-pays-hauteur') || {}).value) || 0;
+            const qte = parseFloat((this._container.querySelector('#cex-pays-quantite') || {}).value) || 0;
+            const prof = parseFloat((this._container.querySelector('#cex-pays-profondeur') || {}).value) || 0;
             const hsp = parseFloat((this._container.querySelector('#cex-m-hsp') || {}).value) || 0;
             const codePays = (document.getElementById('cex-pays-tache') || {}).value || p.tachePaysagisme || '';
-            const lineairePays = p && p.corps === 'paysagisme' && this._isOuvrageLineaire('paysagisme', p, codePays);
-            s = lineairePays ? Math.round(l * Math.max(1, hp || 1) * 100) / 100 : Math.round(l * w * 100) / 100;
+            const typePays = p && p.corps === 'paysagisme' ? this._getTypeMetragePaysagisme(p, codePays) : 'm2';
+            if (p && p.corps === 'paysagisme' && typePays === 'haie') {
+              const essenceId = (this._container.querySelector('#cex-pays-essence') || {}).value || 'autre';
+              const essence = this._getEssenceHaie(essenceId);
+              s = l > 0 ? Math.ceil(l / essence.espacement) : 0;
+              p.essenceHaie = essence.id;
+              p.nbPlants = s;
+            } else if (p && p.corps === 'paysagisme' && typePays === 'ml') {
+              s = Math.round(l * (hp || 1) * 100) / 100;
+            } else if (p && p.corps === 'paysagisme' && typePays === 'u') {
+              s = qte;
+            } else if (p && p.corps === 'paysagisme' && typePays === 'm3') {
+              s = Math.round(l * w * prof * 100) / 100;
+            } else {
+              s = Math.round(l * w * 100) / 100;
+            }
             if (p) {
               p.longueur = l; p.largeur = w;
-              if (lineairePays) p.hauteurPaysage = hp || null;
+              p.hauteurPaysage = typePays === 'ml' ? (hp || null) : null;
+              p.quantite = typePays === 'u' ? qte : null;
+              p.profondeur = typePays === 'm3' ? prof : null;
               if (hsp) {
                 p.hsp          = hsp;
                 p.surface_sol  = s;
@@ -1649,7 +1736,7 @@ const CalcExpressV2 = {
                 if (ouv) dims.push(ouv.designation);
               }
               if (r.coutMat > 0 || r.coutMO > 0) {
-                dims.push('Dont mat. ' + fmt(r.coutMat) + ' + MO ' + fmt(r.coutMO));
+                dims.push('(Mat+Mo)');
               }
               const estElecPlomb = (corpsId === 'electricite' || corpsId === 'plomberie');
               if (estElecPlomb && p.quantites) {

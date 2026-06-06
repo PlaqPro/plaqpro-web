@@ -224,6 +224,59 @@ Tu réponds en français, de façon courte et pratique.`,
   },
 
   // ── Helpers ───────────────────────────────────────────────
+  _cleanJsonGroq(raw) {
+    let text = String(raw || '').replace(/```json/g, '').replace(/```/g, '').trim();
+    const first = text.indexOf('{');
+    const last = text.lastIndexOf('}');
+    if (first === -1 || last === -1 || last <= first) {
+      throw new Error('Réponse IA invalide : aucun bloc JSON détecté.');
+    }
+    text = text.slice(first, last + 1).replace(/[\u2018\u2019]/g, "'");
+    let out = '';
+    let inString = false;
+    let escaped = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (escaped) {
+        out += ch;
+        escaped = false;
+        continue;
+      }
+      if (ch === '\\') {
+        out += ch;
+        escaped = true;
+        continue;
+      }
+      if (ch === '"') {
+        if (!inString) {
+          inString = true;
+          out += ch;
+          continue;
+        }
+        let j = i + 1;
+        while (j < text.length && /\s/.test(text[j])) j++;
+        if (j >= text.length || /[,}\]:]/.test(text[j])) {
+          inString = false;
+          out += ch;
+        } else {
+          out += '\\"';
+        }
+        continue;
+      }
+      out += ch;
+    }
+    return out;
+  },
+
+  parseJsonGroq(raw) {
+    const cleaned = this._cleanJsonGroq(raw);
+    try {
+      return JSON.parse(cleaned);
+    } catch (err) {
+      throw new Error('Réponse IA JSON illisible après nettoyage : ' + err.message);
+    }
+  },
+
   _addMessage(role, html, isTemp = false) {
     const id  = 'ia-msg-' + Date.now();
     const div = document.createElement('div');

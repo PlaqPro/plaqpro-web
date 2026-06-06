@@ -585,9 +585,9 @@ Règles importantes :
       var data = await resp.json();
       var text = (data.choices?.[0]?.message?.content || '').trim();
 
-      // Nettoyer le JSON
-      text = text.replace(/```json/g,'').replace(/```/g,'').trim();
-      var result = JSON.parse(text);
+      var result = (typeof AssistantIA !== 'undefined' && AssistantIA.parseJsonGroq)
+        ? AssistantIA.parseJsonGroq(text)
+        : JSON.parse(text.replace(/```json/g,'').replace(/```/g,'').trim());
 
       // Injecter les sections dans le state
       var state = DevisMulti._state;
