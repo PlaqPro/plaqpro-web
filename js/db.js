@@ -359,7 +359,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── Helper Groq : clé depuis localStorage ─────────────────────
 // Retourne { url, headers } ou null si aucune clé configurée
 function groqConfig() {
-  const key = localStorage.getItem('plaqpro_groq_key') || '';
+  const key = localStorage.getItem('plaqpro_groq_key') ||
+              localStorage.getItem('groq_api_key') ||
+              '';
   if (!key) return null;
   return {
     url: 'https://api.groq.com/openai/v1/chat/completions',

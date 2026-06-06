@@ -27,7 +27,8 @@ Tu réponds en français, de façon courte et pratique.`,
   setSynthese(texte) {
     try { sessionStorage.setItem('plaqpro_synthese_chiffrage', texte); } catch(e) {}
     // Si un champ description existe dans l'UI, le remplir
-    const champ = document.getElementById('ia-input') ||
+    const champ = document.getElementById('dm-ia-descriptif') ||
+                  document.getElementById('ia-input') ||
                   document.getElementById('assistant-description') ||
                   document.getElementById('ia-description') ||
                   document.querySelector('[data-ia-description]');
