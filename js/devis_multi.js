@@ -388,6 +388,7 @@ var DevisMulti = {
 
   _buildRowHTML: function(sid, l, li) {
     var tot = ((parseFloat(l.qte) || 0) * (parseFloat(l.prix) || 0)).toFixed(2);
+    var lock = l.obligatoire ? '<span title="Ligne obligatoire du package" style="font-size:12px;color:#10b981">Obligatoire</span>' : '<button class="dm-del-btn" onclick="DevisMulti.removeLigne(\'' + sid + '\',' + li + ')">✕</button>';
     return '<tr id="dm-row-' + sid + '-' + li + '">'
       + '<td><input class="dm-cell" value="' + DevisMulti._esc(l.ref || '') + '"'
       + ' onchange="DevisMulti._updateLigne(\'' + sid + '\',' + li + ',\'ref\',this.value)"></td>'
@@ -405,7 +406,7 @@ var DevisMulti = {
       + '<td><input class="dm-cell dm-cell-num" type="number" min="0" step="0.01" value="' + (parseFloat(l.prix) || 0).toFixed(2) + '"'
       + ' oninput="DevisMulti._updateLigne(\'' + sid + '\',' + li + ',\'prix\',parseFloat(this.value)||0)"></td>'
       + '<td class="dm-cell-total" id="dm-tot-' + sid + '-' + li + '">' + tot + ' €</td>'
-      + '<td><button class="dm-del-btn" onclick="DevisMulti.removeLigne(\'' + sid + '\',' + li + ')">✕</button></td>'
+      + '<td>' + lock + '</td>'
       + '</tr>';
   },
 
@@ -616,6 +617,9 @@ Règles importantes :
       var resultatDiv = document.getElementById('dm-ia-resultat');
       if (resultatDiv) {
         var html = '';
+        if (result._analysePartielle) {
+          html += '<div style="background:rgba(245,158,11,.08);border-left:3px solid #f59e0b;padding:10px 14px;border-radius:0 6px 6px 0;font-size:13px;font-weight:600;margin-bottom:10px">Analyse partielle : la réponse IA a été reçue mais n’a pas pu être entièrement structurée.</div>';
+        }
         if (result.resume)
           html += '<div style="background:rgba(79,142,247,.1);border-left:3px solid var(--accent);padding:10px 14px;border-radius:0 6px 6px 0;font-size:13px;font-weight:600;margin-bottom:10px">✅ ' + result.resume + '</div>';
         if (result.alertes && result.alertes.length)
@@ -631,12 +635,13 @@ Règles importantes :
 
       // Rafraîchir les sections
       DevisMulti._renderSections();
-      if (status) status.textContent = '✅ ' + ajoutees + ' lignes générées';
-      App.toast('🤖 Devis généré — ' + ajoutees + ' lignes ajoutées !', 'success');
+      if (status) status.textContent = result._analysePartielle ? 'Analyse partielle' : '✅ ' + ajoutees + ' lignes générées';
+      App.toast(result._analysePartielle ? 'Analyse partielle — vérifiez le devis généré' : '🤖 Devis généré — ' + ajoutees + ' lignes ajoutées !', result._analysePartielle ? 'warning' : 'success');
 
     } catch(e) {
-      if (status) status.textContent = '❌ Erreur analyse';
-      App.toast('Erreur IA : ' + e.message, 'error');
+      console.warn('[DevisMulti] Analyse IA indisponible:', e);
+      if (status) status.textContent = 'Analyse partielle';
+      App.toast('Analyse partielle — complétez le devis manuellement', 'warning');
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -796,6 +801,10 @@ Règles importantes :
   removeLigne: function(sid, li) {
     var sec = DevisMulti._state.sections.find(function(s) { return s.sid === sid; });
     if (!sec) return;
+    if (sec.lignes[li] && sec.lignes[li].obligatoire) {
+      App.toast('Ligne obligatoire du package — non supprimable', 'warning');
+      return;
+    }
     sec.lignes.splice(li, 1);
     DevisMulti._rerenderTbody(sid);
     DevisMulti._refreshTotaux(sid);
@@ -831,6 +840,10 @@ Règles importantes :
     if (col) col.innerHTML = DevisMulti._buildSectionsHTML();
     var recap = document.getElementById('dm-recap');
     if (recap) recap.innerHTML = DevisMulti._buildRecapHTML();
+  },
+
+  _renderSections: function() {
+    DevisMulti._rerenderSectionsCol();
   },
 
   _rerenderAll: function() {
@@ -960,7 +973,9 @@ Règles importantes :
           quantite:    parseFloat(l.qte)  || 0,
           prixHT:      parseFloat(l.prix) || 0,
           tva:         DevisMulti._tvaValue(sec.tva, 0),
-          totalHT:     (parseFloat(l.qte) || 0) * (parseFloat(l.prix) || 0)
+          totalHT:     (parseFloat(l.qte) || 0) * (parseFloat(l.prix) || 0),
+          obligatoire: !!l.obligatoire,
+          option:      !!l.option
         });
       });
     });
@@ -1000,6 +1015,8 @@ Règles importantes :
           prixHT: parseFloat(l.prix) || 0,
           totalHT: (parseFloat(l.qte)||0) * (parseFloat(l.prix)||0),
           tva: sec.tva || 20,
+          obligatoire: !!l.obligatoire,
+          option: !!l.option,
         });
       });
     });
@@ -1068,6 +1085,8 @@ Règles importantes :
           unite:       l.unite       || '',
           qte:         l.quantite    || 0,
           prix:        l.prixHT      || 0,
+          obligatoire: !!l.obligatoire,
+          option:      !!l.option,
         });
       }
     });

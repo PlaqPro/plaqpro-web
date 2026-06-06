@@ -172,8 +172,18 @@ const CalcExpressV2 = {
   // ── Obtenir la liste de lieux pour un corps + profil ──────
   _getLieux(corpsId, profil) {
     if (corpsId === 'maconnerie') {
+      const key = (this._corpsConfig[corpsId] || {}).lieuxKey || 'maconnerie_ext';
+      if (key === 'maconnerie_int') {
+        const piecesChantier = this._dedupeBy(
+          (this._pieces || [])
+            .filter(p => p && p.nom && p.corps !== 'maconnerie')
+            .map(p => p.nom),
+          nom => String(nom || '').trim().toLowerCase()
+        );
+        const prestations = (this.LIEUX_CORPS.maconnerie_int || {}).prestations || [];
+        if (piecesChantier.length) return { pieces: piecesChantier, prestations };
+      }
       if (profil === 'pro') {
-        const key = (this._corpsConfig[corpsId] || {}).lieuxKey || 'maconnerie_ext';
         return key === 'maconnerie_int'
           ? {
               pieces: ['Cage d\'escalier', 'Cloison de séparation', 'Couloir', 'Hall d\'entrée',
@@ -187,7 +197,6 @@ const CalcExpressV2 = {
               prestations: ['Enduit façade', 'Ravalement', 'Parpaing', 'Brique de parement'],
             };
       }
-      const key = (this._corpsConfig[corpsId] || {}).lieuxKey || 'maconnerie_ext';
       return this.LIEUX_CORPS[key] || [];
     }
     if (corpsId === 'electricite') {
@@ -384,6 +393,74 @@ const CalcExpressV2 = {
     if (unite === 'u') return 'u';
     if (unite === 'm3' || unite === 'm³' || unite.includes('³')) return 'm3';
     return 'm2';
+  },
+
+  _getPackageTypePaysagisme(piece, code) {
+    const raw = [
+      code || (piece && piece.tachePaysagisme) || '',
+      piece && piece.nom,
+      typeof BddV2 !== 'undefined' && BddV2.estChargee && BddV2.estChargee() && code ? ((BddV2.getOuvrage(code) || {}).designation || '') : '',
+    ].join(' ').toUpperCase();
+    if (raw.includes('BASSIN') || raw.includes('EAU')) return 'bassin';
+    if (raw.includes('GAZON') || raw.includes('PELOUSE') || raw.includes('ENGAZON')) return 'pelouse';
+    if (raw.includes('CLOTURE') || raw.includes('CLÔTURE')) return 'cloture';
+    if (raw.includes('HAIE') || raw.includes('PLANTATION')) return 'haie';
+    if (raw.includes('ALLEE') || raw.includes('ALLÉE') || raw.includes('CHEMIN')) return 'allee';
+    if (raw.includes('TERRASSE')) return 'terrasse';
+    if (raw.includes('BORDURE')) return 'bordure';
+    if (raw.includes('ARBRE') || raw.includes('ARBUSTE')) return 'arbre';
+    return 'pelouse';
+  },
+
+  _getOptionsPackagePaysagisme(piece, code) {
+    const type = this._getPackageTypePaysagisme(piece, code);
+    const options = {
+      bassin: [
+        { id:'eclairage_subaquatique', label:'Éclairage subaquatique', unite:'u', prix:120 },
+        { id:'pompe_filtration', label:'Pompe filtration', unite:'u', prix:260 },
+        { id:'plantes_aquatiques', label:'Plantes aquatiques', unite:'u', prix:18 },
+      ],
+      pelouse: [
+        { id:'gazon_rouleau', label:'Gazon rouleau', unite:'m²', prix:18 },
+        { id:'semis', label:'Semis', unite:'m²', prix:5 },
+        { id:'arrosage_auto', label:'Arrosage automatique', unite:'forfait', prix:750 },
+      ],
+      cloture: [
+        { id:'type_grillage', label:'Variante grillage', unite:'ml', prix:42 },
+        { id:'type_bois', label:'Variante bois', unite:'ml', prix:68 },
+        { id:'type_pvc', label:'Variante PVC', unite:'ml', prix:76 },
+        { id:'type_metal', label:'Variante métal', unite:'ml', prix:95 },
+        { id:'portail', label:'Portail', unite:'u', prix:650 },
+        { id:'portillon', label:'Portillon', unite:'u', prix:280 },
+      ],
+      haie: [
+        { id:'tuteurage', label:'Tuteurage', unite:'u', prix:7 },
+      ],
+      allee: [
+        { id:'materiau_gravier', label:'Revêtement gravier', unite:'m²', prix:28 },
+        { id:'materiau_dallage', label:'Revêtement dallage', unite:'m²', prix:62 },
+        { id:'materiau_beton_desactive', label:'Revêtement béton désactivé', unite:'m²', prix:78 },
+        { id:'materiau_pas_japonais', label:'Pas japonais', unite:'m²', prix:48 },
+      ],
+      terrasse: [
+        { id:'materiau_bois', label:'Revêtement bois', unite:'m²', prix:85 },
+        { id:'materiau_composite', label:'Revêtement composite', unite:'m²', prix:105 },
+        { id:'materiau_carrelage', label:'Revêtement carrelage', unite:'m²', prix:72 },
+        { id:'materiau_beton', label:'Revêtement béton', unite:'m²', prix:68 },
+        { id:'eclairage_integre', label:'Éclairage intégré', unite:'forfait', prix:420 },
+      ],
+      bordure: [
+        { id:'materiau_beton', label:'Bordure béton', unite:'ml', prix:22 },
+        { id:'materiau_pierre', label:'Bordure pierre', unite:'ml', prix:38 },
+        { id:'materiau_acier', label:'Bordure acier cor-ten', unite:'ml', prix:44 },
+        { id:'materiau_bois', label:'Bordure bois', unite:'ml', prix:24 },
+      ],
+      arbre: [
+        { id:'essence_taille', label:'Essence / taille supérieure', unite:'u', prix:65 },
+        { id:'paillage', label:'Paillage', unite:'u', prix:12 },
+      ],
+    };
+    return options[type] || [];
   },
 
   _progressBar(etapeActive) {
@@ -953,6 +1030,21 @@ const CalcExpressV2 = {
           ${prestsPays}
         </select>
       </div>` : '';
+    const optionsPackagePays = p.corps === 'paysagisme' && p.tachePaysagisme
+      ? this._getOptionsPackagePaysagisme(p, p.tachePaysagisme)
+      : [];
+    const optionsPaysagisme = optionsPackagePays.length ? `
+      <div style="background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.35);border-radius:10px;padding:14px;margin-bottom:16px">
+        <p style="font-weight:700;color:var(--accent,#4f8ef7);margin:0 0 10px 0">Options du package</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px">
+          ${optionsPackagePays.map(opt => `
+            <label style="display:flex;gap:8px;align-items:center;font-size:.85rem;color:var(--text-secondary,#ddd);cursor:pointer">
+              <input type="checkbox" data-cex-pays-option="${opt.id}" ${(p.optionsPaysagisme || []).includes(opt.id) ? 'checked' : ''}>
+              <span>${this._esc(opt.label)} <small style="opacity:.7">(${opt.unite})</small></span>
+            </label>
+          `).join('')}
+        </div>
+      </div>` : '';
 
     this._html(`
       ${this._progressBar('metrage')}
@@ -970,6 +1062,7 @@ const CalcExpressV2 = {
           </div>
         </div>
         ${champPaysagisme}
+        ${optionsPaysagisme}
         <div style="display:flex;gap:8px;margin-bottom:16px">
           ${btnMode('rectangle','Rectangle','▬')}
           ${btnMode('forme-l','Forme en L','⌐')}
@@ -1376,6 +1469,111 @@ const CalcExpressV2 = {
     return BddV2.calcPrixVente(bdd.ouvrageDefaut, surface);
   },
 
+  _estimerPerimetre(piece) {
+    const l = parseFloat(piece.longueur) || 0;
+    const w = parseFloat(piece.largeur) || 0;
+    const surface = parseFloat(piece.surface) || 0;
+    if (l && w) return Math.round((2 * l + 2 * w) * 100) / 100;
+    if (parseFloat(piece.perimetre)) return parseFloat(piece.perimetre);
+    return surface > 0 ? Math.round(Math.sqrt(surface) * 4 * 100) / 100 : 0;
+  },
+
+  _linePackagePaysagisme(designation, qte, unite, prix, obligatoire, ouvrage) {
+    return { designation, qte: Math.max(0, Math.round((qte || 0) * 100) / 100), unite, prix, obligatoire: !!obligatoire, ouvrage: ouvrage || null };
+  },
+
+  _buildPackagePaysagisme(piece) {
+    const code = piece.tachePaysagisme || '';
+    const type = this._getPackageTypePaysagisme(piece, code);
+    const surface = parseFloat(piece.surface) || 0;
+    const longueur = parseFloat(piece.longueur) || parseFloat(piece.perimetre) || surface || 0;
+    const perimetre = this._estimerPerimetre(piece) || longueur;
+    const plants = this._isOuvrageHaiePlantation(piece) ? this._getQuantiteDevis('paysagisme', piece) : (parseFloat(piece.quantite) || 1);
+    const opts = new Set(piece.optionsPaysagisme || []);
+    const lines = [];
+    const add = (d, q, u, prix, obligatoire, ouvrage) => lines.push(this._linePackagePaysagisme(d, q, u, prix, obligatoire, ouvrage));
+
+    if (type === 'bassin') {
+      add('Terrassement bassin / pièce d’eau', surface * 0.6, 'm³', 90, true);
+      add('Pose bassin préfabriqué', 1, 'u', 850, true, code);
+      add('Raccordement eau bassin', 1, 'forfait', 250, true);
+      add('Étanchéité des bords', perimetre, 'ml', 35, true);
+    } else if (type === 'pelouse') {
+      const poseRouleau = code.toUpperCase().includes('ROULEAU') || opts.has('gazon_rouleau');
+      add('Terrassement / décapage', surface, 'm²', 7, true);
+      add('Retournement et amendement terre', surface, 'm²', 6, true);
+      add(poseRouleau ? 'Pose gazon rouleau' : 'Semis gazon', surface, 'm²', poseRouleau ? 18 : 5, true, code);
+      add('Arrosage mise en place', 1, 'forfait', 85, true);
+    } else if (type === 'cloture') {
+      add('Terrassement implantation clôture', longueur, 'ml', 12, true);
+      add('Pose poteaux + fondations béton', longueur, 'ml', 34, true);
+      add('Pose clôture', longueur, 'ml', 58, true, code);
+    } else if (type === 'haie') {
+      add('Terrassement tranchée haie', longueur, 'ml', 10, true);
+      add('Amendement terre haie', longueur, 'ml', 7, true);
+      add('Plantation haie', plants, 'u', 16, true, code);
+      add('Paillage haie', longueur, 'ml', 6, true);
+      add('Arrosage mise en place haie', 1, 'forfait', 80, true);
+    } else if (type === 'allee') {
+      add('Terrassement allée / chemin', surface, 'm²', 12, true);
+      add('Pose géotextile', surface, 'm²', 4, true);
+      add('Pose revêtement allée', surface, 'm²', 38, true, code);
+      add('Finitions des bords', perimetre, 'ml', 14, true);
+    } else if (type === 'terrasse') {
+      add('Terrassement terrasse', surface, 'm²', 12, true);
+      add('Pose structure / lambourdes', surface, 'm²', 28, true);
+      add('Pose revêtement terrasse', surface, 'm²', 72, true, code);
+    } else if (type === 'bordure') {
+      add('Terrassement bordure', longueur, 'ml', 9, true);
+      add('Pose bordure', longueur, 'ml', 24, true, code);
+      add('Jointoiement / finition bordure', longueur, 'ml', 8, true);
+    } else {
+      add('Fosse plantation arbre / arbuste', plants, 'u', 38, true);
+      add('Amendement plantation', plants, 'u', 14, true);
+      add('Plantation arbre / arbuste', plants, 'u', 45, true, code);
+      add('Tuteurage plantation', plants, 'u', 12, true);
+      add('Arrosage mise en place', plants, 'u', 6, true);
+    }
+
+    this._getOptionsPackagePaysagisme(piece, code).forEach(opt => {
+      if (!opts.has(opt.id)) return;
+      const q = opt.unite === 'm²' ? surface : opt.unite === 'ml' ? longueur : opt.unite === 'u' ? (type === 'haie' ? plants : 1) : 1;
+      add(opt.label, q, opt.unite, opt.prix, false);
+    });
+    return lines.filter(l => l.qte > 0);
+  },
+
+  _prixUnitairePackagePaysagisme(line) {
+    if (line.ouvrage && typeof BddV2 !== 'undefined' && BddV2.estChargee && BddV2.estChargee()) {
+      const r = BddV2.calcPrixVente(line.ouvrage, line.qte);
+      if (r && line.qte > 0 && r.prixVente > 0) return Math.round(r.prixVente / line.qte);
+    }
+    return line.prix || 0;
+  },
+
+  _ajouterPackagePaysagismeDevis(piece, corps) {
+    const sectionKey = 'paysagisme';
+    let sec = DevisMulti._state.sections.find(s => s.key === sectionKey);
+    if (!sec) {
+      sec = { key: sectionKey, icon: corps.icone || '🌿', titre: corps.label || 'Paysagisme', tva: 10, lignes: [], sid: DevisMulti._uid() };
+      DevisMulti._state.sections.push(sec);
+    }
+    const ouvrage = (piece.tachePaysagisme && typeof BddV2 !== 'undefined') ? BddV2.getOuvrage(piece.tachePaysagisme) : null;
+    const prefix = piece.nom + (ouvrage ? ' - ' + ouvrage.designation : '');
+    this._buildPackagePaysagisme(piece).forEach(line => {
+      sec.lignes.push({
+        id: DevisMulti._uid(),
+        ref: '',
+        designation: prefix + ' — ' + line.designation,
+        unite: line.unite,
+        qte: line.qte,
+        prix: this._prixUnitairePackagePaysagisme(line),
+        obligatoire: line.obligatoire,
+        option: !line.obligatoire,
+      });
+    });
+  },
+
   _getUniteOuvrage(corpsId, piece) {
     if (corpsId === 'electricite' || corpsId === 'plomberie') return 'u';
     if (corpsId === 'paysagisme' && this._isOuvrageHaiePlantation(piece)) return 'u';
@@ -1670,6 +1868,7 @@ const CalcExpressV2 = {
             p.mode = mode;
             if (p.corps === 'paysagisme') {
               p.tachePaysagisme = (document.getElementById('cex-pays-tache') || {}).value || 'OUV_GAZON_ROULEAU';
+              p.optionsPaysagisme = Array.from(this._container.querySelectorAll('[data-cex-pays-option]:checked')).map(cb => cb.dataset.cexPaysOption);
             }
           }
           this._renderEtape('pieces');
@@ -1725,6 +1924,10 @@ const CalcExpressV2 = {
               return parseFloat(p.surface) > 0;
             });
             pcs.forEach(p => {
+              if (corpsId === 'paysagisme' && p.tachePaysagisme) {
+                this._ajouterPackagePaysagismeDevis(p, corps);
+                return;
+              }
               const quantiteDevis = this._getQuantiteDevis(corpsId, p);
               const r    = this._calcCorps(corpsId, quantiteDevis, p);
               const dims = [];

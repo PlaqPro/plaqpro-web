@@ -17,6 +17,7 @@ const AssistantIA = {
   _open:    false,
   _loading: false,
   _history: [],
+  _listenersController: null,
 
 
   SYSTEM: `Tu es un assistant conseil en Plâtrerie et peinture intégré dans PlaqPro+.
@@ -65,11 +66,13 @@ Tu réponds en français, de façon courte et pratique.`,
 
   // ── Construction du widget ────────────────────────────────
   _buildWidget() {
+    this._resetListeners();
+    document.getElementById('ia-toggle-btn')?.remove();
+    document.getElementById('ia-window')?.remove();
     const btn = document.createElement('button');
     btn.id = 'ia-toggle-btn';
     btn.innerHTML = '🤖';
     btn.title = 'Assistant IA PlaqPro+';
-    btn.onclick = () => this.toggle();
     document.body.appendChild(btn);
 
     const win = document.createElement('div');
@@ -106,9 +109,8 @@ Tu réponds en français, de façon courte et pratique.`,
 
       <div id="ia-input-row">
         <div id="ia-hint" style="display:none"></div>
-        <textarea id="ia-input" placeholder="Ex: Quelle vis utiliser pour du BA13 sur ossature ?" rows="1"
-          onkeydown="AssistantIA._onKey(event)"></textarea>
-        <button id="ia-send-btn" onclick="AssistantIA.send()">
+        <textarea id="ia-input" placeholder="Ex: Quelle vis utiliser pour du BA13 sur ossature ?" rows="1"></textarea>
+        <button id="ia-send-btn">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
           </svg>
@@ -117,11 +119,27 @@ Tu réponds en français, de façon courte et pratique.`,
     `;
     document.body.appendChild(win);
 
+    this._bindWidgetListeners();
+  },
+
+  _resetListeners() {
+    if (this._listenersController) this._listenersController.abort();
+    this._listenersController = new AbortController();
+  },
+
+  _bindWidgetListeners() {
+    const signal = this._listenersController.signal;
+    const toggleBtn = document.getElementById('ia-toggle-btn');
+    const sendBtn = document.getElementById('ia-send-btn');
     const ta = document.getElementById('ia-input');
+    if (toggleBtn) toggleBtn.addEventListener('click', () => this.toggle(), { signal });
+    if (sendBtn) sendBtn.addEventListener('click', () => this.send(), { signal });
+    if (!ta) return;
+    ta.addEventListener('keydown', e => this._onKey(e), { signal });
     ta.addEventListener('input', () => {
       ta.style.height = 'auto';
       ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
-    });
+    }, { signal });
   },
 
   // ── Toggle ────────────────────────────────────────────────
@@ -225,13 +243,14 @@ Tu réponds en français, de façon courte et pratique.`,
 
   // ── Helpers ───────────────────────────────────────────────
   _cleanJsonGroq(raw) {
-    let text = String(raw || '').replace(/```json/g, '').replace(/```/g, '').trim();
-    const first = text.indexOf('{');
-    const last = text.lastIndexOf('}');
-    if (first === -1 || last === -1 || last <= first) {
-      throw new Error('Réponse IA invalide : aucun bloc JSON détecté.');
-    }
-    text = text.slice(first, last + 1).replace(/[\u2018\u2019]/g, "'");
+    const brut = String(raw || '');
+    console.warn('[AssistantIA] Réponse Groq brute:', brut);
+    let text = (brut.match(/\{[\s\S]*\}/) || [''])[0]
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
+    if (!text) return '';
+    text = text.replace(/[\u2018\u2019]/g, "'");
     let out = '';
     let inString = false;
     let escaped = false;
@@ -269,12 +288,27 @@ Tu réponds en français, de façon courte et pratique.`,
   },
 
   parseJsonGroq(raw) {
-    const cleaned = this._cleanJsonGroq(raw);
     try {
-      return JSON.parse(cleaned);
-    } catch (err) {
-      throw new Error('Réponse IA JSON illisible après nettoyage : ' + err.message);
+      const direct = (String(raw || '').match(/\{[\s\S]*\}/) || [''])[0];
+      if (direct) return JSON.parse(direct);
+    } catch (errDirect) {
+      // Deuxième chance avec nettoyage fin.
     }
+    try {
+      const cleaned = this._cleanJsonGroq(raw);
+      if (cleaned) return JSON.parse(cleaned);
+    } catch (errClean) {
+      console.warn('[AssistantIA] Analyse JSON partielle après échec nettoyage:', errClean.message);
+    }
+    return {
+      synthese: 'Analyse indisponible',
+      resume: 'Analyse partielle',
+      postes: [],
+      sections: [],
+      alertes: ['Analyse partielle : certaines informations IA n’ont pas pu être interprétées.'],
+      recommandations: [],
+      _analysePartielle: true,
+    };
   },
 
   _addMessage(role, html, isTemp = false) {
