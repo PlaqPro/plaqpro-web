@@ -169,6 +169,160 @@ const CalcExpressV2 = {
     'Zone de stockage extérieur':['OUV_DALLE_BETON_12CM','OUV_TERRASSEMENT_PREP','OUV_PARKING_STABILISE'],
   },
 
+  PACKAGES_PAYSAGISME: {
+    OUV_GAZON_ROULEAU: {
+      lignesAuto: [
+        { tache:'Décapage / terrassement', unite:'m²', prixUnit:7 },
+        { tache:'Retournement et amendement terre', unite:'m²', prixUnit:6 },
+        { tache:'Pose gazon rouleau', unite:'m²', prixUnit:12 },
+        { tache:'Arrosage mise en place', unite:'forfait', prixUnit:85 },
+      ],
+      options: [{ tache:'Arrosage automatique', unite:'forfait', prixUnit:450 }],
+    },
+    OUV_TALUS_ENGAZONNEMENT: {
+      lignesAuto: [
+        { tache:'Préparation talus', unite:'m²', prixUnit:8 },
+        { tache:'Amendement + semis fixation', unite:'m²', prixUnit:9 },
+        { tache:'Arrosage mise en place', unite:'forfait', prixUnit:85 },
+      ],
+      options: [{ tache:'Filet anti-érosion', unite:'m²', prixUnit:4 }],
+    },
+    OUV_MASSIF_PAILLAGE: {
+      lignesAuto: [
+        { tache:'Décapage et préparation sol', unite:'m²', prixUnit:7 },
+        { tache:'Amendement terre', unite:'m²', prixUnit:6 },
+        { tache:'Plantation massif', unite:'m²', prixUnit:15 },
+        { tache:'Pose paillage', unite:'m²', prixUnit:5 },
+        { tache:'Arrosage mise en place', unite:'forfait', prixUnit:60 },
+      ],
+      options: [{ tache:'Géotextile anti-herbes', unite:'m²', prixUnit:3 }],
+    },
+    OUV_BORDURE_JARDIN: {
+      lignesAuto: [
+        { tache:'Terrassement bordure', unite:'ml', prixUnit:9 },
+        { tache:'Pose bordure', unite:'ml', prixUnit:10 },
+        { tache:'Jointoiement / finition bordure', unite:'ml', prixUnit:8 },
+      ],
+      options: [
+        { tache:'Bordure pierre naturelle', unite:'ml', prixUnit:38 },
+        { tache:'Bordure acier cor-ten', unite:'ml', prixUnit:28 },
+        { tache:'Bordure béton', unite:'ml', prixUnit:12 },
+      ],
+    },
+    OUV_CLOTURE_BETON: {
+      lignesAuto: [
+        { tache:'Terrassement implantation clôture', unite:'ml', prixUnit:12 },
+        { tache:'Pose poteaux + fondations béton', unite:'ml', prixUnit:34 },
+        { tache:'Pose clôture béton + grillage', unite:'ml', prixUnit:81 },
+      ],
+      options: [
+        { tache:'Portail battant', unite:'u', prixUnit:850 },
+        { tache:'Portillon', unite:'u', prixUnit:320 },
+      ],
+    },
+    OUV_CLOTURE_BOIS: {
+      lignesAuto: [
+        { tache:'Terrassement implantation clôture', unite:'ml', prixUnit:12 },
+        { tache:'Pose poteaux + fondations béton', unite:'ml', prixUnit:34 },
+        { tache:'Pose clôture bois panneaux', unite:'ml', prixUnit:65 },
+      ],
+      options: [
+        { tache:'Traitement lasure bois', unite:'ml', prixUnit:8 },
+        { tache:'Portail bois battant', unite:'u', prixUnit:750 },
+        { tache:'Portillon bois', unite:'u', prixUnit:290 },
+      ],
+    },
+    OUV_HAIE_PLANTATION: {
+      lignesAuto: [
+        { tache:'Terrassement tranchée haie', unite:'ml', prixUnit:10 },
+        { tache:'Amendement terre haie', unite:'ml', prixUnit:7 },
+        { tache:'Plantation haie', unite:'u', prixUnit:81 },
+        { tache:'Paillage haie', unite:'ml', prixUnit:6 },
+        { tache:'Arrosage mise en place haie', unite:'forfait', prixUnit:80 },
+      ],
+      options: [{ tache:'Tuteurage', unite:'u', prixUnit:7 }],
+    },
+    OUV_ALLEE_GRAVIERS: {
+      lignesAuto: [
+        { tache:'Terrassement allée', unite:'m²', prixUnit:8 },
+        { tache:'Pose géotextile', unite:'m²', prixUnit:4 },
+        { tache:'Pose graviers', unite:'m²', prixUnit:18 },
+        { tache:'Finitions bords', unite:'ml', prixUnit:9 },
+      ],
+      options: [{ tache:'Bordure de contention', unite:'ml', prixUnit:12 }],
+    },
+    OUV_ALLEE_DALLAGE: {
+      lignesAuto: [
+        { tache:'Terrassement allée', unite:'m²', prixUnit:8 },
+        { tache:'Pose géotextile', unite:'m²', prixUnit:4 },
+        { tache:'Pose dallage béton', unite:'m²', prixUnit:45 },
+        { tache:'Jointoiement dallage', unite:'m²', prixUnit:8 },
+        { tache:'Finitions bords', unite:'ml', prixUnit:9 },
+      ],
+      options: [{ tache:'Éclairage solaire intégré', unite:'u', prixUnit:45 }],
+    },
+    OUV_TERRASSE_BETON_DESACTIVE: {
+      lignesAuto: [
+        { tache:'Terrassement terrasse', unite:'m²', prixUnit:10 },
+        { tache:'Pose forme béton', unite:'m²', prixUnit:35 },
+        { tache:'Désactivation surface', unite:'m²', prixUnit:18 },
+        { tache:'Joints de dilatation', unite:'ml', prixUnit:12 },
+      ],
+      options: [{ tache:'Éclairage extérieur intégré', unite:'forfait', prixUnit:380 }],
+    },
+    OUV_BASSIN_PREFAB: {
+      lignesAuto: [
+        { tache:'Terrassement bassin', unite:'m³', prixUnit:90 },
+        { tache:'Pose bassin préfabriqué', unite:'u', prixUnit:8 },
+        { tache:'Raccordement eau bassin', unite:'forfait', prixUnit:250 },
+        { tache:'Étanchéité des bords', unite:'ml', prixUnit:35 },
+      ],
+      options: [
+        { tache:'Éclairage subaquatique', unite:'u', prixUnit:120 },
+        { tache:'Pompe filtration', unite:'u', prixUnit:180 },
+        { tache:'Plantes aquatiques', unite:'u', prixUnit:25 },
+      ],
+    },
+    OUV_POTAGER_CARRE: {
+      lignesAuto: [
+        { tache:'Préparation emplacement potager', unite:'u', prixUnit:45 },
+        { tache:'Pose carré potager bois', unite:'u', prixUnit:85 },
+        { tache:'Remplissage terre végétale', unite:'u', prixUnit:60 },
+      ],
+      options: [{ tache:'Système arrosage goutte-à-goutte', unite:'u', prixUnit:95 }],
+    },
+    OUV_AIRE_JEUX_SOL: {
+      lignesAuto: [
+        { tache:'Terrassement aire de jeux', unite:'m²', prixUnit:7 },
+        { tache:'Pose géotextile', unite:'m²', prixUnit:4 },
+        { tache:'Pose copeaux de bois', unite:'m²', prixUnit:22 },
+        { tache:'Bordure de contention', unite:'ml', prixUnit:12 },
+      ],
+      options: [{ tache:'Recharge copeaux annuelle', unite:'forfait', prixUnit:180 }],
+    },
+    OUV_PARKING_STABILISE: {
+      lignesAuto: [
+        { tache:'Terrassement parking', unite:'m²', prixUnit:10 },
+        { tache:'Pose géotextile', unite:'m²', prixUnit:4 },
+        { tache:'Pose grave compactée', unite:'m²', prixUnit:18 },
+        { tache:'Pose stabilisateur gravier', unite:'m²', prixUnit:15 },
+        { tache:'Pose gravier de finition', unite:'m²', prixUnit:12 },
+      ],
+      options: [
+        { tache:'Bordure de contention', unite:'ml', prixUnit:12 },
+        { tache:'Éclairage solaire parking', unite:'u', prixUnit:85 },
+      ],
+    },
+    OUV_TERRASSEMENT_PREP: {
+      lignesAuto: [
+        { tache:'Décapage végétation existante', unite:'m²', prixUnit:5 },
+        { tache:'Terrassement général', unite:'m²', prixUnit:8 },
+        { tache:'Évacuation terres', unite:'m³', prixUnit:35 },
+      ],
+      options: [{ tache:'Nivellement laser', unite:'m²', prixUnit:6 }],
+    },
+  },
+
   // ── Obtenir la liste de lieux pour un corps + profil ──────
   _getLieux(corpsId, profil) {
     if (corpsId === 'maconnerie') {
@@ -396,71 +550,26 @@ const CalcExpressV2 = {
   },
 
   _getPackageTypePaysagisme(piece, code) {
-    const raw = [
-      code || (piece && piece.tachePaysagisme) || '',
-      piece && piece.nom,
-      typeof BddV2 !== 'undefined' && BddV2.estChargee && BddV2.estChargee() && code ? ((BddV2.getOuvrage(code) || {}).designation || '') : '',
-    ].join(' ').toUpperCase();
-    if (raw.includes('BASSIN') || raw.includes('EAU')) return 'bassin';
-    if (raw.includes('GAZON') || raw.includes('PELOUSE') || raw.includes('ENGAZON')) return 'pelouse';
-    if (raw.includes('CLOTURE') || raw.includes('CLÔTURE')) return 'cloture';
-    if (raw.includes('HAIE') || raw.includes('PLANTATION')) return 'haie';
-    if (raw.includes('ALLEE') || raw.includes('ALLÉE') || raw.includes('CHEMIN')) return 'allee';
-    if (raw.includes('TERRASSE')) return 'terrasse';
-    if (raw.includes('BORDURE')) return 'bordure';
-    if (raw.includes('ARBRE') || raw.includes('ARBUSTE')) return 'arbre';
-    return 'pelouse';
+    const ouvrageId = String(code || (piece && piece.tachePaysagisme) || '').toUpperCase();
+    return this.PACKAGES_PAYSAGISME[ouvrageId] ? ouvrageId : '';
+  },
+
+  _getPackagePaysagisme(piece, code) {
+    const ouvrageId = this._getPackageTypePaysagisme(piece, code);
+    return ouvrageId ? this.PACKAGES_PAYSAGISME[ouvrageId] : null;
+  },
+
+  _idOptionPaysagisme(opt) {
+    return String(opt.id || opt.tache || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
   },
 
   _getOptionsPackagePaysagisme(piece, code) {
-    const type = this._getPackageTypePaysagisme(piece, code);
-    const options = {
-      bassin: [
-        { id:'eclairage_subaquatique', label:'Éclairage subaquatique', unite:'u', prix:120 },
-        { id:'pompe_filtration', label:'Pompe filtration', unite:'u', prix:260 },
-        { id:'plantes_aquatiques', label:'Plantes aquatiques', unite:'u', prix:18 },
-      ],
-      pelouse: [
-        { id:'gazon_rouleau', label:'Gazon rouleau', unite:'m²', prix:18 },
-        { id:'semis', label:'Semis', unite:'m²', prix:5 },
-        { id:'arrosage_auto', label:'Arrosage automatique', unite:'forfait', prix:750 },
-      ],
-      cloture: [
-        { id:'type_grillage', label:'Variante grillage', unite:'ml', prix:42 },
-        { id:'type_bois', label:'Variante bois', unite:'ml', prix:68 },
-        { id:'type_pvc', label:'Variante PVC', unite:'ml', prix:76 },
-        { id:'type_metal', label:'Variante métal', unite:'ml', prix:95 },
-        { id:'portail', label:'Portail', unite:'u', prix:650 },
-        { id:'portillon', label:'Portillon', unite:'u', prix:280 },
-      ],
-      haie: [
-        { id:'tuteurage', label:'Tuteurage', unite:'u', prix:7 },
-      ],
-      allee: [
-        { id:'materiau_gravier', label:'Revêtement gravier', unite:'m²', prix:28 },
-        { id:'materiau_dallage', label:'Revêtement dallage', unite:'m²', prix:62 },
-        { id:'materiau_beton_desactive', label:'Revêtement béton désactivé', unite:'m²', prix:78 },
-        { id:'materiau_pas_japonais', label:'Pas japonais', unite:'m²', prix:48 },
-      ],
-      terrasse: [
-        { id:'materiau_bois', label:'Revêtement bois', unite:'m²', prix:85 },
-        { id:'materiau_composite', label:'Revêtement composite', unite:'m²', prix:105 },
-        { id:'materiau_carrelage', label:'Revêtement carrelage', unite:'m²', prix:72 },
-        { id:'materiau_beton', label:'Revêtement béton', unite:'m²', prix:68 },
-        { id:'eclairage_integre', label:'Éclairage intégré', unite:'forfait', prix:420 },
-      ],
-      bordure: [
-        { id:'materiau_beton', label:'Bordure béton', unite:'ml', prix:22 },
-        { id:'materiau_pierre', label:'Bordure pierre', unite:'ml', prix:38 },
-        { id:'materiau_acier', label:'Bordure acier cor-ten', unite:'ml', prix:44 },
-        { id:'materiau_bois', label:'Bordure bois', unite:'ml', prix:24 },
-      ],
-      arbre: [
-        { id:'essence_taille', label:'Essence / taille supérieure', unite:'u', prix:65 },
-        { id:'paillage', label:'Paillage', unite:'u', prix:12 },
-      ],
-    };
-    return options[type] || [];
+    const pkg = this._getPackagePaysagisme(piece, code);
+    return (pkg && pkg.options ? pkg.options : []).map(opt =>
+      Object.assign({}, opt, { id: this._idOptionPaysagisme(opt), label: opt.tache, prix: opt.prixUnit })
+    );
   },
 
   _progressBar(etapeActive) {
@@ -1482,63 +1591,60 @@ const CalcExpressV2 = {
     return { designation, qte: Math.max(0, Math.round((qte || 0) * 100) / 100), unite, prix, obligatoire: !!obligatoire, ouvrage: ouvrage || null };
   },
 
+  _quantiteLignePackagePaysagisme(piece, ouvrageId, line) {
+    const unite = String(line.unite || '').toLowerCase();
+    const surface = parseFloat(piece.surface) || 0;
+    const longueur = parseFloat(piece.longueur) || parseFloat(piece.perimetre) || 0;
+    const largeur = parseFloat(piece.largeur) || 0;
+    const perimetre = longueur && largeur ? Math.round(2 * (longueur + largeur)) : this._estimerPerimetre(piece);
+    const tache = String(line.tache || '').toUpperCase();
+    const ouvrageUnite = String(this._getUniteOuvrage('paysagisme', piece) || '').toLowerCase();
+
+    if (ouvrageId === 'OUV_BASSIN_PREFAB' && tache.includes('TERRASSEMENT')) return surface * 0.6;
+    if (ouvrageId === 'OUV_BASSIN_PREFAB' && (tache.includes('ETANCHEITE') || tache.includes('ÉTANCHÉITÉ'))) return Math.round(4 * Math.sqrt(surface || 0));
+    if (ouvrageId === 'OUV_HAIE_PLANTATION' && tache.includes('PLANTATION')) return this._getQuantiteDevis('paysagisme', piece);
+    if (unite === 'm²' || unite === 'm2') return surface;
+    if (unite === 'm³' || unite === 'm3') return surface;
+    if (unite === 'ml') {
+      if (ouvrageUnite === 'ml' || ouvrageId.includes('CLOTURE') || ouvrageId.includes('BORDURE') || ouvrageId.includes('HAIE')) return longueur || perimetre;
+      return perimetre || longueur;
+    }
+    if (unite === 'u' || unite === 'forfait') return 1;
+    return surface || longueur || 1;
+  },
+
   _buildPackagePaysagisme(piece) {
     const code = piece.tachePaysagisme || '';
-    const type = this._getPackageTypePaysagisme(piece, code);
-    const surface = parseFloat(piece.surface) || 0;
-    const longueur = parseFloat(piece.longueur) || parseFloat(piece.perimetre) || surface || 0;
-    const perimetre = this._estimerPerimetre(piece) || longueur;
-    const plants = this._isOuvrageHaiePlantation(piece) ? this._getQuantiteDevis('paysagisme', piece) : (parseFloat(piece.quantite) || 1);
+    const ouvrageId = String(code || '').toUpperCase();
+    const pkg = this._getPackagePaysagisme(piece, code);
     const opts = new Set(piece.optionsPaysagisme || []);
     const lines = [];
-    const add = (d, q, u, prix, obligatoire, ouvrage) => lines.push(this._linePackagePaysagisme(d, q, u, prix, obligatoire, ouvrage));
+    const add = (line, obligatoire) => {
+      lines.push(this._linePackagePaysagisme(
+        line.tache,
+        this._quantiteLignePackagePaysagisme(piece, ouvrageId, line),
+        line.unite,
+        line.prixUnit,
+        obligatoire,
+        null
+      ));
+    };
 
-    if (type === 'bassin') {
-      add('Terrassement bassin / pièce d’eau', surface * 0.6, 'm³', 90, true);
-      add('Pose bassin préfabriqué', 1, 'u', 850, true, code);
-      add('Raccordement eau bassin', 1, 'forfait', 250, true);
-      add('Étanchéité des bords', perimetre, 'ml', 35, true);
-    } else if (type === 'pelouse') {
-      const poseRouleau = code.toUpperCase().includes('ROULEAU') || opts.has('gazon_rouleau');
-      add('Terrassement / décapage', surface, 'm²', 7, true);
-      add('Retournement et amendement terre', surface, 'm²', 6, true);
-      add(poseRouleau ? 'Pose gazon rouleau' : 'Semis gazon', surface, 'm²', poseRouleau ? 18 : 5, true, code);
-      add('Arrosage mise en place', 1, 'forfait', 85, true);
-    } else if (type === 'cloture') {
-      add('Terrassement implantation clôture', longueur, 'ml', 12, true);
-      add('Pose poteaux + fondations béton', longueur, 'ml', 34, true);
-      add('Pose clôture', longueur, 'ml', 58, true, code);
-    } else if (type === 'haie') {
-      add('Terrassement tranchée haie', longueur, 'ml', 10, true);
-      add('Amendement terre haie', longueur, 'ml', 7, true);
-      add('Plantation haie', plants, 'u', 16, true, code);
-      add('Paillage haie', longueur, 'ml', 6, true);
-      add('Arrosage mise en place haie', 1, 'forfait', 80, true);
-    } else if (type === 'allee') {
-      add('Terrassement allée / chemin', surface, 'm²', 12, true);
-      add('Pose géotextile', surface, 'm²', 4, true);
-      add('Pose revêtement allée', surface, 'm²', 38, true, code);
-      add('Finitions des bords', perimetre, 'ml', 14, true);
-    } else if (type === 'terrasse') {
-      add('Terrassement terrasse', surface, 'm²', 12, true);
-      add('Pose structure / lambourdes', surface, 'm²', 28, true);
-      add('Pose revêtement terrasse', surface, 'm²', 72, true, code);
-    } else if (type === 'bordure') {
-      add('Terrassement bordure', longueur, 'ml', 9, true);
-      add('Pose bordure', longueur, 'ml', 24, true, code);
-      add('Jointoiement / finition bordure', longueur, 'ml', 8, true);
-    } else {
-      add('Fosse plantation arbre / arbuste', plants, 'u', 38, true);
-      add('Amendement plantation', plants, 'u', 14, true);
-      add('Plantation arbre / arbuste', plants, 'u', 45, true, code);
-      add('Tuteurage plantation', plants, 'u', 12, true);
-      add('Arrosage mise en place', plants, 'u', 6, true);
+    if (!pkg) {
+      const ouvrage = (typeof BddV2 !== 'undefined' && BddV2.getOuvrage) ? BddV2.getOuvrage(code) : null;
+      return [this._linePackagePaysagisme(
+        ouvrage ? ouvrage.designation : code,
+        this._getQuantiteDevis('paysagisme', piece),
+        this._getUniteOuvrage('paysagisme', piece),
+        0,
+        true,
+        code
+      )].filter(l => l.qte > 0);
     }
 
+    (pkg.lignesAuto || []).forEach(line => add(line, true));
     this._getOptionsPackagePaysagisme(piece, code).forEach(opt => {
-      if (!opts.has(opt.id)) return;
-      const q = opt.unite === 'm²' ? surface : opt.unite === 'ml' ? longueur : opt.unite === 'u' ? (type === 'haie' ? plants : 1) : 1;
-      add(opt.label, q, opt.unite, opt.prix, false);
+      if (opts.has(opt.id)) add(opt, false);
     });
     return lines.filter(l => l.qte > 0);
   },
@@ -1558,8 +1664,7 @@ const CalcExpressV2 = {
       sec = { key: sectionKey, icon: corps.icone || '🌿', titre: corps.label || 'Paysagisme', tva: 10, lignes: [], sid: DevisMulti._uid() };
       DevisMulti._state.sections.push(sec);
     }
-    const ouvrage = (piece.tachePaysagisme && typeof BddV2 !== 'undefined') ? BddV2.getOuvrage(piece.tachePaysagisme) : null;
-    const prefix = piece.nom + (ouvrage ? ' - ' + ouvrage.designation : '');
+    const prefix = piece.nom;
     this._buildPackagePaysagisme(piece).forEach(line => {
       sec.lignes.push({
         id: DevisMulti._uid(),
