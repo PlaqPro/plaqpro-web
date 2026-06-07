@@ -144,6 +144,31 @@ const CalcExpressV2 = {
                   'Garage', 'Salle de bain 1', 'Salle de bain 2', 'WC'],
   },
 
+  SECTIONS_PAR_ZONE: {
+    'Aire de jeux':       [1, 8, 9],
+    'Allée':              [1, 3, 7, 9],
+    "Bassin / pièce d'eau": [1, 4, 7, 9],
+    'Clôture':            [6],
+    'Haie':               [1, 2, 9],
+    'Jardin arrière':     [1, 2, 3, 4, 5, 7, 9],
+    'Jardin avant':       [1, 2, 3, 5, 7, 9],
+    'Massif fleuri':      [1, 2, 9],
+    'Parking':            [1, 3, 9],
+    'Pelouse':            [1, 2, 7, 9],
+    'Potager':            [1, 8, 9],
+    'Talus':              [1, 2, 9],
+    'Terrasse':           [1, 5, 7, 9],
+    'Zone boisée':        [1, 2, 9],
+    'Gazon':              [1, 2, 7, 9],
+    'Massif':             [1, 2, 9],
+    'Bordure':            [1, 3, 9],
+    'Haie / Clôture':     [1, 2, 6, 9],
+    'Chemin':             [1, 3, 9],
+    'Pièce d\'eau':       [1, 4, 7, 9],
+    'Jardin':             [1, 2, 3, 5, 7, 9],
+    'Extérieur':          [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  },
+
   PRESTATIONS_PAYSAGISME: {
     'Aire de jeux':         ['OUV_AIRE_JEUX_SOL','OUV_GAZON_ROULEAU','OUV_TERRASSEMENT_PREP'],
     'Allée':                ['OUV_ALLEE_GRAVIERS','OUV_ALLEE_DALLAGE','OUV_BORDURE_JARDIN'],
@@ -593,6 +618,19 @@ const CalcExpressV2 = {
     return (pkg && pkg.options ? pkg.options : []).map(opt =>
       Object.assign({}, opt, { id: this._idOptionPaysagisme(opt), label: opt.tache, prix: opt.prixUnit })
     );
+  },
+
+  _getSectionsForZonePaysagisme(nomZone) {
+    const all = (typeof BddPaysagismeV2 !== 'undefined')
+      ? BddPaysagismeV2.sections.map(s => s.id)
+      : [];
+    if (!nomZone) return all;
+    if (this.SECTIONS_PAR_ZONE[nomZone]) return this.SECTIONS_PAR_ZONE[nomZone];
+    const lower = String(nomZone).toLowerCase();
+    for (const [key, ids] of Object.entries(this.SECTIONS_PAR_ZONE)) {
+      if (lower.includes(key.toLowerCase())) return ids;
+    }
+    return all;
   },
 
   _progressBar(etapeActive) {
@@ -1169,26 +1207,37 @@ const CalcExpressV2 = {
           </select></div>`;
       }
       const currentId = p.tachePaysagisme || '';
-      const accordion = BddPaysagismeV2.sections.map(sec => {
+      let sectionsIds = this._getSectionsForZonePaysagisme(p.nom);
+      if (currentId) {
+        const selectedSection = BddPaysagismeV2.sections.find(sec =>
+          BddPaysagismeV2.getPrestationsBySection(sec.id).some(pr => pr.id === currentId)
+        );
+        if (selectedSection && !sectionsIds.includes(selectedSection.id)) {
+          sectionsIds = sectionsIds.concat(selectedSection.id);
+        }
+      }
+      const accordion = BddPaysagismeV2.sections
+        .filter(sec => sectionsIds.includes(sec.id))
+        .map(sec => {
         const prests = BddPaysagismeV2.getPrestationsBySection(sec.id);
         const hasSelected = prests.some(pr => pr.id === currentId);
-        return `<details style="border:1px solid var(--border,#334);border-radius:8px;margin-bottom:6px" ${hasSelected ? 'open' : ''}>
+        const isOpen = currentId ? hasSelected : sec.id === 1;
+        return `<details style="border:1px solid var(--border,#334);border-radius:8px;margin-bottom:6px" ${isOpen ? 'open' : ''}>
           <summary style="cursor:pointer;padding:8px 12px;font-weight:600;color:var(--text,#fff);list-style:none;display:flex;align-items:center;gap:8px">
             <span>${sec.icone}</span><span>${this._esc(sec.libelle)}</span>
           </summary>
           <div style="padding:8px 12px;display:flex;flex-direction:column;gap:4px">
             ${prests.map(pr => `
-              <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;${pr.id===currentId?'background:rgba(79,142,247,.18);font-weight:600':''}">
-                <input type="radio" name="cex-pays-radio" value="${pr.id}" ${pr.id===currentId?'checked':''} style="accent-color:var(--accent,#4f8ef7)">
-                <span style="font-size:.85rem;color:var(--text,#fff)">${this._esc(pr.libelle)}</span>
-                <small style="margin-left:auto;opacity:.6;font-size:.75rem">${pr.unite}</small>
+              <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;width:100%;${pr.id===currentId?'background:rgba(79,142,247,.18);font-weight:600':''}">
+                <input type="radio" name="cex-pays-radio" value="${pr.id}" ${pr.id===currentId?'checked':''} style="accent-color:var(--accent,#4f8ef7);flex-shrink:0">
+                <span style="font-size:.85rem;color:var(--text,#fff);flex:1">${this._esc(pr.libelle)}</span><small style="flex-shrink:0;opacity:.6;font-size:.75rem">${this._esc(String(pr.unite || '').replace('²','²').replace('³','³'))}</small>
               </label>`).join('')}
           </div>
         </details>`;
       }).join('');
       return `<div style="background:var(--card-bg,#1e1e2e);border:1px solid var(--accent,#4f8ef7);border-radius:10px;padding:14px;margin-bottom:16px">
         <p style="font-weight:700;color:var(--accent,#4f8ef7);margin:0 0 10px 0">🌿 Prestation sur ${this._esc(p.nom)}</p>
-        ${accordion}
+        <div style="max-height:60vh;overflow-y:auto;padding-right:4px">${accordion}</div>
       </div>`;
     })() : '';
     const optionsPackagePays = p.corps === 'paysagisme' && p.tachePaysagisme
