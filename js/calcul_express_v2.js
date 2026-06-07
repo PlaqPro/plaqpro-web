@@ -653,12 +653,12 @@ const CalcExpressV2 = {
       for (const pr of prests) {
         const checked = pr.id === currentId ? ' checked' : '';
         const bg = pr.id === currentId ? 'background:rgba(79,142,247,.18);font-weight:600;' : '';
-        html += '<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;';
-        html += 'border-radius:6px;cursor:pointer;min-width:0;overflow:hidden;box-sizing:border-box;width:100%;max-width:100%;' + bg + '">';
+        html += '<label style="display:grid;grid-template-columns:20px 1fr auto;align-items:center;gap:8px;padding:6px 8px;';
+        html += 'border-radius:6px;cursor:pointer;width:100%;box-sizing:border-box;' + bg + '">';
         html += '<input type="radio" name="cex-pays-radio" value="' + esc(pr.id) + '"';
-        html += checked + ' style="flex-shrink:0;accent-color:var(--accent,#4f8ef7)">';
-        html += '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.85rem;color:var(--text,#fff);word-break:normal">' + esc(pr.libelle) + '</span>';
-        html += '<span style="flex-shrink:0;opacity:.6;font-size:.75rem;white-space:nowrap">' + esc(pr.unite || '') + '</span>';
+        html += checked + ' style="accent-color:var(--accent,#4f8ef7)">';
+        html += '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text,#fff);font-size:.85rem">' + esc(pr.libelle) + '</span>';
+        html += '<span style="opacity:.6;font-size:.75rem;white-space:nowrap">' + esc(pr.unite || '') + '</span>';
         html += '</label>';
       }
       html += '</div></div>';
