@@ -637,7 +637,7 @@ const CalcExpressV2 = {
     let html = '';
     const esc = s => this._esc(s);
     const firstId = sections.length ? sections[0].id : null;
-    html += '<div data-cex-pays-accordion="1" style="max-height:55vh;overflow-y:auto;overflow-x:hidden;padding-right:4px;min-width:0;width:100%;max-width:100%">';
+    html += '<div data-cex-pays-accordion="1" style="max-height:55vh;overflow-y:auto;overflow-x:hidden;padding-right:4px;min-width:0;width:100%;max-width:100%;box-sizing:border-box">';
     for (const sec of sections) {
       const prests = BddPaysagismeV2.getPrestationsBySection(sec.id);
       const hasSelected = prests.some(pr => pr.id === currentId);
@@ -649,15 +649,15 @@ const CalcExpressV2 = {
       html += '<span style="flex:1;min-width:0;white-space:normal;overflow-wrap:normal;word-break:normal">' + esc(sec.libelle) + '</span>';
       html += '<span data-cex-pays-chevron="' + esc(sec.id) + '" style="flex-shrink:0;opacity:.65">' + (isOpen ? '▾' : '▸') + '</span>';
       html += '</button>';
-      html += '<div data-cex-pays-body="' + esc(sec.id) + '" style="display:' + (isOpen ? 'flex' : 'none') + ';padding:6px 10px;flex-direction:column;gap:2px;min-width:0;max-width:100%;overflow:hidden">';
+      html += '<div data-cex-pays-body="' + esc(sec.id) + '" style="display:' + (isOpen ? 'flex' : 'none') + ';padding:6px 10px;flex-direction:column;gap:2px;min-width:0;max-width:100%;overflow:hidden;box-sizing:border-box;width:100%">';
       for (const pr of prests) {
         const checked = pr.id === currentId ? ' checked' : '';
         const bg = pr.id === currentId ? 'background:rgba(79,142,247,.18);font-weight:600;' : '';
         html += '<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;';
-        html += 'border-radius:6px;cursor:pointer;min-width:0;max-width:100%;' + bg + '">';
+        html += 'border-radius:6px;cursor:pointer;min-width:0;overflow:hidden;box-sizing:border-box;width:100%;max-width:100%;' + bg + '">';
         html += '<input type="radio" name="cex-pays-radio" value="' + esc(pr.id) + '"';
         html += checked + ' style="flex-shrink:0;accent-color:var(--accent,#4f8ef7)">';
-        html += '<span style="flex:1;min-width:0;font-size:.85rem;color:var(--text,#fff);white-space:normal;overflow-wrap:normal;word-break:normal">' + esc(pr.libelle) + '</span>';
+        html += '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.85rem;color:var(--text,#fff);word-break:normal">' + esc(pr.libelle) + '</span>';
         html += '<span style="flex-shrink:0;opacity:.6;font-size:.75rem;white-space:nowrap">' + esc(pr.unite || '') + '</span>';
         html += '</label>';
       }
@@ -1234,7 +1234,7 @@ const CalcExpressV2 = {
           const sel = (p.tachePaysagisme||'') === code ? 'selected' : '';
           return `<option value="${code}" ${sel}>${this._esc(ouv ? ouv.designation : code)}</option>`;
         }).join('');
-        return `<div style="background:var(--card-bg,#1e1e2e);border:1px solid var(--accent,#4f8ef7);border-radius:10px;padding:14px;margin-bottom:16px">
+        return `<div style="background:var(--card-bg,#1e1e2e);border:1px solid var(--accent,#4f8ef7);border-radius:10px;padding:14px;margin-bottom:16px;overflow:hidden;max-width:100%;box-sizing:border-box;width:100%">
           <p style="font-weight:700;color:var(--accent,#4f8ef7);margin:0 0 10px 0">🌿 Prestation sur ${this._esc(p.nom)}</p>
           <select id="cex-pays-tache" style="width:100%;padding:10px;border-radius:8px;background:#fff;color:#222;border:none;font-size:15px">
             <option value="">-- Choisir --</option>${opts}
@@ -1252,7 +1252,7 @@ const CalcExpressV2 = {
       }
       const sectionsAccordeon = BddPaysagismeV2.sections.filter(sec => sectionsIds.includes(sec.id));
       const accordion = this._renderAccordeonPaysagisme(sectionsAccordeon, currentId);
-      return `<div style="background:var(--card-bg,#1e1e2e);border:1px solid var(--accent,#4f8ef7);border-radius:10px;padding:14px;margin-bottom:16px;overflow:hidden;max-width:100%">
+      return `<div style="background:var(--card-bg,#1e1e2e);border:1px solid var(--accent,#4f8ef7);border-radius:10px;padding:14px;margin-bottom:16px;overflow:hidden;max-width:100%;box-sizing:border-box;width:100%">
         <p style="font-weight:700;color:var(--accent,#4f8ef7);margin:0 0 10px 0">🌿 Prestation sur ${this._esc(p.nom)}</p>
         ${accordion}
       </div>`;
