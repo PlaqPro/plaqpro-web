@@ -533,8 +533,12 @@ const CalcExpressV2 = {
   },
 
   _isOuvrageHaiePlantation(piece, code) {
-    const id = String(code || (piece && piece.tachePaysagisme) || '').toUpperCase();
-    return id.includes('HAIE') || id.includes('PLANTATION');
+    const id = String(code || (piece && piece.tachePaysagisme) || '');
+    if (id.startsWith('PAYS_') && typeof BddPaysagismeV2 !== 'undefined') {
+      const prestation = BddPaysagismeV2.getPrestation(id);
+      if (prestation) return (prestation.package.lignesAuto || []).some(l => l.quantiteMode === 'nb_plants');
+    }
+    return id.toUpperCase().includes('HAIE') || id.toUpperCase().includes('PLANTATION');
   },
 
   _getEssencesHaie() {
@@ -569,6 +573,11 @@ const CalcExpressV2 = {
   },
 
   _getPackagePaysagisme(piece, code) {
+    const id = String(code || (piece && piece.tachePaysagisme) || '');
+    if (id.startsWith('PAYS_') && typeof BddPaysagismeV2 !== 'undefined') {
+      const prestation = BddPaysagismeV2.getPrestation(id);
+      if (prestation && prestation.package) return prestation.package;
+    }
     const ouvrageId = this._getPackageTypePaysagisme(piece, code);
     return ouvrageId ? this.PACKAGES_PAYSAGISME[ouvrageId] : null;
   },
@@ -858,8 +867,17 @@ const CalcExpressV2 = {
       const prestBadge = p.prestation
         ? `<span style="background:var(--accent,#4f8ef7);color:#fff;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:4px">${this._esc(p.prestation)}</span>`
         : '';
-      const tacheBadge = p.tachePaysagisme && typeof BddV2 !== 'undefined'
-        ? `<span style="background:var(--accent,#4f8ef7);color:#fff;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:4px">${this._esc(((BddV2.getOuvrage(p.tachePaysagisme) || { designation: p.tachePaysagisme }).designation))}</span>`
+      const tacheBadge = p.tachePaysagisme
+        ? (() => {
+            const code = p.tachePaysagisme;
+            let label = code;
+            if (code.startsWith('PAYS_') && typeof BddPaysagismeV2 !== 'undefined') {
+              label = (BddPaysagismeV2.getPrestation(code) || {}).libelle || code;
+            } else if (typeof BddV2 !== 'undefined') {
+              label = (BddV2.getOuvrage(code) || { designation: code }).designation;
+            }
+            return `<span style="background:var(--accent,#4f8ef7);color:#fff;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:4px">${this._esc(label)}</span>`;
+          })()
         : '';
       const badges = badge + prestBadge + tacheBadge;
       if (isMaconnerie) {
@@ -1136,24 +1154,43 @@ const CalcExpressV2 = {
         <input type="hidden" id="cex-surface-libre" value="${p.surface && p.mode === 'libre' ? p.surface : 0}">
       </div>` : '';
     const champs = mode === 'forme-l' ? champL : champRect;
-    const prestsPays = p.corps === 'paysagisme'
-      ? this._dedupeBy(this.PRESTATIONS_PAYSAGISME[p.nom] || ['OUV_GAZON_ROULEAU'], code => code)
-          .map(code => {
-            const ouv = (typeof BddV2 !== 'undefined' && BddV2.estChargee()) ? BddV2.getOuvrage(code) : null;
-            const label = ouv ? ouv.designation : code;
-            const sel = (p.tachePaysagisme||'') === code ? 'selected' : '';
-            return `<option value="${code}" ${sel}>${this._esc(label)}</option>`;
-          }).join('')
-      : '';
-
-    const champPaysagisme = p.corps === 'paysagisme' ? `
-      <div style="background:var(--card-bg,#1e1e2e);border:1px solid var(--accent,#4f8ef7);border-radius:10px;padding:14px;margin-bottom:16px">
+    const champPaysagisme = p.corps === 'paysagisme' ? (() => {
+      if (typeof BddPaysagismeV2 === 'undefined') {
+        const codes = this._dedupeBy(this.PRESTATIONS_PAYSAGISME[p.nom] || ['OUV_GAZON_ROULEAU'], c => c);
+        const opts = codes.map(code => {
+          const ouv = typeof BddV2 !== 'undefined' ? BddV2.getOuvrage(code) : null;
+          const sel = (p.tachePaysagisme||'') === code ? 'selected' : '';
+          return `<option value="${code}" ${sel}>${this._esc(ouv ? ouv.designation : code)}</option>`;
+        }).join('');
+        return `<div style="background:var(--card-bg,#1e1e2e);border:1px solid var(--accent,#4f8ef7);border-radius:10px;padding:14px;margin-bottom:16px">
+          <p style="font-weight:700;color:var(--accent,#4f8ef7);margin:0 0 10px 0">🌿 Prestation sur ${this._esc(p.nom)}</p>
+          <select id="cex-pays-tache" style="width:100%;padding:10px;border-radius:8px;background:#fff;color:#222;border:none;font-size:15px">
+            <option value="">-- Choisir --</option>${opts}
+          </select></div>`;
+      }
+      const currentId = p.tachePaysagisme || '';
+      const accordion = BddPaysagismeV2.sections.map(sec => {
+        const prests = BddPaysagismeV2.getPrestationsBySection(sec.id);
+        const hasSelected = prests.some(pr => pr.id === currentId);
+        return `<details style="border:1px solid var(--border,#334);border-radius:8px;margin-bottom:6px" ${hasSelected ? 'open' : ''}>
+          <summary style="cursor:pointer;padding:8px 12px;font-weight:600;color:var(--text,#fff);list-style:none;display:flex;align-items:center;gap:8px">
+            <span>${sec.icone}</span><span>${this._esc(sec.libelle)}</span>
+          </summary>
+          <div style="padding:8px 12px;display:flex;flex-direction:column;gap:4px">
+            ${prests.map(pr => `
+              <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;${pr.id===currentId?'background:rgba(79,142,247,.18);font-weight:600':''}">
+                <input type="radio" name="cex-pays-radio" value="${pr.id}" ${pr.id===currentId?'checked':''} style="accent-color:var(--accent,#4f8ef7)">
+                <span style="font-size:.85rem;color:var(--text,#fff)">${this._esc(pr.libelle)}</span>
+                <small style="margin-left:auto;opacity:.6;font-size:.75rem">${pr.unite}</small>
+              </label>`).join('')}
+          </div>
+        </details>`;
+      }).join('');
+      return `<div style="background:var(--card-bg,#1e1e2e);border:1px solid var(--accent,#4f8ef7);border-radius:10px;padding:14px;margin-bottom:16px">
         <p style="font-weight:700;color:var(--accent,#4f8ef7);margin:0 0 10px 0">🌿 Prestation sur ${this._esc(p.nom)}</p>
-        <select id="cex-pays-tache" style="width:100%;padding:10px;border-radius:8px;background:#fff;color:#222;border:none;font-size:15px">
-          <option value="">-- Choisir --</option>
-          ${prestsPays}
-        </select>
-      </div>` : '';
+        ${accordion}
+      </div>`;
+    })() : '';
     const optionsPackagePays = p.corps === 'paysagisme' && p.tachePaysagisme
       ? this._getOptionsPackagePaysagisme(p, p.tachePaysagisme)
       : [];
@@ -1251,17 +1288,26 @@ const CalcExpressV2 = {
     this._bind();
     const btnValider = this._container.querySelector('#cex-metrage-valider');
     if (btnValider) {
-      const sel = this._container.querySelector('#cex-pays-tache');
       const signal = this._bindController.signal;
-      if (p.corps === 'paysagisme' && sel) {
-        const valeurInitiale = p.tachePaysagisme || '';
-        sel.value = valeurInitiale;
-        btnValider.disabled = !valeurInitiale;
-        sel.addEventListener('change', () => {
-          p.tachePaysagisme = sel.value;
-          btnValider.disabled = !sel.value;
-          this._renderEtape('metrage');
-        }, { signal });
+      if (p.corps === 'paysagisme') {
+        btnValider.disabled = !p.tachePaysagisme;
+        const radios = this._container.querySelectorAll('[name="cex-pays-radio"]');
+        radios.forEach(radio => {
+          radio.addEventListener('change', () => {
+            p.tachePaysagisme = radio.value;
+            btnValider.disabled = !radio.value;
+            this._renderEtape('metrage');
+          }, { signal });
+        });
+        const sel = this._container.querySelector('#cex-pays-tache');
+        if (sel) {
+          sel.value = p.tachePaysagisme || '';
+          sel.addEventListener('change', () => {
+            p.tachePaysagisme = sel.value;
+            btnValider.disabled = !sel.value;
+            this._renderEtape('metrage');
+          }, { signal });
+        }
       } else {
         btnValider.disabled = false;
       }
@@ -1572,8 +1618,19 @@ const CalcExpressV2 = {
       }
     }
     if (corpsId === 'paysagisme' && piece && piece.tachePaysagisme) {
+      const code = piece.tachePaysagisme;
+      if (code.startsWith('PAYS_') && typeof BddPaysagismeV2 !== 'undefined') {
+        const prix = BddPaysagismeV2.getPrix(code);
+        if (prix) {
+          const q = surface || 1;
+          const coutMat = prix.mat * q;
+          const coutMO = prix.mo * q;
+          const prixVente = coutMat * 1.3 + coutMO * 1.4;
+          return { coutMat, coutMO, prixVente, gain: prixVente - coutMat - coutMO };
+        }
+      }
       if (typeof BddV2 !== 'undefined' && BddV2.estChargee()) {
-        return BddV2.calcPrixVente(piece.tachePaysagisme, surface);
+        return BddV2.calcPrixVente(code, surface);
       }
     }
     const bdd = this.CORPS_BDD[corpsId];
@@ -1614,6 +1671,16 @@ const CalcExpressV2 = {
     const perimetre = longueur && largeur ? Math.round(2 * (longueur + largeur)) : this._estimerPerimetre(piece);
     const tache = String(line.tache || '').toUpperCase();
     const ouvrageUnite = String(this._getUniteOuvrage('paysagisme', piece) || '').toLowerCase();
+
+    const mode = line.quantiteMode;
+    if (mode) {
+      if (mode === 'surface') return surface;
+      if (mode === 'longueur') return longueur || perimetre;
+      if (mode === 'perimetre') return perimetre || longueur;
+      if (mode === 'volume') { const prof = parseFloat(piece.profondeur) || 0; return prof ? surface * prof : surface * 0.5; }
+      if (mode === 'nb_plants') { const esp = this._getEssenceHaie(piece.essenceHaie || 'autre').espacement; return longueur > 0 ? Math.ceil(longueur / esp) : 1; }
+      if (mode === 'forfait' || mode === 'unite') return 1;
+    }
 
     if (ouvrageId === 'OUV_BASSIN_PREFAB' && tache.includes('TERRASSEMENT')) return surface * 0.6;
     if (ouvrageId === 'OUV_BASSIN_PREFAB' && (tache.includes('ETANCHEITE') || tache.includes('ÉTANCHÉITÉ'))) return Math.round(4 * Math.sqrt(surface || 0));
@@ -1697,9 +1764,16 @@ const CalcExpressV2 = {
   _getUniteOuvrage(corpsId, piece) {
     if (corpsId === 'electricite' || corpsId === 'plomberie') return 'u';
     if (corpsId === 'paysagisme' && this._isOuvrageHaiePlantation(piece)) return 'u';
-    if (corpsId === 'paysagisme' && piece && piece.tachePaysagisme && typeof BddV2 !== 'undefined') {
-      const ouvrage = BddV2.getOuvrage(piece.tachePaysagisme);
-      if (ouvrage && ouvrage.unite) return ouvrage.unite;
+    if (corpsId === 'paysagisme' && piece && piece.tachePaysagisme) {
+      const code = piece.tachePaysagisme;
+      if (code.startsWith('PAYS_') && typeof BddPaysagismeV2 !== 'undefined') {
+        const prestation = BddPaysagismeV2.getPrestation(code);
+        if (prestation && prestation.unite) return prestation.unite;
+      }
+      if (typeof BddV2 !== 'undefined') {
+        const ouvrage = BddV2.getOuvrage(code);
+        if (ouvrage && ouvrage.unite) return ouvrage.unite;
+      }
     }
     return 'm²';
   },
