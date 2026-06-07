@@ -633,6 +633,40 @@ const CalcExpressV2 = {
     return all;
   },
 
+  _renderAccordeonPaysagisme(sections, currentId) {
+    let html = '';
+    const esc = s => this._esc(s);
+    html += '<div style="max-height:55vh;overflow-y:auto;overflow-x:hidden;padding-right:4px">';
+    for (const sec of sections) {
+      const prests = BddPaysagismeV2.getPrestationsBySection(sec.id);
+      const hasSelected = prests.some(pr => pr.id === currentId);
+      html += '<details style="border:1px solid rgba(79,142,247,.3);border-radius:8px;margin-bottom:6px"';
+      if (hasSelected) html += ' open';
+      else if (sec.id === sections[0].id && !currentId) html += ' open';
+      html += '>';
+      html += '<summary style="cursor:pointer;padding:10px 14px;font-weight:600;';
+      html += 'color:var(--text,#fff);list-style:none;display:flex;align-items:center;gap:8px">';
+      html += '<span>' + esc(sec.icone) + '</span>';
+      html += '<span>' + esc(sec.libelle) + '</span>';
+      html += '</summary>';
+      html += '<div style="padding:6px 10px;display:flex;flex-direction:column;gap:2px">';
+      for (const pr of prests) {
+        const checked = pr.id === currentId ? ' checked' : '';
+        const bg = pr.id === currentId ? 'background:rgba(79,142,247,.18);font-weight:600;' : '';
+        html += '<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;';
+        html += 'border-radius:6px;cursor:pointer;' + bg + '">';
+        html += '<input type="radio" name="cex-pays-radio" value="' + esc(pr.id) + '"';
+        html += checked + ' style="flex-shrink:0;accent-color:var(--accent,#4f8ef7)">';
+        html += '<span style="flex:1;font-size:.85rem;color:var(--text,#fff)">' + esc(pr.libelle) + '</span>';
+        html += '<span style="flex-shrink:0;opacity:.6;font-size:.75rem">' + esc(pr.unite || '') + '</span>';
+        html += '</label>';
+      }
+      html += '</div></details>';
+    }
+    html += '</div>';
+    return html;
+  },
+
   _progressBar(etapeActive) {
     const etapes = ['chantier','profil','sousTraitants','corps','pieces','metrage'];
     const labels = ['Chantier','Profil','Sous-traitants','Travaux','Pièces','Métrage'];
@@ -1216,28 +1250,11 @@ const CalcExpressV2 = {
           sectionsIds = sectionsIds.concat(selectedSection.id);
         }
       }
-      const accordion = BddPaysagismeV2.sections
-        .filter(sec => sectionsIds.includes(sec.id))
-        .map(sec => {
-        const prests = BddPaysagismeV2.getPrestationsBySection(sec.id);
-        const hasSelected = prests.some(pr => pr.id === currentId);
-        const isOpen = currentId ? hasSelected : sec.id === 1;
-        return `<details style="border:1px solid var(--border,#334);border-radius:8px;margin-bottom:6px" ${isOpen ? 'open' : ''}>
-          <summary style="cursor:pointer;padding:8px 12px;font-weight:600;color:var(--text,#fff);list-style:none;display:flex;align-items:center;gap:8px">
-            <span>${sec.icone}</span><span>${this._esc(sec.libelle)}</span>
-          </summary>
-          <div style="padding:8px 12px;display:flex;flex-direction:column;gap:4px">
-            ${prests.map(pr => `
-              <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;width:100%;${pr.id===currentId?'background:rgba(79,142,247,.18);font-weight:600':''}">
-                <input type="radio" name="cex-pays-radio" value="${pr.id}" ${pr.id===currentId?'checked':''} style="accent-color:var(--accent,#4f8ef7);flex-shrink:0">
-                <span style="font-size:.85rem;color:var(--text,#fff);flex:1">${this._esc(pr.libelle)}</span><small style="flex-shrink:0;opacity:.6;font-size:.75rem">${this._esc(String(pr.unite || '').replace('²','²').replace('³','³'))}</small>
-              </label>`).join('')}
-          </div>
-        </details>`;
-      }).join('');
-      return `<div style="background:var(--card-bg,#1e1e2e);border:1px solid var(--accent,#4f8ef7);border-radius:10px;padding:14px;margin-bottom:16px">
+      const sectionsAccordeon = BddPaysagismeV2.sections.filter(sec => sectionsIds.includes(sec.id));
+      const accordion = this._renderAccordeonPaysagisme(sectionsAccordeon, currentId);
+      return `<div style="background:var(--card-bg,#1e1e2e);border:1px solid var(--accent,#4f8ef7);border-radius:10px;padding:14px;margin-bottom:16px;overflow:hidden;max-width:100%">
         <p style="font-weight:700;color:var(--accent,#4f8ef7);margin:0 0 10px 0">🌿 Prestation sur ${this._esc(p.nom)}</p>
-        <div style="max-height:60vh;overflow-y:auto;padding-right:4px">${accordion}</div>
+        ${accordion}
       </div>`;
     })() : '';
     const optionsPackagePays = p.corps === 'paysagisme' && p.tachePaysagisme
