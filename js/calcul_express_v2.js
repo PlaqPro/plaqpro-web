@@ -356,14 +356,15 @@ const CalcExpressV2 = {
             .map(p => p.nom),
           nom => String(nom || '').trim().toLowerCase()
         );
+        const piecesChantierFiltrees = this._filtrerPiecesPourCorps(corpsId, piecesChantier);
         const prestations = (this.LIEUX_CORPS.maconnerie_int || {}).prestations || [];
-        if (piecesChantier.length) return { pieces: piecesChantier, prestations };
+        if (piecesChantierFiltrees.length) return { pieces: piecesChantierFiltrees, prestations };
       }
       if (profil === 'pro') {
         return key === 'maconnerie_int'
           ? {
-              pieces: ['Cage d\'escalier', 'Cloison de séparation', 'Couloir', 'Hall d\'entrée',
-                       'Local technique', 'Mur coupe-feu', 'Mur porteur', 'Sas d\'entrée'],
+              pieces: this._filtrerPiecesPourCorps(corpsId, ['Cage d\'escalier', 'Cloison de séparation', 'Couloir', 'Hall d\'entrée',
+                       'Local technique', 'Mur coupe-feu', 'Mur porteur', 'Sas d\'entrée']),
               prestations: ['Cloison briques', 'Cloison brique de verre', 'Mur porteur', 'Doublage'],
             }
           : {
@@ -373,7 +374,7 @@ const CalcExpressV2 = {
               prestations: ['Enduit façade', 'Ravalement', 'Parpaing', 'Brique de parement'],
             };
       }
-      return this.LIEUX_CORPS[key] || [];
+      return this._filtrerPiecesPourCorps(corpsId, this.LIEUX_CORPS[key] || []);
     }
     if (corpsId === 'electricite') {
       const piecesChantier = this._dedupeBy(
@@ -382,15 +383,16 @@ const CalcExpressV2 = {
           .map(p => p.nom),
         nom => String(nom || '').trim().toLowerCase()
       );
-      if (piecesChantier.length) return piecesChantier;
-      return this._dedupeBy(this.PIECES_PROFIL[profil] || this.PIECES_PROFIL.particulier, nom => String(nom || '').trim().toLowerCase());
+      const piecesChantierFiltrees = this._filtrerPiecesPourCorps(corpsId, piecesChantier);
+      if (piecesChantierFiltrees.length) return piecesChantierFiltrees;
+      return this._filtrerPiecesPourCorps(corpsId, this._dedupeBy(this.PIECES_PROFIL[profil] || this.PIECES_PROFIL.particulier, nom => String(nom || '').trim().toLowerCase()));
     }
     if (corpsId === 'plomberie') {
       return profil === 'pro'
-        ? ['Espace pause', 'Local technique', 'Sanitaires hommes',
+        ? this._filtrerPiecesPourCorps(corpsId, ['Espace pause', 'Local technique', 'Sanitaires hommes',
            'Sanitaires femmes', 'Sanitaires PMR', 'Salle de pause',
-           'Cuisine professionnelle', 'Buanderie', 'Local nettoyage']
-        : this.LIEUX_CORPS.plomberie;
+           'Cuisine professionnelle', 'Buanderie', 'Local nettoyage'])
+        : this._filtrerPiecesPourCorps(corpsId, this.LIEUX_CORPS.plomberie);
     }
     if (corpsId === 'paysagisme') {
       return profil === 'pro'
@@ -399,8 +401,8 @@ const CalcExpressV2 = {
            'Terrasse extérieure', 'Zone de livraison', 'Zone de stockage extérieur']
         : this.LIEUX_CORPS.paysagisme;
     }
-    if (this.LIEUX_CORPS[corpsId]) return this.LIEUX_CORPS[corpsId];
-    return this.PIECES_PROFIL[profil] || this.PIECES_PROFIL.particulier;
+    if (this.LIEUX_CORPS[corpsId]) return this._filtrerPiecesPourCorps(corpsId, this.LIEUX_CORPS[corpsId]);
+    return this._filtrerPiecesPourCorps(corpsId, this.PIECES_PROFIL[profil] || this.PIECES_PROFIL.particulier);
   },
 
   _getOuvragePrestation(prestation) {
@@ -534,6 +536,23 @@ const CalcExpressV2 = {
       seen.add(key);
       return true;
     });
+  },
+
+  _getZonesPaysagismeSet() {
+    return new Set(this.LIEUX_CORPS.paysagisme || []);
+  },
+
+  _estZonePaysagisme(item) {
+    const nom = String((item && item.nom) || item || '').trim();
+    return this._getZonesPaysagismeSet().has(nom);
+  },
+
+  _filtrerPiecesPourCorps(corpsId, pieces) {
+    if (corpsId === 'paysagisme') return pieces || [];
+    if (['plaquisterie','peinture','electricite','plomberie','maconnerie'].includes(corpsId)) {
+      return (pieces || []).filter(p => !this._estZonePaysagisme(p));
+    }
+    return pieces || [];
   },
 
   _getPaysagismeIds(piece) {
@@ -938,10 +957,10 @@ const CalcExpressV2 = {
       (!Array.isArray(lieuxConfig) && lieuxConfig.prestations) ? lieuxConfig.prestations : [],
       prestation => String(prestation || '').trim().toLowerCase()
     );
-    const piecesExistantes = this._pieces.filter(p => p.corps === corps.id);
+    const piecesExistantes = this._filtrerPiecesPourCorps(corps.id, this._pieces.filter(p => p.corps === corps.id));
 
     const piecesPlaco = corps.id === 'peinture'
-      ? this._pieces.filter(p => p.corps === 'plaquisterie' && (p.surface_sol || p.surface))
+      ? this._filtrerPiecesPourCorps('plaquisterie', this._pieces.filter(p => p.corps === 'plaquisterie' && (p.surface_sol || p.surface)))
       : [];
 
     const corpsId = corps.id;
@@ -1167,6 +1186,11 @@ const CalcExpressV2 = {
   _renderMetrage() {
     const p = this._pieceEnCours;
     if (!p) { this._renderEtape('pieces'); return; }
+    if (p.corps !== 'paysagisme' && this._estZonePaysagisme(p)) {
+      this._pieceEnCours = null;
+      this._renderEtape('pieces');
+      return;
+    }
     const corps = this.CORPS.find(c => c.id === p.corps);
     const mode  = p.mode || 'rectangle';
     const metrageHeaderQte = p.corps === 'paysagisme' ? this._getQuantiteDevis('paysagisme', p) : parseFloat(p.surface) || 0;
@@ -1706,6 +1730,7 @@ const CalcExpressV2 = {
     if (typeof DevisMulti === 'undefined' || !DevisMulti._state) return;
     const piecesChiffrees = (this._pieces || []).filter(p => {
       if (!p || !p.corps) return false;
+      if (p.corps !== 'paysagisme' && this._estZonePaysagisme(p)) return false;
       if (p.corps === 'electricite' || p.corps === 'plomberie') {
         return Object.values(p.quantites || {}).reduce((s, v) => s + (parseFloat(v) || 0), 0) > 0;
       }
@@ -1951,7 +1976,7 @@ const CalcExpressV2 = {
 
     const lignes = this._corpsActifs.map(corpsId => {
       const corps  = this.CORPS.find(c => c.id === corpsId);
-      const pieces = this._pieces.filter(p => p.corps === corpsId && p.surface);
+      const pieces = this._filtrerPiecesPourCorps(corpsId, this._pieces.filter(p => p.corps === corpsId && p.surface));
       const config = this._corpsConfig[corpsId] || {};
       let coutCorps = 0, gainCorps = 0, detail = [];
 
@@ -2305,7 +2330,7 @@ const CalcExpressV2 = {
           this._corpsActifs.forEach(corpsId => {
             const corps = this.CORPS.find(c => c.id === corpsId);
             if (!corps) return;
-            const pcs = (this._pieces || []).filter(p => {
+            const pcs = this._filtrerPiecesPourCorps(corpsId, this._pieces || []).filter(p => {
               if (p.corps !== corpsId) return false;
               if (corpsId === 'electricite' || corpsId === 'plomberie') {
                 return Object.values(p.quantites || {}).reduce((s,v) => s+(parseFloat(v)||0), 0) > 0;
@@ -2476,7 +2501,7 @@ const CalcExpressV2 = {
           return;
         }
         if (action === 'import-placo') {
-          const piecesPlaco = this._pieces.filter(p => p.corps === 'plaquisterie' && (p.surface_sol || p.surface));
+          const piecesPlaco = this._filtrerPiecesPourCorps('plaquisterie', this._pieces.filter(p => p.corps === 'plaquisterie' && (p.surface_sol || p.surface)));
           piecesPlaco.forEach(pp => {
             const exist = this._pieces.find(p => p.corps === 'peinture' && p.nom === pp.nom);
             if (!exist) {
