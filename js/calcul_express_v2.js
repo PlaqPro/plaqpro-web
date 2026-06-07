@@ -674,15 +674,15 @@ const CalcExpressV2 = {
     for (const sec of sections) {
       const prests = BddPaysagismeV2.getPrestationsBySection(sec.id);
       const hasSelected = prests.some(pr => ids.includes(pr.id));
-      const isOpen = hasSelected || (sec.id === firstId && !currentId);
-      html += '<div data-cex-pays-section="' + esc(sec.id) + '" style="border:1px solid rgba(79,142,247,.3);border-radius:8px;margin-bottom:6px;overflow:hidden;max-width:100%;min-width:0">';
-      html += '<button type="button" data-cex-pays-toggle="' + esc(sec.id) + '" style="width:100%;cursor:pointer;padding:10px 14px;font-weight:600;';
+      const isOpen = hasSelected || (sec.id === firstId && !ids.length);
+      html += '<div data-accord-wrap="paysagisme" data-section-idx="' + esc(sec.id) + '" style="border:1px solid rgba(79,142,247,.3);border-radius:8px;margin-bottom:6px;overflow:hidden;max-width:100%;min-width:0">';
+      html += '<button type="button" data-accord-toggle="paysagisme" data-section-idx="' + esc(sec.id) + '" style="width:100%;cursor:pointer;padding:10px 14px;font-weight:600;';
       html += 'color:var(--text,#fff);background:transparent;border:0;display:flex;align-items:center;gap:8px;text-align:left;min-width:0">';
       html += '<span style="flex-shrink:0">' + esc(sec.icone) + '</span>';
       html += '<span style="flex:1;min-width:0;white-space:normal;overflow-wrap:normal;word-break:normal">' + esc(sec.libelle) + '</span>';
-      html += '<span data-cex-pays-chevron="' + esc(sec.id) + '" style="flex-shrink:0;opacity:.65">' + (isOpen ? '▾' : '▸') + '</span>';
+      html += '<span data-chevron="paysagisme" style="flex-shrink:0;opacity:.65">' + (isOpen ? '▼' : '▶') + '</span>';
       html += '</button>';
-      html += '<div data-cex-pays-body="' + esc(sec.id) + '" style="display:' + (isOpen ? 'flex' : 'none') + ';padding:6px 10px;flex-direction:column;gap:2px;min-width:0;max-width:100%;overflow:hidden;box-sizing:border-box;width:100%">';
+      html += '<div data-accord-body="paysagisme" style="display:' + (isOpen ? 'block' : 'none') + ';padding:6px 10px;min-width:0;max-width:100%;overflow:hidden;box-sizing:border-box;width:100%">';
       for (const pr of prests) {
         const checked = ids.includes(pr.id) ? ' checked' : '';
         const bg = ids.includes(pr.id) ? 'background:rgba(79,142,247,.18);font-weight:600;' : '';
@@ -1382,47 +1382,6 @@ const CalcExpressV2 = {
     this._container.querySelectorAll('select').forEach(i => i.addEventListener('change', preview));
     preview();
     this._bind();
-    const btnValider = this._container.querySelector('#cex-metrage-valider');
-    if (btnValider) {
-      const signal = this._bindController.signal;
-      if (p.corps === 'paysagisme') {
-        btnValider.disabled = this._getPaysagismeIds(p).length === 0;
-        const checks = this._container.querySelectorAll('[name="cex-pays-check"]');
-        checks.forEach(cb => {
-          cb.addEventListener('change', () => {
-            p.tachesPaysagisme = Array.from(checks)
-              .filter(c => c.checked)
-              .map(c => c.value);
-            p.tachePaysagisme = p.tachesPaysagisme[0] || '';
-            btnValider.disabled = p.tachesPaysagisme.length === 0;
-            this._renderEtape('metrage');
-          }, { signal });
-        });
-        const toggles = this._container.querySelectorAll('[data-cex-pays-toggle]');
-        toggles.forEach(toggle => {
-          toggle.addEventListener('click', () => {
-            const id = toggle.getAttribute('data-cex-pays-toggle');
-            const body = this._container.querySelector('[data-cex-pays-body="' + id + '"]');
-            const chevron = this._container.querySelector('[data-cex-pays-chevron="' + id + '"]');
-            const isOpen = body && body.style.display !== 'none';
-            if (body) body.style.display = isOpen ? 'none' : 'flex';
-            if (chevron) chevron.textContent = isOpen ? '▸' : '▾';
-          }, { signal });
-        });
-        const sel = this._container.querySelector('#cex-pays-tache');
-        if (sel) {
-          sel.value = this._getPaysagismePrimaryId(p);
-          sel.addEventListener('change', () => {
-            p.tachePaysagisme = sel.value;
-            p.tachesPaysagisme = sel.value ? [sel.value] : [];
-            btnValider.disabled = !sel.value;
-            this._renderEtape('metrage');
-          }, { signal });
-        }
-      } else {
-        btnValider.disabled = false;
-      }
-    }
     const canvas = this._container.querySelector('#cex-canvas-libre');
     if (canvas) {
       const ctx = canvas.getContext('2d');
@@ -2107,6 +2066,49 @@ const CalcExpressV2 = {
     this._bindController = new AbortController();
     const signal = this._bindController.signal;
     const fmt = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v || 0);
+
+    const btnValiderMetrage = this._container.querySelector('#cex-metrage-valider');
+    const pieceMetrage = this._pieceEnCours;
+    if (btnValiderMetrage && pieceMetrage) {
+      if (pieceMetrage.corps === 'paysagisme') {
+        btnValiderMetrage.disabled = this._getPaysagismeIds(pieceMetrage).length === 0;
+        const checks = this._container.querySelectorAll('[name="cex-pays-check"]');
+        checks.forEach(cb => {
+          cb.addEventListener('change', () => {
+            pieceMetrage.tachesPaysagisme = Array.from(checks)
+              .filter(c => c.checked)
+              .map(c => c.value);
+            pieceMetrage.tachePaysagisme = pieceMetrage.tachesPaysagisme[0] || '';
+            btnValiderMetrage.disabled = pieceMetrage.tachesPaysagisme.length === 0;
+            this._renderEtape('metrage');
+          }, { signal });
+        });
+        const sel = this._container.querySelector('#cex-pays-tache');
+        if (sel) {
+          sel.value = this._getPaysagismePrimaryId(pieceMetrage);
+          sel.addEventListener('change', () => {
+            pieceMetrage.tachePaysagisme = sel.value;
+            pieceMetrage.tachesPaysagisme = sel.value ? [sel.value] : [];
+            btnValiderMetrage.disabled = !sel.value;
+            this._renderEtape('metrage');
+          }, { signal });
+        }
+      } else {
+        btnValiderMetrage.disabled = false;
+      }
+    }
+
+    this._container.querySelectorAll('[data-accord-toggle]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const wrap = btn.closest('[data-accord-wrap]');
+        const body = wrap ? wrap.querySelector('[data-accord-body]') : null;
+        const chevron = btn.querySelector('[data-chevron]');
+        if (!body) return;
+        const isClosed = body.style.display === 'none';
+        body.style.display = isClosed ? 'block' : 'none';
+        if (chevron) chevron.textContent = isClosed ? '▼' : '▶';
+      }, { signal });
+    });
 
     document.addEventListener('click', e => {
       if (!this._container || !this._container.contains(e.target)) return;
