@@ -433,6 +433,11 @@ const CalcExpressV2 = {
     if (!c) return false;
     // Restaurer l'état complet
     this._chantier    = c.chantier    || { nom:'', clientId:null, adresse:'' };
+    this._chantier.clientId = this._normalizeId(this._chantier.clientId || c.clientId);
+    if (!this._chantier.clientId && this._chantier.chantierId && typeof DB !== 'undefined' && DB.getChantier) {
+      const ch = DB.getChantier(this._normalizeId(this._chantier.chantierId));
+      if (ch && ch.clientId) this._chantier.clientId = this._normalizeId(ch.clientId);
+    }
     this._corpsActifs = c.corpsActifs || [];
     this._pieces      = (c.pieces     || []).map(p => {
       const piece = {
@@ -482,6 +487,15 @@ const CalcExpressV2 = {
 
   _esc(s) {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  },
+
+  _normalizeId(value) {
+    const n = parseInt(value, 10);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  },
+
+  _getClientIdChantier() {
+    return this._normalizeId(this._chantier && this._chantier.clientId);
   },
 
   _dedupeBy(items, keyFn) {
@@ -608,12 +622,13 @@ const CalcExpressV2 = {
     const clients    = (typeof DB.getClients === 'function' ? DB.getClients() : DB.getAll(DB.KEYS.clients)).filter(c => c.actif !== false);
     const chantiers  = DB.getAll(DB.KEYS.chantiers).filter(c => c.actif !== false);
     const chantierId = this._chantier.chantierId;
+    const clientIdActuel = this._getClientIdChantier();
 
     const optChantier = chantiers.map(c =>
       `<option value="${c.id}" ${c.id == chantierId ? 'selected' : ''}>${this._esc(c.nom || c.libelle || '')}</option>`
     ).join('');
     const optClient = clients.map(c =>
-      `<option value="${c.id}" ${c.id == this._chantier.clientId ? 'selected' : ''}>${this._esc(c.nom || c.raisonSociale || '')}</option>`
+      `<option value="${c.id}" ${c.id == clientIdActuel ? 'selected' : ''}>${this._esc(c.nom || c.raisonSociale || '')}</option>`
     ).join('');
 
     const inputStyle = 'width:100%;padding:11px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font-size:.95rem;box-sizing:border-box;outline:none';
@@ -668,12 +683,12 @@ const CalcExpressV2 = {
         this._chantier.chantierId = id || null;
         if (ch) {
           this._chantier.nom      = ch.nom || ch.libelle || '';
-          this._chantier.clientId = ch.clientId || null;
+          this._chantier.clientId = this._normalizeId(ch.clientId);
           this._chantier.adresse  = ch.adresse || ch.ville || '';
           const clientSelect = document.getElementById('cex-client-select');
           const nomInput     = document.getElementById('cex-nom-chantier');
           const adresseInput = document.getElementById('cex-adresse');
-          if (clientSelect) clientSelect.value = ch.clientId || '';
+          if (clientSelect) clientSelect.value = this._chantier.clientId || '';
           if (nomInput) nomInput.value = ch.nom || ch.libelle || '';
           if (adresseInput) adresseInput.value = ch.adresse || ch.ville || '';
           const cli = DB.getClient(parseInt(ch.clientId));
@@ -1850,16 +1865,16 @@ const CalcExpressV2 = {
         if (action === 'chantier-suivant') {
           const chantierId = (this._container.querySelector('#cex-chantier-id') || {}).value;
           const nom     = ((this._container.querySelector('#cex-nom-chantier') || {}).value || '').trim();
-          const client  = (this._container.querySelector('#cex-client-select') || {}).value;
+          const client  = this._normalizeId((this._container.querySelector('#cex-client-select') || {}).value);
           const adresse = ((this._container.querySelector('#cex-adresse') || {}).value || '').trim();
-          if (!client) { if (typeof App !== 'undefined' && App.toast) App.toast('Sélectionnez un client', 'warning'); return; }
+          if (!client) { if (typeof App !== 'undefined' && App.toast) App.toast('Veuillez sélectionner un client avant de continuer', 'warning'); return; }
           if (!nom) { if (typeof App !== 'undefined' && App.toast) App.toast('Saisissez un nom de chantier', 'warning'); return; }
-          const cliSelectionne = DB.getClient(parseInt(client));
+          const cliSelectionne = DB.getClient(client);
           this._profil = cliSelectionne && cliSelectionne.type
             ? (cliSelectionne.type === 'particulier' ? 'particulier' : 'pro')
             : null;
           if (chantierId) {
-            this._chantier = { nom, clientId: client || null, chantierId, adresse };
+            this._chantier = { nom, clientId: client, chantierId: this._normalizeId(chantierId), adresse };
             if (!this._profil) {
               if (cliSelectionne && !cliSelectionne.type) {
                 if (typeof App !== 'undefined' && App.toast) App.toast("⚠️ Ce client n'a pas de type renseigné — veuillez compléter sa fiche", 'warning');
@@ -1870,8 +1885,8 @@ const CalcExpressV2 = {
             this._renderEtape('profil');
             return;
           }
-          const nouveau = DB.addChantier({ nom, clientId: parseInt(client), adresse });
-          this._chantier = { nom, clientId: client || null, chantierId: nouveau ? nouveau.id : null, adresse };
+          const nouveau = DB.addChantier({ nom, clientId: client, adresse });
+          this._chantier = { nom, clientId: client, chantierId: nouveau ? this._normalizeId(nouveau.id) : null, adresse };
           this._renderEtape('profil');
         }
         if (action === 'chantier-annuler') { if (typeof App !== 'undefined') App.navigate('dashboard'); return; }
@@ -1993,6 +2008,7 @@ const CalcExpressV2 = {
           const chiffrage = {
             id:          'chiffrage_' + Date.now(),
             date:        new Date().toISOString(),
+            clientId:     this._getClientIdChantier(),
             chantier:    this._chantier    || {},
             corpsActifs: this._corpsActifs || [],
             corpsConfig: this._corpsConfig || {},
@@ -2014,9 +2030,15 @@ const CalcExpressV2 = {
           if (!this._corpsActifs || !this._corpsActifs.length) {
             if (typeof App !== 'undefined' && App.toast) App.toast('Aucun corps actif à devis', 'warning'); return;
           }
+          const clientId = this._getClientIdChantier();
+          if (!clientId) {
+            if (typeof App !== 'undefined' && App.toast) App.toast('Veuillez sélectionner un client avant de continuer', 'warning');
+            this._renderEtape('chantier');
+            return;
+          }
           DevisMulti._state = DevisMulti._newState();
-          DevisMulti._state.clientId   = (this._chantier && this._chantier.clientId)   || '';
-          DevisMulti._state.chantierId = (this._chantier && this._chantier.chantierId) || '';
+          DevisMulti._state.clientId   = clientId;
+          DevisMulti._state.chantierId = this._normalizeId(this._chantier && this._chantier.chantierId) || '';
           DevisMulti._state.objet      = 'Chiffrage ' + ((this._chantier && this._chantier.nom) || 'sans nom');
           this._corpsActifs.forEach(corpsId => {
             const corps = this.CORPS.find(c => c.id === corpsId);
@@ -2100,9 +2122,9 @@ const CalcExpressV2 = {
           const stateAvant = DevisMulti._state;
           if (!stateAvant.clientId) {
             // Tenter de récupérer clientId depuis this._chantier
-            if (this._chantier && this._chantier.clientId) {
-              DevisMulti._state.clientId   = this._chantier.clientId;
-              DevisMulti._state.chantierId = this._chantier.id || this._chantier.chantierId || '';
+            if (clientId) {
+              DevisMulti._state.clientId   = clientId;
+              DevisMulti._state.chantierId = this._normalizeId(this._chantier.id || this._chantier.chantierId) || '';
             }
           }
           const devisIdExistant = this._lastResume && this._lastResume.devisId;
@@ -2124,6 +2146,7 @@ const CalcExpressV2 = {
               id:          'chiffrage_' + Date.now(),
               date:        new Date().toISOString(),
               devisId:     idDevis,
+              clientId:     clientId,
               chantier:    this._chantier    || {},
               corpsActifs: this._corpsActifs || [],
               corpsConfig: this._corpsConfig || {},
@@ -2141,7 +2164,7 @@ const CalcExpressV2 = {
             // Diagnostic précis
             const s = DevisMulti._state;
             const nbLignes = (s.sections||[]).reduce((t,sec)=>t+(sec.lignes||[]).length,0);
-            const msg = !s.clientId ? '⚠️ Client manquant — devis non enregistré'
+            const msg = !s.clientId ? 'Veuillez sélectionner un client avant de continuer'
                       : !nbLignes   ? '⚠️ Devis vide — aucune ligne'
                       : '⚠️ Erreur enregistrement devis';
             if (typeof App !== 'undefined' && App.toast) App.toast(msg, 'error');

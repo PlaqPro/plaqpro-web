@@ -48,6 +48,11 @@ var DevisMulti = {
     return Number.isFinite(parsed) ? parsed : fallback;
   },
 
+  _normalizeId: function(value) {
+    var n = parseInt(value, 10);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  },
+
   _newState: function() {
     return { clientId: '', chantierId: '', objet: "Devis multi-corps d'état", sections: [] };
   },
@@ -143,11 +148,11 @@ var DevisMulti = {
   },
 
   _onClientChange: function(clientId) {
-    DevisMulti._state.clientId = clientId;
+    DevisMulti._state.clientId = DevisMulti._normalizeId(clientId) || '';
     DevisMulti._state.chantierId = '';
     var chantiers = DB.chantiers || [];
-    var filtered  = clientId
-      ? chantiers.filter(function(c) { return String(c.clientId) === String(clientId); })
+    var filtered  = DevisMulti._state.clientId
+      ? chantiers.filter(function(c) { return String(c.clientId) === String(DevisMulti._state.clientId); })
       : chantiers;
     var html = '<option value="">— Chantier —</option>'
       + filtered.map(function(c) {
@@ -168,7 +173,7 @@ var DevisMulti = {
       onConfirm: function(vals) {
         if (!vals.nom) { App.toast('Le nom est obligatoire', 'error'); return false; }
         var client = DB.addClient({ nom: vals.nom, telephone: vals.tel || '', email: vals.email || '', statut: 'Actif' });
-        DevisMulti._state.clientId = String(client.id);
+        DevisMulti._state.clientId = DevisMulti._normalizeId(client.id) || '';
         var wrap = document.getElementById('dm-wrap');
         if (wrap) { wrap.innerHTML = DevisMulti._buildHTML(); DevisMulti._bindEvents(); }
         App.toast('Client ' + vals.nom + ' créé ✅', 'success');
@@ -187,10 +192,10 @@ var DevisMulti = {
       onConfirm: function(vals) {
         if (!vals.nom) { App.toast('Le nom est obligatoire', 'error'); return false; }
         var chantier = DB.addChantier({
-          clientId: parseInt(DevisMulti._state.clientId),
+          clientId: DevisMulti._normalizeId(DevisMulti._state.clientId),
           nom: vals.nom, adresse: vals.adresse || '', statut: 'En cours'
         });
-        DevisMulti._state.chantierId = String(chantier.id);
+        DevisMulti._state.chantierId = DevisMulti._normalizeId(chantier.id) || '';
         var wrap = document.getElementById('dm-wrap');
         if (wrap) { wrap.innerHTML = DevisMulti._buildHTML(); DevisMulti._bindEvents(); }
         App.toast('Chantier ' + vals.nom + ' créé ✅', 'success');
@@ -199,7 +204,7 @@ var DevisMulti = {
   },
 
   _onChantierChange: function(chantierId) {
-    DevisMulti._state.chantierId = chantierId;
+    DevisMulti._state.chantierId = DevisMulti._normalizeId(chantierId) || '';
     if (!chantierId) return;
 
     // Récupérer les métrés du chantier
@@ -946,8 +951,10 @@ Règles importantes :
       return;
     }
 
+    state.clientId = DevisMulti._normalizeId(state.clientId) || '';
+    state.chantierId = DevisMulti._normalizeId(state.chantierId) || '';
     if (!state.clientId) {
-      App.toast('⚠️ Sélectionnez un client avant de sauvegarder', 'warning');
+      App.toast('Veuillez sélectionner un client avant de continuer', 'warning');
       return;
     }
 
@@ -983,8 +990,8 @@ Règles importantes :
     DB.addDevis({
       numero:     numero,
       objet:      state.objet || "Devis multi-corps d'état",
-      clientId:   state.clientId  || null,
-      chantierId: state.chantierId || null,
+      clientId:   DevisMulti._normalizeId(state.clientId),
+      chantierId: DevisMulti._normalizeId(state.chantierId),
       date:       dateStr,
       validite:   validite,
       statut:     'Brouillon',
@@ -1003,6 +1010,8 @@ Règles importantes :
 
   enregistrerSilencieux: function() {
     var state = DevisMulti._state;
+    state.clientId = DevisMulti._normalizeId(state.clientId) || '';
+    state.chantierId = DevisMulti._normalizeId(state.chantierId) || '';
     if (!state.clientId) return null;
     var sections = state.sections || [];
     var lignes = [];
@@ -1026,8 +1035,8 @@ Règles importantes :
     var devis = {
       numero:     'DEV-' + Date.now(),
       objet:      state.objet || 'Devis',
-      clientId:   state.clientId || '',
-      chantierId: state.chantierId || '',
+      clientId:   DevisMulti._normalizeId(state.clientId),
+      chantierId: DevisMulti._normalizeId(state.chantierId) || '',
       date:       new Date().toISOString().slice(0,10),
       validite:   state.validite || '',
       statut:     'Brouillon',
@@ -1055,8 +1064,8 @@ Règles importantes :
 
     // Reconstruire _state depuis le devis sauvegardé
     DevisMulti._state = DevisMulti._newState();
-    DevisMulti._state.clientId   = devis.clientId   || '';
-    DevisMulti._state.chantierId = devis.chantierId || '';
+    DevisMulti._state.clientId   = DevisMulti._normalizeId(devis.clientId) || '';
+    DevisMulti._state.chantierId = DevisMulti._normalizeId(devis.chantierId) || '';
     DevisMulti._state.objet      = devis.objet      || '';
     DevisMulti._state.date       = devis.date       || '';
     DevisMulti._state.validite   = devis.validite   || '';
