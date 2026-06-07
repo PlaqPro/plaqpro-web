@@ -636,32 +636,32 @@ const CalcExpressV2 = {
   _renderAccordeonPaysagisme(sections, currentId) {
     let html = '';
     const esc = s => this._esc(s);
-    html += '<div style="max-height:55vh;overflow-y:auto;overflow-x:hidden;padding-right:4px">';
+    const firstId = sections.length ? sections[0].id : null;
+    html += '<div data-cex-pays-accordion="1" style="max-height:55vh;overflow-y:auto;overflow-x:hidden;padding-right:4px;min-width:0;width:100%;max-width:100%">';
     for (const sec of sections) {
       const prests = BddPaysagismeV2.getPrestationsBySection(sec.id);
       const hasSelected = prests.some(pr => pr.id === currentId);
-      html += '<details style="border:1px solid rgba(79,142,247,.3);border-radius:8px;margin-bottom:6px"';
-      if (hasSelected) html += ' open';
-      else if (sec.id === sections[0].id && !currentId) html += ' open';
-      html += '>';
-      html += '<summary style="cursor:pointer;padding:10px 14px;font-weight:600;';
-      html += 'color:var(--text,#fff);list-style:none;display:flex;align-items:center;gap:8px">';
-      html += '<span>' + esc(sec.icone) + '</span>';
-      html += '<span>' + esc(sec.libelle) + '</span>';
-      html += '</summary>';
-      html += '<div style="padding:6px 10px;display:flex;flex-direction:column;gap:2px">';
+      const isOpen = hasSelected || (sec.id === firstId && !currentId);
+      html += '<div data-cex-pays-section="' + esc(sec.id) + '" style="border:1px solid rgba(79,142,247,.3);border-radius:8px;margin-bottom:6px;overflow:hidden;max-width:100%;min-width:0">';
+      html += '<button type="button" data-cex-pays-toggle="' + esc(sec.id) + '" style="width:100%;cursor:pointer;padding:10px 14px;font-weight:600;';
+      html += 'color:var(--text,#fff);background:transparent;border:0;display:flex;align-items:center;gap:8px;text-align:left;min-width:0">';
+      html += '<span style="flex-shrink:0">' + esc(sec.icone) + '</span>';
+      html += '<span style="flex:1;min-width:0;white-space:normal;overflow-wrap:normal;word-break:normal">' + esc(sec.libelle) + '</span>';
+      html += '<span data-cex-pays-chevron="' + esc(sec.id) + '" style="flex-shrink:0;opacity:.65">' + (isOpen ? '▾' : '▸') + '</span>';
+      html += '</button>';
+      html += '<div data-cex-pays-body="' + esc(sec.id) + '" style="display:' + (isOpen ? 'flex' : 'none') + ';padding:6px 10px;flex-direction:column;gap:2px;min-width:0;max-width:100%;overflow:hidden">';
       for (const pr of prests) {
         const checked = pr.id === currentId ? ' checked' : '';
         const bg = pr.id === currentId ? 'background:rgba(79,142,247,.18);font-weight:600;' : '';
         html += '<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;';
-        html += 'border-radius:6px;cursor:pointer;' + bg + '">';
+        html += 'border-radius:6px;cursor:pointer;min-width:0;max-width:100%;' + bg + '">';
         html += '<input type="radio" name="cex-pays-radio" value="' + esc(pr.id) + '"';
         html += checked + ' style="flex-shrink:0;accent-color:var(--accent,#4f8ef7)">';
-        html += '<span style="flex:1;font-size:.85rem;color:var(--text,#fff)">' + esc(pr.libelle) + '</span>';
-        html += '<span style="flex-shrink:0;opacity:.6;font-size:.75rem">' + esc(pr.unite || '') + '</span>';
+        html += '<span style="flex:1;min-width:0;font-size:.85rem;color:var(--text,#fff);white-space:normal;overflow-wrap:normal;word-break:normal">' + esc(pr.libelle) + '</span>';
+        html += '<span style="flex-shrink:0;opacity:.6;font-size:.75rem;white-space:nowrap">' + esc(pr.unite || '') + '</span>';
         html += '</label>';
       }
-      html += '</div></details>';
+      html += '</div></div>';
     }
     html += '</div>';
     return html;
@@ -1363,6 +1363,17 @@ const CalcExpressV2 = {
             p.tachePaysagisme = radio.value;
             btnValider.disabled = !radio.value;
             this._renderEtape('metrage');
+          }, { signal });
+        });
+        const toggles = this._container.querySelectorAll('[data-cex-pays-toggle]');
+        toggles.forEach(toggle => {
+          toggle.addEventListener('click', () => {
+            const id = toggle.getAttribute('data-cex-pays-toggle');
+            const body = this._container.querySelector('[data-cex-pays-body="' + id + '"]');
+            const chevron = this._container.querySelector('[data-cex-pays-chevron="' + id + '"]');
+            const isOpen = body && body.style.display !== 'none';
+            if (body) body.style.display = isOpen ? 'none' : 'flex';
+            if (chevron) chevron.textContent = isOpen ? '▸' : '▾';
           }, { signal });
         });
         const sel = this._container.querySelector('#cex-pays-tache');
