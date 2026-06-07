@@ -1738,9 +1738,18 @@ const CalcExpressV2 = {
       return (parseFloat(p.surface) || 0) > 0;
     });
     if (!piecesChiffrees.length) return;
-    const surfaceTotale = Math.round(piecesChiffrees.reduce((s, p) => s + (parseFloat(p.surface) || 0), 0) * 100) / 100;
-    const paysOnly = piecesChiffrees.every(p => p.corps === 'paysagisme');
-    const nb = piecesChiffrees.length;
+    const piecesUniques = [];
+    const nomsSeen = new Set();
+    piecesChiffrees.forEach(piece => {
+      const nom = String(piece.nom || '').trim();
+      const key = nom || piece.id || piecesUniques.length;
+      if (nomsSeen.has(key)) return;
+      nomsSeen.add(key);
+      piecesUniques.push(piece);
+    });
+    const surfaceTotale = Math.round(piecesUniques.reduce((s, p) => s + (parseFloat(p.surface) || 0), 0) * 100) / 100;
+    const paysOnly = piecesUniques.every(p => p.corps === 'paysagisme');
+    const nb = piecesUniques.length;
     const prix = paysOnly
       ? Math.min(1200, Math.max(120, Math.round(nb * 65 + surfaceTotale * 0.5)))
       : Math.min(850, Math.max(85, Math.round(nb * 45 + surfaceTotale * 0.8)));
