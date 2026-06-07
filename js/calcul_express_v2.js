@@ -126,9 +126,9 @@ const CalcExpressV2 = {
 
   // ── Lieux par corps de métier (prioritaire sur profil) ────
   LIEUX_CORPS: {
-    paysagisme:  ['Aire de jeux', 'Allée', 'Bassin / pièce d\'eau', 'Clôture',
-                  'Haie', 'Jardin arrière', 'Jardin avant', 'Massif fleuri',
-                  'Parking', 'Pelouse', 'Potager', 'Talus', 'Terrasse', 'Zone boisée'],
+    paysagisme:  ['Aire de jeux', 'Jardin', 'Allée', 'Bassin / pièce d\'eau',
+                  'Clôture', 'Haie', 'Massif fleuri', 'Parking', 'Potager',
+                  'Talus', 'Terrasse', 'Zone boisée'],
     maconnerie_int: {
       pieces: ['Chambre', 'Couloir', 'Cuisine', 'Entrée', 'Salle de bain', 'Salon', 'Séjour'],
       prestations: ['Cloison briques', 'Cloison brique de verre', 'Mur porteur', 'Doublage'],
@@ -150,11 +150,8 @@ const CalcExpressV2 = {
     "Bassin / pièce d'eau": [1, 4, 7, 9],
     'Clôture':            [6],
     'Haie':               [1, 2, 9],
-    'Jardin arrière':     [1, 2, 3, 4, 5, 7, 9],
-    'Jardin avant':       [1, 2, 3, 5, 7, 9],
     'Massif fleuri':      [1, 2, 9],
     'Parking':            [1, 3, 9],
-    'Pelouse':            [1, 2, 7, 9],
     'Potager':            [1, 8, 9],
     'Talus':              [1, 2, 9],
     'Terrasse':           [1, 5, 7, 9],
@@ -165,7 +162,7 @@ const CalcExpressV2 = {
     'Haie / Clôture':     [1, 2, 6, 9],
     'Chemin':             [1, 3, 9],
     'Pièce d\'eau':       [1, 4, 7, 9],
-    'Jardin':             [1, 2, 3, 5, 7, 9],
+    'Jardin':             [1, 2, 3, 4, 5, 7, 9],
     'Extérieur':          [1, 2, 3, 4, 5, 6, 7, 8, 9],
   },
 
@@ -469,6 +466,12 @@ const CalcExpressV2 = {
         ...p,
         quantites: p.quantites || {},
       };
+      if (piece.corps === 'paysagisme') {
+        piece.tachesPaysagisme = Array.isArray(piece.tachesPaysagisme)
+          ? piece.tachesPaysagisme.filter(Boolean)
+          : (piece.tachePaysagisme ? [piece.tachePaysagisme] : []);
+        piece.tachePaysagisme = piece.tachesPaysagisme[0] || piece.tachePaysagisme || '';
+      }
       if ((piece.corps === 'electricite' || piece.corps === 'plomberie') &&
           parseFloat(piece.surface) > 0 &&
           (!piece.quantites || !Object.keys(piece.quantites).length)) {
@@ -533,9 +536,35 @@ const CalcExpressV2 = {
     });
   },
 
+  _getPaysagismeIds(piece) {
+    if (!piece) return [];
+    const ids = Array.isArray(piece.tachesPaysagisme) && piece.tachesPaysagisme.length
+      ? piece.tachesPaysagisme
+      : (piece.tachePaysagisme ? [piece.tachePaysagisme] : []);
+    return this._dedupeBy(ids.filter(Boolean), id => String(id));
+  },
+
+  _getPaysagismePrimaryId(piece, code) {
+    return String(code || this._getPaysagismeIds(piece)[0] || '');
+  },
+
+  _getPaysagismeLabel(code) {
+    const id = String(code || '');
+    if (id.startsWith('PAYS_') && typeof BddPaysagismeV2 !== 'undefined') {
+      return (BddPaysagismeV2.getPrestation(id) || {}).libelle || id;
+    }
+    if (typeof BddV2 !== 'undefined' && BddV2.getOuvrage) {
+      return (BddV2.getOuvrage(id) || { designation: id }).designation;
+    }
+    return id;
+  },
+
   _isOuvrageLineaire(corpsId, piece, code) {
     const testPiece = Object.assign({}, piece || {});
-    if (code) testPiece.tachePaysagisme = code;
+    if (code) {
+      testPiece.tachePaysagisme = code;
+      testPiece.tachesPaysagisme = [code];
+    }
     return this._getUniteOuvrage(corpsId, testPiece) === 'ml';
   },
 
@@ -558,7 +587,7 @@ const CalcExpressV2 = {
   },
 
   _isOuvrageHaiePlantation(piece, code) {
-    const id = String(code || (piece && piece.tachePaysagisme) || '');
+    const id = this._getPaysagismePrimaryId(piece, code);
     if (id.startsWith('PAYS_') && typeof BddPaysagismeV2 !== 'undefined') {
       const prestation = BddPaysagismeV2.getPrestation(id);
       if (prestation) return (prestation.package.lignesAuto || []).some(l => l.quantiteMode === 'nb_plants');
@@ -584,7 +613,10 @@ const CalcExpressV2 = {
   _getTypeMetragePaysagisme(piece, code) {
     if (this._isOuvrageHaiePlantation(piece, code)) return 'haie';
     const testPiece = Object.assign({}, piece || {});
-    if (code) testPiece.tachePaysagisme = code;
+    if (code) {
+      testPiece.tachePaysagisme = code;
+      testPiece.tachesPaysagisme = [code];
+    }
     const unite = String(this._getUniteOuvrage('paysagisme', testPiece) || '').toLowerCase();
     if (unite === 'ml') return 'ml';
     if (unite === 'u') return 'u';
@@ -593,12 +625,12 @@ const CalcExpressV2 = {
   },
 
   _getPackageTypePaysagisme(piece, code) {
-    const ouvrageId = String(code || (piece && piece.tachePaysagisme) || '').toUpperCase();
+    const ouvrageId = this._getPaysagismePrimaryId(piece, code).toUpperCase();
     return this.PACKAGES_PAYSAGISME[ouvrageId] ? ouvrageId : '';
   },
 
   _getPackagePaysagisme(piece, code) {
-    const id = String(code || (piece && piece.tachePaysagisme) || '');
+    const id = this._getPaysagismePrimaryId(piece, code);
     if (id.startsWith('PAYS_') && typeof BddPaysagismeV2 !== 'undefined') {
       const prestation = BddPaysagismeV2.getPrestation(id);
       if (prestation && prestation.package) return prestation.package;
@@ -633,14 +665,15 @@ const CalcExpressV2 = {
     return all;
   },
 
-  _renderAccordeonPaysagisme(sections, currentId) {
+  _renderAccordeonPaysagisme(sections, currentIds) {
     let html = '';
     const esc = s => this._esc(s);
+    const ids = Array.isArray(currentIds) ? currentIds : (currentIds ? [currentIds] : []);
     const firstId = sections.length ? sections[0].id : null;
     html += '<div data-cex-pays-accordion="1" style="max-height:55vh;overflow-y:auto;overflow-x:hidden;padding-right:4px;min-width:0;width:100%;max-width:100%;box-sizing:border-box">';
     for (const sec of sections) {
       const prests = BddPaysagismeV2.getPrestationsBySection(sec.id);
-      const hasSelected = prests.some(pr => pr.id === currentId);
+      const hasSelected = prests.some(pr => ids.includes(pr.id));
       const isOpen = hasSelected || (sec.id === firstId && !currentId);
       html += '<div data-cex-pays-section="' + esc(sec.id) + '" style="border:1px solid rgba(79,142,247,.3);border-radius:8px;margin-bottom:6px;overflow:hidden;max-width:100%;min-width:0">';
       html += '<button type="button" data-cex-pays-toggle="' + esc(sec.id) + '" style="width:100%;cursor:pointer;padding:10px 14px;font-weight:600;';
@@ -651,11 +684,11 @@ const CalcExpressV2 = {
       html += '</button>';
       html += '<div data-cex-pays-body="' + esc(sec.id) + '" style="display:' + (isOpen ? 'flex' : 'none') + ';padding:6px 10px;flex-direction:column;gap:2px;min-width:0;max-width:100%;overflow:hidden;box-sizing:border-box;width:100%">';
       for (const pr of prests) {
-        const checked = pr.id === currentId ? ' checked' : '';
-        const bg = pr.id === currentId ? 'background:rgba(79,142,247,.18);font-weight:600;' : '';
+        const checked = ids.includes(pr.id) ? ' checked' : '';
+        const bg = ids.includes(pr.id) ? 'background:rgba(79,142,247,.18);font-weight:600;' : '';
         html += '<label style="display:grid;grid-template-columns:20px 1fr auto;align-items:center;gap:8px;padding:6px 8px;';
         html += 'border-radius:6px;cursor:pointer;width:100%;box-sizing:border-box;' + bg + '">';
-        html += '<input type="radio" name="cex-pays-radio" value="' + esc(pr.id) + '"';
+        html += '<input type="checkbox" name="cex-pays-check" value="' + esc(pr.id) + '"';
         html += checked + ' style="accent-color:var(--accent,#4f8ef7)">';
         html += '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text,#fff);font-size:.85rem">' + esc(pr.libelle) + '</span>';
         html += '<span style="opacity:.6;font-size:.75rem;white-space:nowrap">' + esc(pr.unite || '') + '</span>';
@@ -939,15 +972,11 @@ const CalcExpressV2 = {
       const prestBadge = p.prestation
         ? `<span style="background:var(--accent,#4f8ef7);color:#fff;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:4px">${this._esc(p.prestation)}</span>`
         : '';
-      const tacheBadge = p.tachePaysagisme
+      const tacheIds = this._getPaysagismeIds(p);
+      const tacheBadge = tacheIds.length
         ? (() => {
-            const code = p.tachePaysagisme;
-            let label = code;
-            if (code.startsWith('PAYS_') && typeof BddPaysagismeV2 !== 'undefined') {
-              label = (BddPaysagismeV2.getPrestation(code) || {}).libelle || code;
-            } else if (typeof BddV2 !== 'undefined') {
-              label = (BddV2.getOuvrage(code) || { designation: code }).designation;
-            }
+            const labels = tacheIds.map(code => this._getPaysagismeLabel(code));
+            const label = labels.length > 1 ? labels.length + ' tâches' : labels[0];
             return `<span style="background:var(--accent,#4f8ef7);color:#fff;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:4px">${this._esc(label)}</span>`;
           })()
         : '';
@@ -1150,7 +1179,8 @@ const CalcExpressV2 = {
 
     const isPlaco   = p.corps === 'plaquisterie';
     const needsHSP  = isPlaco || (p.corps === 'maconnerie' && (this._corpsConfig['maconnerie'] || {}).lieuxKey === 'maconnerie_int');
-    const paysCodeActuel = p.tachePaysagisme || '';
+    const paysIdsActuels = this._getPaysagismeIds(p);
+    const paysCodeActuel = this._getPaysagismePrimaryId(p);
     const typePaysActuel = p.corps === 'paysagisme' ? this._getTypeMetragePaysagisme(p, paysCodeActuel) : 'm2';
     const fieldWrap = (id, label, inputHtml, visible) => `
         <div id="${id}" style="flex:1;min-width:120px;display:${visible ? 'block' : 'none'}">
@@ -1231,7 +1261,7 @@ const CalcExpressV2 = {
         const codes = this._dedupeBy(this.PRESTATIONS_PAYSAGISME[p.nom] || ['OUV_GAZON_ROULEAU'], c => c);
         const opts = codes.map(code => {
           const ouv = typeof BddV2 !== 'undefined' ? BddV2.getOuvrage(code) : null;
-          const sel = (p.tachePaysagisme||'') === code ? 'selected' : '';
+          const sel = paysIdsActuels.includes(code) ? 'selected' : '';
           return `<option value="${code}" ${sel}>${this._esc(ouv ? ouv.designation : code)}</option>`;
         }).join('');
         return `<div style="background:var(--card-bg,#1e1e2e);border:1px solid var(--accent,#4f8ef7);border-radius:10px;padding:14px;margin-bottom:16px;overflow:hidden;max-width:100%;box-sizing:border-box;width:100%">
@@ -1240,25 +1270,25 @@ const CalcExpressV2 = {
             <option value="">-- Choisir --</option>${opts}
           </select></div>`;
       }
-      const currentId = p.tachePaysagisme || '';
+      const currentIds = this._getPaysagismeIds(p);
       let sectionsIds = this._getSectionsForZonePaysagisme(p.nom);
-      if (currentId) {
+      currentIds.forEach(currentId => {
         const selectedSection = BddPaysagismeV2.sections.find(sec =>
           BddPaysagismeV2.getPrestationsBySection(sec.id).some(pr => pr.id === currentId)
         );
         if (selectedSection && !sectionsIds.includes(selectedSection.id)) {
           sectionsIds = sectionsIds.concat(selectedSection.id);
         }
-      }
+      });
       const sectionsAccordeon = BddPaysagismeV2.sections.filter(sec => sectionsIds.includes(sec.id));
-      const accordion = this._renderAccordeonPaysagisme(sectionsAccordeon, currentId);
+      const accordion = this._renderAccordeonPaysagisme(sectionsAccordeon, currentIds);
       return `<div style="background:var(--card-bg,#1e1e2e);border:1px solid var(--accent,#4f8ef7);border-radius:10px;padding:14px;margin-bottom:16px;overflow:hidden;max-width:100%;box-sizing:border-box;width:100%">
         <p style="font-weight:700;color:var(--accent,#4f8ef7);margin:0 0 10px 0">🌿 Prestation sur ${this._esc(p.nom)}</p>
         ${accordion}
       </div>`;
     })() : '';
-    const optionsPackagePays = p.corps === 'paysagisme' && p.tachePaysagisme
-      ? this._getOptionsPackagePaysagisme(p, p.tachePaysagisme)
+    const optionsPackagePays = p.corps === 'paysagisme'
+      ? this._dedupeBy(this._getPaysagismeIds(p).flatMap(code => this._getOptionsPackagePaysagisme(p, code)), opt => opt.id)
       : [];
     const optionsPaysagisme = optionsPackagePays.length ? `
       <div style="background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.35);border-radius:10px;padding:14px;margin-bottom:16px">
@@ -1356,12 +1386,15 @@ const CalcExpressV2 = {
     if (btnValider) {
       const signal = this._bindController.signal;
       if (p.corps === 'paysagisme') {
-        btnValider.disabled = !p.tachePaysagisme;
-        const radios = this._container.querySelectorAll('[name="cex-pays-radio"]');
-        radios.forEach(radio => {
-          radio.addEventListener('change', () => {
-            p.tachePaysagisme = radio.value;
-            btnValider.disabled = !radio.value;
+        btnValider.disabled = this._getPaysagismeIds(p).length === 0;
+        const checks = this._container.querySelectorAll('[name="cex-pays-check"]');
+        checks.forEach(cb => {
+          cb.addEventListener('change', () => {
+            p.tachesPaysagisme = Array.from(checks)
+              .filter(c => c.checked)
+              .map(c => c.value);
+            p.tachePaysagisme = p.tachesPaysagisme[0] || '';
+            btnValider.disabled = p.tachesPaysagisme.length === 0;
             this._renderEtape('metrage');
           }, { signal });
         });
@@ -1378,9 +1411,10 @@ const CalcExpressV2 = {
         });
         const sel = this._container.querySelector('#cex-pays-tache');
         if (sel) {
-          sel.value = p.tachePaysagisme || '';
+          sel.value = this._getPaysagismePrimaryId(p);
           sel.addEventListener('change', () => {
             p.tachePaysagisme = sel.value;
+            p.tachesPaysagisme = sel.value ? [sel.value] : [];
             btnValider.disabled = !sel.value;
             this._renderEtape('metrage');
           }, { signal });
@@ -1686,6 +1720,70 @@ const CalcExpressV2 = {
     paysagisme:   { label: 'Paysagisme',   ouvrageDefaut: null },
   },
 
+  _buildDesignationDevis(corpsId, piece, dims) {
+    if (corpsId === 'plaquisterie') {
+      const surface = parseFloat(piece.surface) || 0;
+      const longueur = parseFloat(piece.longueur) || (surface > 0 ? Math.round(Math.sqrt(surface) * 10) / 10 : 0);
+      const hauteur = parseFloat(piece.hauteur) || parseFloat(piece.hsp) || 2.5;
+      const ouvrageId = piece.ouvrageId || piece.ouvrage || (this.CORPS_BDD.plaquisterie || {}).ouvrageDefaut;
+      const ouvrage = (typeof BddV2 !== 'undefined' && BddV2.getOuvrage) ? BddV2.getOuvrage(ouvrageId) : null;
+      const epaisseur = (ouvrage && (ouvrage.epaisseur || ouvrage.epaisseur_mm)) || piece.epaisseur || 72;
+      const isolation = piece.isolation || piece.typeIsolation || 'laine de verre';
+      if (longueur && hauteur) {
+        return piece.nom + ' — Cloison ' + longueur + '×' + hauteur + 'm — ' + epaisseur + 'mm + isolation ' + isolation;
+      }
+      return piece.nom + ' — ' + (ouvrage ? ouvrage.designation : 'Cloison ' + epaisseur + 'mm');
+    }
+    if (corpsId === 'peinture') {
+      const couches = parseInt(piece.nbCouches || piece.couches, 10) || 2;
+      const finition = piece.finition || 'satiné';
+      const coloris = piece.coloris ? ' ' + piece.coloris : '';
+      return piece.nom + ' — Préparation + ' + couches + ' couches ' + finition + coloris;
+    }
+    return piece.nom + (dims.length ? ' — ' + dims.join(' | ') : '');
+  },
+
+  _ajouterForfaitPreparationDevis() {
+    if (typeof DevisMulti === 'undefined' || !DevisMulti._state) return;
+    const piecesChiffrees = (this._pieces || []).filter(p => {
+      if (!p || !p.corps) return false;
+      if (p.corps === 'electricite' || p.corps === 'plomberie') {
+        return Object.values(p.quantites || {}).reduce((s, v) => s + (parseFloat(v) || 0), 0) > 0;
+      }
+      if (p.corps === 'paysagisme') return this._getPaysagismeIds(p).length > 0 && this._getQuantiteDevis('paysagisme', p) > 0;
+      return (parseFloat(p.surface) || 0) > 0;
+    });
+    if (!piecesChiffrees.length) return;
+    const surfaceTotale = Math.round(piecesChiffrees.reduce((s, p) => s + (parseFloat(p.surface) || 0), 0) * 100) / 100;
+    const paysOnly = piecesChiffrees.every(p => p.corps === 'paysagisme');
+    const nb = piecesChiffrees.length;
+    const prix = paysOnly
+      ? Math.min(1200, Math.max(120, Math.round(nb * 65 + surfaceTotale * 0.5)))
+      : Math.min(850, Math.max(85, Math.round(nb * 45 + surfaceTotale * 0.8)));
+    const designation = paysOnly
+      ? 'Préparation chantier extérieur — Balisage, protections, nettoyage fin de chantier (' + nb + ' zone(s), ' + surfaceTotale + 'm²)'
+      : 'Protection chantier — Polyane, scotch, protections + installation et repli (' + nb + ' pièce(s), ' + surfaceTotale + 'm²)';
+    const sec = {
+      key: 'preparation_chantier',
+      icon: paysOnly ? '🌿' : '🛡️',
+      titre: paysOnly ? 'Préparation chantier extérieur' : 'Protection chantier',
+      tva: paysOnly ? 10 : 20,
+      lignes: [{
+        id: DevisMulti._uid(),
+        ref: '',
+        designation,
+        unite: 'forfait',
+        qte: 1,
+        prix,
+        obligatoire: true,
+        option: false,
+      }],
+      sid: DevisMulti._uid(),
+    };
+    DevisMulti._state.sections = (DevisMulti._state.sections || []).filter(s => s.key !== sec.key);
+    DevisMulti._state.sections.unshift(sec);
+  },
+
   // ── Calcul prix réel via BddV2 (fallback forfait) ────────
   _calcCorps(corpsId, surface, piece) {
     if (corpsId === 'maconnerie' && piece && piece.prestation) {
@@ -1694,8 +1792,8 @@ const CalcExpressV2 = {
         return BddV2.calcPrixVente(ouvragePrestation, surface);
       }
     }
-    if (corpsId === 'paysagisme' && piece && piece.tachePaysagisme) {
-      const code = piece.tachePaysagisme;
+    if (corpsId === 'paysagisme' && piece && this._getPaysagismeIds(piece).length) {
+      const code = this._getPaysagismePrimaryId(piece);
       if (code.startsWith('PAYS_') && typeof BddPaysagismeV2 !== 'undefined') {
         const prix = BddPaysagismeV2.getPrix(code);
         if (prix) {
@@ -1740,14 +1838,15 @@ const CalcExpressV2 = {
     return { designation, qte: Math.max(0, Math.round((qte || 0) * 100) / 100), unite, prix, obligatoire: !!obligatoire, ouvrage: ouvrage || null };
   },
 
-  _quantiteLignePackagePaysagisme(piece, ouvrageId, line) {
+  _quantiteLignePackagePaysagisme(piece, ouvrageId, line, code) {
     const unite = String(line.unite || '').toLowerCase();
     const surface = parseFloat(piece.surface) || 0;
     const longueur = parseFloat(piece.longueur) || parseFloat(piece.perimetre) || 0;
     const largeur = parseFloat(piece.largeur) || 0;
     const perimetre = longueur && largeur ? Math.round(2 * (longueur + largeur)) : this._estimerPerimetre(piece);
     const tache = String(line.tache || '').toUpperCase();
-    const ouvrageUnite = String(this._getUniteOuvrage('paysagisme', piece) || '').toLowerCase();
+    const pieceCode = code ? Object.assign({}, piece, { tachePaysagisme: code, tachesPaysagisme: [code] }) : piece;
+    const ouvrageUnite = String(this._getUniteOuvrage('paysagisme', pieceCode) || '').toLowerCase();
 
     const mode = line.quantiteMode;
     if (mode) {
@@ -1772,16 +1871,17 @@ const CalcExpressV2 = {
     return surface || longueur || 1;
   },
 
-  _buildPackagePaysagisme(piece) {
-    const code = piece.tachePaysagisme || '';
+  _buildPackagePaysagisme(piece, codeParam) {
+    const code = this._getPaysagismePrimaryId(piece, codeParam);
     const ouvrageId = String(code || '').toUpperCase();
     const pkg = this._getPackagePaysagisme(piece, code);
     const opts = new Set(piece.optionsPaysagisme || []);
     const lines = [];
+    const tacheLabel = this._getPaysagismeLabel(code);
     const add = (line, obligatoire) => {
       lines.push(this._linePackagePaysagisme(
-        line.tache,
-        this._quantiteLignePackagePaysagisme(piece, ouvrageId, line),
+        tacheLabel + ' — ' + line.tache,
+        this._quantiteLignePackagePaysagisme(piece, ouvrageId, line, code),
         line.unite,
         line.prixUnit,
         obligatoire,
@@ -1824,16 +1924,18 @@ const CalcExpressV2 = {
       DevisMulti._state.sections.push(sec);
     }
     const prefix = piece.nom;
-    this._buildPackagePaysagisme(piece).forEach(line => {
-      sec.lignes.push({
-        id: DevisMulti._uid(),
-        ref: '',
-        designation: prefix + ' — ' + line.designation,
-        unite: line.unite,
-        qte: line.qte,
-        prix: this._prixUnitairePackagePaysagisme(line),
-        obligatoire: line.obligatoire,
-        option: !line.obligatoire,
+    this._getPaysagismeIds(piece).forEach(code => {
+      this._buildPackagePaysagisme(piece, code).forEach(line => {
+        sec.lignes.push({
+          id: DevisMulti._uid(),
+          ref: '',
+          designation: prefix + ' — ' + line.designation,
+          unite: line.unite,
+          qte: line.qte,
+          prix: this._prixUnitairePackagePaysagisme(line),
+          obligatoire: line.obligatoire,
+          option: !line.obligatoire,
+        });
       });
     });
   },
@@ -1841,8 +1943,8 @@ const CalcExpressV2 = {
   _getUniteOuvrage(corpsId, piece) {
     if (corpsId === 'electricite' || corpsId === 'plomberie') return 'u';
     if (corpsId === 'paysagisme' && this._isOuvrageHaiePlantation(piece)) return 'u';
-    if (corpsId === 'paysagisme' && piece && piece.tachePaysagisme) {
-      const code = piece.tachePaysagisme;
+    if (corpsId === 'paysagisme' && piece && this._getPaysagismeIds(piece).length) {
+      const code = this._getPaysagismePrimaryId(piece);
       if (code.startsWith('PAYS_') && typeof BddPaysagismeV2 !== 'undefined') {
         const prestation = BddPaysagismeV2.getPrestation(code);
         if (prestation && prestation.unite) return prestation.unite;
@@ -2072,7 +2174,10 @@ const CalcExpressV2 = {
             p.nbPoints = total;
             p.surface  = total;
             if (p.corps === 'paysagisme') {
-              p.tachePaysagisme = (document.getElementById('cex-pays-tache') || {}).value || 'OUV_GAZON_ROULEAU';
+              const fallbackPays = (document.getElementById('cex-pays-tache') || {}).value || 'OUV_GAZON_ROULEAU';
+              p.tachesPaysagisme = this._getPaysagismeIds(p);
+              if (!p.tachesPaysagisme.length) p.tachesPaysagisme = [fallbackPays];
+              p.tachePaysagisme = p.tachesPaysagisme[0] || fallbackPays;
             }
           }
           this._renderEtape('pieces');
@@ -2090,7 +2195,7 @@ const CalcExpressV2 = {
             const qte = parseFloat((this._container.querySelector('#cex-pays-quantite') || {}).value) || 0;
             const prof = parseFloat((this._container.querySelector('#cex-pays-profondeur') || {}).value) || 0;
             const hsp = parseFloat((this._container.querySelector('#cex-m-hsp') || {}).value) || 0;
-            const codePays = (document.getElementById('cex-pays-tache') || {}).value || p.tachePaysagisme || '';
+            const codePays = (document.getElementById('cex-pays-tache') || {}).value || this._getPaysagismePrimaryId(p);
             const typePays = p && p.corps === 'paysagisme' ? this._getTypeMetragePaysagisme(p, codePays) : 'm2';
             if (p && p.corps === 'paysagisme' && typePays === 'haie') {
               const essenceId = (this._container.querySelector('#cex-pays-essence') || {}).value || 'autre';
@@ -2138,7 +2243,10 @@ const CalcExpressV2 = {
             p.surface = s;
             p.mode = mode;
             if (p.corps === 'paysagisme') {
-              p.tachePaysagisme = (document.getElementById('cex-pays-tache') || {}).value || 'OUV_GAZON_ROULEAU';
+              const fallbackPays = (document.getElementById('cex-pays-tache') || {}).value;
+              p.tachesPaysagisme = this._getPaysagismeIds(p);
+              if (!p.tachesPaysagisme.length && fallbackPays) p.tachesPaysagisme = [fallbackPays];
+              p.tachePaysagisme = p.tachesPaysagisme[0] || fallbackPays || 'OUV_GAZON_ROULEAU';
               p.optionsPaysagisme = Array.from(this._container.querySelectorAll('[data-cex-pays-option]:checked')).map(cb => cb.dataset.cexPaysOption);
             }
           }
@@ -2191,6 +2299,7 @@ const CalcExpressV2 = {
           DevisMulti._state.clientId   = clientId;
           DevisMulti._state.chantierId = this._normalizeId(this._chantier && this._chantier.chantierId) || '';
           DevisMulti._state.objet      = 'Chiffrage ' + ((this._chantier && this._chantier.nom) || 'sans nom');
+          this._ajouterForfaitPreparationDevis();
           this._corpsActifs.forEach(corpsId => {
             const corps = this.CORPS.find(c => c.id === corpsId);
             if (!corps) return;
@@ -2199,10 +2308,13 @@ const CalcExpressV2 = {
               if (corpsId === 'electricite' || corpsId === 'plomberie') {
                 return Object.values(p.quantites || {}).reduce((s,v) => s+(parseFloat(v)||0), 0) > 0;
               }
+              if (corpsId === 'paysagisme') {
+                return this._getPaysagismeIds(p).length > 0 && this._getQuantiteDevis(corpsId, p) > 0;
+              }
               return parseFloat(p.surface) > 0;
             });
             pcs.forEach(p => {
-              if (corpsId === 'paysagisme' && p.tachePaysagisme) {
+              if (corpsId === 'paysagisme' && this._getPaysagismeIds(p).length) {
                 this._ajouterPackagePaysagismeDevis(p, corps);
                 return;
               }
@@ -2212,8 +2324,9 @@ const CalcExpressV2 = {
               if (p.longueur && p.largeur) dims.push(p.longueur + 'm × ' + p.largeur + 'm');
               if (p.hsp) dims.push('HSP ' + p.hsp + 'm');
               if (p.prestation) dims.push(p.prestation);
-              if (p.tachePaysagisme && typeof BddV2 !== 'undefined') {
-                const ouv = BddV2.getOuvrage(p.tachePaysagisme);
+              const codePaysDevis = this._getPaysagismePrimaryId(p);
+              if (codePaysDevis && typeof BddV2 !== 'undefined') {
+                const ouv = BddV2.getOuvrage(codePaysDevis);
                 if (ouv) dims.push(ouv.designation);
               }
               if (r.coutMat > 0 || r.coutMO > 0) {
@@ -2227,7 +2340,7 @@ const CalcExpressV2 = {
                   .join(', ');
                 if (details) dims.push(details);
               }
-              const designation = p.nom + (dims.length ? ' — ' + dims.join(' | ') : '');
+              const designation = this._buildDesignationDevis(corpsId, p, dims);
               const uniteDevis = this._getUniteOuvrage(corpsId, p);
               const nbLignesAvant = (() => {
                 const s = DevisMulti._state.sections.find(s => s.key === corpsId);

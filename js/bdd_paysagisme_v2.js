@@ -126,15 +126,63 @@
     opt('Store / voile', 'u', 280),
   ]);
 
-  const pkgCloture = (poseTache, posePrix) => pkg([
+  const pkgCloture = (poseTache, posePrix, options) => pkg([
     line('Terrassement implantation', 'ml', 12, Q.longueur),
     line('Pose poteaux + fondations béton', 'ml', 34, Q.longueur),
     line(poseTache, 'ml', posePrix, Q.longueur),
-  ], [
+  ], options || [
     opt('Portail battant', 'u', 1030),
     opt('Portillon', 'u', 415),
     opt('Traitement / lasure bois', 'ml', 8),
   ]);
+
+  const optsClotureSouple = [
+    opt('Portail battant grillage', 'u', 650),
+    opt('Portillon grillage', 'u', 280),
+    opt('Tendeur de grillage', 'u', 25),
+  ];
+  const optsClotureRigide = [
+    opt('Portail battant', 'u', 750),
+    opt('Portillon', 'u', 300),
+    opt('Lames occultantes', 'ml', 18),
+  ];
+  const optsClotureMetal = [
+    opt('Portail battant motorisé', 'u', 1800),
+    opt('Portail battant manuel', 'u', 950),
+    opt('Portillon', 'u', 380),
+    opt('Peinture anticorrosion', 'ml', 12),
+  ];
+  const optsClotureBois = [
+    opt('Portail bois battant', 'u', 750),
+    opt('Portillon bois', 'u', 290),
+    opt('Traitement lasure', 'ml', 8),
+    opt('Teinture bois', 'ml', 6),
+  ];
+  const optsClotureCompositePvc = [
+    opt('Portail composite/PVC', 'u', 820),
+    opt('Portillon composite/PVC', 'u', 310),
+  ];
+  const optsClotureMur = [
+    opt('Portail battant motorisé', 'u', 1800),
+    opt('Portail battant manuel', 'u', 950),
+    opt('Portillon', 'u', 380),
+    opt('Enduit finition', 'm²', 18),
+    opt('Chaperon mur', 'ml', 25),
+  ];
+  const optsClotureElectrique = [
+    opt('Energiseur solaire', 'u', 180),
+    opt('Energiseur secteur', 'u', 120),
+    opt('Isolateurs supplémentaires', 'u', 3),
+  ];
+  const optsCloturePiscine = [
+    opt('Portillon sécurité normé', 'u', 450),
+    opt('Alarme piscine NF P90-307', 'u', 280),
+  ];
+  const optsPortailSeul = [
+    opt('Motorisation portail', 'u', 650),
+    opt('Interphone', 'u', 180),
+    opt('Digidigicode', 'u', 120),
+  ];
 
   const pkgArrosage = (poseTache, posePrix) => pkg([
     line('Création tranchées', 'ml', 12, Q.longueur),
@@ -258,29 +306,29 @@
       p('PAYS_S5_013', 5, 'Muret pierre naturelle', 'ml', 95, 55, pkgStructure('Pose muret pierre naturelle', 'm²', 150)),
       p('PAYS_S5_014', 5, 'Muret gabions', 'ml', 75, 45, pkgStructure('Pose muret gabions', 'm²', 120)),
 
-      p('PAYS_S6_001', 6, 'Clôture grillage souple', 'ml', 12, 18, pkgCloture('Pose clôture grillage souple', 30)),
-      p('PAYS_S6_002', 6, 'Clôture grillage rigide panneaux', 'ml', 22, 18, pkgCloture('Pose clôture grillage rigide panneaux', 40)),
-      p('PAYS_S6_003', 6, 'Clôture barreaudage acier', 'ml', 45, 25, pkgCloture('Pose clôture barreaudage acier', 70)),
-      p('PAYS_S6_004', 6, 'Clôture fer forgé', 'ml', 85, 35, pkgCloture('Pose clôture fer forgé', 120)),
-      p('PAYS_S6_005', 6, 'Clôture aluminium barreaudée', 'ml', 65, 25, pkgCloture('Pose clôture aluminium barreaudée', 90)),
-      p('PAYS_S6_006', 6, 'Palissade bois pleine', 'ml', 35, 22, pkgCloture('Pose palissade bois pleine', 57)),
-      p('PAYS_S6_007', 6, 'Clôture bois ajourée / lames', 'ml', 42, 22, pkgCloture('Pose clôture bois ajourée / lames', 64)),
-      p('PAYS_S6_008', 6, 'Claustra bois décoratif', 'ml', 55, 25, pkgCloture('Pose claustra bois décoratif', 80)),
-      p('PAYS_S6_009', 6, 'Traverses paysagères', 'ml', 28, 20, pkgCloture('Pose traverses paysagères', 48)),
-      p('PAYS_S6_010', 6, 'Clôture composite', 'ml', 58, 22, pkgCloture('Pose clôture composite', 80)),
-      p('PAYS_S6_011', 6, 'Clôture PVC pleine', 'ml', 38, 20, pkgCloture('Pose clôture PVC pleine', 58)),
-      p('PAYS_S6_012', 6, 'Clôture PVC ajourée', 'ml', 32, 20, pkgCloture('Pose clôture PVC ajourée', 52)),
-      p('PAYS_S6_013', 6, 'Mur clôture parpaings', 'ml', 55, 45, pkgCloture('Pose mur clôture parpaings', 100)),
-      p('PAYS_S6_014', 6, 'Mur clôture pierre', 'ml', 120, 65, pkgCloture('Pose mur clôture pierre', 185)),
-      p('PAYS_S6_015', 6, 'Clôture gabions', 'ml', 85, 45, pkgCloture('Pose clôture gabions', 130)),
-      p('PAYS_S6_016', 6, 'Muret + panneaux', 'ml', 75, 45, pkgCloture('Pose muret + panneaux', 120)),
+      p('PAYS_S6_001', 6, 'Clôture grillage souple', 'ml', 12, 18, pkgCloture('Pose clôture grillage souple', 30, optsClotureSouple)),
+      p('PAYS_S6_002', 6, 'Clôture grillage rigide panneaux', 'ml', 22, 18, pkgCloture('Pose clôture grillage rigide panneaux', 40, optsClotureRigide)),
+      p('PAYS_S6_003', 6, 'Clôture barreaudage acier', 'ml', 45, 25, pkgCloture('Pose clôture barreaudage acier', 70, optsClotureMetal)),
+      p('PAYS_S6_004', 6, 'Clôture fer forgé', 'ml', 85, 35, pkgCloture('Pose clôture fer forgé', 120, optsClotureMetal)),
+      p('PAYS_S6_005', 6, 'Clôture aluminium barreaudée', 'ml', 65, 25, pkgCloture('Pose clôture aluminium barreaudée', 90, optsClotureMetal)),
+      p('PAYS_S6_006', 6, 'Palissade bois pleine', 'ml', 35, 22, pkgCloture('Pose palissade bois pleine', 57, optsClotureBois)),
+      p('PAYS_S6_007', 6, 'Clôture bois ajourée / lames', 'ml', 42, 22, pkgCloture('Pose clôture bois ajourée / lames', 64, optsClotureBois)),
+      p('PAYS_S6_008', 6, 'Claustra bois décoratif', 'ml', 55, 25, pkgCloture('Pose claustra bois décoratif', 80, optsClotureBois)),
+      p('PAYS_S6_009', 6, 'Traverses paysagères', 'ml', 28, 20, pkgCloture('Pose traverses paysagères', 48, optsClotureBois)),
+      p('PAYS_S6_010', 6, 'Clôture composite', 'ml', 58, 22, pkgCloture('Pose clôture composite', 80, optsClotureCompositePvc)),
+      p('PAYS_S6_011', 6, 'Clôture PVC pleine', 'ml', 38, 20, pkgCloture('Pose clôture PVC pleine', 58, optsClotureCompositePvc)),
+      p('PAYS_S6_012', 6, 'Clôture PVC ajourée', 'ml', 32, 20, pkgCloture('Pose clôture PVC ajourée', 52, optsClotureCompositePvc)),
+      p('PAYS_S6_013', 6, 'Mur clôture parpaings', 'ml', 55, 45, pkgCloture('Pose mur clôture parpaings', 100, optsClotureMur)),
+      p('PAYS_S6_014', 6, 'Mur clôture pierre', 'ml', 120, 65, pkgCloture('Pose mur clôture pierre', 185, optsClotureMur)),
+      p('PAYS_S6_015', 6, 'Clôture gabions', 'ml', 85, 45, pkgCloture('Pose clôture gabions', 130, optsClotureMur)),
+      p('PAYS_S6_016', 6, 'Muret + panneaux', 'ml', 75, 45, pkgCloture('Pose muret + panneaux', 120, optsClotureMur)),
       p('PAYS_S6_017', 6, 'Panneaux occultants bois', 'ml', 48, 22, pkgCloture('Pose panneaux occultants bois', 70)),
       p('PAYS_S6_018', 6, 'Panneaux occultants composite', 'ml', 62, 22, pkgCloture('Pose panneaux occultants composite', 84)),
-      p('PAYS_S6_019', 6, 'Clôture électrique', 'ml', 8, 12, pkgCloture('Pose clôture électrique', 20)),
-      p('PAYS_S6_020', 6, 'Clôture de piscine normée', 'ml', 95, 45, pkgCloture('Pose clôture de piscine normée', 140)),
-      p('PAYS_S6_021', 6, 'Portail battant (fourni + posé)', 'u', 850, 180, autoSelf('Pose portail battant', 'u', 1030, Q.unite)),
-      p('PAYS_S6_022', 6, 'Portail coulissant (fourni + posé)', 'u', 1200, 220, autoSelf('Pose portail coulissant', 'u', 1420, Q.unite)),
-      p('PAYS_S6_023', 6, 'Portillon (fourni + posé)', 'u', 320, 95, autoSelf('Pose portillon', 'u', 415, Q.unite)),
+      p('PAYS_S6_019', 6, 'Clôture électrique', 'ml', 8, 12, pkgCloture('Pose clôture électrique', 20, optsClotureElectrique)),
+      p('PAYS_S6_020', 6, 'Clôture de piscine normée', 'ml', 95, 45, pkgCloture('Pose clôture de piscine normée', 140, optsCloturePiscine)),
+      p('PAYS_S6_021', 6, 'Portail battant (fourni + posé)', 'u', 850, 180, autoSelf('Pose portail battant', 'u', 1030, Q.unite, optsPortailSeul)),
+      p('PAYS_S6_022', 6, 'Portail coulissant (fourni + posé)', 'u', 1200, 220, autoSelf('Pose portail coulissant', 'u', 1420, Q.unite, optsPortailSeul)),
+      p('PAYS_S6_023', 6, 'Portillon (fourni + posé)', 'u', 320, 95, autoSelf('Pose portillon', 'u', 415, Q.unite, optsPortailSeul)),
 
       p('PAYS_S7_001', 7, 'Arrosage automatique turbines', 'forfait', 350, 180, pkgArrosage('Pose réseau arrosage automatique turbines', 20)),
       p('PAYS_S7_002', 7, 'Réseau arrosage enterré', 'ml', 8, 12, pkgArrosage('Pose réseau arrosage enterré', 20)),
