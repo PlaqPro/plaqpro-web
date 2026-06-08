@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'plaqpro-v20260603c';
+﻿const CACHE_NAME = 'plaqpro-v20260603d';
 
 const FICHIERS_CACHE = [
   '/plaqpro-web/login.html',
@@ -117,6 +117,7 @@ self.addEventListener('fetch', e => {
     })
   );
 });
+
 
 
 
