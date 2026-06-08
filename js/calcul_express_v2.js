@@ -1726,36 +1726,68 @@ const CalcExpressV2 = {
     return piece.nom + (dims.length ? ' — ' + dims.join(' | ') : '');
   },
 
+  _getSurfaceChantierPiece(piece) {
+    if (!piece) return 0;
+    const surfaceSol = parseFloat(piece.surface_sol);
+    if (surfaceSol > 0) return surfaceSol;
+    const longueur = parseFloat(piece.longueur) || 0;
+    const largeur = parseFloat(piece.largeur) || 0;
+    if (longueur > 0 && largeur > 0) return Math.round(longueur * largeur * 100) / 100;
+    const l1 = parseFloat(piece.l1) || 0;
+    const w1 = parseFloat(piece.w1) || 0;
+    const l2 = parseFloat(piece.l2) || 0;
+    const w2 = parseFloat(piece.w2) || 0;
+    if ((l1 && w1) || (l2 && w2)) return Math.round((l1 * w1 + l2 * w2) * 100) / 100;
+    return parseFloat(piece.surface) || 0;
+  },
+
+  _getPiecesSourceForfait() {
+    const state = {
+      chantier: this._chantier || {},
+      etape1: this._etape1 || {},
+      lieux: (this._pieces || []).map(p => Object.assign({}, p, {
+        surface: this._getSurfaceChantierPiece(p),
+      })),
+    };
+    // Structure réelle observée ici : CalcExpressV2 n'alimente pas
+    // state.chantier.pieces/state.etape1.pieces ; les pièces saisies sont dans
+    // this._pieces, tableau plat corps×pièce. DevisMulti._state contient les
+    // sections/lignes devis et ne doit pas servir au calcul du forfait.
+    const piecesChantier = (
+      (state.chantier && state.chantier.pieces) ||
+      (state.etape1 && state.etape1.pieces) ||
+      []
+    );
+    if (piecesChantier.length > 0) return piecesChantier;
+    return Object.values(
+      ((state.lieux || []).reduce((acc, p) => {
+        const nom = String((p && p.nom) || '').trim();
+        if (nom && !acc[nom]) acc[nom] = p;
+        return acc;
+      }, {}))
+    );
+  },
+
   _ajouterForfaitPreparationDevis() {
     if (typeof DevisMulti === 'undefined' || !DevisMulti._state) return;
-    const piecesChiffrees = (this._pieces || []).filter(p => {
-      if (!p || !p.corps) return false;
-      if (p.corps !== 'paysagisme' && this._estZonePaysagisme(p)) return false;
-      if (p.corps === 'electricite' || p.corps === 'plomberie') {
-        return Object.values(p.quantites || {}).reduce((s, v) => s + (parseFloat(v) || 0), 0) > 0;
-      }
-      if (p.corps === 'paysagisme') return this._getPaysagismeIds(p).length > 0 && this._getQuantiteDevis('paysagisme', p) > 0;
-      return (parseFloat(p.surface) || 0) > 0;
-    });
-    if (!piecesChiffrees.length) return;
-    const piecesUniques = [];
-    const nomsSeen = new Set();
-    piecesChiffrees.forEach(piece => {
-      const nom = String(piece.nom || '').trim();
-      const key = nom || piece.id || piecesUniques.length;
-      if (nomsSeen.has(key)) return;
-      nomsSeen.add(key);
-      piecesUniques.push(piece);
-    });
-    const surfaceTotale = Math.round(piecesUniques.reduce((s, p) => s + (parseFloat(p.surface) || 0), 0) * 100) / 100;
-    const paysOnly = piecesUniques.every(p => p.corps === 'paysagisme');
-    const nb = piecesUniques.length;
+    const piecesSource = this._getPiecesSourceForfait();
+    if (!piecesSource.length) return;
+    const zonesPaysagisme = this._getZonesPaysagismeSet();
+    const surfaceTotale = Math.round(piecesSource.reduce((s, p) => s + (parseFloat(p.surface) || 0), 0) * 100) / 100;
+    const piecesInterieures = piecesSource.filter(p => !zonesPaysagisme.has((p && p.nom) || p));
+    const zonesExterieures = piecesSource.filter(p => zonesPaysagisme.has((p && p.nom) || p));
+    const nbPieces = piecesInterieures.length;
+    const nbZones = zonesExterieures.length;
+    const surfacePays = Math.round(zonesExterieures.reduce((s, p) => s + (parseFloat(p.surface) || 0), 0) * 100) / 100;
+    const paysOnly = nbZones > 0 && nbPieces === 0;
+    const nb = paysOnly ? nbZones : nbPieces;
+    const surfaceForfait = paysOnly ? surfacePays : surfaceTotale;
     const prix = paysOnly
-      ? Math.min(1200, Math.max(120, Math.round(nb * 65 + surfaceTotale * 0.5)))
-      : Math.min(850, Math.max(85, Math.round(nb * 45 + surfaceTotale * 0.8)));
+      ? Math.min(1200, Math.max(120, Math.round(nbZones * 65 + surfacePays * 0.5)))
+      : Math.min(850, Math.max(85, Math.round(nbPieces * 45 + surfaceTotale * 0.8)));
     const designation = paysOnly
-      ? 'Préparation chantier extérieur — Balisage, protections, nettoyage fin de chantier (' + nb + ' zone(s), ' + surfaceTotale + 'm²)'
-      : 'Protection chantier — Polyane, scotch, protections + installation et repli (' + nb + ' pièce(s), ' + surfaceTotale + 'm²)';
+      ? 'Préparation chantier extérieur — Balisage, protections, nettoyage fin de chantier (' + nb + ' zone(s), ' + surfaceForfait + 'm²)'
+      : 'Protection chantier — Polyane, scotch, protections + installation et repli (' + nb + ' pièce(s), ' + surfaceForfait + 'm²)';
     const sec = {
       key: 'preparation_chantier',
       icon: paysOnly ? '🌿' : '🛡️',
