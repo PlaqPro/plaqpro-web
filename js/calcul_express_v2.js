@@ -464,7 +464,7 @@ const CalcExpressV2 = {
       'Reprise fissures': 'OUV_ENDUIT_LISSAGE',
       'Chape béton': 'OUV_DALLE_BETON_12CM',
       'Cloison briques': 'OUV_MUR_PARPAING_20',
-      'Cloison brique de verre': 'OUV_MUR_PARPAING_20',
+      'Cloison brique de verre': 'OUV_MURET_BETON',
       'Mur porteur': 'OUV_MUR_PARPAING_20',
       'Doublage': 'OUV_MUR_PARPAING_20',
       'Soubassement': 'OUV_MUR_PARPAING_20',
