@@ -32,10 +32,10 @@
   ];
 
   const PRIX_HAIE_SUPPRESSION_HAUTEUR = [
-    { maxH: 1.5, prixUnit: 12 },
-    { maxH: 3,   prixUnit: 22 },
-    { maxH: 5,   prixUnit: 38 },
-    { maxH: 99,  prixUnit: 65 },
+    { maxH: 1.5, prixUnit: 35 },
+    { maxH: 3,   prixUnit: 55 },
+    { maxH: 5,   prixUnit: 95 },
+    { maxH: 99,  prixUnit: 145 },
   ];
 
   const autoSelf = (libelle, unite, prixUnit, quantiteMode, options) =>
@@ -381,7 +381,7 @@
         opt('Dessouchage', 'u', 85),
         opt('Rebouchage fosse', 'u', 35),
       ]), PRIX_ARBRE_HAUTEUR), 'Pour arbustes, buissons ou petits sujets isolés — pas pour une haie linéaire'),
-      p('PAYS_S9_010', 9, 'Suppression haie linéaire', 'ml', 0, 35, withPrixParHauteur(pkg([
+      p('PAYS_S9_010', 9, 'Suppression haie linéaire', 'ml', 0, 95, withPrixParHauteur(pkg([
         line('Suppression haie linéaire', 'ml', 18, Q.longueur),
         line('Dessouchage haie', 'ml', 22, Q.longueur),
         line('Évacuation déchets verts', 'm³', 45, Q.volume),

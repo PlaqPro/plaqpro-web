@@ -79,7 +79,7 @@ const DocPrint = {
     const montantTVA = doc.montantTVA || 0;
     const totalTTC   = doc.totalTTC   || 0;
     const tva        = doc.tva        || 0;
-    const tauxTVA    = Math.round(tva * 100);
+    const tauxTVA    = tva > 1 ? Math.round(tva) : Math.round(tva * 100);
     const typeDoc    = isFacture ? 'FACTURE' : 'DEVIS';
 
     const accentColor  = isFacture ? '#2563EB' : '#4F8EF7';
