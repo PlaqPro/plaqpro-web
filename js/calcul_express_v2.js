@@ -153,11 +153,15 @@ const CalcExpressV2 = {
                   'Talus', 'Terrasse', 'Zone boisée'],
     maconnerie_int: {
       pieces: ['Chambre', 'Couloir', 'Cuisine', 'Entrée', 'Salle de bain', 'Salon', 'Séjour'],
-      prestations: ['Cloison briques', 'Cloison brique de verre', 'Mur porteur', 'Doublage'],
+      prestations: ['Cloison placo standard', 'Cloison brique / carreau plâtre', 'Cloison brique de verre',
+                    'Doublage isolant', 'Enduit projeté', 'Ragréage sol', 'Démolition cloison',
+                    'Reprise fissures', 'Chape béton'],
     },
     maconnerie_ext: {
       zones: ['Façade', 'Mur de clôture', 'Mur pignon', 'Soubassement', 'Terrasse béton'],
-      prestations: ['Enduit façade', 'Ravalement', 'Parpaing', 'Brique de parement'],
+      prestations: ['Cloison placo standard', 'Cloison brique / carreau plâtre', 'Cloison brique de verre',
+                    'Doublage isolant', 'Enduit projeté', 'Ragréage sol', 'Démolition cloison',
+                    'Reprise fissures', 'Chape béton'],
     },
     electricite: ['Cave', 'Chambre 1', 'Chambre 2', 'Cuisine', 'Extérieur',
                   'Garage', 'Salle de bain', 'Salon', 'Séjour', 'Tableau principal',
@@ -166,6 +170,18 @@ const CalcExpressV2 = {
                   'Garage', 'Salle de bain 1', 'Salle de bain 2', 'WC'],
     revetement:  null,
   },
+
+  TACHES_MACONNERIE: [
+    'Cloison placo standard',
+    'Cloison brique / carreau plâtre',
+    'Cloison brique de verre',
+    'Doublage isolant',
+    'Enduit projeté',
+    'Ragréage sol',
+    'Démolition cloison',
+    'Reprise fissures',
+    'Chape béton',
+  ],
 
   SECTIONS_PAR_ZONE: {
     'Aire de jeux':       [1, 8, 9],
@@ -388,16 +404,25 @@ const CalcExpressV2 = {
           ? {
               pieces: this._filtrerPiecesPourCorps(corpsId, ['Cage d\'escalier', 'Cloison de séparation', 'Couloir', 'Hall d\'entrée',
                        'Local technique', 'Mur coupe-feu', 'Mur porteur', 'Sas d\'entrée']),
-              prestations: ['Cloison briques', 'Cloison brique de verre', 'Mur porteur', 'Doublage'],
+              prestations: ['Cloison placo standard', 'Cloison brique / carreau plâtre', 'Cloison brique de verre',
+                            'Doublage isolant', 'Enduit projeté', 'Ragréage sol', 'Démolition cloison',
+                            'Reprise fissures', 'Chape béton'],
             }
           : {
               zones: ['Bardage façade', 'Clôture périmétrique', 'Dalle extérieure',
                       'Façade principale', 'Mur de soutènement', 'Portail entrée',
                       'Quai de chargement', 'Voirie interne'],
-              prestations: ['Enduit façade', 'Ravalement', 'Parpaing', 'Brique de parement'],
+              prestations: ['Cloison placo standard', 'Cloison brique / carreau plâtre', 'Cloison brique de verre',
+                            'Doublage isolant', 'Enduit projeté', 'Ragréage sol', 'Démolition cloison',
+                            'Reprise fissures', 'Chape béton'],
             };
       }
-      return this._filtrerPiecesPourCorps(corpsId, this.LIEUX_CORPS[key] || []);
+      const cfg = this.LIEUX_CORPS[key] || {};
+      const lieux = cfg.pieces || cfg.zones || [];
+      return Object.assign({}, cfg, {
+        pieces: cfg.pieces ? this._filtrerPiecesPourCorps(corpsId, lieux) : undefined,
+        zones: cfg.zones ? this._filtrerPiecesPourCorps(corpsId, lieux) : undefined,
+      });
     }
     if (corpsId === 'electricite' || corpsId === 'revetement') {
       const piecesChantier = this._dedupeBy(
@@ -430,6 +455,14 @@ const CalcExpressV2 = {
 
   _getOuvragePrestation(prestation) {
     const map = {
+      'Cloison placo standard': 'OUV_CLOISON_BA13_M48',
+      'Cloison brique / carreau plâtre': 'OUV_MUR_PARPAING_20',
+      'Doublage isolant': 'OUV_DOUBLAGE_LAINE_BA13',
+      'Enduit projeté': 'OUV_ENDUIT_LISSAGE',
+      'Ragréage sol': 'OUV_DALLE_BETON_12CM',
+      'Démolition cloison': 'OUV_MUR_PARPAING_20',
+      'Reprise fissures': 'OUV_ENDUIT_LISSAGE',
+      'Chape béton': 'OUV_DALLE_BETON_12CM',
       'Cloison briques': 'OUV_MUR_PARPAING_20',
       'Cloison brique de verre': 'OUV_MUR_PARPAING_20',
       'Mur porteur': 'OUV_MUR_PARPAING_20',
@@ -443,6 +476,23 @@ const CalcExpressV2 = {
       'Terrasse béton': 'OUV_DALLE_BETON_12CM',
     };
     return map[prestation] || null;
+  },
+
+  _getTachesMaconnerie(piece) {
+    if (!piece) return [];
+    const source = Array.isArray(piece.tachesMaconnerie) ? piece.tachesMaconnerie
+      : (Array.isArray(piece.tachesMaponnerie) ? piece.tachesMaponnerie
+        : (piece.tacheMaconnerie || piece.prestation ? [piece.tacheMaconnerie || piece.prestation] : []));
+    return this._dedupeBy(source.filter(Boolean), t => String(t || '').trim().toLowerCase());
+  },
+
+  _setTachesMaconnerie(piece, taches) {
+    if (!piece) return;
+    const liste = this._dedupeBy((taches || []).filter(Boolean), t => String(t || '').trim().toLowerCase());
+    piece.tachesMaconnerie = liste;
+    piece.tachesMaponnerie = liste;
+    piece.tacheMaconnerie = liste[0] || '';
+    piece.prestation = liste[0] || '';
   },
 
   _getOuvragesRevetement() {
@@ -513,6 +563,9 @@ const CalcExpressV2 = {
           ? piece.tachesPaysagisme.filter(Boolean)
           : (piece.tachePaysagisme ? [piece.tachePaysagisme] : []);
         piece.tachePaysagisme = piece.tachesPaysagisme[0] || piece.tachePaysagisme || '';
+      }
+      if (piece.corps === 'maconnerie') {
+        this._setTachesMaconnerie(piece, this._getTachesMaconnerie(piece));
       }
       if ((piece.corps === 'electricite' || piece.corps === 'plomberie') &&
           parseFloat(piece.surface) > 0 &&
@@ -1214,8 +1267,9 @@ const CalcExpressV2 = {
       const badge = valeurAffichee
         ? `<span style="background:var(--success,#22c55e);color:#fff;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:8px">✅ ${valeurAffichee}</span>`
         : '';
-      const prestBadge = p.prestation
-        ? `<span style="background:var(--accent,#4f8ef7);color:#fff;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:4px">${this._esc(p.prestation)}</span>`
+      const tachesMaconnerie = this._getTachesMaconnerie(p);
+      const prestBadge = tachesMaconnerie.length
+        ? `<span style="background:var(--accent,#4f8ef7);color:#fff;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:4px">${this._esc(tachesMaconnerie.length > 1 ? tachesMaconnerie.length + ' tâches' : tachesMaconnerie[0])}</span>`
         : '';
       const tacheIds = this._getPaysagismeIds(p);
       const tacheBadge = tacheIds.length
@@ -1229,12 +1283,15 @@ const CalcExpressV2 = {
       if (isMaconnerie) {
         const ouvert = this._pieceMaconnerieSelection === nom;
         const selectPrestation = ouvert ? `
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
-            <select id="cex-maconnerie-prestation" data-cex-prestation-piece="${this._esc(nom)}" style="flex:1;min-width:220px;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:var(--bg-card,#1e2530);color:#fff;font-size:.9rem;box-sizing:border-box">
-              <option value="">-- Prestation à chiffrer --</option>
-              ${prestationsMaconnerie.map(prestation => '<option value="' + this._esc(prestation) + '" ' + (sel && sel.prestation === prestation ? 'selected' : '') + '>' + prestation + '</option>').join('')}
-            </select>
-            ${this._btn('Chiffrer', 'maconnerie-prestation-valider')}
+          <div data-cex-maconnerie-picker="${this._esc(nom)}" style="margin-top:10px">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;margin-bottom:10px">
+              ${prestationsMaconnerie.map(prestation => `
+                <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid rgba(79,142,247,.25);background:rgba(255,255,255,.04);cursor:pointer;font-size:.86rem;color:var(--text,#fff)">
+                  <input type="checkbox" name="cex-maconnerie-check" data-cex-maconnerie-piece="${this._esc(nom)}" value="${this._esc(prestation)}" ${tachesMaconnerie.includes(prestation) ? 'checked' : ''} style="accent-color:var(--accent,#4f8ef7)">
+                  <span>${this._esc(prestation)}</span>
+                </label>`).join('')}
+            </div>
+            ${this._btn('Chiffrer', 'maconnerie-prestation-valider').replace('<button ', '<button id="cex-maconnerie-valider" data-cex-maconnerie-piece="' + this._esc(nom) + '" ' + (tachesMaconnerie.length ? '' : 'disabled ') )}
           </div>` : '';
         return `<div style="padding:12px 16px;border-radius:8px;border:2px solid ${sel ? 'var(--accent,#2563eb)' : 'var(--border,#e2e8f0)'};background:${sel ? 'rgba(37,99,235,.06)' : 'var(--bg-card,#1e2530)'}">
           <div data-cex-piece="${this._esc(nom)}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between">
@@ -1389,7 +1446,7 @@ const CalcExpressV2 = {
           <span style="font-size:1.4rem">${corps ? corps.icone : ''}</span>
           <div>
             <h2 style="margin:0;font-size:1rem;font-weight:700">${this._esc(p.nom)}</h2>
-            <div style="font-size:.8rem;color:var(--text-secondary,#666)">${corps ? corps.label : ''}${p.prestation ? ' · ' + this._esc(p.prestation) : ''}</div>
+            <div style="font-size:.8rem;color:var(--text-secondary,#666)">${corps ? corps.label : ''}${this._getTachesMaconnerie(p).length ? ' · ' + this._esc(this._getTachesMaconnerie(p).join(', ')) : (p.prestation ? ' · ' + this._esc(p.prestation) : '')}</div>
           </div>
           ${total > 0 ? `<span style="margin-left:auto;font-size:.9rem;color:#16a34a;font-weight:700">${total} point${total>1?'s':''}</span>` : ''}
           <div style="${total > 0 ? '' : 'margin-left:auto;'}display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
@@ -1435,7 +1492,7 @@ const CalcExpressV2 = {
     const isRevetement = p.corps === 'revetement';
     const isMaconCloison = p.corps === 'maconnerie' &&
       (this._corpsConfig['maconnerie'] || {}).lieuxKey === 'maconnerie_int' &&
-      (!p.prestation || /cloison|brique/i.test(p.prestation));
+      (!this._getTachesMaconnerie(p).length || this._getTachesMaconnerie(p).some(t => /cloison|brique/i.test(t)));
     const needsHSP  = isPlaco || isMaconCloison;
     const paysIdsActuels = this._getPaysagismeIds(p);
     const paysCodeActuel = this._getPaysagismePrimaryId(p);
@@ -2121,8 +2178,8 @@ const CalcExpressV2 = {
 
   // ── Calcul prix réel via BddV2 (fallback forfait) ────────
   _calcCorps(corpsId, surface, piece) {
-    if (corpsId === 'maconnerie' && piece && piece.prestation) {
-      const ouvragePrestation = this._getOuvragePrestation(piece.prestation);
+    if (corpsId === 'maconnerie' && piece && (piece.prestation || piece.tacheMaconnerie)) {
+      const ouvragePrestation = this._getOuvragePrestation(piece.prestation || piece.tacheMaconnerie);
       if (ouvragePrestation && typeof BddV2 !== 'undefined' && BddV2.estChargee()) {
         return BddV2.calcPrixVente(ouvragePrestation, surface);
       }
@@ -2407,6 +2464,17 @@ const CalcExpressV2 = {
         // Autres corps : quantite selon l'unite de l'ouvrage
         const quantite = this._getQuantiteDevis(corpsId, p);
         if (!quantite) return;
+        if (corpsId === 'maconnerie' && this._getTachesMaconnerie(p).length) {
+          this._getTachesMaconnerie(p).forEach(tache => {
+            const pieceTache = Object.assign({}, p, { prestation: tache, tacheMaconnerie: tache });
+            const r = this._calcCorps(corpsId, quantite, pieceTache);
+            coutCorps += r.coutMat + r.coutMO;
+            gainCorps += r.gain;
+            const uniteAff = ' ' + this._getUniteOuvrage(corpsId, p);
+            detail.push(p.nom + ' · ' + tache + ' · ' + quantite + uniteAff + ' → ' + fmt(r.prixVente));
+          });
+          return;
+        }
         const r = this._calcCorps(corpsId, quantite, p);
         coutCorps += r.coutMat + r.coutMO;
         gainCorps += r.gain;
@@ -2529,6 +2597,17 @@ const CalcExpressV2 = {
       } else {
         btnValiderMetrage.disabled = false;
       }
+    }
+
+    const maconnerieChecks = this._container.querySelectorAll('input[name="cex-maconnerie-check"]');
+    if (maconnerieChecks.length) {
+      const updateMaconnerieValider = () => {
+        const btn = this._container.querySelector('#cex-maconnerie-valider');
+        if (!btn) return;
+        btn.disabled = !Array.from(maconnerieChecks).some(cb => cb.checked);
+      };
+      maconnerieChecks.forEach(cb => cb.addEventListener('change', updateMaconnerieValider, { signal }));
+      updateMaconnerieValider();
     }
 
     this._container.querySelectorAll('[data-accord-toggle]').forEach(btn => {
@@ -2655,7 +2734,7 @@ const CalcExpressV2 = {
               s = qte;
             } else if (p && p.corps === 'paysagisme' && typePays === 'm3') {
               s = Math.round(l * w * prof * 100) / 100;
-            } else if (p && p.corps === 'maconnerie' && /cloison|brique/i.test(p.prestation || '') && hsp > 0) {
+            } else if (p && p.corps === 'maconnerie' && this._getTachesMaconnerie(p).some(t => /cloison|brique/i.test(t)) && hsp > 0) {
               s = Math.round(l * hsp * 100) / 100;
             } else {
               s = Math.round(l * w * 100) / 100;
@@ -2774,6 +2853,34 @@ const CalcExpressV2 = {
             pcs.forEach(p => {
               if (corpsId === 'paysagisme' && this._getPaysagismeIds(p).length) {
                 this._ajouterPackagePaysagismeDevis(p, corps);
+                return;
+              }
+              if (corpsId === 'maconnerie' && this._getTachesMaconnerie(p).length) {
+                const quantiteDevis = this._getQuantiteDevis(corpsId, p);
+                if (!quantiteDevis) return;
+                this._getTachesMaconnerie(p).forEach(tache => {
+                  const pieceTache = Object.assign({}, p, { prestation: tache, tacheMaconnerie: tache });
+                  const r = this._calcCorps(corpsId, quantiteDevis, pieceTache);
+                  const dims = [];
+                  if (p.longueur && p.largeur) dims.push(p.longueur + 'm × ' + p.largeur + 'm');
+                  if (p.hsp) dims.push('HSP ' + p.hsp + 'm');
+                  dims.push(tache);
+                  if (r.coutMat > 0 || r.coutMO > 0) dims.push('(Mat+Mo)');
+                  const designation = this._buildDesignationDevis(corpsId, pieceTache, dims);
+                  const uniteDevis = this._getUniteOuvrage(corpsId, p);
+                  const nbLignesAvant = (() => {
+                    const s = DevisMulti._state.sections.find(s => s.key === corpsId);
+                    return s ? s.lignes.length : 0;
+                  })();
+                  DevisMulti._ajouterSectionAvecSurface(
+                    corpsId, corps.icone || '🔧', corps.label,
+                    quantiteDevis, uniteDevis, designation
+                  );
+                  const sec = DevisMulti._state.sections.find(s => s.key === corpsId);
+                  if (sec && sec.lignes.length > nbLignesAvant) {
+                    sec.lignes[nbLignesAvant].prix = quantiteDevis > 0 ? Math.round(r.prixVente / quantiteDevis) : 0;
+                  }
+                });
                 return;
               }
               const quantiteDevis = this._getQuantiteDevis(corpsId, p);
@@ -3030,17 +3137,18 @@ const CalcExpressV2 = {
         if (action === 'corps-suivant-pieces') { this._corpsEnCours++; this._renderEtape('pieces'); }
         if (action === 'pieces-terminer')      { this._renderEtape('resume'); return; }
         if (action === 'maconnerie-prestation-valider') {
-          const select = this._container.querySelector('#cex-maconnerie-prestation');
-          const prestation = (select ? select.value : '').trim();
-          const nom = select ? select.dataset.cexPrestationPiece : '';
+          const nom = btn.dataset.cexMaconneriePiece || '';
+          const checks = Array.from(this._container.querySelectorAll('input[name="cex-maconnerie-check"]'))
+            .filter(cb => cb.dataset.cexMaconneriePiece === nom);
+          const prestations = checks.filter(cb => cb.checked).map(cb => cb.value).filter(Boolean);
           const corpsId = this._corpsActifs[this._corpsEnCours];
-          if (!prestation) { if (typeof App !== 'undefined' && App.toast) App.toast('Choisissez une prestation de maçonnerie', 'warning'); return; }
+          if (!prestations.length) { if (typeof App !== 'undefined' && App.toast) App.toast('Choisissez au moins une tâche de maçonnerie', 'warning'); return; }
           let pieceMac = this._pieces.find(p => p.nom === nom && p.corps === corpsId);
           if (!pieceMac) {
             pieceMac = { nom, corps: corpsId, surface: null, mode: 'rectangle', quantites: {} };
             this._pieces.push(pieceMac);
           }
-          pieceMac.prestation = prestation;
+          this._setTachesMaconnerie(pieceMac, prestations);
           this._pieceMaconnerieSelection = nom;
           this._pieceEnCours = pieceMac;
           this._renderEtape('metrage');
