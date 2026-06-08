@@ -6,13 +6,22 @@
  */
 /* global App, DB, BddV2 */
 
+function getTvaRate(typeChantier) {
+  if (!typeChantier) return 20;
+  const t = typeChantier.toLowerCase();
+  if (t.includes('neuf') || t.includes('promotion')) return 20;
+  if (t.includes('energ') || t.includes('5.5')) return 5.5;
+  if (t.includes('auto') || t.includes('liquid')) return 0;
+  return 10;
+}
+
 const CalcExpressV2 = {
 
   // ── État ──────────────────────────────────────────────────
   _containerId:   null,
   _container:     null,
   _etape:         null,
-  _chantier:      { nom: '', clientId: null, adresse: '', ville: '', codePostal: '' },
+  _chantier:      { nom: '', clientId: null, adresse: '', ville: '', codePostal: '', typeChantier: '' },
   _profil:        null,
   _sousTraitants: [],
   _corpsActifs:   [],
@@ -1012,6 +1021,15 @@ const CalcExpressV2 = {
           `)}
           ${row('Ville', `
             <input id="cex-ville" type="text" placeholder="ex : Lyon" value="${this._esc(this._chantier.ville || '')}" style="${inputStyle}">
+          `)}
+          ${row('Type de chantier', `
+            <select id="cex-type-chantier" style="${inputStyle}">
+              <option value="" ${!this._chantier.typeChantier ? 'selected' : ''}>-- Choisir le type --</option>
+              <option value="renovation" ${this._chantier.typeChantier === 'renovation' ? 'selected' : ''}>Rénovation — TVA 10 %</option>
+              <option value="neuf" ${this._chantier.typeChantier === 'neuf' ? 'selected' : ''}>Construction neuve — TVA 20 %</option>
+              <option value="energetique" ${this._chantier.typeChantier === 'energetique' ? 'selected' : ''}>Amélioration énergétique — TVA 5,5 %</option>
+              <option value="auto-liquidee" ${this._chantier.typeChantier === 'auto-liquidee' ? 'selected' : ''}>Auto-liquidée — Net à payer</option>
+            </select>
           `)}
         </div>
         <div style="display:flex;justify-content:space-between;margin-top:24px">
@@ -2159,7 +2177,7 @@ const CalcExpressV2 = {
       key: 'preparation_chantier',
       icon: paysOnly ? '🌿' : '🛡️',
       titre: paysOnly ? 'Préparation chantier extérieur' : 'Protection chantier',
-      tva: paysOnly ? 10 : 20,
+      tva: paysOnly ? getTvaRate('renovation') : getTvaRate(this._chantier && this._chantier.typeChantier || ''),
       lignes: [{
         id: DevisMulti._uid(),
         ref: '',
@@ -2240,7 +2258,7 @@ const CalcExpressV2 = {
         key: corpsId,
         icon: (corps && corps.icone) || '🔧',
         titre: (corps && corps.label) || corpsId,
-        tva: 10,
+        tva: getTvaRate(this._chantier && this._chantier.typeChantier || ''),
         lignes: [],
         sid: DevisMulti._uid(),
       };
@@ -2364,7 +2382,7 @@ const CalcExpressV2 = {
     const sectionKey = 'paysagisme';
     let sec = DevisMulti._state.sections.find(s => s.key === sectionKey);
     if (!sec) {
-      sec = { key: sectionKey, icon: corps.icone || '🌿', titre: corps.label || 'Paysagisme', tva: 10, lignes: [], sid: DevisMulti._uid() };
+      sec = { key: sectionKey, icon: corps.icone || '🌿', titre: corps.label || 'Paysagisme', tva: getTvaRate(this._chantier && this._chantier.typeChantier || ''), lignes: [], sid: DevisMulti._uid() };
       DevisMulti._state.sections.push(sec);
     }
     const prefix = piece.nom;
@@ -2636,6 +2654,7 @@ const CalcExpressV2 = {
           const adresse = ((this._container.querySelector('#cex-adresse') || {}).value || '').trim();
           const codePostal = ((this._container.querySelector('#cex-code-postal') || {}).value || '').trim();
           const ville = ((this._container.querySelector('#cex-ville') || {}).value || '').trim();
+          const typeChantier = ((this._container.querySelector('#cex-type-chantier') || {}).value || '').trim();
           if (!client) { if (typeof App !== 'undefined' && App.toast) App.toast('Veuillez sélectionner un client avant de continuer', 'warning'); return; }
           if (!nom) { if (typeof App !== 'undefined' && App.toast) App.toast('Saisissez un nom de chantier', 'warning'); return; }
           const cliSelectionne = this._getClientById(client);
@@ -2643,7 +2662,7 @@ const CalcExpressV2 = {
             ? (cliSelectionne.type === 'particulier' ? 'particulier' : 'pro')
             : null;
           if (chantierId) {
-            this._chantier = { nom, clientId: client, chantierId: this._normalizeId(chantierId), adresse, codePostal, ville };
+            this._chantier = { nom, clientId: client, chantierId: this._normalizeId(chantierId), adresse, codePostal, ville, typeChantier };
             if (!this._profil) {
               if (cliSelectionne && !cliSelectionne.type) {
                 if (typeof App !== 'undefined' && App.toast) App.toast("⚠️ Ce client n'a pas de type renseigné — veuillez compléter sa fiche", 'warning');
@@ -2655,7 +2674,7 @@ const CalcExpressV2 = {
             return;
           }
           const nouveau = DB.addChantier({ nom, clientId: client, adresse, codePostal, cp: codePostal, ville });
-          this._chantier = { nom, clientId: client, chantierId: nouveau ? this._normalizeId(nouveau.id) : null, adresse, codePostal, ville };
+          this._chantier = { nom, clientId: client, chantierId: nouveau ? this._normalizeId(nouveau.id) : null, adresse, codePostal, ville, typeChantier };
           this._renderEtape('profil');
         }
         if (action === 'chantier-annuler') { if (typeof App !== 'undefined') App.navigate('dashboard'); return; }
