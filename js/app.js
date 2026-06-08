@@ -2429,6 +2429,35 @@ const Pages = {
     `);
   },
 
+  _bindCodePostalVille(root, cpSelector, villeSelector) {
+    const cpInput = root.querySelector(cpSelector);
+    const villeInput = root.querySelector(villeSelector);
+    if (!cpInput || !villeInput) return;
+    const listId = cpInput.id + '-villes';
+    let datalist = root.querySelector('#' + listId);
+    if (!datalist) {
+      datalist = document.createElement('datalist');
+      datalist.id = listId;
+      root.appendChild(datalist);
+      villeInput.setAttribute('list', listId);
+    }
+    villeInput.addEventListener('input', () => { villeInput.dataset.userEdited = '1'; });
+    cpInput.addEventListener('input', () => {
+      cpInput.dataset.userEdited = '1';
+      const cp = cpInput.value.replace(/\D/g, '').slice(0, 5);
+      if (cpInput.value !== cp) cpInput.value = cp;
+      if (cp.length !== 5 || typeof fetch === 'undefined') return;
+      fetch('https://geo.api.gouv.fr/communes?codePostal=' + cp + '&fields=nom&limit=5')
+        .then(r => r.ok ? r.json() : [])
+        .then(villes => {
+          const noms = (Array.isArray(villes) ? villes : []).map(v => v.nom).filter(Boolean);
+          datalist.innerHTML = noms.map(n => '<option value="' + esc(n) + '"></option>').join('');
+          if (noms.length === 1 && !villeInput.dataset.userEdited) villeInput.value = noms[0];
+        })
+        .catch(() => {});
+    });
+  },
+
   _formClient(c = {}) {
     const d = document.createElement('div');
     d.innerHTML = `
@@ -2461,6 +2490,7 @@ const Pages = {
       <div class="form-group"><label class="form-label">Notes</label>
         <input class="form-control" id="f-notes-client" value="${c.notes || ''}" placeholder="Informations complémentaires…"></div>
     `;
+    this._bindCodePostalVille(d, '#f-cp', '#f-ville');
     return d;
   },
 
@@ -2670,6 +2700,12 @@ const Pages = {
       <div class="form-group"><label class="form-label">Adresse du chantier</label>
         <input class="form-control" id="f-adr-ch" value="${c.adresse || ''}"></div>
       <div class="form-row">
+        <div class="form-group"><label class="form-label">Code postal</label>
+          <input class="form-control" id="f-cp-ch" value="${c.codePostal || c.cp || ''}" maxlength="5" inputmode="numeric"></div>
+        <div class="form-group"><label class="form-label">Ville</label>
+          <input class="form-control" id="f-ville-ch" value="${c.ville || ''}"></div>
+      </div>
+      <div class="form-row">
         <div class="form-group"><label class="form-label">Date début</label>
           <input class="form-control" type="date" id="f-debut" value="${c.dateDebut || ''}"></div>
         <div class="form-group"><label class="form-label">Date fin prévue</label>
@@ -2682,6 +2718,23 @@ const Pages = {
       <div class="form-group"><label class="form-label">Notes</label>
         <textarea class="form-control" id="f-notes">${c.notes || ''}</textarea></div>
     `;
+    this._bindCodePostalVille(d, '#f-cp-ch', '#f-ville-ch');
+    const clientSelect = d.querySelector('#f-client');
+    const adrInput = d.querySelector('#f-adr-ch');
+    const cpInput = d.querySelector('#f-cp-ch');
+    const villeInput = d.querySelector('#f-ville-ch');
+    [adrInput, cpInput, villeInput].forEach(inp => {
+      if (inp) inp.addEventListener('input', () => { inp.dataset.userEdited = '1'; });
+    });
+    if (clientSelect) {
+      clientSelect.addEventListener('change', () => {
+        const client = DB.clients.find(cl => String(cl.id) === String(clientSelect.value));
+        if (!client) return;
+        if (adrInput && !adrInput.dataset.userEdited && !adrInput.value.trim()) adrInput.value = client.adresse || '';
+        if (cpInput && !cpInput.dataset.userEdited && !cpInput.value.trim()) cpInput.value = client.codePostal || client.cp || '';
+        if (villeInput && !villeInput.dataset.userEdited && !villeInput.value.trim()) villeInput.value = client.ville || '';
+      });
+    }
     return d;
   },
 
@@ -2690,13 +2743,15 @@ const Pages = {
     const nom     = document.getElementById('f-nom-ch')?.value || '';
     const client  = document.getElementById('f-client')?.value || '';
     const adr     = document.getElementById('f-adr-ch')?.value || '';
+    const cp      = document.getElementById('f-cp-ch')?.value || '';
+    const ville   = document.getElementById('f-ville-ch')?.value || '';
     const debut   = document.getElementById('f-debut')?.value || '';
     const fin     = document.getElementById('f-fin')?.value || '';
     const statut  = document.getElementById('f-statut')?.value || '';
     const notes   = document.getElementById('f-notes')?.value || '';
 
     // Recréer le formulaire avec le bon type
-    const chantierPartiel = { typeChantier: type, nom, clientId: parseInt(client), adresse: adr, dateDebut: debut, dateFin: fin, statut, notes };
+    const chantierPartiel = { typeChantier: type, nom, clientId: parseInt(client), adresse: adr, codePostal: cp, cp, ville, dateDebut: debut, dateFin: fin, statut, notes };
     const modalBody = document.getElementById('modal-body');
     if (!modalBody) return;
     modalBody.innerHTML = '';
@@ -2709,6 +2764,9 @@ const Pages = {
     if (!nom || !clientId) { App.toast('Nom et client obligatoires', 'error'); return; }
     const data = {
       clientId, nom, adresse: document.getElementById('f-adr-ch').value,
+      codePostal: document.getElementById('f-cp-ch')?.value || '',
+      cp: document.getElementById('f-cp-ch')?.value || '',
+      ville: document.getElementById('f-ville-ch')?.value || '',
       dateDebut: document.getElementById('f-debut').value,
       dateFin:   document.getElementById('f-fin').value,
       statut:    document.getElementById('f-statut').value,

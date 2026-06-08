@@ -12,13 +12,14 @@ const CalcExpressV2 = {
   _containerId:   null,
   _container:     null,
   _etape:         null,
-  _chantier:      { nom: '', clientId: null, adresse: '' },
+  _chantier:      { nom: '', clientId: null, adresse: '', ville: '', codePostal: '' },
   _profil:        null,
   _sousTraitants: [],
   _corpsActifs:   [],
   _pieces:        [],
   _resultats:     {},
   _bindController: null,
+  _modeModif: false,
 
   // ── Corps disponibles ─────────────────────────────────────
   CORPS: [
@@ -463,7 +464,7 @@ const CalcExpressV2 = {
       this._chiffrageCharge = false;
       return;
     }
-    this._chantier      = { nom: '', clientId: null, adresse: '' };
+    this._chantier      = { nom: '', clientId: null, adresse: '', ville: '', codePostal: '' };
     this._profil        = null;
     this._sousTraitants = [];
     this._corpsActifs   = [];
@@ -475,6 +476,7 @@ const CalcExpressV2 = {
     this._pieceEnCours  = null;
     this._corpsConfig   = {};
     this._chiffrageEnModification = false;
+    this._modeModif = false;
     this._renderEtape('chantier');
   },
 
@@ -485,7 +487,7 @@ const CalcExpressV2 = {
       : liste[0];
     if (!c) return false;
     // Restaurer l'état complet
-    this._chantier    = c.chantier    || { nom:'', clientId:null, adresse:'' };
+    this._chantier    = c.chantier    || { nom:'', clientId:null, adresse:'', ville:'', codePostal:'' };
     this._chantier.clientId = this._normalizeId(this._chantier.clientId || c.clientId);
     if (!this._chantier.clientId && this._chantier.chantierId && typeof DB !== 'undefined' && DB.getChantier) {
       const ch = DB.getChantier(this._normalizeId(this._chantier.chantierId));
@@ -517,14 +519,24 @@ const CalcExpressV2 = {
     this._corpsConfig = c.corpsConfig || {};
     // Démarrer à l'étape résumé pour review
     this._corpsEnCours = 0;
+    this._pieceEnCours = null;
     this._etapeEnCours = 'resume';
     this._chiffrageCharge = true;
     this._chiffrageEnModification = true;
+    this._modeModif = true;
     return true;
   },
 
   // ── Dispatcher étapes ─────────────────────────────────────
   _renderEtape(etape) {
+    if (etape === 'corps') {
+      this._pieceEnCours = null;
+      this._corpsEnCours = Math.max(0, Math.min(this._corpsEnCours || 0, Math.max(0, (this._corpsActifs || []).length - 1)));
+    }
+    if (etape === 'pieces') {
+      this._pieceEnCours = null;
+      this._corpsEnCours = Math.max(0, Math.min(this._corpsEnCours || 0, Math.max(0, (this._corpsActifs || []).length - 1)));
+    }
     this._etape = etape;
     if (!this._container) return;
     const renders = {
@@ -555,6 +567,56 @@ const CalcExpressV2 = {
 
   _getClientIdChantier() {
     return this._normalizeId(this._chantier && this._chantier.clientId);
+  },
+
+  _getClientAdresseParts(client) {
+    if (!client) return { adresse: '', ville: '', codePostal: '' };
+    return {
+      adresse: client.adresse || '',
+      ville: client.ville || '',
+      codePostal: client.codePostal || client.cp || '',
+    };
+  },
+
+  _remplirAdresseClientSiVide(clientId) {
+    const client = clientId && typeof DB !== 'undefined' && DB.getClient ? DB.getClient(this._normalizeId(clientId)) : null;
+    const adr = this._getClientAdresseParts(client);
+    if (!adr.adresse && !adr.ville && !adr.codePostal) return;
+    const adresseInput = this._container.querySelector('#cex-adresse');
+    const villeInput = this._container.querySelector('#cex-ville');
+    const cpInput = this._container.querySelector('#cex-code-postal');
+    if (adresseInput && !adresseInput.dataset.userEdited && !adresseInput.value.trim()) adresseInput.value = adr.adresse;
+    if (villeInput && !villeInput.dataset.userEdited && !villeInput.value.trim()) villeInput.value = adr.ville;
+    if (cpInput && !cpInput.dataset.userEdited && !cpInput.value.trim()) cpInput.value = adr.codePostal;
+  },
+
+  _bindCodePostalVille(cpSelector, villeSelector) {
+    const cpInput = this._container ? this._container.querySelector(cpSelector) : null;
+    const villeInput = this._container ? this._container.querySelector(villeSelector) : null;
+    if (!cpInput || !villeInput) return;
+    const listId = cpInput.id + '-villes';
+    let datalist = this._container.querySelector('#' + listId);
+    if (!datalist) {
+      datalist = document.createElement('datalist');
+      datalist.id = listId;
+      this._container.appendChild(datalist);
+      villeInput.setAttribute('list', listId);
+    }
+    cpInput.addEventListener('input', () => {
+      cpInput.dataset.userEdited = '1';
+      const cp = cpInput.value.replace(/\D/g, '').slice(0, 5);
+      if (cpInput.value !== cp) cpInput.value = cp;
+      if (cp.length !== 5 || typeof fetch === 'undefined') return;
+      fetch('https://geo.api.gouv.fr/communes?codePostal=' + cp + '&fields=nom&limit=5')
+        .then(r => r.ok ? r.json() : [])
+        .then(villes => {
+          const noms = (Array.isArray(villes) ? villes : []).map(v => v.nom).filter(Boolean);
+          datalist.innerHTML = noms.map(n => '<option value="' + this._esc(n) + '"></option>').join('');
+          if (noms.length === 1 && !villeInput.dataset.userEdited) villeInput.value = noms[0];
+        })
+        .catch(() => {});
+    });
+    villeInput.addEventListener('input', () => { villeInput.dataset.userEdited = '1'; });
   },
 
   _dedupeBy(items, keyFn) {
@@ -829,6 +891,12 @@ const CalcExpressV2 = {
           ${row('Adresse', `
             <input id="cex-adresse" type="text" placeholder="ex : 12 rue des Acacias, Lyon" value="${this._esc(this._chantier.adresse)}" style="${inputStyle}">
           `)}
+          ${row('Code postal', `
+            <input id="cex-code-postal" type="text" inputmode="numeric" maxlength="5" placeholder="ex : 69003" value="${this._esc(this._chantier.codePostal || this._chantier.cp || '')}" style="${inputStyle}">
+          `)}
+          ${row('Ville', `
+            <input id="cex-ville" type="text" placeholder="ex : Lyon" value="${this._esc(this._chantier.ville || '')}" style="${inputStyle}">
+          `)}
         </div>
         <div style="display:flex;justify-content:space-between;margin-top:24px">
           ${this._btn('✕ Annuler', 'chantier-annuler', 'secondary')}
@@ -847,12 +915,18 @@ const CalcExpressV2 = {
           this._chantier.nom      = ch.nom || ch.libelle || '';
           this._chantier.clientId = this._normalizeId(ch.clientId);
           this._chantier.adresse  = ch.adresse || ch.ville || '';
+          this._chantier.ville = ch.ville || '';
+          this._chantier.codePostal = ch.codePostal || ch.cp || '';
           const clientSelect = document.getElementById('cex-client-select');
           const nomInput     = document.getElementById('cex-nom-chantier');
           const adresseInput = document.getElementById('cex-adresse');
+          const villeInput = document.getElementById('cex-ville');
+          const cpInput = document.getElementById('cex-code-postal');
           if (clientSelect) clientSelect.value = this._chantier.clientId || '';
           if (nomInput) nomInput.value = ch.nom || ch.libelle || '';
           if (adresseInput) adresseInput.value = ch.adresse || ch.ville || '';
+          if (villeInput) villeInput.value = this._chantier.ville || '';
+          if (cpInput) cpInput.value = this._chantier.codePostal || '';
           const cli = DB.getClient(parseInt(ch.clientId));
           if (cli && cli.type) {
             this._profil = cli.type === 'particulier' ? 'particulier' : 'pro';
@@ -864,6 +938,18 @@ const CalcExpressV2 = {
         }
       });
     }
+    const clientSelect = this._container.querySelector('#cex-client-select');
+    const adresseInput = this._container.querySelector('#cex-adresse');
+    const villeInput = this._container.querySelector('#cex-ville');
+    if (adresseInput) adresseInput.addEventListener('input', () => { adresseInput.dataset.userEdited = '1'; });
+    if (villeInput) villeInput.addEventListener('input', () => { villeInput.dataset.userEdited = '1'; });
+    if (clientSelect) {
+      clientSelect.addEventListener('change', () => {
+        this._chantier.clientId = this._normalizeId(clientSelect.value);
+        this._remplirAdresseClientSiVide(clientSelect.value);
+      });
+    }
+    this._bindCodePostalVille('#cex-code-postal', '#cex-ville');
     this._bind();
   },
 
@@ -993,6 +1079,52 @@ const CalcExpressV2 = {
       : [];
 
     const corpsId = corps.id;
+    if (corpsId === 'revetement') {
+      const piecesPlaco = this._filtrerPiecesPourCorps('plaquisterie', this._pieces
+        .filter(p => (p.corps === 'plaquisterie' || p.corps === 'platrerie') && (p.surface_sol || p.surface))
+        .map(p => ({ nom: p.nom, surface: p.surface_sol || p.surface || 0 })));
+      const source = piecesPlaco.length > 0
+        ? piecesPlaco
+        : this._filtrerPiecesPourCorps('revetement', (listePieces || []).map(nom => ({ nom, surface: 0 })));
+      const sourceDedup = this._dedupeBy(source, p => String((p && p.nom) || '').trim().toLowerCase());
+      const rows = sourceDedup.map(src => {
+        const exist = piecesExistantes.find(p => p.nom === src.nom);
+        const surface = exist ? (exist.surface || src.surface || '') : (src.surface || '');
+        const checked = (exist || piecesPlaco.length > 0) ? 'checked' : '';
+        return `<div style="display:grid;grid-template-columns:24px minmax(120px,1fr) 120px auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--border,#e2e8f0);border-radius:8px;background:var(--bg-card,#1e2530)">
+          <input type="checkbox" data-cex-revetement-check="${this._esc(src.nom)}" ${checked} style="accent-color:var(--accent,#4f8ef7)">
+          <span style="font-weight:600">${this._esc(src.nom)}</span>
+          <input type="number" min="0" step="0.1" data-cex-revetement-surface="${this._esc(src.nom)}" value="${this._esc(surface)}" style="width:100%;padding:8px;border-radius:7px;border:1px solid var(--border,#e2e8f0);background:rgba(255,255,255,.06);color:#fff">
+          <button type="button" data-cex-revetement-open="${this._esc(src.nom)}" style="padding:7px 10px;border-radius:7px;border:1px solid var(--accent,#4f8ef7);background:transparent;color:#fff;cursor:pointer">Ouvrage</button>
+        </div>`;
+      }).join('');
+      const progress = `${this._corpsEnCours + 1} / ${this._corpsActifs.length}`;
+      this._html(`
+        ${this._progressBar('pieces')}
+        ${this._card(`
+          <div style="position:sticky;top:0;z-index:10;background:var(--bg,#0f0f1a);padding:12px 16px;border-bottom:1px solid var(--border,rgba(255,255,255,.1));display:flex;align-items:center;gap:10px;margin:-16px -16px 16px">
+            <span style="font-size:1.5rem">${corps.icone}</span>
+            <h2 style="margin:0;font-size:1.1rem;font-weight:700">${corps.label} — Pièces à chiffrer</h2>
+            <span style="margin-left:auto;font-size:.8rem;color:var(--text-secondary,#666);background:var(--bg-secondary,#f8f9fa);padding:4px 10px;border-radius:20px">${progress}</span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+              ${this._btn('← Retour', 'pieces-retour', 'secondary')}
+              ${this._btn('↩ Retour corps de métiers', 'pieces-vers-corps')}
+            </div>
+          </div>
+          <p style="margin:0 0 16px;font-size:.85rem;color:var(--text-secondary,#666)">Cochez les pièces à traiter. Les surfaces Plâtrerie sont reprises automatiquement si disponibles.</p>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">${rows || '<p style="color:var(--text-secondary,#666);font-size:.85rem">Aucune pièce disponible</p>'}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+            ${this._btn('Valider les pièces revêtement', 'revetement-pieces-valider')}
+            <div style="display:flex;gap:8px">
+              ${this._corpsEnCours > 0 ? this._btn('← Corps précédent', 'corps-precedent', 'secondary') : ''}
+              ${this._corpsEnCours < this._corpsActifs.length - 1 ? this._btn('Corps suivant →', 'corps-suivant-pieces') : this._btn('Voir le résumé →', 'pieces-terminer')}
+            </div>
+          </div>
+        `)}
+      `);
+      this._bind();
+      return;
+    }
     const isUnite = ['electricite','plomberie'].includes(corpsId);
     const isMaconnerie = corps.id === 'maconnerie';
     const items = listePieces.map(nom => {
@@ -2300,6 +2432,8 @@ const CalcExpressV2 = {
           const nom     = ((this._container.querySelector('#cex-nom-chantier') || {}).value || '').trim();
           const client  = this._normalizeId((this._container.querySelector('#cex-client-select') || {}).value);
           const adresse = ((this._container.querySelector('#cex-adresse') || {}).value || '').trim();
+          const codePostal = ((this._container.querySelector('#cex-code-postal') || {}).value || '').trim();
+          const ville = ((this._container.querySelector('#cex-ville') || {}).value || '').trim();
           if (!client) { if (typeof App !== 'undefined' && App.toast) App.toast('Veuillez sélectionner un client avant de continuer', 'warning'); return; }
           if (!nom) { if (typeof App !== 'undefined' && App.toast) App.toast('Saisissez un nom de chantier', 'warning'); return; }
           const cliSelectionne = DB.getClient(client);
@@ -2307,7 +2441,7 @@ const CalcExpressV2 = {
             ? (cliSelectionne.type === 'particulier' ? 'particulier' : 'pro')
             : null;
           if (chantierId) {
-            this._chantier = { nom, clientId: client, chantierId: this._normalizeId(chantierId), adresse };
+            this._chantier = { nom, clientId: client, chantierId: this._normalizeId(chantierId), adresse, codePostal, ville };
             if (!this._profil) {
               if (cliSelectionne && !cliSelectionne.type) {
                 if (typeof App !== 'undefined' && App.toast) App.toast("⚠️ Ce client n'a pas de type renseigné — veuillez compléter sa fiche", 'warning');
@@ -2318,8 +2452,8 @@ const CalcExpressV2 = {
             this._renderEtape('profil');
             return;
           }
-          const nouveau = DB.addChantier({ nom, clientId: client, adresse });
-          this._chantier = { nom, clientId: client, chantierId: nouveau ? this._normalizeId(nouveau.id) : null, adresse };
+          const nouveau = DB.addChantier({ nom, clientId: client, adresse, codePostal, cp: codePostal, ville });
+          this._chantier = { nom, clientId: client, chantierId: nouveau ? this._normalizeId(nouveau.id) : null, adresse, codePostal, ville };
           this._renderEtape('profil');
         }
         if (action === 'chantier-annuler') { if (typeof App !== 'undefined') App.navigate('dashboard'); return; }
@@ -2616,6 +2750,17 @@ const CalcExpressV2 = {
               localStorage.setItem('plaqpro_chiffrages', JSON.stringify(liste));
             } catch(e) {}
             if (typeof App !== 'undefined' && App.toast) App.toast('✅ Devis enregistré — visible dans Devis', 'success');
+            const box = this._container.querySelector('#cex-resume-container');
+            if (box) {
+              box.innerHTML = `
+                <div style="border:1px solid rgba(22,163,74,.45);background:rgba(22,163,74,.10);border-radius:12px;padding:16px;color:var(--text,#fff)">
+                  <div style="font-weight:800;margin-bottom:10px">✅ Devis enregistré avec succès</div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button type="button" data-cex-action="resume-voir-devis" style="padding:9px 14px;border-radius:8px;border:none;background:var(--accent,#2563eb);color:#fff;font-weight:700;cursor:pointer">Voir le devis</button>
+                    <button type="button" data-cex-action="resume-nouveau" style="padding:9px 14px;border-radius:8px;border:1px solid var(--border,#e2e8f0);background:transparent;color:var(--text,#fff);font-weight:700;cursor:pointer">Nouveau chiffrage</button>
+                  </div>
+                </div>`;
+            }
           } else {
             // Diagnostic précis
             const s = DevisMulti._state;
@@ -2627,8 +2772,6 @@ const CalcExpressV2 = {
             // Ne pas naviguer si échec
             return;
           }
-          // Naviguer vers devis_complet pour visualiser
-          if (typeof App !== 'undefined' && App.navigate) App.navigate('devis_complet');
           if (typeof AssistantIA !== 'undefined' && this._lastResume && this._lastResume.synthese) {
             const syntheseIA = this._lastResume.synthese;
             AssistantIA.setSynthese && AssistantIA.setSynthese(syntheseIA);
@@ -2639,6 +2782,31 @@ const CalcExpressV2 = {
               if (champ && !champ.value) champ.value = syntheseIA;
             }, 120);
           }
+          return;
+        }
+        if (action === 'resume-voir-devis') {
+          const id = this._lastResume && this._lastResume.devisId;
+          if (id && typeof DocPrint !== 'undefined' && DocPrint.apercu) {
+            DocPrint.apercu('devis', id);
+          } else if (typeof App !== 'undefined' && App.navigate) {
+            App.navigate('devis_complet');
+          }
+          return;
+        }
+        if (action === 'resume-nouveau') {
+          this._chantier      = { nom: '', clientId: null, adresse: '', ville: '', codePostal: '' };
+          this._profil        = null;
+          this._sousTraitants = [];
+          this._corpsActifs   = [];
+          this._pieces        = [];
+          this._resultats     = {};
+          this._lastResume    = null;
+          this._corpsEnCours  = 0;
+          this._pieceEnCours  = null;
+          this._corpsConfig   = {};
+          this._chiffrageEnModification = false;
+          this._modeModif = false;
+          this._renderEtape('chantier');
           return;
         }
         if (action === 'resume-achat') {
@@ -2688,7 +2856,30 @@ const CalcExpressV2 = {
           this._renderEtape('pieces');
           return;
         }
-        if (action === 'pieces-retour')        this._renderEtape('corps');
+        if (action === 'revetement-pieces-valider') {
+          const corpsId = this._corpsActifs[this._corpsEnCours];
+          const checks = Array.from(this._container.querySelectorAll('[data-cex-revetement-check]'));
+          checks.forEach(cb => {
+            const nom = cb.dataset.cexRevetementCheck;
+            const input = Array.from(this._container.querySelectorAll('[data-cex-revetement-surface]'))
+              .find(el => el.dataset.cexRevetementSurface === nom);
+            const surface = parseFloat((input || {}).value) || 0;
+            const idx = this._pieces.findIndex(p => p.nom === nom && p.corps === corpsId);
+            if (cb.checked && surface > 0) {
+              if (idx >= 0) {
+                this._pieces[idx].surface = surface;
+              } else {
+                this._pieces.push({ nom, corps: corpsId, surface, mode: 'rectangle', ouvrageRevetement: 'OUV_STRATIFIE', quantites: {} });
+              }
+            } else if (!cb.checked && idx >= 0) {
+              this._pieces.splice(idx, 1);
+            }
+          });
+          if (typeof App !== 'undefined' && App.toast) App.toast('Pièces revêtement mises à jour', 'success');
+          this._renderEtape('pieces');
+          return;
+        }
+        if (action === 'pieces-retour')        { this._renderEtape('corps'); return; }
         if (action === 'pieces-vers-corps')    { this._renderEtape('corps'); return; }
         if (action === 'corps-precedent')      { this._corpsEnCours--; this._renderEtape('pieces'); }
         if (action === 'corps-suivant-pieces') { this._corpsEnCours++; this._renderEtape('pieces'); }
@@ -2790,6 +2981,25 @@ const CalcExpressV2 = {
         pieceMac.prestation = prestation;
         this._pieceMaconnerieSelection = nom;
         this._pieceEnCours = pieceMac;
+        this._renderEtape('metrage');
+        return;
+      }
+
+      const revetementOpen = e.target.closest('[data-cex-revetement-open]');
+      if (revetementOpen) {
+        const nom = revetementOpen.dataset.cexRevetementOpen;
+        const corpsId = this._corpsActifs[this._corpsEnCours];
+        const input = Array.from(this._container.querySelectorAll('[data-cex-revetement-surface]'))
+          .find(el => el.dataset.cexRevetementSurface === nom);
+        const surface = parseFloat((input || {}).value) || 0;
+        let pieceRev = this._pieces.find(p => p.nom === nom && p.corps === corpsId);
+        if (!pieceRev) {
+          pieceRev = { nom, corps: corpsId, surface, mode: 'rectangle', ouvrageRevetement: 'OUV_STRATIFIE', quantites: {} };
+          this._pieces.push(pieceRev);
+        } else if (surface > 0) {
+          pieceRev.surface = surface;
+        }
+        this._pieceEnCours = pieceRev;
         this._renderEtape('metrage');
         return;
       }
