@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PlaqPro+ — BDD V2 : MASTER_MATERIAUX, OUVRAGES_TYPES, OUVRAGES_COMPOSITION
  * Chargement depuis données statiques (issues du fichier Excel valide 02/06/2026)
  * Copyright (c) 2026 Gabriel Khamassi — Saint-Priest (69)
