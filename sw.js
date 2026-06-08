@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'plaqpro-v20260608-utf8';
+﻿const CACHE_NAME = 'plaqpro-v20260608a';
 
 const FICHIERS_CACHE = [
   '/plaqpro-web/login.html',
