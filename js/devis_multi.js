@@ -328,9 +328,6 @@ var DevisMulti = {
         DevisMulti._rerenderAll();
       }
     });
-    return;
-    DevisMulti._state = DevisMulti._newState();
-    DevisMulti._rerenderAll();
   },
 
   // ── Sections ──────────────────────────────────────────────
