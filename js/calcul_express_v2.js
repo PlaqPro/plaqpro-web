@@ -1433,7 +1433,10 @@ const CalcExpressV2 = {
 
     const isPlaco   = p.corps === 'plaquisterie';
     const isRevetement = p.corps === 'revetement';
-    const needsHSP  = isPlaco || (p.corps === 'maconnerie' && (this._corpsConfig['maconnerie'] || {}).lieuxKey === 'maconnerie_int');
+    const isMaconCloison = p.corps === 'maconnerie' &&
+      (this._corpsConfig['maconnerie'] || {}).lieuxKey === 'maconnerie_int' &&
+      (!p.prestation || /cloison|brique/i.test(p.prestation));
+    const needsHSP  = isPlaco || isMaconCloison;
     const paysIdsActuels = this._getPaysagismeIds(p);
     const paysCodeActuel = this._getPaysagismePrimaryId(p);
     const typePaysActuel = p.corps === 'paysagisme' ? this._getTypeMetragePaysagisme(p, paysCodeActuel) : 'm2';
@@ -1451,7 +1454,7 @@ const CalcExpressV2 = {
     const champRect = `
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px">
         ${fieldWrap('cex-m-l-wrap', 'Longueur (m)', `<input id="cex-m-l" type="number" min="0" step="0.1" value="${p.longueur||''}" placeholder="ex: 5.5" style="${inputStyle}">`, p.corps !== 'paysagisme' || !['u'].includes(typePaysActuel))}
-        ${fieldWrap('cex-m-w-wrap', 'Largeur (m)', `<input id="cex-m-w" type="number" min="0" step="0.1" value="${p.largeur||''}" placeholder="ex: 3.8" style="${inputStyle}">`, p.corps !== 'paysagisme' || ['m2','m3'].includes(typePaysActuel))}
+        ${fieldWrap('cex-m-w-wrap', 'Largeur (m)', `<input id="cex-m-w" type="number" min="0" step="0.1" value="${p.largeur||''}" placeholder="ex: 3.8" style="${inputStyle}">`, (p.corps !== 'paysagisme' || ['m2','m3'].includes(typePaysActuel)) && !isMaconCloison)}
         ${fieldWrap('cex-pays-hauteur-wrap', 'Hauteur (m)', `<input id="cex-pays-hauteur" type="number" min="0" step="0.1" value="${p.hauteurPaysage||''}" placeholder="ex: 1.8" style="${inputStyle}">`, p.corps === 'paysagisme' && typePaysActuel === 'ml' && !paysPrixHauteurActif)}
         ${fieldWrap('cex-pays-essence-wrap', 'Essence', `<select id="cex-pays-essence" style="${inputStyle}">${essencesOptions}</select>`, p.corps === 'paysagisme' && typePaysActuel === 'haie')}
         ${fieldWrap('cex-pays-quantite-wrap', 'Quantité', `<input id="cex-pays-quantite" type="number" min="0" step="1" value="${p.quantite||p.nbPoints||''}" placeholder="ex: 1" style="${inputStyle}">`, p.corps === 'paysagisme' && typePaysActuel === 'u')}
@@ -2652,6 +2655,8 @@ const CalcExpressV2 = {
               s = qte;
             } else if (p && p.corps === 'paysagisme' && typePays === 'm3') {
               s = Math.round(l * w * prof * 100) / 100;
+            } else if (p && p.corps === 'maconnerie' && /cloison|brique/i.test(p.prestation || '') && hsp > 0) {
+              s = Math.round(l * hsp * 100) / 100;
             } else {
               s = Math.round(l * w * 100) / 100;
             }
