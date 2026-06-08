@@ -63,7 +63,9 @@ var DevisMulti = {
   },
 
   _isZeroNoiseLine: function(l, sec) {
-    if (!l || DevisMulti._isHeaderLine(l) || !DevisMulti._isZeroAmountLine(l)) return false;
+    if (!l || DevisMulti._isHeaderLine(l)) return false;
+    var totalHT = ((parseFloat(l && l.qte) || 0) * (parseFloat(l && l.prix) || 0));
+    if (totalHT > 0) return false;
     var designation = DevisMulti._normLabel(l.designation || '');
     var titre = DevisMulti._normLabel(sec && sec.titre || '');
     var unite = DevisMulti._normLabel(l.unite || '');

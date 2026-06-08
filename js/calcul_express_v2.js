@@ -2189,7 +2189,7 @@ const CalcExpressV2 = {
 
     const mode = line.quantiteMode;
     if (mode) {
-      if (mode === 'surface') return surface;
+      if (mode === 'surface') return surface || this._getSurfaceChantierPiece(piece);
       if (mode === 'longueur') return longueur || perimetre;
       if (mode === 'perimetre') return perimetre || longueur;
       if (mode === 'volume') { const prof = parseFloat(piece.profondeur) || 0; return prof ? surface * prof : surface * 0.5; }
