@@ -18,9 +18,25 @@
   const line = (tache, unite, prixUnit, quantiteMode) => ({ tache, unite, prixUnit, quantiteMode });
   const opt = (tache, unite, prixUnit) => ({ tache, unite, prixUnit });
   const pkg = (lignesAuto, options) => ({ lignesAuto, options: options || [] });
-  const p = (id, section, libelle, unite, cout_mat, cout_mo, pack) => ({
-    id, section, libelle, unite, cout_mat, cout_mo, package: pack
+  const p = (id, section, libelle, unite, cout_mat, cout_mo, pack, description) => ({
+    id, section, libelle, unite, cout_mat, cout_mo, package: pack, description: description || ''
   });
+  const withPrixParHauteur = (pack, prixParHauteur) =>
+    Object.assign(pack, { prixParHauteur });
+
+  const PRIX_ARBRE_HAUTEUR = [
+    { maxH: 2,  prixUnit: 45 },
+    { maxH: 4,  prixUnit: 120 },
+    { maxH: 7,  prixUnit: 220 },
+    { maxH: 99, prixUnit: 380 },
+  ];
+
+  const PRIX_HAIE_SUPPRESSION_HAUTEUR = [
+    { maxH: 1.5, prixUnit: 12 },
+    { maxH: 3,   prixUnit: 22 },
+    { maxH: 5,   prixUnit: 38 },
+    { maxH: 99,  prixUnit: 65 },
+  ];
 
   const autoSelf = (libelle, unite, prixUnit, quantiteMode, options) =>
     pkg([line(libelle, unite, prixUnit, quantiteMode)], options || []);
@@ -358,22 +374,22 @@
       p('PAYS_S9_006', 9, 'Mise en service bassin', 'forfait', 25, 65, autoSelf('Mise en service bassin', 'forfait', 90, Q.forfait)),
       p('PAYS_S9_007', 9, 'Mise en service arrosage', 'forfait', 15, 45, autoSelf('Mise en service arrosage', 'forfait', 60, Q.forfait)),
       p('PAYS_S9_008', 9, 'Évacuation végétaux / déchets verts', 'm³', 0, 45, autoSelf('Évacuation végétaux / déchets verts', 'm³', 45, Q.volume)),
-      p('PAYS_S9_009', 9, 'Arrachage végétaux / arbustes', 'u', 0, 45, pkg([
+      p('PAYS_S9_009', 9, 'Arrachage arbustes isolés (hors haie)', 'u', 0, 45, withPrixParHauteur(pkg([
         line('Arrachage et extraction', 'u', 45, Q.unite),
         line('Évacuation végétaux', 'u', 25, Q.unite),
       ], [
         opt('Dessouchage', 'u', 85),
         opt('Rebouchage fosse', 'u', 35),
-      ])),
-      p('PAYS_S9_010', 9, 'Suppression haie', 'ml', 0, 35, pkg([
-        line('Arrachage haie', 'ml', 18, Q.longueur),
+      ]), PRIX_ARBRE_HAUTEUR), 'Pour arbustes, buissons ou petits sujets isolés — pas pour une haie linéaire'),
+      p('PAYS_S9_010', 9, 'Suppression haie linéaire', 'ml', 0, 35, withPrixParHauteur(pkg([
+        line('Suppression haie linéaire', 'ml', 18, Q.longueur),
         line('Dessouchage haie', 'ml', 22, Q.longueur),
         line('Évacuation déchets verts', 'm³', 45, Q.volume),
       ], [
         opt('Remise en état sol', 'm²', 8),
         opt('Nouvelle plantation après suppression', 'ml', 15),
-      ])),
-      p('PAYS_S9_011', 9, 'Remplacement végétaux', 'u', 35, 35, pkg([
+      ]), PRIX_HAIE_SUPPRESSION_HAUTEUR), 'Pour une rangée continue (bambous, lauriers, thuyas...) — saisir la longueur en ml'),
+      p('PAYS_S9_011', 9, 'Remplacement arbuste / arbre isolé', 'u', 35, 35, pkg([
         line('Arrachage ancien végétal', 'u', 35, Q.unite),
         line('Préparation fosse', 'u', 25, Q.unite),
         line('Plantation nouveau végétal', 'u', 45, Q.unite),
@@ -381,20 +397,20 @@
       ], [
         opt('Tuteurage', 'u', 12),
         opt('Paillage pied', 'u', 8),
-      ])),
-      p('PAYS_S9_012', 9, 'Taille / recépage arbres', 'u', 0, 85, pkg([
-        line('Taille de formation ou recépage', 'u', 85, Q.unite),
+      ]), 'Remplacement d’un sujet isolé avec préparation et plantation'),
+      p('PAYS_S9_012', 9, 'Élagage / abattage arbre (par arbre)', 'u', 0, 85, withPrixParHauteur(pkg([
+        line('Élagage / abattage arbre', 'u', 85, Q.unite),
         line('Évacuation branchages', 'forfait', 45, Q.forfait),
       ], [
         opt('Broyage sur place', 'forfait', 85),
         opt('Traitement cicatrisant', 'u', 15),
-      ])),
-      p('PAYS_S9_013', 9, 'Taille haie entretien', 'ml', 0, 8, pkg([
+      ]), PRIX_ARBRE_HAUTEUR), 'Prix unitaire par arbre — tenir compte de la hauteur et l\'emprise'),
+      p('PAYS_S9_013', 9, 'Taille haie entretien (par ml)', 'ml', 0, 8, pkg([
         line('Taille haie', 'ml', 8, Q.longueur),
         line('Ramassage et évacuation', 'forfait', 35, Q.forfait),
       ], [
         opt('Taille double face', 'ml', 4),
-      ])),
+      ]), 'Taille annuelle d\'entretien — saisir la longueur en ml'),
     ],
 
     getSection(sectionId) {

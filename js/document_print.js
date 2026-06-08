@@ -74,7 +74,7 @@ const DocPrint = {
 
   // ── HTML complet ──────────────────────────────────────────
   _html(doc, chantier, client, config, isFacture, logoB64, qrDataUrl = null, qrContent = '') {
-    const lignes     = doc.lignes     || [];
+    const lignes     = (doc.lignes || []).filter(l => !DocPrint._isHeaderLine(l) && !DocPrint._isZeroNoiseLine(l));
     const totalHT    = doc.totalHT    || 0;
     const montantTVA = doc.montantTVA || 0;
     const totalTTC   = doc.totalTTC   || 0;
@@ -115,13 +115,19 @@ const DocPrint = {
     const [sc, sb] = statutColors[doc.statut] || ['#6B7280','#F3F4F6'];
 
     const lignesHTML = lignes.length
-      ? lignes.map((l, i) => `
+      ? lignes.map((l, i) => {
+        const qte = parseFloat(l.quantite || l.qte || 1) || 1;
+        const unite = l.unite || (l.quantite || l.qte ? '' : 'Forfait');
+        const total = parseFloat(l.totalClient || l.totalHT || 0);
+        const prixUnit = parseFloat(l.prixHT || l.prixUnitaire || l.prix || (qte ? total / qte : total)) || 0;
+        return `
         <tr class="${i % 2 === 1 ? 'tr-even' : ''}">
           <td class="td-des">${DocPrint._esc(l.poste || l.designation || '')}</td>
-          <td class="td-c">1&nbsp;Forfait</td>
-          <td class="td-r">${DocPrint._n(l.totalClient || l.totalHT || 0)}&nbsp;€</td>
-          <td class="td-r td-bold">${DocPrint._n(l.totalClient || l.totalHT || 0)}&nbsp;€</td>
-        </tr>`).join('')
+          <td class="td-c">${DocPrint._n(qte)}&nbsp;${DocPrint._esc(unite)}</td>
+          <td class="td-r">${DocPrint._n(prixUnit)}&nbsp;€</td>
+          <td class="td-r td-bold">${DocPrint._n(total)}&nbsp;€</td>
+        </tr>`;
+      }).join('')
       : `<tr><td colspan="4" style="text-align:center;padding:18pt;color:#9CA3AF;font-style:italic">Aucune prestation</td></tr>`;
 
     // Script inline copie contact dans la popup
@@ -537,6 +543,31 @@ ${copyScript}
 
   _n(val) {
     return (val || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  },
+
+  _norm(str) {
+    return String(str || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\w]+/g, ' ')
+      .trim()
+      .toLowerCase();
+  },
+
+  _isHeaderLine(l) {
+    return !!(l && (l._header || l.isHeader || l.type === 'header'));
+  },
+
+  _isZeroNoiseLine(l) {
+    if (!l) return false;
+    const total = parseFloat(l.totalClient || l.totalHT || 0);
+    const prix = parseFloat(l.prixHT || l.prixUnitaire || l.prix || 0);
+    if (total > 0 || prix > 0) return false;
+    const designation = DocPrint._norm(l.poste || l.designation || '');
+    const unite = DocPrint._norm(l.unite || '');
+    if (designation === 'paysagisme') return true;
+    if (designation.indexOf('protection chantier') !== -1) return true;
+    if (designation.indexOf('preparation chantier exterieur') !== -1) return true;
+    return unite === 'forfait' && designation.indexOf(' ') === -1;
   },
 
   _esc(str) {

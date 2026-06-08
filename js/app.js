@@ -942,7 +942,7 @@ const Pages = {
     if (!content) return;
 
     const totaux = devis.totaux || {};
-    const lignes = devis.lignes || [];
+    const lignes = (devis.lignes || []).filter(l => !(l._header || l.isHeader || l.type === 'header'));
 
     content.innerHTML = `
       <div class="card">
@@ -961,6 +961,7 @@ const Pages = {
             ${devis.id && devis.statut === 'Accepté'
               ? `<button class="btn btn-primary btn-sm" onclick="Pages.convertirEnFacture(${devis.id})">🧾 Convertir en facture</button>`
               : ''}
+            ${devis.id ? `<button class="btn btn-secondary btn-sm" onclick="Pages.modifierDevisCalcExpress(${devis.id})">✏️ Modifier ce devis</button>` : ''}
             ${devis.id ? `<button class="btn btn-secondary btn-sm" onclick="DocPrint.apercu('devis',${devis.id})">🖨 Aperçu impression</button>` : ''}
             ${devis.id ? `<button class="btn btn-primary btn-sm" onclick="EmailDevis.envoyerDevis(${devis.id})">📧 Envoyer au client</button>` : ''}
             ${devis.id && typeof Signature !== 'undefined' && !Signature.estSigne(devis.id) ? `<button class="btn btn-secondary btn-sm" onclick="Signature.demanderSignature(${devis.id})">✍️ Signature</button>` : ''}
@@ -1073,6 +1074,7 @@ const Pages = {
                   <td>${App.statut(d.statut)}</td>
                   <td>
                     ${d.statut === 'Accepté' ? `<button class="btn btn-primary btn-sm" onclick="Pages.convertirEnFacture(${d.id})">🧾 → Facture</button>` + ((DB.factures||[]).find(f=>f.devisId===d.id) ? ' <span style="color:#10b981;font-size:11px">✅ Facturée</span>' : '') : ''}
+                    <button class="btn btn-secondary btn-sm" onclick="Pages.modifierDevisCalcExpress(${d.id})">✏️ Modifier</button>
                     <button class="btn btn-secondary btn-sm" onclick="DocPrint.apercu('devis',${d.id})">🖨</button>
                     <button class="btn btn-secondary btn-sm" onclick="EmailDevis.envoyerDevis(${d.id})">📧</button>
                     ${d.statut === 'Envoyé' ? `<button onclick="App.relancerDevis(${d.id})" class="btn btn-sm" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;font-size:11px;padding:4px 10px;border-radius:6px">📬 Relancer</button>` : ''}
@@ -1126,6 +1128,27 @@ const Pages = {
           }, 300);
         }
       }
+    }
+  },
+
+  modifierDevisCalcExpress(devisId) {
+    if (typeof CalcExpressV2 === 'undefined' || !CalcExpressV2.chargerChiffrage) {
+      App.toast('Module Calcul Express V2 non disponible', 'error');
+      return;
+    }
+    let chiffrage = null;
+    try {
+      const liste = JSON.parse(localStorage.getItem('plaqpro_chiffrages') || '[]');
+      chiffrage = liste.find(c => String(c.devisId) === String(devisId));
+    } catch(e) {}
+    if (!chiffrage) {
+      App.toast('Chiffrage source introuvable pour ce devis', 'warning');
+      return;
+    }
+    if (CalcExpressV2.chargerChiffrage(chiffrage.id)) {
+      App.navigate('calcExpressV2');
+    } else {
+      App.toast('Impossible de charger ce chiffrage', 'error');
     }
   },
 

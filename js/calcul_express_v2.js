@@ -786,6 +786,27 @@ const CalcExpressV2 = {
     return ouvrageId ? this.PACKAGES_PAYSAGISME[ouvrageId] : null;
   },
 
+  _hasPrixParHauteurPaysagisme(piece, code) {
+    const pkg = this._getPackagePaysagisme(piece, code);
+    return !!(pkg && Array.isArray(pkg.prixParHauteur) && pkg.prixParHauteur.length);
+  },
+
+  _prixParHauteurPaysagisme(piece, code, hauteurOverride) {
+    const pkg = this._getPackagePaysagisme(piece, code);
+    const tranches = pkg && Array.isArray(pkg.prixParHauteur) ? pkg.prixParHauteur : [];
+    if (!tranches.length) return null;
+    const hauteur = parseFloat(hauteurOverride) || parseFloat(piece && piece.hauteurArbre) || parseFloat(piece && piece.hauteurPaysage) || 0;
+    if (!hauteur) return null;
+    const tranche = tranches.find(t => hauteur <= (parseFloat(t.maxH) || 0)) || tranches[tranches.length - 1];
+    if (!tranche) return null;
+    const prestation = code && typeof BddPaysagismeV2 !== 'undefined' ? BddPaysagismeV2.getPrestation(code) : null;
+    return {
+      prixUnit: parseFloat(tranche.prixUnit) || 0,
+      unite: (prestation && prestation.unite) || 'u',
+      hauteur,
+    };
+  },
+
   _idOptionPaysagisme(opt) {
     return String(opt.id || opt.tache || '')
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -837,7 +858,12 @@ const CalcExpressV2 = {
         html += 'border-radius:6px;cursor:pointer;width:100%;box-sizing:border-box;' + bg + '">';
         html += '<input type="checkbox" name="cex-pays-check" value="' + esc(pr.id) + '"';
         html += checked + ' style="accent-color:var(--accent,#4f8ef7)">';
-        html += '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text,#fff);font-size:.85rem">' + esc(pr.libelle) + '</span>';
+        html += '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text,#fff);font-size:.85rem">';
+        html += esc(pr.libelle);
+        if (pr.description) {
+          html += '<small style="display:block;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary,#aaa);opacity:.75;font-size:.72rem;font-weight:400">' + esc(pr.description) + '</small>';
+        }
+        html += '</span>';
         html += '<span style="opacity:.6;font-size:.75rem;white-space:nowrap">' + esc(pr.unite || '') + '</span>';
         html += '</label>';
       }
@@ -1411,6 +1437,8 @@ const CalcExpressV2 = {
     const paysIdsActuels = this._getPaysagismeIds(p);
     const paysCodeActuel = this._getPaysagismePrimaryId(p);
     const typePaysActuel = p.corps === 'paysagisme' ? this._getTypeMetragePaysagisme(p, paysCodeActuel) : 'm2';
+    const paysPrixHauteurActif = p.corps === 'paysagisme' && this._hasPrixParHauteurPaysagisme(p, paysCodeActuel);
+    const prixHauteurInitial = paysPrixHauteurActif ? this._prixParHauteurPaysagisme(p, paysCodeActuel) : null;
     const fieldWrap = (id, label, inputHtml, visible) => `
         <div id="${id}" style="flex:1;min-width:120px;display:${visible ? 'block' : 'none'}">
           <label style="font-size:.8rem;color:var(--text-secondary,#666);display:block;margin-bottom:4px">${label}</label>
@@ -1424,9 +1452,11 @@ const CalcExpressV2 = {
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px">
         ${fieldWrap('cex-m-l-wrap', 'Longueur (m)', `<input id="cex-m-l" type="number" min="0" step="0.1" value="${p.longueur||''}" placeholder="ex: 5.5" style="${inputStyle}">`, p.corps !== 'paysagisme' || !['u'].includes(typePaysActuel))}
         ${fieldWrap('cex-m-w-wrap', 'Largeur (m)', `<input id="cex-m-w" type="number" min="0" step="0.1" value="${p.largeur||''}" placeholder="ex: 3.8" style="${inputStyle}">`, p.corps !== 'paysagisme' || ['m2','m3'].includes(typePaysActuel))}
-        ${fieldWrap('cex-pays-hauteur-wrap', 'Hauteur (m)', `<input id="cex-pays-hauteur" type="number" min="0" step="0.1" value="${p.hauteurPaysage||''}" placeholder="ex: 1.8" style="${inputStyle}">`, p.corps === 'paysagisme' && typePaysActuel === 'ml')}
+        ${fieldWrap('cex-pays-hauteur-wrap', 'Hauteur (m)', `<input id="cex-pays-hauteur" type="number" min="0" step="0.1" value="${p.hauteurPaysage||''}" placeholder="ex: 1.8" style="${inputStyle}">`, p.corps === 'paysagisme' && typePaysActuel === 'ml' && !paysPrixHauteurActif)}
         ${fieldWrap('cex-pays-essence-wrap', 'Essence', `<select id="cex-pays-essence" style="${inputStyle}">${essencesOptions}</select>`, p.corps === 'paysagisme' && typePaysActuel === 'haie')}
         ${fieldWrap('cex-pays-quantite-wrap', 'Quantité', `<input id="cex-pays-quantite" type="number" min="0" step="1" value="${p.quantite||p.nbPoints||''}" placeholder="ex: 1" style="${inputStyle}">`, p.corps === 'paysagisme' && typePaysActuel === 'u')}
+        ${fieldWrap('cex-pays-hauteur-arbre-wrap', 'Hauteur estimée (m)', `<input id="cex-pays-hauteur-arbre" type="number" min="0" step="0.1" value="${p.hauteurArbre||''}" placeholder="ex: 3.5" style="${inputStyle}">`, paysPrixHauteurActif)}
+        ${fieldWrap('cex-pays-emprise-arbre-wrap', 'Emprise / largeur (m)', `<input id="cex-pays-emprise-arbre" type="number" min="0" step="0.1" value="${p.empriseArbre||''}" placeholder="optionnel" style="${inputStyle}">`, paysPrixHauteurActif)}
         ${fieldWrap('cex-pays-profondeur-wrap', 'Profondeur (m)', `<input id="cex-pays-profondeur" type="number" min="0" step="0.1" value="${p.profondeur||''}" placeholder="ex: 0.3" style="${inputStyle}">`, p.corps === 'paysagisme' && typePaysActuel === 'm3')}
         ${fieldWrap('cex-placo-epaisseur-wrap', 'Épaisseur cloison', `<select id="cex-placo-epaisseur" style="${inputStyle}">
           <option value="48" ${(p.epaisseurCloison || p.epaisseur || 72) == 48 ? 'selected' : ''}>48 mm (cloison légère)</option>
@@ -1449,6 +1479,7 @@ const CalcExpressV2 = {
             style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid #f59e0b;background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box">
         </div>` : ''}
       </div>
+      ${paysPrixHauteurActif ? `<div id="cex-pays-prix-hauteur-estime" style="font-size:.8rem;color:var(--text-secondary,#aaa);margin:-2px 0 8px">${prixHauteurInitial ? 'Prix estimé : ' + prixHauteurInitial.prixUnit + '€/' + prixHauteurInitial.unite + ' selon hauteur saisie' : 'Prix estimé : saisissez une hauteur'}</div>` : ''}
       <div id="cex-m-preview" style="font-size:.9rem;color:var(--accent,#2563eb);font-weight:600;min-height:22px"></div>`;
 
     const revetementOptions = this._getOuvragesRevetement().map(ouv => {
@@ -1605,11 +1636,20 @@ const CalcExpressV2 = {
         const l   = parseFloat((this._container.querySelector('#cex-m-l') || {}).value) || 0;
         const w   = parseFloat((this._container.querySelector('#cex-m-w') || {}).value) || 0;
         const hp  = parseFloat((this._container.querySelector('#cex-pays-hauteur') || {}).value) || 0;
+        const hArbre = parseFloat((this._container.querySelector('#cex-pays-hauteur-arbre') || {}).value) || 0;
         const qte = parseFloat((this._container.querySelector('#cex-pays-quantite') || {}).value) || 0;
         const prof = parseFloat((this._container.querySelector('#cex-pays-profondeur') || {}).value) || 0;
         const hsp = parseFloat((this._container.querySelector('#cex-m-hsp') || {}).value) || 0;
         const selPays = this._container.querySelector('#cex-pays-tache');
-        const typePays = p.corps === 'paysagisme' ? this._getTypeMetragePaysagisme(p, selPays ? selPays.value : '') : 'm2';
+        const codePreview = selPays ? selPays.value : this._getPaysagismePrimaryId(p);
+        const typePays = p.corps === 'paysagisme' ? this._getTypeMetragePaysagisme(p, codePreview) : 'm2';
+        const prixHauteurEl = this._container.querySelector('#cex-pays-prix-hauteur-estime');
+        const prixHauteur = p.corps === 'paysagisme' ? this._prixParHauteurPaysagisme(p, codePreview, hArbre) : null;
+        if (prixHauteurEl) {
+          prixHauteurEl.textContent = prixHauteur
+            ? 'Prix estimé : ' + prixHauteur.prixUnit + '€/' + prixHauteur.unite + ' selon hauteur saisie'
+            : 'Prix estimé : saisissez une hauteur';
+        }
         if (p.corps === 'paysagisme' && typePays === 'haie') {
           const essence = this._getEssenceHaie((this._container.querySelector('#cex-pays-essence') || {}).value || 'autre');
           s = l > 0 ? Math.ceil(l / essence.espacement) : 0;
@@ -1617,13 +1657,15 @@ const CalcExpressV2 = {
           return;
         }
         if (p.corps === 'paysagisme' && typePays === 'ml') {
-          s = Math.round(l * (hp || 1) * 100) / 100;
-          el.textContent = l > 0 ? '→ Linéaire : ' + l + ' ml' + (hp > 0 ? ' × hauteur ' + hp + ' m = ' + s + ' ml' : '') : '';
+          s = prixHauteur ? l : Math.round(l * (hp || 1) * 100) / 100;
+          el.textContent = l > 0
+            ? '→ Linéaire : ' + l + ' ml' + (prixHauteur ? ' · hauteur ' + prixHauteur.hauteur + ' m' : (hp > 0 ? ' × hauteur ' + hp + ' m = ' + s + ' ml' : ''))
+            : '';
           return;
         }
         if (p.corps === 'paysagisme' && typePays === 'u') {
           s = qte;
-          el.textContent = s > 0 ? '→ Quantité : ' + s + ' u' : '';
+          el.textContent = s > 0 ? '→ Quantité : ' + s + ' u' + (prixHauteur ? ' · hauteur ' + prixHauteur.hauteur + ' m' : '') : '';
           return;
         }
         if (p.corps === 'paysagisme' && typePays === 'm3') {
@@ -2217,12 +2259,15 @@ const CalcExpressV2 = {
     const opts = new Set(piece.optionsPaysagisme || []);
     const lines = [];
     const tacheLabel = this._getPaysagismeLabel(code);
-    const add = (line, obligatoire) => {
+    const add = (line, obligatoire, index) => {
+      const prixHauteur = obligatoire && index === 0
+        ? this._prixParHauteurPaysagisme(piece, code)
+        : null;
       lines.push(this._linePackagePaysagisme(
         tacheLabel + ' — ' + line.tache,
         this._quantiteLignePackagePaysagisme(piece, ouvrageId, line, code),
         line.unite,
-        line.prixUnit,
+        prixHauteur ? prixHauteur.prixUnit : line.prixUnit,
         obligatoire,
         null
       ));
@@ -2240,9 +2285,9 @@ const CalcExpressV2 = {
       )].filter(l => l.qte > 0);
     }
 
-    (pkg.lignesAuto || []).forEach(line => add(line, true));
+    (pkg.lignesAuto || []).forEach((line, index) => add(line, true, index));
     this._getOptionsPackagePaysagisme(piece, code).forEach(opt => {
-      if (opts.has(opt.id)) add(opt, false);
+      if (opts.has(opt.id)) add(opt, false, -1);
     });
     return lines.filter(l => l.qte > 0);
   },
@@ -2314,6 +2359,7 @@ const CalcExpressV2 = {
       const perimetre = parseFloat(piece.perimetre) || 0;
       const hauteur = parseFloat(piece.hauteurPaysage) || 0;
       const base = perimetre || longueur || largeur || parseFloat(piece.surface) || 0;
+      if (this._hasPrixParHauteurPaysagisme(piece, this._getPaysagismePrimaryId(piece))) return base;
       return base && hauteur ? Math.round(base * hauteur * 100) / 100 : base;
     }
     if (corpsId === 'paysagisme' && unite === 'u') {
@@ -2584,6 +2630,8 @@ const CalcExpressV2 = {
             const l   = parseFloat((this._container.querySelector('#cex-m-l') || {}).value) || 0;
             const w   = parseFloat((this._container.querySelector('#cex-m-w') || {}).value) || 0;
             const hp  = parseFloat((this._container.querySelector('#cex-pays-hauteur') || {}).value) || 0;
+            const hArbre = parseFloat((this._container.querySelector('#cex-pays-hauteur-arbre') || {}).value) || 0;
+            const empriseArbre = parseFloat((this._container.querySelector('#cex-pays-emprise-arbre') || {}).value) || 0;
             const qte = parseFloat((this._container.querySelector('#cex-pays-quantite') || {}).value) || 0;
             const prof = parseFloat((this._container.querySelector('#cex-pays-profondeur') || {}).value) || 0;
             const hsp = parseFloat((this._container.querySelector('#cex-m-hsp') || {}).value) || 0;
@@ -2591,6 +2639,7 @@ const CalcExpressV2 = {
             const isolant = (this._container.querySelector('#cex-placo-isolant') || {}).value || 'aucun';
             const codePays = (document.getElementById('cex-pays-tache') || {}).value || this._getPaysagismePrimaryId(p);
             const typePays = p && p.corps === 'paysagisme' ? this._getTypeMetragePaysagisme(p, codePays) : 'm2';
+            const prixHauteurActif = p && p.corps === 'paysagisme' && this._hasPrixParHauteurPaysagisme(p, codePays);
             if (p && p.corps === 'paysagisme' && typePays === 'haie') {
               const essenceId = (this._container.querySelector('#cex-pays-essence') || {}).value || 'autre';
               const essence = this._getEssenceHaie(essenceId);
@@ -2598,7 +2647,7 @@ const CalcExpressV2 = {
               p.essenceHaie = essence.id;
               p.nbPlants = s;
             } else if (p && p.corps === 'paysagisme' && typePays === 'ml') {
-              s = Math.round(l * (hp || 1) * 100) / 100;
+              s = prixHauteurActif ? l : Math.round(l * (hp || 1) * 100) / 100;
             } else if (p && p.corps === 'paysagisme' && typePays === 'u') {
               s = qte;
             } else if (p && p.corps === 'paysagisme' && typePays === 'm3') {
@@ -2608,7 +2657,9 @@ const CalcExpressV2 = {
             }
             if (p) {
               p.longueur = l; p.largeur = w;
-              p.hauteurPaysage = typePays === 'ml' ? (hp || null) : null;
+              p.hauteurPaysage = typePays === 'ml' && !prixHauteurActif ? (hp || null) : null;
+              p.hauteurArbre = prixHauteurActif ? (hArbre || null) : null;
+              p.empriseArbre = prixHauteurActif ? (empriseArbre || null) : null;
               p.quantite = typePays === 'u' ? qte : null;
               p.profondeur = typePays === 'm3' ? prof : null;
               if (p.corps === 'plaquisterie' || p.corps === 'platrerie') {

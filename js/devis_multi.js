@@ -63,19 +63,21 @@ var DevisMulti = {
   },
 
   _isZeroNoiseLine: function(l, sec) {
-    if (!l || DevisMulti._isHeaderLine(l)) return false;
+    if (!l) return false;
     var totalHT = ((parseFloat(l && l.qte) || 0) * (parseFloat(l && l.prix) || 0));
     if (totalHT > 0) return false;
     var designation = DevisMulti._normLabel(l.designation || '');
     var titre = DevisMulti._normLabel(sec && sec.titre || '');
     var unite = DevisMulti._normLabel(l.unite || '');
+    if (designation.indexOf('preparation chantier exterieur') !== -1 || designation.indexOf('préparation chantier extérieur') !== -1) return true;
     if (designation.indexOf('protection chantier') !== -1) return true;
+    if (designation === 'paysagisme' && titre === 'paysagisme') return true;
     return !!titre && designation === titre && (!unite || unite === 'forfait' || unite === 'ff' || unite === 'u');
   },
 
   _lignesFacturables: function(sec) {
     return (sec && sec.lignes || []).filter(function(l) {
-      return !DevisMulti._isZeroNoiseLine(l, sec);
+      return !DevisMulti._isHeaderLine(l) && !DevisMulti._isZeroNoiseLine(l, sec);
     });
   },
 
@@ -375,6 +377,7 @@ var DevisMulti = {
     var total = DevisMulti._sectionTotal(sec);
 
     var rows = (sec.lignes || []).map(function(l, li) {
+      if (DevisMulti._isHeaderLine(l)) return '';
       if (DevisMulti._isZeroNoiseLine(l, sec)) return '';
       return DevisMulti._buildRowHTML(sec.sid, l, li);
     }).join('');
@@ -865,6 +868,7 @@ Règles importantes :
       return;
     }
     tbody.innerHTML = sec.lignes.map(function(l, li) {
+      if (DevisMulti._isHeaderLine(l)) return '';
       if (DevisMulti._isZeroNoiseLine(l, sec)) return '';
       return DevisMulti._buildRowHTML(sid, l, li);
     }).join('');
