@@ -48,6 +48,35 @@ var DevisMulti = {
     return Number.isFinite(parsed) ? parsed : fallback;
   },
 
+  _isHeaderLine: function(l) {
+    return !!(l && (l._header || l.isHeader || l.type === 'header'));
+  },
+
+  _isZeroAmountLine: function(l) {
+    return ((parseFloat(l && l.qte) || parseFloat(l && l.quantite) || 0) === 0)
+      && ((parseFloat(l && l.prix) || parseFloat(l && l.prixHT) || 0) === 0)
+      && ((parseFloat(l && l.totalHT) || 0) === 0);
+  },
+
+  _normLabel: function(value) {
+    return String(value || '').replace(/[^\wÀ-ÿ]+/g, ' ').trim().toLowerCase();
+  },
+
+  _isZeroNoiseLine: function(l, sec) {
+    if (!l || DevisMulti._isHeaderLine(l) || !DevisMulti._isZeroAmountLine(l)) return false;
+    var designation = DevisMulti._normLabel(l.designation || '');
+    var titre = DevisMulti._normLabel(sec && sec.titre || '');
+    var unite = DevisMulti._normLabel(l.unite || '');
+    if (designation.indexOf('protection chantier') !== -1) return true;
+    return !!titre && designation === titre && (!unite || unite === 'forfait' || unite === 'ff' || unite === 'u');
+  },
+
+  _lignesFacturables: function(sec) {
+    return (sec && sec.lignes || []).filter(function(l) {
+      return !DevisMulti._isZeroNoiseLine(l, sec);
+    });
+  },
+
   _normalizeId: function(value) {
     var n = parseInt(value, 10);
     return Number.isFinite(n) && n > 0 ? n : null;
@@ -344,6 +373,7 @@ var DevisMulti = {
     var total = DevisMulti._sectionTotal(sec);
 
     var rows = (sec.lignes || []).map(function(l, li) {
+      if (DevisMulti._isZeroNoiseLine(l, sec)) return '';
       return DevisMulti._buildRowHTML(sec.sid, l, li);
     }).join('');
 
@@ -459,7 +489,7 @@ var DevisMulti = {
 
   // ── Totaux ────────────────────────────────────────────────
   _sectionTotal: function(sec) {
-    return (sec.lignes || []).reduce(function(s, l) {
+    return DevisMulti._lignesFacturables(sec).reduce(function(s, l) {
       return s + (parseFloat(l.qte) || 0) * (parseFloat(l.prix) || 0);
     }, 0);
   },
@@ -651,7 +681,7 @@ Règles importantes :
 
   _nbLignes: function() {
     return DevisMulti._state.sections.reduce(function(s, sec) {
-      return s + (sec.lignes || []).length;
+      return s + DevisMulti._lignesFacturables(sec).length;
     }, 0);
   },
 
@@ -828,11 +858,12 @@ Règles importantes :
     var sec   = DevisMulti._state.sections.find(function(s) { return s.sid === sid; });
     var tbody = document.getElementById('dm-tbody-' + sid);
     if (!tbody || !sec) return;
-    if (!sec.lignes.length) {
+    if (!DevisMulti._lignesFacturables(sec).length) {
       tbody.innerHTML = '<tr class="dm-empty-row"><td colspan="7" style="text-align:center;color:var(--text-tertiary);padding:14px;font-size:12px">Aucune ligne — ajoutez un produit ci-dessous</td></tr>';
       return;
     }
     tbody.innerHTML = sec.lignes.map(function(l, li) {
+      if (DevisMulti._isZeroNoiseLine(l, sec)) return '';
       return DevisMulti._buildRowHTML(sid, l, li);
     }).join('');
   },
@@ -967,9 +998,9 @@ Règles importantes :
     state.sections.forEach(function(sec) {
       lignes.push({
         ref: '', designation: '─── ' + sec.icon + ' ' + sec.titre + ' ───',
-        unite: '', quantite: 0, prixHT: 0, tva: 0, totalHT: 0, _header: true
+        _header: true, isHeader: true, type: 'header'
       });
-      (sec.lignes || []).forEach(function(l) {
+      DevisMulti._lignesFacturables(sec).forEach(function(l) {
         lignes.push({
           ref:         l.ref || '',
           designation: l.designation || '',
@@ -1013,8 +1044,8 @@ Règles importantes :
     var sections = state.sections || [];
     var lignes = [];
     sections.forEach(function(sec) {
-      lignes.push({ _header:true, designation: sec.titre, icon: sec.icon, tva: sec.tva });
-      (sec.lignes || []).forEach(function(l) {
+      lignes.push({ _header:true, isHeader:true, type:'header', designation: sec.titre, icon: sec.icon, tva: sec.tva });
+      DevisMulti._lignesFacturables(sec).forEach(function(l) {
         lignes.push({
           ref: l.ref || '', designation: l.designation || '',
           unite: l.unite || '', quantite: parseFloat(l.qte) || 0,
@@ -1026,8 +1057,8 @@ Règles importantes :
         });
       });
     });
-    if (!lignes.filter(function(l) { return !l._header; }).length) return null;
-    var totalHT = lignes.filter(function(l) { return !l._header; }).reduce(function(s, l) { return s + l.totalHT; }, 0);
+    if (!lignes.filter(function(l) { return !DevisMulti._isHeaderLine(l); }).length) return null;
+    var totalHT = lignes.filter(function(l) { return !DevisMulti._isHeaderLine(l); }).reduce(function(s, l) { return s + l.totalHT; }, 0);
     var tva = parseFloat(state.tva) || 20;
     var devis = {
       numero:     'DEV-' + Date.now(),
@@ -1073,7 +1104,7 @@ Règles importantes :
     // Reconstruire sections depuis lignes aplaties
     var secCourante = null;
     (devis.lignes || []).forEach(function(l) {
-      if (l._header) {
+      if (DevisMulti._isHeaderLine(l)) {
         secCourante = {
           key:    l.designation || 'section',
           icon:   l.icon || '',
@@ -1141,7 +1172,7 @@ Règles importantes :
 
     // HTML des sections
     var sectionsHTML = state.sections.map(function(sec) {
-      var rows = (sec.lignes || []).map(function(l) {
+      var rows = DevisMulti._lignesFacturables(sec).map(function(l) {
         var ht = (parseFloat(l.qte) || 0) * (parseFloat(l.prix) || 0);
         return '<tr>'
           + '<td>' + DevisMulti._esc(l.ref || '') + '</td>'

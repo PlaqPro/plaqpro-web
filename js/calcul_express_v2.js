@@ -594,16 +594,28 @@ const CalcExpressV2 = {
     };
   },
 
+  _getClientById(clientId) {
+    const id = this._normalizeId(clientId);
+    if (!id || typeof DB === 'undefined') return null;
+    if (typeof DB.lireClient === 'function') return DB.lireClient(id);
+    if (typeof DB.getClient === 'function') return DB.getClient(id);
+    const clients = Array.isArray(DB.clients) ? DB.clients : [];
+    return clients.find(c => String(c.id) === String(id)) || null;
+  },
+
   _remplirAdresseClientSiVide(clientId) {
-    const client = clientId && typeof DB !== 'undefined' && DB.getClient ? DB.getClient(this._normalizeId(clientId)) : null;
+    const client = this._getClientById(clientId);
     const adr = this._getClientAdresseParts(client);
     if (!adr.adresse && !adr.ville && !adr.codePostal) return;
     const adresseInput = this._container.querySelector('#cex-adresse');
     const villeInput = this._container.querySelector('#cex-ville');
     const cpInput = this._container.querySelector('#cex-code-postal');
-    if (adresseInput && !adresseInput.dataset.userEdited && !adresseInput.value.trim()) adresseInput.value = adr.adresse;
-    if (villeInput && !villeInput.dataset.userEdited && !villeInput.value.trim()) villeInput.value = adr.ville;
-    if (cpInput && !cpInput.dataset.userEdited && !cpInput.value.trim()) cpInput.value = adr.codePostal;
+    if (adresseInput && !adresseInput.dataset.userEdited) adresseInput.value = adr.adresse;
+    if (villeInput && !villeInput.dataset.userEdited) villeInput.value = adr.ville;
+    if (cpInput && !cpInput.dataset.userEdited) cpInput.value = adr.codePostal;
+    this._chantier.adresse = adresseInput ? adresseInput.value : adr.adresse;
+    this._chantier.ville = villeInput ? villeInput.value : adr.ville;
+    this._chantier.codePostal = cpInput ? cpInput.value : adr.codePostal;
   },
 
   _bindCodePostalVille(cpSelector, villeSelector) {
@@ -952,7 +964,7 @@ const CalcExpressV2 = {
           if (adresseInput) adresseInput.value = ch.adresse || ch.ville || '';
           if (villeInput) villeInput.value = this._chantier.ville || '';
           if (cpInput) cpInput.value = this._chantier.codePostal || '';
-          const cli = DB.getClient(parseInt(ch.clientId));
+          const cli = this._getClientById(ch.clientId);
           if (cli && cli.type) {
             this._profil = cli.type === 'particulier' ? 'particulier' : 'pro';
           } else {
@@ -966,8 +978,10 @@ const CalcExpressV2 = {
     const clientSelect = this._container.querySelector('#cex-client-select');
     const adresseInput = this._container.querySelector('#cex-adresse');
     const villeInput = this._container.querySelector('#cex-ville');
+    const cpInput = this._container.querySelector('#cex-code-postal');
     if (adresseInput) adresseInput.addEventListener('input', () => { adresseInput.dataset.userEdited = '1'; });
     if (villeInput) villeInput.addEventListener('input', () => { villeInput.dataset.userEdited = '1'; });
+    if (cpInput) cpInput.addEventListener('input', () => { cpInput.dataset.userEdited = '1'; });
     if (clientSelect) {
       clientSelect.addEventListener('change', () => {
         this._chantier.clientId = this._normalizeId(clientSelect.value);
@@ -2496,7 +2510,7 @@ const CalcExpressV2 = {
           const ville = ((this._container.querySelector('#cex-ville') || {}).value || '').trim();
           if (!client) { if (typeof App !== 'undefined' && App.toast) App.toast('Veuillez sélectionner un client avant de continuer', 'warning'); return; }
           if (!nom) { if (typeof App !== 'undefined' && App.toast) App.toast('Saisissez un nom de chantier', 'warning'); return; }
-          const cliSelectionne = DB.getClient(client);
+          const cliSelectionne = this._getClientById(client);
           this._profil = cliSelectionne && cliSelectionne.type
             ? (cliSelectionne.type === 'particulier' ? 'particulier' : 'pro')
             : null;
