@@ -27,6 +27,7 @@ const CalcExpressV2 = {
     { id: 'electricite',  label: 'Électricité',  icone: '⚡' },
     { id: 'plomberie',    label: 'Plomberie',    icone: '🔧' },
     { id: 'maconnerie',   label: 'Maçonnerie',   icone: '🏗' },
+    { id: 'revetement',   label: 'Revêtement de sol', icone: '🪵', couleur: '#8B4513' },
     { id: 'paysagisme',   label: 'Paysagisme',   icone: '🌿' },
   ],
 
@@ -124,6 +125,18 @@ const CalcExpressV2 = {
     ],
   },
 
+  REVETEMENT_OUVRAGES: [
+    'OUV_PARQUET_MASSIF',
+    'OUV_PARQUET_CONTRECOLLE',
+    'OUV_STRATIFIE',
+    'OUV_VINYLE_LVT',
+    'OUV_CARRELAGE_SOL',
+    'OUV_CARRELAGE_GRAND_FORMAT',
+    'OUV_BETON_CIRE',
+    'OUV_MOQUETTE',
+    'OUV_RESINE_SOL',
+  ],
+
   // ── Lieux par corps de métier (prioritaire sur profil) ────
   LIEUX_CORPS: {
     paysagisme:  ['Aire de jeux', 'Jardin', 'Allée', 'Bassin / pièce d\'eau',
@@ -142,6 +155,7 @@ const CalcExpressV2 = {
                   'Tableau secondaire'],
     plomberie:   ['Buanderie', 'Cave', 'Chaufferie', 'Cuisine', 'Extérieur',
                   'Garage', 'Salle de bain 1', 'Salle de bain 2', 'WC'],
+    revetement:  null,
   },
 
   SECTIONS_PAR_ZONE: {
@@ -376,10 +390,10 @@ const CalcExpressV2 = {
       }
       return this._filtrerPiecesPourCorps(corpsId, this.LIEUX_CORPS[key] || []);
     }
-    if (corpsId === 'electricite') {
+    if (corpsId === 'electricite' || corpsId === 'revetement') {
       const piecesChantier = this._dedupeBy(
         (this._pieces || [])
-          .filter(p => p && p.nom && p.corps !== 'electricite')
+          .filter(p => p && p.nom && p.corps !== corpsId)
           .map(p => p.nom),
         nom => String(nom || '').trim().toLowerCase()
       );
@@ -420,6 +434,21 @@ const CalcExpressV2 = {
       'Terrasse béton': 'OUV_DALLE_BETON_12CM',
     };
     return map[prestation] || null;
+  },
+
+  _getOuvragesRevetement() {
+    return (this.REVETEMENT_OUVRAGES || []).map(code => {
+      const ouv = (typeof BddV2 !== 'undefined' && BddV2.getOuvrage) ? BddV2.getOuvrage(code) : null;
+      return ouv || { code, designation: code, unite: 'm²' };
+    });
+  },
+
+  _getOuvrageRevetement(piece) {
+    const code = (piece && (piece.ouvrageRevetement || piece.ouvrageId || piece.ouvrage)) || 'OUV_STRATIFIE';
+    if (typeof BddV2 !== 'undefined' && BddV2.getOuvrage) {
+      return BddV2.getOuvrage(code) || { code, designation: code, unite: 'm²' };
+    }
+    return { code, designation: code, unite: 'm²' };
   },
 
   // ── Entrée ────────────────────────────────────────────────
@@ -549,7 +578,7 @@ const CalcExpressV2 = {
 
   _filtrerPiecesPourCorps(corpsId, pieces) {
     if (corpsId === 'paysagisme') return pieces || [];
-    if (['plaquisterie','peinture','electricite','plomberie','maconnerie'].includes(corpsId)) {
+    if (['plaquisterie','peinture','electricite','plomberie','maconnerie','revetement'].includes(corpsId)) {
       return (pieces || []).filter(p => !this._estZonePaysagisme(p));
     }
     return pieces || [];
@@ -1202,6 +1231,7 @@ const CalcExpressV2 = {
       </button>`;
 
     const isPlaco   = p.corps === 'plaquisterie';
+    const isRevetement = p.corps === 'revetement';
     const needsHSP  = isPlaco || (p.corps === 'maconnerie' && (this._corpsConfig['maconnerie'] || {}).lieuxKey === 'maconnerie_int');
     const paysIdsActuels = this._getPaysagismeIds(p);
     const paysCodeActuel = this._getPaysagismePrimaryId(p);
@@ -1230,6 +1260,22 @@ const CalcExpressV2 = {
             style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid #f59e0b;background:var(--bg-card,#1e2530);color:#fff;font-size:.95rem;box-sizing:border-box">
         </div>` : ''}
       </div>
+      <div id="cex-m-preview" style="font-size:.9rem;color:var(--accent,#2563eb);font-weight:600;min-height:22px"></div>`;
+
+    const revetementOptions = this._getOuvragesRevetement().map(ouv => {
+      const code = ouv.code || ouv.id;
+      const selected = ((p.ouvrageRevetement || 'OUV_STRATIFIE') === code) ? 'selected' : '';
+      return `<option value="${this._esc(code)}" ${selected}>${this._esc(ouv.designation || code)}</option>`;
+    }).join('');
+    const champRevetement = `
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+        ${fieldWrap('cex-revetement-surface-wrap', 'Surface (m²)', `<input id="cex-revetement-surface" type="number" min="0" step="0.1" value="${p.surface||''}" placeholder="ex: 20" style="${inputStyle}">`, true)}
+        ${fieldWrap('cex-revetement-ouvrage-wrap', 'Ouvrage', `<select id="cex-revetement-ouvrage" style="${inputStyle}">${revetementOptions}</select>`, true)}
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:.9rem;color:var(--text-secondary,#ddd);cursor:pointer">
+        <input id="cex-revetement-plinthes" type="checkbox" ${p.plinthes ? 'checked' : ''} style="accent-color:var(--accent,#4f8ef7)">
+        <span>Inclure les plinthes</span>
+      </label>
       <div id="cex-m-preview" style="font-size:.9rem;color:var(--accent,#2563eb);font-weight:600;min-height:22px"></div>`;
 
     const champL = `
@@ -1279,7 +1325,7 @@ const CalcExpressV2 = {
         </button>
         <input type="hidden" id="cex-surface-libre" value="${p.surface && p.mode === 'libre' ? p.surface : 0}">
       </div>` : '';
-    const champs = mode === 'forme-l' ? champL : champRect;
+    const champs = isRevetement ? champRevetement : (mode === 'forme-l' ? champL : champRect);
     const champPaysagisme = p.corps === 'paysagisme' ? (() => {
       if (typeof BddPaysagismeV2 === 'undefined') {
         const codes = this._dedupeBy(this.PRESTATIONS_PAYSAGISME[p.nom] || ['OUV_GAZON_ROULEAU'], c => c);
@@ -1344,7 +1390,7 @@ const CalcExpressV2 = {
         </div>
         ${champPaysagisme}
         ${optionsPaysagisme}
-        <div style="display:flex;gap:8px;margin-bottom:16px">
+        <div style="display:${isRevetement ? 'none' : 'flex'};gap:8px;margin-bottom:16px">
           ${btnMode('rectangle','Rectangle','▬')}
           ${btnMode('forme-l','Forme en L','⌐')}
           ${btnMode('libre','Dessin libre','✏️')}
@@ -1357,6 +1403,15 @@ const CalcExpressV2 = {
       const el = this._container.querySelector('#cex-m-preview');
       if (!el) return;
       let s = 0;
+      if (p.corps === 'revetement') {
+        s = parseFloat((this._container.querySelector('#cex-revetement-surface') || {}).value) || 0;
+        const plinthes = this._container.querySelector('#cex-revetement-plinthes');
+        const perimetre = s > 0 ? Math.round(Math.sqrt(s) * 4 * 100) / 100 : 0;
+        el.textContent = s > 0
+          ? '→ Surface : ' + s + ' m²' + (plinthes && plinthes.checked ? ' · Plinthes estimées : ' + perimetre + ' ml' : '')
+          : '';
+        return;
+      }
       if (mode === 'rectangle') {
         const l   = parseFloat((this._container.querySelector('#cex-m-l') || {}).value) || 0;
         const w   = parseFloat((this._container.querySelector('#cex-m-w') || {}).value) || 0;
@@ -1404,6 +1459,7 @@ const CalcExpressV2 = {
     };
     this._container.querySelectorAll('input[type="number"]').forEach(i => i.addEventListener('input', preview));
     this._container.querySelectorAll('select').forEach(i => i.addEventListener('change', preview));
+    this._container.querySelectorAll('input[type="checkbox"]').forEach(i => i.addEventListener('change', preview));
     preview();
     this._bind();
     const canvas = this._container.querySelector('#cex-canvas-libre');
@@ -1700,6 +1756,7 @@ const CalcExpressV2 = {
     electricite:  { label: 'Electricite',  ouvrageDefaut: null },
     plomberie:    { label: 'Plomberie',    ouvrageDefaut: null },
     maconnerie:   { label: 'Maconnerie',   ouvrageDefaut: 'OUV_MUR_PARPAING_20' },
+    revetement:   { label: 'Revêtement de sol', bdd: 'BddV2', ouvrageDefaut: 'OUV_STRATIFIE' },
     paysagisme:   { label: 'Paysagisme',   ouvrageDefaut: null },
   },
 
@@ -1722,6 +1779,11 @@ const CalcExpressV2 = {
       const finition = piece.finition || 'satiné';
       const coloris = piece.coloris ? ' ' + piece.coloris : '';
       return piece.nom + ' — Préparation + ' + couches + ' couches ' + finition + coloris;
+    }
+    if (corpsId === 'revetement') {
+      const surface = parseFloat(piece.surface) || 0;
+      const ouvrage = this._getOuvrageRevetement(piece);
+      return piece.nom + ' — ' + (ouvrage.designation || 'Revêtement de sol') + ' — ' + surface + 'm²';
     }
     return piece.nom + (dims.length ? ' — ' + dims.join(' | ') : '');
   },
@@ -1833,6 +1895,12 @@ const CalcExpressV2 = {
         return BddV2.calcPrixVente(code, surface);
       }
     }
+    if (corpsId === 'revetement') {
+      const ouvrage = this._getOuvrageRevetement(piece);
+      if (typeof BddV2 !== 'undefined' && BddV2.calcPrixVente) {
+        return BddV2.calcPrixVente(ouvrage.code || 'OUV_STRATIFIE', surface);
+      }
+    }
     const bdd = this.CORPS_BDD[corpsId];
     if (!bdd || !bdd.ouvrageDefaut) {
       const coutMat   = surface * 8;
@@ -1857,6 +1925,49 @@ const CalcExpressV2 = {
     if (l && w) return Math.round((2 * l + 2 * w) * 100) / 100;
     if (parseFloat(piece.perimetre)) return parseFloat(piece.perimetre);
     return surface > 0 ? Math.round(Math.sqrt(surface) * 4 * 100) / 100 : 0;
+  },
+
+  _ajouterLigneDevisDirecte(corpsId, corps, qte, unite, designation, prixUnitaire) {
+    if (typeof DevisMulti === 'undefined' || !DevisMulti._state) return;
+    let sec = DevisMulti._state.sections.find(s => s.key === corpsId);
+    if (!sec) {
+      sec = {
+        key: corpsId,
+        icon: (corps && corps.icone) || '🔧',
+        titre: (corps && corps.label) || corpsId,
+        tva: 10,
+        lignes: [],
+        sid: DevisMulti._uid(),
+      };
+      DevisMulti._state.sections.push(sec);
+    }
+    sec.lignes.push({
+      id: DevisMulti._uid(),
+      ref: '',
+      designation,
+      unite,
+      qte,
+      prix: prixUnitaire || 0,
+      obligatoire: true,
+      option: false,
+    });
+  },
+
+  _ajouterPlinthesRevetementDevis(piece, corps) {
+    const qte = this._estimerPerimetre(piece);
+    if (!qte) return;
+    const r = (typeof BddV2 !== 'undefined' && BddV2.calcPrixVente)
+      ? BddV2.calcPrixVente('OUV_PLINTHE_POSE', qte)
+      : { prixVente: 0 };
+    const prixUnitaire = qte > 0 ? Math.round((r.prixVente || 0) / qte) : 0;
+    this._ajouterLigneDevisDirecte(
+      'revetement',
+      corps,
+      qte,
+      'ml',
+      piece.nom + ' — Plinthes posées — ' + qte + 'ml',
+      prixUnitaire
+    );
   },
 
   _linePackagePaysagisme(designation, qte, unite, prix, obligatoire, ouvrage) {
@@ -1967,6 +2078,7 @@ const CalcExpressV2 = {
 
   _getUniteOuvrage(corpsId, piece) {
     if (corpsId === 'electricite' || corpsId === 'plomberie') return 'u';
+    if (corpsId === 'revetement') return (this._getOuvrageRevetement(piece) || {}).unite || 'm²';
     if (corpsId === 'paysagisme' && this._isOuvrageHaiePlantation(piece)) return 'u';
     if (corpsId === 'paysagisme' && piece && this._getPaysagismeIds(piece).length) {
       const code = this._getPaysagismePrimaryId(piece);
@@ -2256,7 +2368,11 @@ const CalcExpressV2 = {
           const p    = this._pieceEnCours;
           const mode = p ? (p.mode || 'rectangle') : 'rectangle';
           let s = 0;
-          if (mode === 'rectangle') {
+          if (p && p.corps === 'revetement') {
+            s = parseFloat((this._container.querySelector('#cex-revetement-surface') || {}).value) || 0;
+            p.ouvrageRevetement = (this._container.querySelector('#cex-revetement-ouvrage') || {}).value || 'OUV_STRATIFIE';
+            p.plinthes = !!((this._container.querySelector('#cex-revetement-plinthes') || {}).checked);
+          } else if (mode === 'rectangle') {
             const l   = parseFloat((this._container.querySelector('#cex-m-l') || {}).value) || 0;
             const w   = parseFloat((this._container.querySelector('#cex-m-w') || {}).value) || 0;
             const hp  = parseFloat((this._container.querySelector('#cex-pays-hauteur') || {}).value) || 0;
@@ -2410,6 +2526,14 @@ const CalcExpressV2 = {
               }
               const designation = this._buildDesignationDevis(corpsId, p, dims);
               const uniteDevis = this._getUniteOuvrage(corpsId, p);
+              if (['plaquisterie','peinture','revetement'].includes(corpsId)) {
+                const prixUnitaire = quantiteDevis > 0 ? Math.round(r.prixVente / quantiteDevis) : 0;
+                this._ajouterLigneDevisDirecte(corpsId, corps, quantiteDevis, uniteDevis, designation, prixUnitaire);
+                if (corpsId === 'revetement' && p.plinthes) {
+                  this._ajouterPlinthesRevetementDevis(p, corps);
+                }
+                return;
+              }
               const nbLignesAvant = (() => {
                 const s = DevisMulti._state.sections.find(s => s.key === corpsId);
                 return s ? s.lignes.length : 0;
