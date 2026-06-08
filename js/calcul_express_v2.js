@@ -18,6 +18,7 @@ const CalcExpressV2 = {
   _corpsActifs:   [],
   _pieces:        [],
   _resultats:     {},
+  _surfacesMemorisees: {},
   _bindController: null,
   _modeModif: false,
 
@@ -106,6 +107,13 @@ const CalcExpressV2 = {
       { id:'evacuation_ep',   label:'Évacuation EP',            icone:'🔧', cat:'Extérieur' },
       { id:'regard',          label:'Regard',                   icone:'🔧', cat:'Extérieur' },
       { id:'pompe_arrosage',  label:'Pompe arrosage',           icone:'🔧', cat:'Extérieur' },
+      { id:'robinet',         label:'Robinet',                  icone:'🔧', cat:'Raccordements' },
+      { id:'evacuation',      label:'Évacuation',               icone:'🔧', cat:'Raccordements' },
+      { id:'arrosage',        label:'Arrosage',                 icone:'💧', cat:'Extérieur' },
+      { id:'lave_mains',      label:'Lave-mains',               icone:'🚿', cat:'Sanitaires' },
+      { id:'adoucisseur',     label:'Adoucisseur',              icone:'💧', cat:'Divers' },
+      { id:'pompe_relevage',  label:'Pompe de relevage',        icone:'🔧', cat:'Divers' },
+      { id:'radiateur_eau',   label:'Radiateur eau',            icone:'🌡', cat:'Chauffage' },
       { id:'nourrice',        label:'Nourrice distribution',   icone:'🔧', cat:'Divers' },
       { id:'vanne_arret',     label:"Vanne d'arrêt",           icone:'🔧', cat:'Divers' },
     ],
@@ -470,6 +478,7 @@ const CalcExpressV2 = {
     this._corpsActifs   = [];
     this._pieces        = [];
     this._resultats     = {};
+    this._surfacesMemorisees = {};
     if (this._bindController) this._bindController.abort();
     this._bindController = null;
     this._corpsEnCours  = 0;
@@ -513,6 +522,13 @@ const CalcExpressV2 = {
       }
       return piece;
     });
+    this._surfacesMemorisees = c.surfacesMemorisees || {};
+    if (!Object.keys(this._surfacesMemorisees).length) {
+      this._pieces.forEach(p => {
+        const surface = parseFloat(p.surface_sol || p.surface) || 0;
+        if (p.nom && surface > 0 && !this._surfacesMemorisees[p.nom]) this._surfacesMemorisees[p.nom] = surface;
+      });
+    }
     this._lastResume  = c.resume      || {};
     if (c.devisId && !this._lastResume.devisId) this._lastResume.devisId = c.devisId;
     this._profil      = c.profil      || 'particulier';
@@ -629,6 +645,12 @@ const CalcExpressV2 = {
     });
   },
 
+  _memoriserSurfacePiece(piece) {
+    if (!piece || !piece.nom) return;
+    const surface = parseFloat(piece.surface_sol || piece.surface) || 0;
+    if (surface > 0) this._surfacesMemorisees[piece.nom] = surface;
+  },
+
   _getZonesPaysagismeSet() {
     return new Set(this.LIEUX_CORPS.paysagisme || []);
   },
@@ -682,19 +704,22 @@ const CalcExpressV2 = {
     const liste = this.APPAREILLAGE[corpsId] || [];
     if (corpsId !== 'plomberie') return this._dedupeBy(liste, a => a.id);
     const nom = String(nomPiece || '').toLowerCase();
-    const mappings = [
-      { match: n => n.includes('cuisine'), ids: ['evier_1bac','evier_2bacs','robinetterie_cuisine','lave_vaisselle','cumulus','vmc'] },
-      { match: n => n.includes('salle de bain') || n.includes('sanitaire'), ids: ['baignoire','douche_italienne','douche_receveur','vasque','robinetterie_sdb','cumulus','vmc','seche_serviette'] },
-      { match: n => n.includes('wc'), ids: ['wc_standard','wc_suspendu','robinetterie_wc'] },
-      { match: n => n.includes('buanderie'), ids: ['lave_linge','evier_1bac','robinetterie_cuisine','cumulus'] },
-      { match: n => n.includes('extérieur') || n.includes('exterieur'), ids: ['robinet_ext','arrivee_eau','evacuation_ep','regard','pompe_arrosage'] },
-    ];
-    const mapping = mappings.find(m => m.match(nom));
-    if (!mapping) return this._dedupeBy(liste, a => a.id);
-    const ids = mapping.ids;
-    const allowed = new Set(ids);
-    return this._dedupeBy(liste.filter(a => allowed.has(a.id)), a => a.id);
-  },
+        const mappings = [
+          { match: n => n.includes('cuisine'), ids: ['evier_1bac','evier_2bacs','robinetterie_cuisine','lave_vaisselle','cumulus','vmc'] },
+          { match: n => n.includes('salle de bain') || n.includes('sanitaire'), ids: ['baignoire','douche_italienne','douche_receveur','vasque','robinetterie_sdb','cumulus','vmc','seche_serviette'] },
+          { match: n => n.includes('wc'), ids: ['wc_standard','wc_suspendu','robinetterie_wc'] },
+          { match: n => n.includes('buanderie'), ids: ['lave_linge','evier_1bac','robinetterie_cuisine','cumulus'] },
+          { match: n => n.includes('garage') || n.includes('local technique'), ids: ['robinet_ext','arrivee_eau','evacuation_ep','lave_mains','cumulus','adoucisseur'] },
+          { match: n => n.includes('cave') || n.includes('sous-sol') || n.includes('sous sol'), ids: ['robinet','evacuation','pompe_relevage','cumulus'] },
+          { match: n => n.includes('jardin') || n.includes('extérieur') || n.includes('exterieur'), ids: ['robinet_ext','arrosage','evacuation_ep','regard'] },
+          { match: n => n.includes('bureau') || n.includes('chambre'), ids: ['lave_mains','radiateur_eau'] },
+          { match: n => n.includes('couloir') || n.includes('entrée') || n.includes('entree'), ids: ['lave_mains','radiateur_eau'] },
+        ];
+        const mapping = mappings.find(m => m.match(nom));
+        const ids = mapping ? mapping.ids : ['robinet','evacuation','cumulus'];
+        const allowed = new Set(ids);
+        return this._dedupeBy(liste.filter(a => allowed.has(a.id)), a => a.id);
+      },
 
   _isOuvrageHaiePlantation(piece, code) {
     const id = this._getPaysagismePrimaryId(piece, code);
@@ -1108,7 +1133,7 @@ const CalcExpressV2 = {
             <span style="margin-left:auto;font-size:.8rem;color:var(--text-secondary,#666);background:var(--bg-secondary,#f8f9fa);padding:4px 10px;border-radius:20px">${progress}</span>
             <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
               ${this._btn('← Retour', 'pieces-retour', 'secondary')}
-              ${this._btn('↩ Retour corps de métiers', 'pieces-vers-corps')}
+              ${this._btn('← Modifier les corps de métier', 'modifier-corps-metiers')}
             </div>
           </div>
           <p style="margin:0 0 16px;font-size:.85rem;color:var(--text-secondary,#666)">Cochez les pièces à traiter. Les surfaces Plâtrerie sont reprises automatiquement si disponibles.</p>
@@ -1197,7 +1222,7 @@ const CalcExpressV2 = {
           <span style="margin-left:auto;font-size:.8rem;color:var(--text-secondary,#666);background:var(--bg-secondary,#f8f9fa);padding:4px 10px;border-radius:20px">${progress}</span>
           <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
             ${this._btn('← Retour', 'pieces-retour', 'secondary')}
-            ${this._btn('↩ Retour corps de métiers', 'pieces-vers-corps')}
+            ${this._btn('← Modifier les corps de métier', 'modifier-corps-metiers')}
           </div>
         </div>
         <p style="margin:0 0 16px;font-size:.85rem;color:var(--text-secondary,#666)">Sélectionnez les pièces à traiter — cliquez pour les Métrage</p>
@@ -1347,6 +1372,10 @@ const CalcExpressV2 = {
   _renderMetrage() {
     const p = this._pieceEnCours;
     if (!p) { this._renderEtape('pieces'); return; }
+    const surfaceMemorisee = this._surfacesMemorisees[p.nom];
+    if (surfaceMemorisee && !(parseFloat(p.surface) > 0)) {
+      p.surface = surfaceMemorisee;
+    }
     if (p.corps !== 'paysagisme' && this._estZonePaysagisme(p)) {
       this._pieceEnCours = null;
       this._renderEtape('pieces');
@@ -1385,6 +1414,20 @@ const CalcExpressV2 = {
         ${fieldWrap('cex-pays-essence-wrap', 'Essence', `<select id="cex-pays-essence" style="${inputStyle}">${essencesOptions}</select>`, p.corps === 'paysagisme' && typePaysActuel === 'haie')}
         ${fieldWrap('cex-pays-quantite-wrap', 'Quantité', `<input id="cex-pays-quantite" type="number" min="0" step="1" value="${p.quantite||p.nbPoints||''}" placeholder="ex: 1" style="${inputStyle}">`, p.corps === 'paysagisme' && typePaysActuel === 'u')}
         ${fieldWrap('cex-pays-profondeur-wrap', 'Profondeur (m)', `<input id="cex-pays-profondeur" type="number" min="0" step="0.1" value="${p.profondeur||''}" placeholder="ex: 0.3" style="${inputStyle}">`, p.corps === 'paysagisme' && typePaysActuel === 'm3')}
+        ${fieldWrap('cex-placo-epaisseur-wrap', 'Épaisseur cloison', `<select id="cex-placo-epaisseur" style="${inputStyle}">
+          <option value="48" ${(p.epaisseurCloison || p.epaisseur || 72) == 48 ? 'selected' : ''}>48 mm (cloison légère)</option>
+          <option value="72" ${(p.epaisseurCloison || p.epaisseur || 72) == 72 ? 'selected' : ''}>72 mm (standard)</option>
+          <option value="98" ${(p.epaisseurCloison || p.epaisseur || 72) == 98 ? 'selected' : ''}>98 mm (avec isolation)</option>
+          <option value="120" ${(p.epaisseurCloison || p.epaisseur || 72) == 120 ? 'selected' : ''}>120 mm (grande hauteur)</option>
+          <option value="150" ${(p.epaisseurCloison || p.epaisseur || 72) == 150 ? 'selected' : ''}>150 mm (acoustique renforcé)</option>
+        </select>`, isPlaco)}
+        ${fieldWrap('cex-placo-isolant-wrap', 'Isolant', `<select id="cex-placo-isolant" style="${inputStyle}">
+          <option value="aucun" ${(p.isolant || 'ldv') === 'aucun' ? 'selected' : ''}>Sans isolant</option>
+          <option value="ldv" ${(p.isolant || 'ldv') === 'ldv' ? 'selected' : ''}>Laine de verre</option>
+          <option value="ldr" ${p.isolant === 'ldr' ? 'selected' : ''}>Laine de roche</option>
+          <option value="ldv-acoustique" ${p.isolant === 'ldv-acoustique' ? 'selected' : ''}>Laine de verre acoustique</option>
+          <option value="polyurethane" ${p.isolant === 'polyurethane' ? 'selected' : ''}>Polyuréthane</option>
+        </select>`, isPlaco && parseInt(p.epaisseurCloison || p.epaisseur || 72, 10) >= 72)}
         ${needsHSP ? `
         <div style="flex:1;min-width:120px">
           <label style="font-size:.8rem;color:#f59e0b;font-weight:700;display:block;margin-bottom:4px">Hauteur sous plafond (m) *</label>
@@ -1592,6 +1635,13 @@ const CalcExpressV2 = {
     this._container.querySelectorAll('input[type="number"]').forEach(i => i.addEventListener('input', preview));
     this._container.querySelectorAll('select').forEach(i => i.addEventListener('change', preview));
     this._container.querySelectorAll('input[type="checkbox"]').forEach(i => i.addEventListener('change', preview));
+    const placoEpaisseur = this._container.querySelector('#cex-placo-epaisseur');
+    const placoIsolantWrap = this._container.querySelector('#cex-placo-isolant-wrap');
+    if (placoEpaisseur && placoIsolantWrap) {
+      placoEpaisseur.addEventListener('change', () => {
+        placoIsolantWrap.style.display = parseInt(placoEpaisseur.value, 10) >= 72 ? 'block' : 'none';
+      });
+    }
     preview();
     this._bind();
     const canvas = this._container.querySelector('#cex-canvas-libre');
@@ -1899,12 +1949,19 @@ const CalcExpressV2 = {
       const hauteur = parseFloat(piece.hauteur) || parseFloat(piece.hsp) || 2.5;
       const ouvrageId = piece.ouvrageId || piece.ouvrage || (this.CORPS_BDD.plaquisterie || {}).ouvrageDefaut;
       const ouvrage = (typeof BddV2 !== 'undefined' && BddV2.getOuvrage) ? BddV2.getOuvrage(ouvrageId) : null;
-      const epaisseur = (ouvrage && (ouvrage.epaisseur || ouvrage.epaisseur_mm)) || piece.epaisseur || 72;
-      const isolation = piece.isolation || piece.typeIsolation || 'laine de verre';
+      const epaisseur = piece.epaisseurCloison || piece.epaisseur || (ouvrage && (ouvrage.epaisseur || ouvrage.epaisseur_mm)) || 72;
+      const isolants = {
+        aucun: '',
+        ldv: 'laine de verre',
+        ldr: 'laine de roche',
+        'ldv-acoustique': 'laine de verre acoustique',
+        polyurethane: 'polyuréthane',
+      };
+      const isolation = isolants[piece.isolant || 'ldv'] || piece.isolation || piece.typeIsolation || '';
       if (longueur && hauteur) {
-        return piece.nom + ' — Cloison ' + longueur + '×' + hauteur + 'm — ' + epaisseur + 'mm + isolation ' + isolation;
+        return piece.nom + ' — Cloison ' + longueur + '×' + hauteur + 'm — ' + epaisseur + 'mm' + (isolation ? ' + ' + isolation : '');
       }
-      return piece.nom + ' — ' + (ouvrage ? ouvrage.designation : 'Cloison ' + epaisseur + 'mm');
+      return piece.nom + ' — ' + (ouvrage ? ouvrage.designation : 'Cloison ' + epaisseur + 'mm') + (isolation ? ' + ' + isolation : '');
     }
     if (corpsId === 'peinture') {
       const couches = parseInt(piece.nbCouches || piece.couches, 10) || 2;
@@ -2357,7 +2414,10 @@ const CalcExpressV2 = {
         ${lignesHTML || '<p style="color:var(--text-secondary,#666);font-size:.85rem">Aucune surface saisie</p>'}
       `)}
       <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;margin-top:16px">
-        ${this._btn('← Modifier', 'resume-retour', 'secondary')}
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${this._btn('← Modifier', 'resume-retour', 'secondary')}
+          ${this._btn('← Modifier les corps de métier', 'modifier-corps-metiers', 'secondary')}
+        </div>
         <div style="display:flex;gap:8px">
           ${this._btn('💾 Sauvegarder le chiffrage', 'resume-sauver')}
           ${this._btn('📄 Générer et enregistrer le devis', 'resume-devis')}
@@ -2513,6 +2573,8 @@ const CalcExpressV2 = {
             const qte = parseFloat((this._container.querySelector('#cex-pays-quantite') || {}).value) || 0;
             const prof = parseFloat((this._container.querySelector('#cex-pays-profondeur') || {}).value) || 0;
             const hsp = parseFloat((this._container.querySelector('#cex-m-hsp') || {}).value) || 0;
+            const epaisseurCloison = parseInt((this._container.querySelector('#cex-placo-epaisseur') || {}).value, 10) || 72;
+            const isolant = (this._container.querySelector('#cex-placo-isolant') || {}).value || 'aucun';
             const codePays = (document.getElementById('cex-pays-tache') || {}).value || this._getPaysagismePrimaryId(p);
             const typePays = p && p.corps === 'paysagisme' ? this._getTypeMetragePaysagisme(p, codePays) : 'm2';
             if (p && p.corps === 'paysagisme' && typePays === 'haie') {
@@ -2535,6 +2597,11 @@ const CalcExpressV2 = {
               p.hauteurPaysage = typePays === 'ml' ? (hp || null) : null;
               p.quantite = typePays === 'u' ? qte : null;
               p.profondeur = typePays === 'm3' ? prof : null;
+              if (p.corps === 'plaquisterie' || p.corps === 'platrerie') {
+                p.epaisseurCloison = epaisseurCloison;
+                p.epaisseur = epaisseurCloison;
+                p.isolant = epaisseurCloison >= 72 ? isolant : 'aucun';
+              }
               if (hsp) {
                 p.hsp          = hsp;
                 p.surface_sol  = s;
@@ -2560,6 +2627,7 @@ const CalcExpressV2 = {
           if (p) {
             p.surface = s;
             p.mode = mode;
+            this._memoriserSurfacePiece(p);
             if (p.corps === 'paysagisme') {
               const fallbackPays = (document.getElementById('cex-pays-tache') || {}).value;
               p.tachesPaysagisme = this._getPaysagismeIds(p);
@@ -2572,6 +2640,7 @@ const CalcExpressV2 = {
           return;
         }
         if (action === 'resume-retour') { this._renderEtape('corps'); return; }
+        if (action === 'modifier-corps-metiers') { this._renderEtape('corps'); return; }
         if (action === 'modifier-corps') {
           const corpsId = btn.dataset.corps;
           const idx = this._corpsActifs.indexOf(corpsId);
@@ -2589,6 +2658,7 @@ const CalcExpressV2 = {
             chantier:    this._chantier    || {},
             corpsActifs: this._corpsActifs || [],
             corpsConfig: this._corpsConfig || {},
+            surfacesMemorisees: this._surfacesMemorisees || {},
             profil:      this._profil      || 'particulier',
             pieces:      this._pieces      || [],
             resume:      this._lastResume  || {},
@@ -2740,6 +2810,7 @@ const CalcExpressV2 = {
               chantier:    this._chantier    || {},
               corpsActifs: this._corpsActifs || [],
               corpsConfig: this._corpsConfig || {},
+              surfacesMemorisees: this._surfacesMemorisees || {},
               profil:      this._profil      || 'particulier',
               pieces:      this._pieces      || [],
               resume:      this._lastResume  || {},
@@ -2800,6 +2871,7 @@ const CalcExpressV2 = {
           this._corpsActifs   = [];
           this._pieces        = [];
           this._resultats     = {};
+          this._surfacesMemorisees = {};
           this._lastResume    = null;
           this._corpsEnCours  = 0;
           this._pieceEnCours  = null;
@@ -2868,8 +2940,11 @@ const CalcExpressV2 = {
             if (cb.checked && surface > 0) {
               if (idx >= 0) {
                 this._pieces[idx].surface = surface;
+                this._memoriserSurfacePiece(this._pieces[idx]);
               } else {
-                this._pieces.push({ nom, corps: corpsId, surface, mode: 'rectangle', ouvrageRevetement: 'OUV_STRATIFIE', quantites: {} });
+                const pieceRev = { nom, corps: corpsId, surface, mode: 'rectangle', ouvrageRevetement: 'OUV_STRATIFIE', quantites: {} };
+                this._pieces.push(pieceRev);
+                this._memoriserSurfacePiece(pieceRev);
               }
             } else if (!cb.checked && idx >= 0) {
               this._pieces.splice(idx, 1);
