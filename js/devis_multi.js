@@ -1064,8 +1064,12 @@ Règles importantes :
       });
     });
     if (!lignes.filter(function(l) { return !DevisMulti._isHeaderLine(l); }).length) return null;
-    var totalHT = lignes.filter(function(l) { return !DevisMulti._isHeaderLine(l); }).reduce(function(s, l) { return s + l.totalHT; }, 0);
-    var tva = parseFloat(state.tva) || 20;
+    var totaux = DevisMulti._globalTotals();
+    var tauxFacturables = lignes
+      .filter(function(l) { return !DevisMulti._isHeaderLine(l); })
+      .map(function(l) { return DevisMulti._tvaValue(l.tva, 0); });
+    var tauxUniques = Array.from(new Set(tauxFacturables));
+    var tva = tauxUniques.length === 1 ? tauxUniques[0] : 0;
     var devis = {
       numero:     'DEV-' + Date.now(),
       objet:      state.objet || 'Devis',
@@ -1075,10 +1079,10 @@ Règles importantes :
       validite:   state.validite || '',
       statut:     'Brouillon',
       lignes:     lignes,
-      totalHT:    totalHT,
+      totalHT:    totaux.ht,
       tva:        tva,
-      totalTTC:   totalHT * (1 + tva/100),
-      montantTVA: totalHT * tva/100,
+      totalTTC:   totaux.ttc,
+      montantTVA: totaux.tva,
       notes:      state.notes || '',
     };
     var result = DB.addDevis(devis);

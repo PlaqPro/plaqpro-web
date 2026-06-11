@@ -2158,18 +2158,18 @@ const CalcExpressV2 = {
     const piecesSource = this._getPiecesSourceForfait();
     if (!piecesSource.length) return;
     const zonesPaysagisme = this._getZonesPaysagismeSet();
-    const surfaceTotale = Math.round(piecesSource.reduce((s, p) => s + (parseFloat(p.surface) || 0), 0) * 100) / 100;
     const piecesInterieures = piecesSource.filter(p => !zonesPaysagisme.has((p && p.nom) || p));
     const zonesExterieures = piecesSource.filter(p => zonesPaysagisme.has((p && p.nom) || p));
     const nbPieces = piecesInterieures.length;
     const nbZones = zonesExterieures.length;
+    const surfaceInterieure = Math.round(piecesInterieures.reduce((s, p) => s + (parseFloat(p.surface) || 0), 0) * 100) / 100;
     const surfacePays = Math.round(zonesExterieures.reduce((s, p) => s + (parseFloat(p.surface) || 0), 0) * 100) / 100;
     const paysOnly = nbZones > 0 && nbPieces === 0;
     const nb = paysOnly ? nbZones : nbPieces;
-    const surfaceForfait = paysOnly ? surfacePays : surfaceTotale;
+    const surfaceForfait = paysOnly ? surfacePays : surfaceInterieure;
     const prix = paysOnly
       ? Math.min(1200, Math.max(120, Math.round(nbZones * 65 + surfacePays * 0.5)))
-      : Math.min(850, Math.max(85, Math.round(nbPieces * 45 + surfaceTotale * 0.8)));
+      : Math.min(850, Math.max(85, Math.round(nbPieces * 45 + surfaceInterieure * 0.8)));
     const designation = paysOnly
       ? 'Préparation chantier extérieur — Balisage, protections, nettoyage fin de chantier (' + nb + ' zone(s), ' + surfaceForfait + 'm²)'
       : 'Protection chantier — Polyane, scotch, protections + installation et repli (' + nb + ' pièce(s), ' + surfaceForfait + 'm²)';
