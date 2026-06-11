@@ -158,7 +158,7 @@ var Aide = {
     { icon: '📐', nom: 'Métrés',                  desc: 'Saisissez dimensions L×l×H, les surfaces se calculent',  niveau: 'easy',   page: 'metrages' },
     { icon: '📄', nom: 'Devis',                   desc: 'Créez et envoyez des devis pro par email',               niveau: 'easy',   page: 'devis' },
     { icon: '🧾', nom: 'Factures',                desc: 'Transformez vos devis en factures en 1 clic',            niveau: 'easy',   page: 'factures' },
-    { icon: '📸', nom: 'Analyse Photo',           desc: 'Photographiez un chantier → PlaqPro+ l\'analyse. Dans Dashboard → Outils & Goodies → Actions rapides', niveau: 'easy', page: null, action: 'AnalysePhoto.showModal()' },
+    { icon: '📸', nom: 'Analyse Photo',           desc: 'Photographiez un chantier → PlaqPro+ l\'analyse. Accès direct dans la barre basse.', niveau: 'easy', page: null, action: 'AnalysePhoto.showModal()' },
     { icon: '🎯', nom: 'Prospection IA',          desc: 'Trouvez des prospects via les permis de construire',     niveau: 'medium', page: 'prospection' },
     { icon: '🏛', nom: "DPGF / Appels d'offres",  desc: 'Uploadez un DPGF Excel/PDF → PlaqPro+ le complète avec vos prix automatiquement. Dans Commercial → Appels d\'offres', niveau: 'medium', page: 'dpgf' },
     { icon: '🧱', nom: 'Pack Maçonnerie',         desc: 'Devis maçonnerie avec calculs automatiques',             niveau: 'medium', page: 'maconnerie' },
@@ -166,12 +166,12 @@ var Aide = {
     { icon: '🔧', nom: 'Pack Plomberie',          desc: 'Calculs plomberie DTU 60.1 intégrés',                    niveau: 'medium', page: 'plomberie' },
     { icon: '🌿', nom: 'Pack Extérieur',          desc: 'Paysagisme, terrasses, clôtures',                        niveau: 'medium', page: 'exterieur' },
     { icon: '📦', nom: 'Projets Types',           desc: 'Modèles de devis prêts à personnaliser',                 niveau: 'easy',   page: 'projets_types' },
-    { icon: '🤖', nom: 'Assistant IA',            desc: 'Posez vos questions pro à l\'IA 24h/24',                 niveau: 'easy',   page: null, action: "document.getElementById('ia-fab-btn')&&document.getElementById('ia-fab-btn').click()" },
+    { icon: '🤖', nom: 'Assistant IA',            desc: 'Posez vos questions pro à l\'IA 24h/24',                 niveau: 'easy',   page: null, action: "typeof AssistantIA !== 'undefined' && AssistantIA.toggle()" },
     { icon: '🧠', nom: 'Quiz Plaquiste',          desc: 'Testez et développez vos connaissances',                 niveau: 'easy',   page: 'quiz' },
     { icon: '☕', nom: 'Pause Café',             desc: 'Musique lofi + citation + minuteur. Bouton ☕ en bas de la sidebar.',                                    niveau: 'easy',   page: null, action: 'PauseCafe.show()' },
     { icon: '🇪🇺', nom: 'Export XML facture',      desc: 'Téléchargez un fichier XML structuré depuis chaque facture, compatible avec la plupart des logiciels comptables.', niveau: 'easy',   page: 'factures' },
     { icon: '📊', nom: 'Export comptable',        desc: 'Exportez vos écritures en 1 clic — compatible Sage, EBP, Cegid. Dans Configuration → Export comptable.',   niveau: 'easy',   page: 'config' },
-    { icon: '🔍', nom: 'Scanner facture four.',   desc: 'Photographiez une facture fournisseur → PlaqPro+ extrait les montants et la rattache au chantier. Dans Dashboard → Outils & Goodies', niveau: 'easy', page: null, action: 'AnalysePhoto.showModalFournisseur()' },
+    { icon: '🔍', nom: 'Scanner facture four.',   desc: 'Photographiez une facture fournisseur → PlaqPro+ extrait les montants et la rattache au chantier. Accès direct dans la barre basse.', niveau: 'easy', page: null, action: 'AnalysePhoto.showModalFournisseur()' },
     { icon: '📈', nom: 'Marge brute temps réel',  desc: 'Voyez votre marge en temps réel sur le dashboard — total facturé vs total achats.',                         niveau: 'easy',   page: 'dashboard' },
     { icon: '✍️', nom: 'Signature électronique',  desc: 'Le client signe depuis son téléphone. Bouton ✍️ sur chaque devis envoyé.',                                  niveau: 'easy',   page: 'devis' },
   ],
@@ -224,12 +224,12 @@ var Aide = {
     },
     {
       q: 'Comment scanner une facture fournisseur ?',
-      a: 'Dans <strong>Dashboard → Outils & Goodies → Actions rapides → Scanner une facture</strong>. Prenez une photo et PlaqPro+ extrait automatiquement tous les montants (HT, TVA, TTC, fournisseur, date échéance).',
+      a: 'Utilisez le bouton <strong>Scan</strong> dans la barre basse. Prenez une photo et PlaqPro+ extrait automatiquement tous les montants (HT, TVA, TTC, fournisseur, date échéance).',
       page: null,
     },
     {
       q: 'Où est la calculatrice ?',
-      a: 'Dans <strong>Dashboard → Outils & Goodies → Actions rapides → Calculatrice</strong>. Vous pouvez aussi y accéder via le menu <strong>🎮 Jeux</strong> en bas de la sidebar.',
+      a: 'La calculatrice reste dans le menu <strong>🎮 Utilitaires & Jeux</strong> en bas de la sidebar.',
       page: null,
     },
     {
@@ -565,6 +565,7 @@ var Aide = {
 
   // ── Aide contextuelle (bouton ❓ par page) ────────────────
   _injectContextHelp() {
+    if (document.getElementById('plaqpro-bottom-actions')) return;
     if (document.getElementById('aide-ctx-btn')) return;
     const btn = document.createElement('button');
     btn.id = 'aide-ctx-btn';

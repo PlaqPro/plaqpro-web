@@ -64,14 +64,6 @@
              onclick="document.getElementById('games-popup').style.display='none';if(typeof Calculatrice !== 'undefined') Calculatrice.toggle();return false;">
             <span class="nav-icon">🧮</span><span>Calculatrice</span>
           </a>
-          <a class="nav-item" href="#" style="border-radius:var(--radius-sm)"
-             onclick="document.getElementById('games-popup').style.display='none';if(typeof AnalysePhoto !== 'undefined') AnalysePhoto.showModal();return false;">
-            <span class="nav-icon">📸</span><span>Analyser une photo</span>
-          </a>
-          <a class="nav-item" href="#" style="border-radius:var(--radius-sm)"
-             onclick="document.getElementById('games-popup').style.display='none';if(typeof AnalysePhoto !== 'undefined') AnalysePhoto.showModalFournisseur();return false;">
-            <span class="nav-icon">🧾</span><span>Scanner une facture</span>
-          </a>
           <div style="height:1px;background:rgba(255,255,255,0.07);margin:6px 0"></div>
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-tertiary);margin:4px 0 6px 6px">🎮 Jeux</div>
           <a class="nav-item" href="#" style="border-radius:var(--radius-sm)"
@@ -108,6 +100,24 @@
     </div>
     <div id="content" class="content"></div>
   </main>
+
+  <nav class="bottom-actions" id="plaqpro-bottom-actions" aria-label="Actions rapides">
+    <button type="button" class="bottom-action-btn" onclick="App.navigate('calcExpressV2')" title="Nouveau chiffrage">
+      <span class="bottom-action-icon">⚡</span><span class="bottom-action-label">Chiffrage</span>
+    </button>
+    <button type="button" class="bottom-action-btn" onclick="if(typeof AnalysePhoto !== 'undefined') AnalysePhoto.showModal()" title="Analyser une photo">
+      <span class="bottom-action-icon">📸</span><span class="bottom-action-label">Photo</span>
+    </button>
+    <button type="button" class="bottom-action-btn" onclick="if(typeof AnalysePhoto !== 'undefined') AnalysePhoto.showModalFournisseur()" title="Scanner une facture">
+      <span class="bottom-action-icon">🧾</span><span class="bottom-action-label">Scan</span>
+    </button>
+    <button type="button" class="bottom-action-btn" onclick="if(typeof Aide !== 'undefined' && Aide._showContextModal) Aide._showContextModal(); else App.navigate('aide')" title="Aide sur cette page">
+      <span class="bottom-action-icon">❓</span><span class="bottom-action-label">Aide</span>
+    </button>
+    <button type="button" class="bottom-action-btn" onclick="if(typeof AssistantIA !== 'undefined') AssistantIA.toggle()" title="Assistant IA PlaqPro+">
+      <span class="bottom-action-icon">🤖</span><span class="bottom-action-label">IA</span>
+    </button>
+  </nav>
 
   <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)App.closeModal()">
     <div class="modal">

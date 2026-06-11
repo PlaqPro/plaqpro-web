@@ -141,9 +141,63 @@ body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 24px;
+  padding: 24px 24px 96px;
   height: calc(100vh - var(--topbar-h));
   box-sizing: border-box;
+}
+
+/* ACTIONS RAPIDES */
+.bottom-actions {
+  position: fixed;
+  left: var(--sidebar-w);
+  right: 0;
+  bottom: 0;
+  z-index: 8800;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+  background: rgba(7,17,29,0.88);
+  border-top: 1px solid rgba(255,255,255,0.10);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  box-shadow: 0 -12px 36px rgba(0,0,0,0.38);
+}
+
+.bottom-action-btn {
+  min-width: 74px;
+  height: 46px;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.055);
+  color: var(--text-primary);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: transform .16s ease, border-color .16s ease, background .16s ease;
+}
+
+.bottom-action-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(79,142,247,0.16);
+  border-color: rgba(79,142,247,0.34);
+}
+
+.bottom-action-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.bottom-action-label {
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--text-secondary);
 }
 
 /* CARDS */
@@ -524,7 +578,10 @@ body.sidebar-open .hamburger span:nth-child(3) { transform: translateY(-7px) rot
   .topbar-btn-hide { display: none !important; }
 
   /* ── Content padding réduit ── */
-  .content { padding: 14px 12px; }
+  .content { padding: 14px 12px 94px; }
+  .bottom-actions { left: 0; gap: 6px; padding-left: 8px; padding-right: 8px; }
+  .bottom-action-btn { min-width: 58px; flex: 1; max-width: 84px; height: 48px; }
+  .bottom-action-label { font-size: 9px; }
 
   /* ── Stats : 2 colonnes ── */
   .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
@@ -620,6 +677,7 @@ body.sidebar-open .hamburger span:nth-child(3) { transform: translateY(-7px) rot
 }
 
 @media print {
+  .bottom-actions { display: none !important; }
   .no-print { display: none !important; }
   .print-only { display: inline !important; }
   [class*="historique"], .card-historique { display: none !important; }

@@ -416,14 +416,14 @@ Tu réponds en français, de façon courte et pratique.`,
         border: 1px solid var(--accent, #4f8ef7);
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         font-size: 20px; cursor: pointer;
-        display: flex; align-items: center; justify-content: center;
+        display: none !important; align-items: center; justify-content: center;
         transition: all 0.2s ease;
       }
       #ia-toggle-btn:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 10px 32px rgba(79,142,247,0.6); }
       #ia-toggle-btn.ia-btn-active { background: rgba(30,35,50,0.95); font-size: 18px; }
 
       #ia-window {
-        position: fixed; bottom: 96px; right: 88px; z-index: 8999;
+        position: fixed; bottom: 86px; right: 20px; z-index: 8999;
         width: 380px; height: 520px;
         background: var(--ia-bg);
         border: 1px solid var(--ia-border);
@@ -535,7 +535,7 @@ Tu réponds en français, de façon courte et pratique.`,
       #ia-send-btn:disabled { opacity: 0.4; cursor: default; }
 
       @media (max-width: 480px) {
-        #ia-window { width: calc(100vw - 20px); right: 10px; bottom: 80px; }
+        #ia-window { width: calc(100vw - 20px); right: 10px; bottom: 76px; }
         #ia-toggle-btn { bottom: 20px; right: 20px; top: auto; }
       }
     `;
