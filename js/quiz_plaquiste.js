@@ -255,7 +255,7 @@ var Quiz = {
     Quiz._score     = 0;
     Quiz._answered  = false;
 
-    const hasGroq = !!localStorage.getItem('plaqpro_groq_key');
+    const hasGroq = !!getGroqKey();
 
     if (hasGroq) {
       Quiz._afficherChargement(container, niveau);
@@ -561,7 +561,7 @@ Object.assign(Pages, {
     const statsRaw = localStorage.getItem('plaqpro_quiz_stats');
     const stats    = statsRaw ? JSON.parse(statsRaw) : { parties: 0, meilleur: 0, badges: [] };
     const badgeIcons = { premier:'🎯', apprenti:'🟡', compagnon:'🔵', chef:'🔴', parfait:'⭐', eclair:'⚡', assidu:'🏆' };
-    const hasGroq  = !!localStorage.getItem('plaqpro_groq_key');
+    const hasGroq  = !!getGroqKey();
 
     const wrap = document.createElement('div');
     wrap.id = 'quiz-page';

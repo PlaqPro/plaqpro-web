@@ -1041,7 +1041,7 @@ const Pages = {
                 <div style="display:flex;gap:6px;align-items:center">
                   <input class="form-control" id="ligne-libre-desig" placeholder="Désignation du poste…"
                     style="flex:1;font-size:13px">
-                  ${!!localStorage.getItem('plaqpro_groq_key') ? `
+                  ${!!getGroqKey() ? `
                   <button class="btn btn-secondary btn-sm" onclick="Pages._ameliorerLigneIA()" title="Améliorer avec l'IA" style="white-space:nowrap">✨ IA</button>
                   ` : ''}
                 </div>
@@ -1506,7 +1506,7 @@ const Pages = {
   config() {
     const config = DB.getConfig();
     setTimeout(() => Pages._renderPrixMarche(), 50);
-    const groqKey = localStorage.getItem('plaqpro_groq_key') || '';
+    const groqKey = getGroqKey();
     const profil = DB.getProfil ? DB.getProfil() : {};
     const div = document.createElement('div');
     div.innerHTML = `
@@ -2302,14 +2302,14 @@ const Pages = {
   sauvegarderGroqKey() {
     const key = document.getElementById('cfg-groq-key')?.value.trim();
     if (!key) { App.toast('Clé vide', 'error'); return; }
-    localStorage.setItem('plaqpro_groq_key', key);
+    saveGroqKey(key);
     if (typeof AssistantIA !== 'undefined') AssistantIA._checkGroq();
     App.toast('Paramètres IA enregistrés !');
   },
 
   supprimerGroqKey() {
     App.modalConfirm({ message: 'Supprimer la clé API Groq ?', onConfirm: () => {
-      localStorage.removeItem('plaqpro_groq_key');
+      removeGroqKey();
       if (typeof AssistantIA !== 'undefined') AssistantIA._checkGroq();
       App.navigate('config');
       App.toast('Clé supprimée');

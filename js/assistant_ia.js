@@ -45,7 +45,7 @@ Tu réponds en français, de façon courte et pratique.`,
 
   // ── Vérification clé Groq ─────────────────────────────────
   _checkGroq() {
-    const key = localStorage.getItem('plaqpro_groq_key') || '';
+    const key = getGroqKey();
     this._setStatus(key ? 'online' : 'offline');
   },
 
@@ -382,14 +382,7 @@ Tu réponds en français, de façon courte et pratique.`,
       return;
     }
     // Sauvegarder dans tous les emplacements utilisés par PlaqPro+
-    localStorage.setItem('plaqpro_groq_key', cle);
-    localStorage.setItem('groq_api_key', cle);
-    localStorage.setItem('plaqpro_groq', cle);
-    var config = JSON.parse(localStorage.getItem('plaqpro_config') || '{}');
-    config.groqApiKey = cle;
-    config.groqKey    = cle;
-    config.apiKeyGroq = cle;
-    localStorage.setItem('plaqpro_config', JSON.stringify(config));
+    saveGroqKey(cle);
     // Rafraîchir l'assistant
     AssistantIA._cle = cle;
     const wrap = document.getElementById('ia-wrap');

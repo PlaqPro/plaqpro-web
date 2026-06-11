@@ -416,7 +416,7 @@ Pages.devisIntelligent = function(params = {}) {
       }});
     },
     async genererAvecIA() {
-      const groqKey = localStorage.getItem('plaqpro_groq_key') || localStorage.getItem('groq_api_key') || '';
+      const groqKey = getGroqKey();
       if (!groqKey?.startsWith('gsk_')) { App.toast('Clé IA manquante — configurez-la dans Mon Compte', 'error'); return; }
       if (!state.chantier) { App.toast('Sélectionnez un chantier', 'error'); return; }
       App.toast('🤖 Génération IA en cours...', 'success');

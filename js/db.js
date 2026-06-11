@@ -356,12 +356,60 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// ── Helper Groq : clé depuis localStorage ─────────────────────
+// ── Helper Groq : clé persistante depuis localStorage ─────────
+const GROQ_STORAGE_KEYS = ['plaqpro_groq_key', 'groq_api_key', 'plaqpro_groq'];
+
+function getGroqKey() {
+  let key = '';
+  for (const storageKey of GROQ_STORAGE_KEYS) {
+    key = localStorage.getItem(storageKey) || '';
+    if (key) break;
+  }
+  if (!key) {
+    try {
+      const config = JSON.parse(localStorage.getItem('plaqpro_config') || '{}');
+      key = config.groqApiKey || config.groqKey || config.apiKeyGroq || '';
+    } catch(e) {}
+  }
+  if (!key) {
+    for (const storageKey of GROQ_STORAGE_KEYS) {
+      key = sessionStorage.getItem(storageKey) || '';
+      if (key) break;
+    }
+  }
+  if (key) saveGroqKey(key);
+  return key;
+}
+
+function saveGroqKey(key) {
+  const clean = (key || '').trim();
+  if (!clean) return;
+  GROQ_STORAGE_KEYS.forEach(storageKey => localStorage.setItem(storageKey, clean));
+  let config = {};
+  try { config = JSON.parse(localStorage.getItem('plaqpro_config') || '{}'); } catch(e) {}
+  config.groqApiKey = clean;
+  config.groqKey = clean;
+  config.apiKeyGroq = clean;
+  localStorage.setItem('plaqpro_config', JSON.stringify(config));
+}
+
+function removeGroqKey() {
+  GROQ_STORAGE_KEYS.forEach(storageKey => {
+    localStorage.removeItem(storageKey);
+    sessionStorage.removeItem(storageKey);
+  });
+  try {
+    const config = JSON.parse(localStorage.getItem('plaqpro_config') || '{}');
+    delete config.groqApiKey;
+    delete config.groqKey;
+    delete config.apiKeyGroq;
+    localStorage.setItem('plaqpro_config', JSON.stringify(config));
+  } catch(e) {}
+}
+
 // Retourne { url, headers } ou null si aucune clé configurée
 function groqConfig() {
-  const key = localStorage.getItem('plaqpro_groq_key') ||
-              localStorage.getItem('groq_api_key') ||
-              '';
+  const key = getGroqKey();
   if (!key) return null;
   return {
     url: 'https://api.groq.com/openai/v1/chat/completions',

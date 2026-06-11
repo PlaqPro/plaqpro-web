@@ -8,7 +8,7 @@ Pages.monCompte = function() {
   const div = document.createElement('div');
   const config = DB.getConfig();
   const user = JSON.parse(sessionStorage.getItem('plaqpro_session') || '{}');
-  const groqKey = localStorage.getItem('plaqpro_groq_key') || '';
+  const groqKey = getGroqKey();
   const onboardingFait = localStorage.getItem('plaqpro_onboarding_done') === '1';
 
   if (!document.getElementById('style-compte')) {
@@ -203,12 +203,7 @@ const MC = {
       App.toast('❌ Clé invalide — elle doit commencer par gsk_', 'error');
       return;
     }
-    localStorage.setItem('plaqpro_groq_key', cle);
-    localStorage.setItem('groq_api_key', cle);
-    localStorage.setItem('plaqpro_groq', cle);
-    const config = JSON.parse(localStorage.getItem('plaqpro_config') || '{}');
-    config.groqApiKey = cle; config.groqKey = cle; config.apiKeyGroq = cle;
-    localStorage.setItem('plaqpro_config', JSON.stringify(config));
+    saveGroqKey(cle);
     App.toast('✅ Clé IA sauvegardée — assistant actif !', 'success');
     App.navigate('monCompte');
   },

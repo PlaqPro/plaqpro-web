@@ -567,7 +567,7 @@ window.QM = {
   },
 
   async lancerIA() {
-    const apiKey = localStorage.getItem('plaqpro_groq_key') || localStorage.getItem('groq_api_key') || '';
+    const apiKey = getGroqKey();
     if (!apiKey.startsWith('gsk_')) {
       App.modalForm({
         titre: 'Clé API Groq',
@@ -577,7 +577,7 @@ window.QM = {
             App.toast('Clé invalide — doit commencer par gsk_', 'error');
             return false;
           }
-          localStorage.setItem('plaqpro_groq_key', vals.cle.trim());
+          saveGroqKey(vals.cle.trim());
           App.toast('Clé Groq enregistrée ✅ — relancez la question IA', 'success');
         }
       });
@@ -589,7 +589,7 @@ window.QM = {
     document.getElementById('qm-screen-metier').style.display = 'none';
 
     try {
-      const key = localStorage.getItem('plaqpro_groq_key') || localStorage.getItem('groq_api_key');
+      const key = getGroqKey();
       const prompt = `Tu es un formateur expert en BTP français. Génère exactement 10 questions QCM de niveau expert sur le métier : ${metierLabel}.
 Format JSON strict (tableau) :
 [{"q":"Question?","r":"Réponse exacte","opts":["Réponse exacte","Mauvaise1","Mauvaise2","Mauvaise3"],"expl":"Explication courte"}]

@@ -540,7 +540,7 @@ var DevisMulti = {
     if (!descriptif) { App.toast('Saisissez un descriptif des travaux', 'warning'); return; }
 
     var config = DB.getConfig();
-    var groqKey = config.groqApiKey || config.groqKey || config.apiKeyGroq || '';
+    var groqKey = getGroqKey();
     if (!groqKey) {
       App.toast('Clé Groq manquante — configurez-la dans ⚙️ Configuration', 'error');
       return;

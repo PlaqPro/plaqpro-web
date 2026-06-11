@@ -413,11 +413,11 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
                border:1px solid rgba(255,155,50,0.2);border-radius:var(--radius-md);
                display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
             <span style="font-size:12px;color:var(--text-secondary)">
-              ${localStorage.getItem('plaqpro_groq_key')
+              ${getGroqKey()
                 ? '✅ Clé Groq configurée — analyse réelle activée'
                 : '⚠️ Pas de clé Groq — <strong>mode démo</strong> disponible'}
             </span>
-            ${!localStorage.getItem('plaqpro_groq_key')
+            ${!getGroqKey()
               ? `<button class="btn btn-secondary" style="font-size:12px;padding:5px 10px"
                    onclick="AnalysePhoto._runDemo()">🎭 Lancer une démo</button>`
               : ''}

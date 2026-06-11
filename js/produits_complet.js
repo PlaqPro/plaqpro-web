@@ -856,7 +856,7 @@ const ProdMoteur = {
     if (!container) return;
 
     if (!produits.length) {
-      const hasGroq = !!localStorage.getItem('plaqpro_groq_key');
+      const hasGroq = !!getGroqKey();
       const qEsc = query ? query.replace(/"/g, '&quot;') : '';
       const webBtn = hasGroq
         ? `<button class="btn btn-secondary" style="margin-top:8px"
@@ -883,7 +883,7 @@ const ProdMoteur = {
     }
 
     if (produits.length < 3 && query && query.length >= 2) {
-      const hasGroq = !!localStorage.getItem('plaqpro_groq_key');
+      const hasGroq = !!getGroqKey();
       if (hasGroq) {
         const banner = document.createElement('div');
         banner.id = 'pweb-suggest';
@@ -999,7 +999,7 @@ Object.assign(window.PROD, {
   },
 
   actualiserPrix() {
-    const groqKey = localStorage.getItem('plaqpro_groq_key') || localStorage.getItem('groq_api_key') || '';
+    const groqKey = getGroqKey();
     if (!groqKey || !groqKey.startsWith('gsk_')) {
       App.toast('Clé IA manquante — configurez-la dans Mon Compte', 'error');
       return;
