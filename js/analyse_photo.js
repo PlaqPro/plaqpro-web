@@ -409,6 +409,13 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
             `}
           </div>
 
+          <div style="margin-top:12px">
+            <button class="btn btn-secondary" style="width:100%;justify-content:center"
+              onclick="AnalysePhoto.showManualMeasureModal()">
+              Mesure manuelle
+            </button>
+          </div>
+
           <div id="pm-demo-bar" style="margin-top:16px;padding:10px 14px;background:rgba(255,155,50,0.08);
                border:1px solid rgba(255,155,50,0.2);border-radius:var(--radius-md);
                display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
@@ -436,6 +443,344 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
       </div>`;
 
     document.body.appendChild(overlay);
+  },
+
+  showManualMeasureModal() {
+    const existing = document.getElementById('manual-measure-modal-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'manual-measure-modal-overlay';
+    overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+    overlay.innerHTML = `
+      <div class="pm-modal" style="max-width:420px">
+        <div class="pm-modal-header">
+          <div style="font-weight:700;font-size:15px;color:var(--text-primary)">Mesure manuelle</div>
+          <button class="pm-close" onclick="document.getElementById('manual-measure-modal-overlay').remove()">✕</button>
+        </div>
+        <div class="pm-step">
+          <p style="margin:0 0 18px;color:var(--text-secondary);font-size:14px;line-height:1.45">
+            Tracez manuellement vos points avec une mesure de référence.
+          </p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+            <button class="btn btn-primary" style="width:100%;justify-content:center"
+              onclick="AnalysePhoto.startManualLengthMeasure()">
+              Mesurer une longueur ML
+            </button>
+            <button class="btn btn-secondary" style="width:100%;justify-content:center"
+              onclick="AnalysePhoto.startManualAreaMeasure()">
+              Mesurer une surface M²
+            </button>
+          </div>
+          <button class="btn btn-ghost" style="width:100%;justify-content:center"
+            onclick="document.getElementById('manual-measure-modal-overlay').remove()">
+            Fermer
+          </button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+  },
+
+  startManualLengthMeasure() {
+    this.showManualMeasureCamera('length');
+  },
+
+  startManualAreaMeasure() {
+    this.showManualMeasureCamera('area');
+  },
+
+  async showManualMeasureCamera(mode) {
+    const isArea = mode === 'area';
+    const title = isArea ? 'Mesurer une surface M²' : 'Mesurer une longueur ML';
+    const helpText = isArea
+      ? 'Touchez les angles du contour à mesurer'
+      : 'Touchez le point de départ puis le point d’arrivée';
+    const existing = document.getElementById('manual-measure-camera-overlay');
+    if (existing) this.closeManualMeasureCamera();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'manual-measure-camera-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9800;background:#000;display:flex;flex-direction:column;color:#fff';
+    overlay.innerHTML = `
+      <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;
+           background:rgba(0,0,0,0.72);border-bottom:1px solid rgba(255,255,255,0.12)">
+        <div>
+          <div style="font-weight:700;font-size:15px">${title}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.72);margin-top:2px">${helpText}</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button id="manual-measure-clear" class="btn btn-secondary">Effacer</button>
+          <button class="btn btn-secondary" onclick="AnalysePhoto.closeManualMeasureCamera()">Fermer</button>
+        </div>
+      </div>
+      <div id="manual-measure-camera-zone" style="position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden">
+        <video id="manual-measure-video" autoplay playsinline
+          style="width:100%;height:100%;object-fit:cover"></video>
+        <canvas id="manual-measure-canvas"
+          style="position:absolute;inset:0;width:100%;height:100%;pointer-events:auto;touch-action:none"></canvas>
+        <div id="manual-measure-error" style="display:none;position:absolute;left:16px;right:16px;top:50%;
+             transform:translateY(-50%);padding:16px;border-radius:8px;background:rgba(0,0,0,0.74);
+             border:1px solid rgba(255,255,255,0.16);text-align:center;font-size:14px;line-height:1.45"></div>
+      </div>
+      <div style="padding:10px 12px;background:rgba(0,0,0,0.78);border-top:1px solid rgba(255,255,255,0.12);
+           display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:rgba(255,255,255,0.76);min-width:180px;flex:1">
+          Longueur de référence connue (m)
+          <input id="manual-measure-reference-length" type="number" step="0.01" min="0.01" placeholder="1.00"
+            style="height:36px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);
+            color:#fff;padding:0 10px">
+        </label>
+        <button id="manual-measure-calibrate" class="btn btn-primary">Poser référence</button>
+        <button id="manual-measure-reset-calibration" class="btn btn-secondary">Réinitialiser calibration</button>
+        <div id="manual-measure-calibration-status" style="font-size:12px;color:rgba(255,255,255,0.72);min-width:120px">
+          Calibration non définie
+        </div>
+        <div id="manual-measure-result" style="font-size:14px;font-weight:700;color:#F7A64F;min-width:160px"></div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+    const points = [];
+    const calibrationPoints = [];
+    let isCalibrating = false;
+    let metersPerPixel = null;
+    const canvas = document.getElementById('manual-measure-canvas');
+    const clearButton = document.getElementById('manual-measure-clear');
+    const calibrateButton = document.getElementById('manual-measure-calibrate');
+    const resetCalibrationButton = document.getElementById('manual-measure-reset-calibration');
+    const referenceInput = document.getElementById('manual-measure-reference-length');
+    const calibrationStatus = document.getElementById('manual-measure-calibration-status');
+    const resultBox = document.getElementById('manual-measure-result');
+    const drawPoint = (ctx, point, label, fillStyle) => {
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 7, 0, Math.PI * 2);
+      ctx.fillStyle = fillStyle;
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#fff';
+      ctx.stroke();
+      ctx.fillStyle = '#111';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, point.x, point.y);
+    };
+    const updateCalibrationStatus = text => {
+      if (calibrationStatus) calibrationStatus.textContent = text;
+    };
+    const updateLengthResult = () => {
+      if (!resultBox || isArea || points.length < 2) return;
+      const pixelLength = this.distanceBetweenPoints(points[0], points[1]);
+      const ratio = this._manualMeasureCalibrationRatio || metersPerPixel;
+
+      if (!ratio) {
+        resultBox.textContent = 'Calibrez d’abord une longueur de référence';
+        return;
+      }
+
+      resultBox.textContent = `Longueur : ${(pixelLength * ratio).toFixed(2)} m`;
+    };
+    const updateAreaResult = () => {
+      if (!resultBox || !isArea || points.length < 3) return;
+      const areaPixels = this.polygonArea(points);
+      const ratio = this._manualMeasureCalibrationRatio || metersPerPixel;
+
+      if (!ratio) {
+        resultBox.textContent = 'Calibrez d’abord une longueur de référence';
+        return;
+      }
+
+      resultBox.textContent = `Surface : ${(areaPixels * ratio * ratio).toFixed(2)} m²`;
+    };
+    const calculateCalibration = () => {
+      const realLength = Number((referenceInput?.value || referenceInput?.placeholder || '').replace(',', '.'));
+      if (calibrationPoints.length < 2 || !Number.isFinite(realLength) || realLength <= 0) {
+        updateCalibrationStatus('Indiquez une longueur puis posez 2 points');
+        return;
+      }
+
+      const dx = calibrationPoints[1].x - calibrationPoints[0].x;
+      const dy = calibrationPoints[1].y - calibrationPoints[0].y;
+      const pixelLength = Math.sqrt(dx * dx + dy * dy);
+      if (!pixelLength) {
+        updateCalibrationStatus('Référence invalide');
+        return;
+      }
+
+      metersPerPixel = realLength / pixelLength;
+      this._manualMeasureCalibrationRatio = metersPerPixel;
+      updateCalibrationStatus('Calibration OK');
+      updateLengthResult();
+      updateAreaResult();
+    };
+    const redrawCanvas = () => {
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.round(rect.width * dpr));
+      canvas.height = Math.max(1, Math.round(rect.height * dpr));
+
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+
+      if (points.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        points.slice(1).forEach(point => ctx.lineTo(point.x, point.y));
+        ctx.strokeStyle = '#F7A64F';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+      }
+
+      if (isArea && points.length >= 3) {
+        ctx.beginPath();
+        ctx.moveTo(points[points.length - 1].x, points[points.length - 1].y);
+        ctx.lineTo(points[0].x, points[0].y);
+        ctx.strokeStyle = '#F7A64F';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.setLineDash([8, 6]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      points.forEach((point, index) => {
+        drawPoint(ctx, point, String(index + 1), '#F7A64F');
+      });
+
+      if (calibrationPoints.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(calibrationPoints[0].x, calibrationPoints[0].y);
+        ctx.lineTo(calibrationPoints[1].x, calibrationPoints[1].y);
+        ctx.strokeStyle = '#4F8EF7';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8, 6]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      calibrationPoints.forEach((point, index) => {
+        drawPoint(ctx, point, String.fromCharCode(65 + index), '#4F8EF7');
+      });
+    };
+    const addPoint = event => {
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const point = {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+      };
+
+      if (isCalibrating) {
+        if (calibrationPoints.length >= 2) calibrationPoints.length = 0;
+        calibrationPoints.push(point);
+        if (calibrationPoints.length === 2) {
+          isCalibrating = false;
+          calculateCalibration();
+        } else {
+          updateCalibrationStatus('Posez le second point de référence');
+        }
+        redrawCanvas();
+        return;
+      }
+
+      if (!isArea && points.length >= 2) return;
+      points.push({
+        x: point.x,
+        y: point.y
+      });
+      updateLengthResult();
+      updateAreaResult();
+      redrawCanvas();
+    };
+
+    if (canvas) canvas.addEventListener('pointerdown', addPoint);
+    if (clearButton) clearButton.addEventListener('click', () => {
+      points.length = 0;
+      if (resultBox) resultBox.textContent = '';
+      redrawCanvas();
+    });
+    if (calibrateButton) calibrateButton.addEventListener('click', () => {
+      calibrationPoints.length = 0;
+      isCalibrating = true;
+      metersPerPixel = null;
+      this._manualMeasureCalibrationRatio = null;
+      if (resultBox && ((!isArea && points.length >= 2) || (isArea && points.length >= 3))) {
+        resultBox.textContent = 'Calibrez d’abord une longueur de référence';
+      }
+      updateCalibrationStatus('Posez le premier point de référence');
+      redrawCanvas();
+    });
+    if (resetCalibrationButton) resetCalibrationButton.addEventListener('click', () => {
+      calibrationPoints.length = 0;
+      isCalibrating = false;
+      metersPerPixel = null;
+      this._manualMeasureCalibrationRatio = null;
+      if (resultBox && ((!isArea && points.length >= 2) || (isArea && points.length >= 3))) {
+        resultBox.textContent = 'Calibrez d’abord une longueur de référence';
+      }
+      updateCalibrationStatus('Calibration non définie');
+      redrawCanvas();
+    });
+    this._manualMeasureResizeHandler = redrawCanvas;
+    window.addEventListener('resize', redrawCanvas);
+    redrawCanvas();
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      const errorBox = document.getElementById('manual-measure-error');
+      if (errorBox) {
+        errorBox.textContent = 'Caméra non disponible sur cet appareil ou ce navigateur.';
+        errorBox.style.display = 'block';
+      }
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      const video = document.getElementById('manual-measure-video');
+      if (video) video.srcObject = stream;
+      this._manualMeasureStream = stream;
+    } catch(err) {
+      const errorBox = document.getElementById('manual-measure-error');
+      if (errorBox) {
+        errorBox.textContent = 'Impossible d’accéder à la caméra. Vérifiez l’autorisation caméra puis réessayez.';
+        errorBox.style.display = 'block';
+      }
+    }
+  },
+
+  closeManualMeasureCamera() {
+    if (this._manualMeasureStream) {
+      this._manualMeasureStream.getTracks().forEach(track => track.stop());
+      this._manualMeasureStream = null;
+    }
+    if (this._manualMeasureResizeHandler) {
+      window.removeEventListener('resize', this._manualMeasureResizeHandler);
+      this._manualMeasureResizeHandler = null;
+    }
+    const overlay = document.getElementById('manual-measure-camera-overlay');
+    if (overlay) overlay.remove();
+  },
+
+  distanceBetweenPoints(p1, p2) {
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    return Math.sqrt(dx * dx + dy * dy);
+  },
+
+  polygonArea(points) {
+    if (!Array.isArray(points) || points.length < 3) return 0;
+
+    let total = 0;
+    points.forEach((point, index) => {
+      const next = points[(index + 1) % points.length];
+      total += point.x * next.y - next.x * point.y;
+    });
+
+    return Math.abs(total) / 2;
   },
 
   // ── Drag & Drop ───────────────────────────────────────────

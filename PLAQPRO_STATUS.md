@@ -79,17 +79,14 @@
 - Beta test bloquants : 100% corriges
 
 ## Derniere tache terminee
-- Incrementation du cache Service Worker
-- Ancien cache : plaqpro-v20260608m
-- Nouveau cache : plaqpro-v20260612a
-- js/scanner.js ajoute dans FICHIERS_CACHE
-- Validation : node --check sw.js OK
-- Clarification navigation basse Photo / Scan
-- Libelle "Photo" renomme en "Photo chantier"
-- Libelle "Scan" renomme en "Mes scans"
-- Actions onclick conservees : AnalysePhoto.showModal() et App.navigate('scanner')
-- Aucun fichier JS modifie
-- Validation : node --check non necessaire
+- Photo chantier : calcul surface M2 ajoute dans la mesure manuelle
+- Mode surface : a partir de 3 points, boucle fermee visuellement entre dernier et premier point
+- Aire polygone calculee en pixels2 puis convertie avec calibrationRatio au carre
+- Affichage "Surface : X.XX m2" si calibration disponible
+- Affichage "Calibrez d'abord une longueur de reference" si calibration absente
+- AnalysePhoto.polygonArea(points) ajoutee
+- Calcul ML existant conserve
+- Validation : node --check js/analyse_photo.js OK
 - Aucun commit/push effectue
 
 ## Prochaine tache prevue
