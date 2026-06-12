@@ -31,6 +31,7 @@ const DB = {
     ouvragesTypes:        'plaqpro_ouvrages_types',
     ouvragesComposition:  'plaqpro_ouvrages_composition',
     chiffrages:           'plaqpro_chiffrages',
+    scannedDocuments:     'plaqpro_scanned_documents',
   },
 
   // Données paysagisme
@@ -110,6 +111,37 @@ const DB = {
   getChantier(id)       { return this.getById(this.KEYS.chantiers, id); },
   getChantiersByClient(clientId) {
     return this.chantiers.filter(c => c.clientId === clientId);
+  },
+
+  // ── Documents scannés ────────────────────────────────────
+  getScannedDocuments() {
+    return this.getAll(this.KEYS.scannedDocuments);
+  },
+
+  saveScannedDocument(document) {
+    const items = this.getScannedDocuments();
+    const now = new Date().toISOString();
+    const doc = {
+      id: document.id || Date.now(),
+      date: document.date || now,
+      type: document.type || 'document',
+      title: document.title || 'Document scanné',
+      clientId: document.clientId || null,
+      chantierId: document.chantierId || null,
+      source: document.source || null,
+      ...document,
+      updatedAt: now,
+    };
+    const idx = items.findIndex(item => String(item.id) === String(doc.id));
+    if (idx >= 0) items[idx] = { ...items[idx], ...doc };
+    else items.push({ ...doc, createdAt: doc.createdAt || now });
+    this.save(this.KEYS.scannedDocuments, items);
+    return doc;
+  },
+
+  removeScannedDocument(id) {
+    const items = this.getScannedDocuments().filter(item => String(item.id) !== String(id));
+    this.save(this.KEYS.scannedDocuments, items);
   },
 
   // ── Métrages ──────────────────────────────────────────────
