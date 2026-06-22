@@ -340,6 +340,8 @@ Tu réponds en français, de façon courte et pratique.`,
   },
 
   _promptCle() {
+    const savedKey = typeof getGroqKey === 'function' ? getGroqKey() : '';
+    const safeSavedKey = String(savedKey || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
     this._addMessage('bot', `<div style="padding:20px;max-width:340px;margin:0 auto">
     <div style="text-align:center;margin-bottom:20px">
       <div style="font-size:40px;margin-bottom:8px">🤖</div>
@@ -361,7 +363,7 @@ Tu réponds en français, de façon courte et pratique.`,
       🔗 Obtenir ma clé gratuite sur console.groq.com →
     </a>
     <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;font-weight:600">🔑 Collez votre clé ici :</div>
-    <input type="password" id="ia-groq-input" placeholder="gsk_xxxxxxxxxxxxxxxxxxxx"
+    <input type="password" id="ia-groq-input" value="${safeSavedKey}" placeholder="gsk_xxxxxxxxxxxxxxxxxxxx"
       style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-primary);color:var(--text-primary);font-size:13px;margin-bottom:10px;box-sizing:border-box">
     <button onclick="AssistantIA.validerCle()"
       style="width:100%;background:var(--accent);color:#fff;border:none;padding:12px;border-radius:6px;font-weight:700;font-size:14px;cursor:pointer">

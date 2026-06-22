@@ -268,7 +268,16 @@ const DB = {
       piedPageFacture: 'Facture payable à 30 jours. En cas de retard, pénalités de 3× le taux légal + indemnité forfaitaire de 40 € (art. L441-10 C.com).',
     };
   },
-  saveConfig(c) { localStorage.setItem(this.KEYS.config, JSON.stringify(c)); },
+  saveConfig(c) {
+    const config = { ...(c || {}) };
+    const groqKey = typeof getGroqKey === 'function' ? getGroqKey() : '';
+    if (groqKey) {
+      config.groqApiKey = groqKey;
+      config.groqKey = groqKey;
+      config.apiKeyGroq = groqKey;
+    }
+    localStorage.setItem(this.KEYS.config, JSON.stringify(config));
+  },
 
   getProfil() {
     const saved = localStorage.getItem('plaqpro_profil');

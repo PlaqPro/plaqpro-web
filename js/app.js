@@ -2353,10 +2353,12 @@ const Pages = {
       });
       const data = await r.json();
       if (data.choices?.[0]?.message?.content) {
+        saveGroqKey(key);
+        if (typeof AssistantIA !== 'undefined') AssistantIA._checkGroq();
         res.style.background = 'rgba(45,212,160,0.10)';
         res.style.border = '1px solid rgba(45,212,160,0.3)';
         res.style.color = '#2DD4A0';
-        res.innerHTML = '✅ Connexion réussie ! Réponse : ' + data.choices[0].message.content.trim();
+        res.innerHTML = '✅ Connexion réussie ! Clé enregistrée localement. Réponse : ' + data.choices[0].message.content.trim();
       } else if (data.error) {
         throw new Error(data.error.message);
       }
