@@ -446,6 +446,8 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
   },
 
   showManualMeasureModal() {
+    document.getElementById('photo-modal-overlay')?.remove();
+
     const existing = document.getElementById('manual-measure-modal-overlay');
     if (existing) existing.remove();
 
@@ -483,10 +485,12 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
   },
 
   startManualLengthMeasure() {
+    document.getElementById('manual-measure-modal-overlay')?.remove();
     this.showManualMeasureCamera('length');
   },
 
   startManualAreaMeasure() {
+    document.getElementById('manual-measure-modal-overlay')?.remove();
     this.showManualMeasureCamera('area');
   },
 
@@ -496,6 +500,7 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
     const helpText = isArea
       ? 'Touchez les angles du contour à mesurer'
       : 'Touchez le point de départ puis le point d’arrivée';
+    const calibrationHelp = 'Étape 1 : touchez les deux extrémités d’une longueur connue';
     const existing = document.getElementById('manual-measure-camera-overlay');
     if (existing) this.closeManualMeasureCamera();
 
@@ -507,7 +512,7 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
            background:rgba(0,0,0,0.86);border-bottom:1px solid rgba(255,255,255,0.16);backdrop-filter:none">
         <div style="flex:1;min-width:190px">
           <div style="font-weight:800;font-size:16px;line-height:1.2;color:#fff">${title}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.72);margin-top:2px">${helpText}</div>
+          <div id="manual-measure-help" style="font-size:12px;color:rgba(255,255,255,0.72);margin-top:2px">${calibrationHelp}</div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
           <button id="manual-measure-undo" class="btn btn-secondary">Annuler dernier point</button>
@@ -532,10 +537,10 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
             style="height:36px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);
             color:#fff;padding:0 10px">
         </label>
-        <button id="manual-measure-calibrate" class="btn btn-primary">Poser référence</button>
+        <button id="manual-measure-calibrate" class="btn btn-primary">Valider calibrage</button>
         <button id="manual-measure-reset-calibration" class="btn btn-secondary">Réinitialiser calibration</button>
         <div id="manual-measure-calibration-status" style="font-size:12px;color:rgba(255,255,255,0.72);min-width:120px">
-          Calibration non définie
+          Calibrage requis
         </div>
         <div id="manual-measure-result" style="font-size:14px;font-weight:700;color:#F7A64F;min-width:160px"></div>
         ${isArea ? `
@@ -555,8 +560,6 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
     document.body.appendChild(overlay);
     const points = [];
     const calibrationPoints = [];
-    let isCalibrating = false;
-    let metersPerPixel = null;
     const canvas = document.getElementById('manual-measure-canvas');
     const undoButton = document.getElementById('manual-measure-undo');
     const clearButton = document.getElementById('manual-measure-clear');
@@ -564,28 +567,67 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
     const resetCalibrationButton = document.getElementById('manual-measure-reset-calibration');
     const referenceInput = document.getElementById('manual-measure-reference-length');
     const calibrationStatus = document.getElementById('manual-measure-calibration-status');
+    const helpBox = document.getElementById('manual-measure-help');
     const resultBox = document.getElementById('manual-measure-result');
     const areaLabelButtons = Array.from(overlay.querySelectorAll('.manual-area-label-btn'));
     const saveZoneButton = document.getElementById('manual-measure-save-zone');
     const zonesSummary = document.getElementById('manual-measure-zones-summary');
     let selectedAreaLabel = null;
     const measuredZones = [];
-    const drawPoint = (ctx, point, label, fillStyle) => {
+    let isCalibrating = true;
+    let calibrationValidated = false;
+    let draggedCalibrationPointIndex = null;
+    let draggedMeasurePointIndex = null;
+    let metersPerPixel = null;
+    this._manualMeasureCalibrationRatio = null;
+    const drawPoint = (ctx, point, label, fillStyle, options = {}) => {
+      const radius = options.radius || 12;
+      const strokeStyle = options.strokeStyle || '#fff';
+      const textColor = options.textColor || '#111';
       ctx.beginPath();
-      ctx.arc(point.x, point.y, 7, 0, Math.PI * 2);
+      ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
       ctx.fillStyle = fillStyle;
       ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = strokeStyle;
       ctx.stroke();
-      ctx.fillStyle = '#111';
-      ctx.font = 'bold 11px sans-serif';
+      ctx.fillStyle = textColor;
+      ctx.font = 'bold 12px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(label, point.x, point.y);
     };
+    const drawCalibrationReference = (ctx, subtle = false) => {
+      if (!calibrationPoints.length) return;
+
+      ctx.save();
+      ctx.globalAlpha = subtle ? 0.28 : 1;
+
+      if (calibrationPoints.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(calibrationPoints[0].x, calibrationPoints[0].y);
+        ctx.lineTo(calibrationPoints[1].x, calibrationPoints[1].y);
+        ctx.strokeStyle = subtle ? '#fff' : '#F7A64F';
+        ctx.lineWidth = subtle ? 2 : 3;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      }
+
+      calibrationPoints.forEach((point, index) => {
+        drawPoint(ctx, point, String.fromCharCode(65 + index), subtle ? '#fff' : '#F7A64F', {
+          radius: subtle ? 7 : 12,
+          strokeStyle: subtle ? 'rgba(0,0,0,0.45)' : '#fff',
+          textColor: subtle ? '#111' : '#111'
+        });
+      });
+
+      ctx.restore();
+    };
     const updateCalibrationStatus = text => {
       if (calibrationStatus) calibrationStatus.textContent = text;
+    };
+    const updateHelp = text => {
+      if (helpBox) helpBox.textContent = text;
     };
     const updateAreaLabelButtons = () => {
       areaLabelButtons.forEach(button => {
@@ -644,8 +686,8 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
       const pixelLength = this.distanceBetweenPoints(points[0], points[1]);
       const ratio = this._manualMeasureCalibrationRatio || metersPerPixel;
 
-      if (!ratio) {
-        resultBox.textContent = 'Calibrez d’abord une longueur de référence';
+      if (!calibrationValidated || !ratio) {
+        resultBox.textContent = 'Validez le calibrage avant de mesurer';
         return;
       }
 
@@ -656,8 +698,8 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
       const areaPixels = this.polygonArea(points);
       const ratio = this._manualMeasureCalibrationRatio || metersPerPixel;
 
-      if (!ratio) {
-        resultBox.textContent = 'Calibrez d’abord une longueur de référence';
+      if (!calibrationValidated || !ratio) {
+        resultBox.textContent = 'Validez le calibrage avant de mesurer';
         return;
       }
 
@@ -671,16 +713,21 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
     };
     const clearCalibration = text => {
       calibrationPoints.length = 0;
-      isCalibrating = false;
+      isCalibrating = true;
+      calibrationValidated = false;
+      draggedCalibrationPointIndex = null;
+      draggedMeasurePointIndex = null;
       metersPerPixel = null;
       this._manualMeasureCalibrationRatio = null;
       updateCalibrationStatus(text);
+      updateHelp(calibrationHelp);
     };
     const calculateCalibration = () => {
-      const realLength = Number((referenceInput?.value || referenceInput?.placeholder || '').replace(',', '.'));
+      const realLength = Number((referenceInput?.value || '').replace(',', '.'));
       if (calibrationPoints.length < 2 || !Number.isFinite(realLength) || realLength <= 0) {
-        updateCalibrationStatus('Indiquez une longueur puis posez 2 points');
-        return;
+        updateCalibrationStatus('Posez 2 points et indiquez la longueur');
+        calibrationValidated = false;
+        return false;
       }
 
       const dx = calibrationPoints[1].x - calibrationPoints[0].x;
@@ -688,14 +735,19 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
       const pixelLength = Math.sqrt(dx * dx + dy * dy);
       if (!pixelLength) {
         updateCalibrationStatus('Référence invalide');
-        return;
+        calibrationValidated = false;
+        return false;
       }
 
       metersPerPixel = realLength / pixelLength;
       this._manualMeasureCalibrationRatio = metersPerPixel;
-      updateCalibrationStatus('Calibration OK');
+      calibrationValidated = true;
+      isCalibrating = false;
+      updateCalibrationStatus('Calibrage OK');
+      updateHelp(helpText);
       updateLengthResult();
       updateAreaResult();
+      return true;
     };
     const redrawCanvas = () => {
       if (!canvas) return;
@@ -707,6 +759,15 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
       const ctx = canvas.getContext('2d');
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, rect.width, rect.height);
+
+      if (!calibrationValidated) {
+        drawCalibrationReference(ctx, false);
+        return;
+      }
+
+      if (!points.length || draggedCalibrationPointIndex !== null) {
+        drawCalibrationReference(ctx, true);
+      }
 
       if (points.length > 1) {
         ctx.beginPath();
@@ -733,21 +794,6 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
 
       points.forEach((point, index) => {
         drawPoint(ctx, point, String(index + 1), '#F7A64F');
-      });
-
-      if (calibrationPoints.length > 1) {
-        ctx.beginPath();
-        ctx.moveTo(calibrationPoints[0].x, calibrationPoints[0].y);
-        ctx.lineTo(calibrationPoints[1].x, calibrationPoints[1].y);
-        ctx.strokeStyle = '#4F8EF7';
-        ctx.lineWidth = 3;
-        ctx.setLineDash([8, 6]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-
-      calibrationPoints.forEach((point, index) => {
-        drawPoint(ctx, point, String.fromCharCode(65 + index), '#4F8EF7');
       });
 
       measuredZones.forEach(zone => {
@@ -805,24 +851,49 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
         ctx.fillText(selectedAreaLabel, center.x, center.y);
       }
     };
-    const addPoint = event => {
+    const getCanvasPoint = event => {
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
-      const point = {
+      return {
         x: event.clientX - rect.left,
         y: event.clientY - rect.top
       };
+    };
+    const findCalibrationPointIndex = point => {
+      const hitRadius = 24;
+      return calibrationPoints.findIndex(calibrationPoint =>
+        this.distanceBetweenPoints(calibrationPoint, point) <= hitRadius
+      );
+    };
+    const findMeasurePointIndex = point => {
+      const hitRadius = 24;
+      return points.findIndex(measurePoint =>
+        this.distanceBetweenPoints(measurePoint, point) <= hitRadius
+      );
+    };
+    const addPoint = event => {
+      if (!canvas) return;
+      const point = getCanvasPoint(event);
+      if (!point) return;
 
-      if (isCalibrating) {
-        if (calibrationPoints.length >= 2) calibrationPoints.length = 0;
+      if (isCalibrating || !calibrationValidated) {
+        if (calibrationPoints.length >= 2) {
+          updateCalibrationStatus('Déplacez les points ou validez le calibrage');
+          redrawCanvas();
+          return;
+        }
         calibrationPoints.push(point);
         if (calibrationPoints.length === 2) {
-          isCalibrating = false;
-          calculateCalibration();
+          updateCalibrationStatus('Saisissez la longueur puis validez');
         } else {
-          updateCalibrationStatus('Posez le second point de référence');
+          updateCalibrationStatus('Touchez la seconde extrémité');
         }
         redrawCanvas();
+        return;
+      }
+
+      if (!calibrationValidated) {
+        if (resultBox) resultBox.textContent = 'Validez le calibrage avant de mesurer';
         return;
       }
 
@@ -836,18 +907,66 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
       redrawCanvas();
     };
 
-    if (canvas) canvas.addEventListener('pointerdown', addPoint);
+    if (canvas) {
+      canvas.addEventListener('pointerdown', event => {
+        const point = getCanvasPoint(event);
+        if (!point) return;
+        const calibrationPointIndex = findCalibrationPointIndex(point);
+        if (calibrationPointIndex >= 0) {
+          draggedCalibrationPointIndex = calibrationPointIndex;
+          canvas.setPointerCapture?.(event.pointerId);
+          event.preventDefault();
+          return;
+        }
+        if (calibrationValidated) {
+          const measurePointIndex = findMeasurePointIndex(point);
+          if (measurePointIndex >= 0) {
+            draggedMeasurePointIndex = measurePointIndex;
+            canvas.setPointerCapture?.(event.pointerId);
+            event.preventDefault();
+            return;
+          }
+        }
+        addPoint(event);
+      });
+      canvas.addEventListener('pointermove', event => {
+        if (draggedCalibrationPointIndex === null && draggedMeasurePointIndex === null) return;
+        const point = getCanvasPoint(event);
+        if (!point) return;
+
+        if (draggedCalibrationPointIndex !== null) {
+          calibrationPoints[draggedCalibrationPointIndex] = point;
+          if (calibrationValidated) {
+            calculateCalibration();
+          } else if (calibrationPoints.length === 2) {
+            updateCalibrationStatus('Ajustez puis validez le calibrage');
+          }
+        } else if (draggedMeasurePointIndex !== null) {
+          points[draggedMeasurePointIndex] = point;
+          refreshMeasureResult();
+        }
+
+        redrawCanvas();
+        event.preventDefault();
+      });
+      const stopDraggingPoint = event => {
+        if (draggedCalibrationPointIndex === null && draggedMeasurePointIndex === null) return;
+        draggedCalibrationPointIndex = null;
+        draggedMeasurePointIndex = null;
+        canvas.releasePointerCapture?.(event.pointerId);
+        redrawCanvas();
+      };
+      canvas.addEventListener('pointerup', stopDraggingPoint);
+      canvas.addEventListener('pointercancel', stopDraggingPoint);
+    }
     if (undoButton) undoButton.addEventListener('click', () => {
-      if (isCalibrating && calibrationPoints.length) {
+      if (!calibrationValidated && calibrationPoints.length) {
         calibrationPoints.pop();
         if (calibrationPoints.length) {
-          updateCalibrationStatus('Posez le second point de référence');
+          updateCalibrationStatus('Touchez la seconde extrémité');
         } else {
-          clearCalibration('Posez le premier point de référence');
-          isCalibrating = true;
+          clearCalibration('Calibrage requis');
         }
-      } else if (calibrationPoints.length && !points.length) {
-        clearCalibration('Calibration non définie');
       } else if (points.length) {
         points.pop();
         refreshMeasureResult();
@@ -882,6 +1001,11 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
       redrawCanvas();
     });
     if (saveZoneButton) saveZoneButton.addEventListener('click', () => {
+      if (!calibrationValidated) {
+        if (resultBox) resultBox.textContent = 'Validez le calibrage avant de mesurer';
+        return;
+      }
+
       if (points.length < 3) {
         if (resultBox) resultBox.textContent = 'Posez au moins 3 points pour valider une zone';
         return;
@@ -889,7 +1013,7 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
 
       const surface = areaMetersFromPoints(points);
       if (!surface) {
-        if (resultBox) resultBox.textContent = 'Calibrez d’abord une longueur de référence';
+        if (resultBox) resultBox.textContent = 'Validez le calibrage avant de mesurer';
         return;
       }
 
@@ -914,18 +1038,14 @@ Extrais les données et réponds UNIQUEMENT en JSON valide, sans texte avant ni 
       });
     });
     if (calibrateButton) calibrateButton.addEventListener('click', () => {
-      clearCalibration('Posez le premier point de référence');
-      isCalibrating = true;
-      if (resultBox && ((!isArea && points.length >= 2) || (isArea && points.length >= 3))) {
-        resultBox.textContent = 'Calibrez d’abord une longueur de référence';
-      }
+      const ok = calculateCalibration();
+      if (!ok && resultBox) resultBox.textContent = 'Calibrage incomplet';
       redrawCanvas();
     });
     if (resetCalibrationButton) resetCalibrationButton.addEventListener('click', () => {
-      clearCalibration('Calibration non définie');
-      if (resultBox && ((!isArea && points.length >= 2) || (isArea && points.length >= 3))) {
-        resultBox.textContent = 'Calibrez d’abord une longueur de référence';
-      }
+      points.length = 0;
+      clearCalibration('Calibrage requis');
+      if (resultBox) resultBox.textContent = '';
       redrawCanvas();
     });
     this._manualMeasureResizeHandler = redrawCanvas;
