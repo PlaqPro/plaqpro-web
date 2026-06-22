@@ -875,6 +875,7 @@ const Pages = {
 
     const total = Number(data.totalSurfaces || zones.reduce((sum, zone) => sum + (zone.surface || 0), 0));
     const currentLines = Pages._devisEnCours?.lignes || [];
+    const prestationsM2 = Pages.getPrestationsM2();
     return `
       <div class="no-print" style="margin-bottom:16px;padding:12px 14px;background:rgba(247,166,79,0.08);
            border:1px solid rgba(247,166,79,0.22);border-radius:var(--radius-md)">
@@ -892,6 +893,13 @@ const Pages = {
               <span style="font-weight:600">${zone.name}</span>
               <span style="color:var(--text-secondary);font-size:12px">${zone.shapeType}</span>
               <span style="font-family:var(--font-mono);font-weight:700;color:var(--accent)">${Number(zone.surface || 0).toFixed(2)} m²</span>
+              <select class="form-control" id="photo-zone-prestation-${index}" ${alreadyAdded ? 'disabled' : ''}
+                style="min-width:220px;max-width:320px;font-size:12px;padding:6px 8px">
+                <option value="">Prestation non chiffrée</option>
+                ${prestationsM2.map(p => `
+                  <option value="${p.id || p.reference || ''}">${p.designation || p.reference || 'Prestation'} — ${Calculs.fmt(p.prixHT || 0)}/m²</option>
+                `).join('')}
+              </select>
               <button class="btn btn-secondary btn-sm" onclick="Pages.ajouterZonePhotoAuDevis(${index})" ${alreadyAdded ? 'disabled' : ''}
                 style="white-space:nowrap">${alreadyAdded ? 'Déjà ajouté' : 'Ajouter au devis'}</button>
             </div>
@@ -908,6 +916,22 @@ const Pages = {
       Number(zone.surface || 0).toFixed(2),
       zone.shapeType || ''
     ].join('|');
+  },
+
+  getPrestationsM2() {
+    const produits = DB.produits || [];
+    const unitsM2 = ['m2', 'm²', 'm 2', 'm^2', 'metre carre', 'metre carré', 'mètre carre', 'mètre carré'];
+    return produits.filter(p => {
+      const unit = String(p.unite || '').trim().toLowerCase();
+      return unitsM2.includes(unit);
+    });
+  },
+
+  getPrestationM2ByValue(value) {
+    if (!value) return null;
+    return Pages.getPrestationsM2().find(p =>
+      String(p.id || p.reference || '') === String(value)
+    ) || null;
   },
 
   ajouterZonePhotoAuDevis(index) {
@@ -931,18 +955,25 @@ const Pages = {
     }
 
     const quantity = Number(zone.surface || 0);
-    const designation = `${zone.name || 'Zone'} surface mesurée photo`;
+    const prestationSelect = document.getElementById(`photo-zone-prestation-${index}`);
+    const prestation = Pages.getPrestationM2ByValue(prestationSelect?.value || '');
+    const unitPrice = prestation ? Number(prestation.prixHT || 0) : 0;
+    const lineTotal = quantity * unitPrice;
+    const designation = prestation
+      ? `${prestation.designation || prestation.reference || 'Prestation'} - ${zone.name || 'Zone'}`
+      : `${zone.name || 'Zone'} surface mesurée photo`;
     lines.push({
       poste: designation,
       designation,
       unite: 'm²',
       quantite: quantity,
-      prixUnitaire: 0,
-      baseHT: 0,
+      prixUnitaire: unitPrice,
+      baseHT: lineTotal,
       marge: 0,
-      totalClient: 0,
+      totalClient: lineTotal,
       source: 'photo-zone',
       photoZoneKey: zoneKey,
+      prestationRef: prestation?.reference || null,
       photoZone: {
         name: zone.name,
         surface: quantity,
