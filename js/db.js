@@ -32,6 +32,7 @@ const DB = {
     ouvragesComposition:  'plaqpro_ouvrages_composition',
     chiffrages:           'plaqpro_chiffrages',
     scannedDocuments:     'plaqpro_scanned_documents',
+    measuredPhotoZones:   'plaqpro_zones_mesurees',
   },
 
   // Données paysagisme
@@ -111,6 +112,28 @@ const DB = {
   getChantier(id)       { return this.getById(this.KEYS.chantiers, id); },
   getChantiersByClient(clientId) {
     return this.chantiers.filter(c => c.clientId === clientId);
+  },
+
+  // ── Zones mesurées depuis photo ───────────────────────────
+  getMeasuredPhotoZones() {
+    try {
+      const data = JSON.parse(localStorage.getItem(this.KEYS.measuredPhotoZones) || '{}');
+      const zones = Array.isArray(data) ? data : (Array.isArray(data.zones) ? data.zones : []);
+      const normalizedZones = zones.map(zone => ({
+        name: zone.nomZone || zone.name || 'Zone',
+        surface: Number(zone.surfaceM2 ?? zone.surface ?? 0),
+        shapeType: zone.typeForme || zone.shapeType || 'Polygone',
+        points: Array.isArray(zone.points) ? zone.points : [],
+      })).filter(zone => zone.surface > 0);
+
+      return {
+        zones: normalizedZones,
+        totalSurfaces: Number(data.totalSurfaces ?? normalizedZones.reduce((sum, zone) => sum + zone.surface, 0)),
+        dateExport: data.dateExport || null,
+      };
+    } catch(e) {
+      return { zones: [], totalSurfaces: 0, dateExport: null };
+    }
   },
 
   // ── Documents scannés ────────────────────────────────────

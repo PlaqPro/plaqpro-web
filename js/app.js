@@ -868,6 +868,32 @@ const Pages = {
 
   _devisEnCours: null,
 
+  renderMeasuredPhotoZones() {
+    const data = DB.getMeasuredPhotoZones ? DB.getMeasuredPhotoZones() : { zones: [], totalSurfaces: 0 };
+    const zones = data.zones || [];
+    if (!zones.length) return '';
+
+    const total = Number(data.totalSurfaces || zones.reduce((sum, zone) => sum + (zone.surface || 0), 0));
+    return `
+      <div class="no-print" style="margin-bottom:16px;padding:12px 14px;background:rgba(247,166,79,0.08);
+           border:1px solid rgba(247,166,79,0.22);border-radius:var(--radius-md)">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+          <div style="font-weight:700;color:var(--text-primary)">Zones mesurées depuis photo</div>
+          <div style="font-family:var(--font-mono);font-weight:700;color:var(--accent)">Total : ${total.toFixed(2)} m²</div>
+        </div>
+        <div style="display:grid;gap:6px">
+          ${zones.map(zone => `
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;
+                 padding:7px 9px;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;flex-wrap:wrap">
+              <span style="font-weight:600">${zone.name}</span>
+              <span style="color:var(--text-secondary);font-size:12px">${zone.shapeType}</span>
+              <span style="font-family:var(--font-mono);font-weight:700;color:var(--accent)">${Number(zone.surface || 0).toFixed(2)} m²</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+  },
+
   chargerDevisChantier(chantierId, genererAuto = false) {
     if (!chantierId) return;
     const id = parseInt(chantierId);
@@ -1000,6 +1026,8 @@ const Pages = {
               </tr>`).join('')}
             </tbody>
           </table>
+
+          ${Pages.renderMeasuredPhotoZones()}
 
           <!-- Totaux -->
           <div style="max-width:400px;margin-left:auto">
