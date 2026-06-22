@@ -874,6 +874,7 @@ const Pages = {
     if (!zones.length) return '';
 
     const total = Number(data.totalSurfaces || zones.reduce((sum, zone) => sum + (zone.surface || 0), 0));
+    const currentLines = Pages._devisEnCours?.lignes || [];
     return `
       <div class="no-print" style="margin-bottom:16px;padding:12px 14px;background:rgba(247,166,79,0.08);
            border:1px solid rgba(247,166,79,0.22);border-radius:var(--radius-md)">
@@ -882,16 +883,79 @@ const Pages = {
           <div style="font-family:var(--font-mono);font-weight:700;color:var(--accent)">Total : ${total.toFixed(2)} m²</div>
         </div>
         <div style="display:grid;gap:6px">
-          ${zones.map(zone => `
+          ${zones.map((zone, index) => {
+            const zoneKey = Pages.getMeasuredPhotoZoneKey(zone, index);
+            const alreadyAdded = currentLines.some(line => line.photoZoneKey === zoneKey);
+            return `
             <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;
                  padding:7px 9px;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;flex-wrap:wrap">
               <span style="font-weight:600">${zone.name}</span>
               <span style="color:var(--text-secondary);font-size:12px">${zone.shapeType}</span>
               <span style="font-family:var(--font-mono);font-weight:700;color:var(--accent)">${Number(zone.surface || 0).toFixed(2)} m²</span>
+              <button class="btn btn-secondary btn-sm" onclick="Pages.ajouterZonePhotoAuDevis(${index})" ${alreadyAdded ? 'disabled' : ''}
+                style="white-space:nowrap">${alreadyAdded ? 'Déjà ajouté' : 'Ajouter au devis'}</button>
             </div>
-          `).join('')}
+          `; }).join('')}
         </div>
       </div>`;
+  },
+
+  getMeasuredPhotoZoneKey(zone, index) {
+    return [
+      'photo-zone',
+      index,
+      zone.name || '',
+      Number(zone.surface || 0).toFixed(2),
+      zone.shapeType || ''
+    ].join('|');
+  },
+
+  ajouterZonePhotoAuDevis(index) {
+    if (!Pages._devisEnCours) {
+      App.toast('Sélectionnez ou générez un devis', 'error');
+      return;
+    }
+
+    const data = DB.getMeasuredPhotoZones ? DB.getMeasuredPhotoZones() : { zones: [] };
+    const zone = (data.zones || [])[index];
+    if (!zone) {
+      App.toast('Zone photo introuvable', 'error');
+      return;
+    }
+
+    const zoneKey = Pages.getMeasuredPhotoZoneKey(zone, index);
+    const lines = Pages._devisEnCours.lignes || [];
+    if (lines.some(line => line.photoZoneKey === zoneKey)) {
+      App.toast('Zone déjà ajoutée au devis', 'warning');
+      return;
+    }
+
+    const quantity = Number(zone.surface || 0);
+    const designation = `${zone.name || 'Zone'} surface mesurée photo`;
+    lines.push({
+      poste: designation,
+      designation,
+      unite: 'm²',
+      quantite: quantity,
+      prixUnitaire: 0,
+      baseHT: 0,
+      marge: 0,
+      totalClient: 0,
+      source: 'photo-zone',
+      photoZoneKey: zoneKey,
+      photoZone: {
+        name: zone.name,
+        surface: quantity,
+        shapeType: zone.shapeType,
+        points: zone.points || [],
+      },
+    });
+    Pages._devisEnCours.lignes = lines;
+
+    const ch = DB.getChantier(Pages._devisEnCours.chantierId);
+    const cl = ch ? DB.getClient(ch.clientId) : null;
+    Pages.afficherDevis(Pages._devisEnCours, ch, cl);
+    App.toast('Zone ajoutée au devis');
   },
 
   chargerDevisChantier(chantierId, genererAuto = false) {
