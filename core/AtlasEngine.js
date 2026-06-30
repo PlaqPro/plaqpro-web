@@ -9,18 +9,20 @@
     timestamp = new Date().toISOString(),
     objective = null,
     knowledge = [],
-    unknowns = []
+    unknowns = [],
+    eventsLog = []
   } = {}) {
     this.id = id || createId('project');
     this.type = type;
     this.value = value;
-    this.confidence = confidence;
+    this.confidence = clampConfidence(confidence);
     this.source = source;
     this.status = status;
     this.timestamp = timestamp;
     this.objective = objective;
     this.knowledge = knowledge;
     this.unknowns = unknowns;
+    this.eventsLog = eventsLog;
   }
 }
 
@@ -52,7 +54,9 @@ class UnknownItem {
     confidence = 0,
     source = 'user',
     status = 'open',
-    timestamp = new Date().toISOString()
+    timestamp = new Date().toISOString(),
+    priority = 3,
+    reason = null
   } = {}) {
     this.id = id || createId('unknown');
     this.type = type;
@@ -61,6 +65,8 @@ class UnknownItem {
     this.source = source;
     this.status = status;
     this.timestamp = timestamp;
+    this.priority = normalizePriority(priority);
+    this.reason = reason;
   }
 }
 
@@ -73,6 +79,8 @@ class Question {
     source = 'atlas',
     status = 'open',
     timestamp = new Date().toISOString(),
+    priority = 3,
+    reason = null,
     unknownId = null
   } = {}) {
     this.id = id || createId('question');
@@ -82,6 +90,8 @@ class Question {
     this.source = source;
     this.status = status;
     this.timestamp = timestamp;
+    this.priority = normalizePriority(priority);
+    this.reason = reason;
     this.unknownId = unknownId;
   }
 }
@@ -98,6 +108,12 @@ class AtlasEngine {
       status: options.status || 'active'
     });
 
+    this.logEvent('newProject', 'Project created', {
+      projectId: this.project.id,
+      value: this.project.value,
+      status: this.project.status
+    });
+
     return this.project;
   }
 
@@ -110,6 +126,12 @@ class AtlasEngine {
       confidence: options.confidence ?? 1,
       source: options.source || 'user',
       status: options.status || 'active'
+    });
+
+    this.logEvent('setObjective', 'Objective set', {
+      objectiveId: this.project.objective.id,
+      value: this.project.objective.value,
+      confidence: this.project.objective.confidence
     });
 
     this.refreshProjectConfidence();
@@ -126,6 +148,13 @@ class AtlasEngine {
     });
 
     this.project.knowledge.push(item);
+    this.logEvent('addKnowledge', 'Knowledge added', {
+      knowledgeId: item.id,
+      type: item.type,
+      value: item.value,
+      confidence: item.confidence
+    });
+
     this.refreshProjectConfidence();
     return item;
   }
@@ -136,10 +165,19 @@ class AtlasEngine {
     const item = new UnknownItem({
       ...options,
       value,
-      type: options.type || 'unknown'
+      type: options.type || 'unknown',
+      priority: options.priority ?? 3,
+      reason: options.reason ?? null
     });
 
     this.project.unknowns.push(item);
+    this.logEvent('addUnknown', 'Unknown added', {
+      unknownId: item.id,
+      value: item.value,
+      priority: item.priority,
+      reason: item.reason
+    });
+
     this.refreshProjectConfidence();
     return item;
   }
@@ -161,6 +199,13 @@ class AtlasEngine {
       confidence: unknown.confidence,
       source: unknown.source,
       status: 'active'
+    });
+
+    this.logEvent('resolveUnknown', 'Unknown resolved', {
+      unknownId: unknown.id,
+      knowledgeId: knowledge.id,
+      resolution,
+      confidence: unknown.confidence
     });
 
     this.refreshProjectConfidence();
@@ -187,6 +232,11 @@ class AtlasEngine {
     return this.project.confidence;
   }
 
+  getEventsLog() {
+    this.ensureProject();
+    return [...this.project.eventsLog];
+  }
+
   isReady() {
     this.ensureProject();
     return Boolean(this.project.objective) && this.getUnknowns('open').length === 0 && this.getConfidence() >= 0.75;
@@ -195,7 +245,7 @@ class AtlasEngine {
   nextQuestion() {
     this.ensureProject();
 
-    const unknown = this.getUnknowns('open')[0];
+    const unknown = this.getUnknowns('open').sort((left, right) => right.priority - left.priority)[0];
     if (!unknown) {
       return null;
     }
@@ -203,6 +253,8 @@ class AtlasEngine {
     return new Question({
       value: `Quelle est la valeur de "${unknown.value}" ?`,
       confidence: unknown.confidence,
+      priority: unknown.priority,
+      reason: unknown.reason,
       unknownId: unknown.id
     });
   }
@@ -219,17 +271,36 @@ class AtlasEngine {
       confidence: this.getConfidence(),
       ready: this.isReady(),
       status: this.project.status,
+      eventCount: this.project.eventsLog.length,
       timestamp: new Date().toISOString()
     };
   }
 
+  logEvent(type, message, payload = {}) {
+    this.ensureProject();
+
+    const event = {
+      id: createId('event'),
+      type,
+      message,
+      payload,
+      timestamp: new Date().toISOString()
+    };
+
+    this.project.eventsLog.push(event);
+    return event;
+  }
+
   ensureProject() {
     if (!this.project) {
-      this.newProject();
+      throw new Error('Atlas project not initialized');
     }
   }
 
   refreshProjectConfidence() {
+    this.ensureProject();
+
+    const previousStatus = this.project.status;
     const knowledgeConfidence = average(this.project.knowledge.map((item) => item.confidence));
     const objectiveConfidence = this.project.objective ? this.project.objective.confidence : 0;
     const openUnknowns = this.project.unknowns.filter((item) => item.status === 'open').length;
@@ -239,6 +310,14 @@ class AtlasEngine {
 
     this.project.confidence = clampConfidence(baseConfidence - unknownPenalty);
     this.project.status = Boolean(this.project.objective) && openUnknowns === 0 && this.project.confidence >= 0.75 ? 'ready' : 'active';
+
+    if (this.project.status !== previousStatus) {
+      this.logEvent('refreshProjectConfidence', 'Project status changed', {
+        from: previousStatus,
+        to: this.project.status,
+        confidence: this.project.confidence
+      });
+    }
   }
 }
 
@@ -252,6 +331,14 @@ function clampConfidence(value) {
   }
 
   return Math.max(0, Math.min(1, Number(value)));
+}
+
+function normalizePriority(value) {
+  if (Number.isNaN(Number(value))) {
+    return 3;
+  }
+
+  return Number(value);
 }
 
 function average(values) {
