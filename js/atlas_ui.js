@@ -66,8 +66,8 @@
     return value;
   }
 
-  function addMessage(role, content) {
-    state.history.push({ id: createId("msg"), role, content, timestamp: new Date().toISOString() });
+  function addMessage(role, content, details = null) {
+    state.history.push({ id: createId("msg"), role, content, details, timestamp: new Date().toISOString() });
     renderConversation();
   }
 
@@ -91,15 +91,59 @@
   }
 
   function buildQuestion(requirement) {
+    const expectedAnswerType = inferExpectedAnswerType(requirement);
+
     return {
       id: createId("question"),
       requirementKey: requirement.key,
       label: requirement.label,
       question: (requirement.defaultQuestions && requirement.defaultQuestions[0]) || `Pouvez-vous préciser : ${requirement.label} ?`,
-      reason: requirement.description || "Information nécessaire au diagnostic.",
+      reason: requirement.description || `J'en ai besoin pour compléter ${requirement.label}.`,
+      impact: buildImpact(requirement),
+      example: buildExample(expectedAnswerType, requirement),
       priority: requirement.priority || 3,
+      expectedAnswerType,
       acceptedSources: requirement.acceptedSources || ["USER"]
     };
+  }
+
+  function inferExpectedAnswerType(requirement) {
+    const rules = requirement.validationRules || [];
+    const types = rules.map((rule) => rule && rule.type).filter(Boolean);
+    const acceptedSources = requirement.acceptedSources || [];
+
+    if (types.includes("enum")) return "enum";
+    if (types.includes("range")) return "range";
+    if (types.includes("number")) return "number";
+    if (types.includes("boolean")) return "boolean";
+    if (acceptedSources.includes("PHOTO")) return "photo";
+    if (acceptedSources.includes("PLAN")) return "plan";
+    if (acceptedSources.includes("PDF")) return "pdf";
+    if (acceptedSources.includes("MEASURE")) return "measure";
+    return "text";
+  }
+
+  function buildImpact(requirement) {
+    if (requirement.required) {
+      return `Sans cette information, le diagnostic reste bloqué sur ${requirement.label}.`;
+    }
+
+    return `Sans cette information, le diagnostic reste moins précis pour ${requirement.label}.`;
+  }
+
+  function buildExample(expectedAnswerType, requirement) {
+    if (["number", "range", "measure"].includes(expectedAnswerType)) return "2,50 m";
+    if (expectedAnswerType === "boolean") return "oui";
+
+    if (expectedAnswerType === "enum") {
+      const enumRule = (requirement.validationRules || []).find((rule) => rule && rule.type === "enum" && Array.isArray(rule.value));
+      return enumRule && enumRule.value.length > 0 ? String(enumRule.value[0]) : "option proposée";
+    }
+
+    if (expectedAnswerType === "photo") return "photo du support";
+    if (expectedAnswerType === "plan") return "plan du chantier";
+    if (expectedAnswerType === "pdf") return "document PDF";
+    return "valeur renseignée";
   }
 
   function askNextQuestion() {
@@ -120,7 +164,7 @@
     input.value = "";
     input.placeholder = "Votre réponse";
     submit.textContent = "Répondre";
-    addMessage("assistant", state.currentQuestion.question);
+    addMessage("assistant", state.currentQuestion.question, { question: state.currentQuestion });
     renderDiagnostic();
   }
 
@@ -206,10 +250,40 @@
       content.textContent = message.content;
 
       item.append(label, content);
+
+      if (message.details && message.details.question) {
+        item.appendChild(renderQuestionDetails(message.details.question));
+      }
+
       conversation.appendChild(item);
     });
 
     conversation.scrollTop = conversation.scrollHeight;
+  }
+
+  function renderQuestionDetails(question) {
+    const details = document.createElement("div");
+    details.className = "atlas-question-details";
+
+    const rows = [
+      ["Question", question.question],
+      ["Pourquoi", question.reason],
+      ["Exemple", question.example]
+    ];
+
+    rows.forEach(([title, value]) => {
+      if (!value) return;
+      const row = document.createElement("p");
+      row.className = "atlas-question-detail";
+      const strong = document.createElement("strong");
+      strong.textContent = title;
+      const span = document.createElement("span");
+      span.textContent = value;
+      row.append(strong, span);
+      details.appendChild(row);
+    });
+
+    return details;
   }
 
   function renderDiagnostic() {

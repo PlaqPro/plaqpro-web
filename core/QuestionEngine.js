@@ -1,10 +1,12 @@
-class UserQuestion {
+﻿class UserQuestion {
   constructor({
     id,
     requirementKey,
     label,
     question,
     reason = null,
+    impact = null,
+    example = null,
     priority = 3,
     expectedAnswerType = 'text',
     acceptedSources = [],
@@ -14,7 +16,9 @@ class UserQuestion {
     this.requirementKey = requirementKey;
     this.label = label;
     this.question = question;
-    this.reason = reason;
+    this.reason = reason || buildDefaultReason(label);
+    this.impact = impact || buildDefaultImpact({ label });
+    this.example = example || buildDefaultExample(expectedAnswerType);
     this.priority = normalizePriority(priority);
     this.expectedAnswerType = expectedAnswerType;
     this.acceptedSources = Array.isArray(acceptedSources) ? [...acceptedSources] : [];
@@ -40,14 +44,17 @@ class QuestionEngine {
         const missingItem = missingItems.find((item) => item.key === action.targetRequirementKey) || {};
         const merged = { ...missingItem, ...action };
         const label = missingItem.label || normalizeLabel(action.label) || action.targetRequirementKey;
+        const expectedAnswerType = this.inferExpectedAnswerType(merged);
 
         return new UserQuestion({
           requirementKey: action.targetRequirementKey,
           label,
           question: this.buildQuestion(label, merged),
-          reason: action.reason || missingItem.reason || null,
+          reason: this.buildReason(label, merged),
+          impact: this.buildImpact(label, merged),
+          example: this.buildExample(expectedAnswerType, merged),
           priority: action.priority ?? missingItem.priority ?? 3,
-          expectedAnswerType: this.inferExpectedAnswerType(merged),
+          expectedAnswerType,
           acceptedSources: missingItem.acceptedSources || action.acceptedSources || [],
           actionType: action.type || null
         });
@@ -121,6 +128,38 @@ class QuestionEngine {
 
     return `Quelle est la valeur de ${label} ?`;
   }
+
+  buildReason(label, item = {}) {
+    if (typeof item.reason === 'string' && item.reason.trim()) {
+      return item.reason;
+    }
+
+    if (typeof item.description === 'string' && item.description.trim()) {
+      return item.description;
+    }
+
+    return buildDefaultReason(label);
+  }
+
+  buildImpact(label, item = {}) {
+    if (typeof item.impact === 'string' && item.impact.trim()) {
+      return item.impact;
+    }
+
+    if (item.required) {
+      return `Sans cette information, le diagnostic reste bloque sur ${label}.`;
+    }
+
+    return buildDefaultImpact({ label });
+  }
+
+  buildExample(expectedAnswerType, item = {}) {
+    if (typeof item.example === 'string' && item.example.trim()) {
+      return item.example;
+    }
+
+    return buildDefaultExample(expectedAnswerType, item);
+  }
 }
 
 function normalizeValidationTypes(validationRules = []) {
@@ -149,6 +188,45 @@ function normalizePriority(priority) {
   }
 
   return normalized;
+}
+
+function buildDefaultReason(label) {
+  return `J'en ai besoin pour completer l'information ${label || 'demandee'}.`;
+}
+
+function buildDefaultImpact({ label } = {}) {
+  return `Sans cette information, le diagnostic reste incomplet${label ? ` pour ${label}` : ''}.`;
+}
+
+function buildDefaultExample(expectedAnswerType, item = {}) {
+  if (expectedAnswerType === 'number' || expectedAnswerType === 'range' || expectedAnswerType === 'measure') {
+    return '2,50 m';
+  }
+
+  if (expectedAnswerType === 'boolean') {
+    return 'oui';
+  }
+
+  if (expectedAnswerType === 'enum') {
+    const enumRule = Array.isArray(item.validationRules)
+      ? item.validationRules.find((rule) => rule && rule.type === 'enum' && Array.isArray(rule.value))
+      : null;
+    return enumRule && enumRule.value.length > 0 ? String(enumRule.value[0]) : 'option proposee';
+  }
+
+  if (expectedAnswerType === 'photo') {
+    return 'photo du support';
+  }
+
+  if (expectedAnswerType === 'plan') {
+    return 'plan du chantier';
+  }
+
+  if (expectedAnswerType === 'pdf') {
+    return 'document PDF';
+  }
+
+  return 'valeur renseignee';
 }
 
 function createId(prefix) {

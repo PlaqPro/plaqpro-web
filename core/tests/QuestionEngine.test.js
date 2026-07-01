@@ -1,4 +1,6 @@
-const assert = require('node:assert/strict');
+﻿const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const { AtlasEngine } = require('../AtlasEngine');
 const { KnowledgeSource } = require('../KnowledgeSchema');
 const { DiagnosticEngine, DiagnosticActionType } = require('../DiagnosticEngine');
@@ -81,6 +83,48 @@ test('defaultQuestions utilisees', () => {
   assert.equal(question.question, 'Quelle surface faut-il retenir ?');
 });
 
+
+test('reason impact example presents', () => {
+  const report = createDoublageReport();
+  const question = new QuestionEngine(report).getNextQuestion();
+
+  assert.equal(typeof question.reason, 'string');
+  assert.equal(question.reason.length > 0, true);
+  assert.equal(typeof question.impact, 'string');
+  assert.equal(question.impact.length > 0, true);
+  assert.equal(typeof question.example, 'string');
+  assert.equal(question.example.length > 0, true);
+});
+
+test('example adapte au type attendu', () => {
+  const report = {
+    suggestedActions: [
+      {
+        type: DiagnosticActionType.ASK_USER,
+        label: 'Choix finition',
+        priority: 3,
+        targetRequirementKey: 'finition',
+        validationRules: [{ type: 'enum', value: ['mat', 'satin'] }]
+      }
+    ],
+    missingItems: []
+  };
+
+  const question = new QuestionEngine(report).getNextQuestion();
+
+  assert.equal(question.expectedAnswerType, 'enum');
+  assert.equal(question.example, 'mat');
+});
+
+test('UI affiche correctement les informations compactes', () => {
+  const uiPath = path.join(__dirname, '..', '..', 'js', 'atlas_ui.js');
+  const uiSource = fs.readFileSync(uiPath, 'utf8');
+
+  assert.match(uiSource, /Question/);
+  assert.match(uiSource, /Pourquoi/);
+  assert.match(uiSource, /Exemple/);
+  assert.match(uiSource, /atlas-question-detail/);
+});
 test('expectedAnswerType number', () => {
   const engine = new QuestionEngine({ suggestedActions: [], missingItems: [] });
 
