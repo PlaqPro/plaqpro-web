@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --atlas-bg: #f5f7fb;
   --atlas-panel: #ffffff;
   --atlas-text: #18202f;
@@ -198,6 +198,105 @@ h2 {
 .atlas-status.ready {
   background: #e7f6ee;
   color: var(--atlas-ok);
+}
+
+
+.atlas-progress {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--atlas-line);
+  border-radius: var(--atlas-radius);
+  padding: 12px;
+  background: #f8fbff;
+}
+
+.atlas-progress-header,
+.atlas-progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.atlas-progress-header strong {
+  color: var(--atlas-text);
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.atlas-state-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  background: #eaf3ff;
+  color: var(--atlas-primary-dark);
+  white-space: nowrap;
+}
+
+.atlas-state-badge.ready {
+  background: #e7f6ee;
+  color: var(--atlas-ok);
+}
+
+.atlas-state-badge.blocked {
+  background: #fff0f0;
+  color: #a13b3b;
+}
+
+.atlas-progress-track {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dde7f4;
+}
+
+.atlas-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--atlas-primary);
+  transition: width 180ms ease;
+}
+
+.atlas-progress-meta {
+  color: var(--atlas-muted);
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.atlas-progress-meta span:last-child {
+  color: var(--atlas-text);
+  font-weight: 700;
+  text-align: right;
+}
+
+.atlas-question-details {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+  border-top: 1px solid var(--atlas-line);
+  padding-top: 10px;
+}
+
+.atlas-question-detail {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 8px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.atlas-question-detail strong {
+  margin: 0;
+  font-size: 0.76rem;
+}
+
+.atlas-question-detail span {
+  min-width: 0;
 }
 
 .atlas-diagnostic ul {

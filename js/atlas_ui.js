@@ -71,9 +71,13 @@
     renderConversation();
   }
 
+  function getRequiredRequirements() {
+    return state.requirements.filter((requirement) => requirement.required);
+  }
+
   function getRequiredMissing() {
-    return state.requirements
-      .filter((requirement) => requirement.required && !state.knowledge.has(requirement.key))
+    return getRequiredRequirements()
+      .filter((requirement) => !state.knowledge.has(requirement.key))
       .sort((a, b) => (b.priority || 3) - (a.priority || 3));
   }
 
@@ -84,10 +88,73 @@
   }
 
   function getConfidence() {
-    const required = state.requirements.filter((requirement) => requirement.required);
+    const required = getRequiredRequirements();
     if (required.length === 0) return 100;
     const completed = required.filter((requirement) => state.knowledge.has(requirement.key)).length;
     return Math.round((completed / required.length) * 100);
+  }
+
+  function getProgress() {
+    const required = getRequiredRequirements();
+    const completedRequirements = required
+      .filter((requirement) => state.knowledge.has(requirement.key))
+      .map((requirement) => requirement.key);
+    const remainingRequirements = required
+      .filter((requirement) => !state.knowledge.has(requirement.key))
+      .map((requirement) => requirement.key);
+    const blockingRequirements = [...remainingRequirements];
+    const completionPercent = required.length === 0
+      ? 100
+      : Math.round((completedRequirements.length / required.length) * 100);
+
+    return {
+      completionPercent,
+      completedRequirements,
+      remainingRequirements,
+      blockingRequirements
+    };
+  }
+
+  function getNextAction() {
+    if (state.ready || !state.currentQuestion) {
+      return null;
+    }
+
+    return {
+      type: "ASK_USER",
+      label: `Répondre : ${state.currentQuestion.label}`,
+      description: state.currentQuestion.reason,
+      priority: state.currentQuestion.priority,
+      origin: "diagnostic",
+      blocking: true
+    };
+  }
+
+  function getStatus() {
+    const progress = getProgress();
+    const nextAction = getNextAction();
+    const confidence = getConfidence();
+    const blocked = state.started && !state.ready && !nextAction && progress.blockingRequirements.length > 0;
+    const badge = state.ready ? "Prêt" : blocked ? "Bloqué" : "Diagnostic en cours";
+
+    return {
+      ready: state.ready,
+      status: blocked ? "blocked" : state.ready ? "ready" : "in_progress",
+      confidence,
+      progress,
+      nextAction,
+      summary: {
+        objective: state.objectiveLabel || state.objective,
+        ready: state.ready,
+        confidence,
+        completionPercent: progress.completionPercent,
+        completedRequirements: progress.completedRequirements.length,
+        remainingRequirements: progress.remainingRequirements.length,
+        blockingRequirements: progress.blockingRequirements.length,
+        nextActionLabel: nextAction ? nextAction.label : null,
+        badge
+      }
+    };
   }
 
   function buildQuestion(requirement) {
@@ -286,12 +353,55 @@
     return details;
   }
 
+  function renderProgress(status) {
+    const section = document.createElement("section");
+    section.className = "atlas-progress";
+
+    const header = document.createElement("div");
+    header.className = "atlas-progress-header";
+
+    const title = document.createElement("strong");
+    title.textContent = `${status.progress.completionPercent}%`;
+
+    const badge = document.createElement("span");
+    badge.className = `atlas-state-badge ${status.status}`;
+    badge.textContent = status.summary.badge;
+
+    header.append(title, badge);
+
+    const track = document.createElement("div");
+    track.className = "atlas-progress-track";
+    track.setAttribute("aria-label", "Progression Atlas");
+    track.setAttribute("aria-valuemin", "0");
+    track.setAttribute("aria-valuemax", "100");
+    track.setAttribute("aria-valuenow", String(status.progress.completionPercent));
+    track.setAttribute("role", "progressbar");
+
+    const fill = document.createElement("div");
+    fill.className = "atlas-progress-fill";
+    fill.style.width = `${status.progress.completionPercent}%`;
+    track.appendChild(fill);
+
+    const meta = document.createElement("div");
+    meta.className = "atlas-progress-meta";
+
+    const remaining = document.createElement("span");
+    remaining.textContent = `${status.progress.remainingRequirements.length} information${status.progress.remainingRequirements.length > 1 ? "s" : ""} restante${status.progress.remainingRequirements.length > 1 ? "s" : ""}`;
+
+    const action = document.createElement("span");
+    action.textContent = status.nextAction ? status.nextAction.label : "Aucune action restante";
+
+    meta.append(remaining, action);
+    section.append(header, track, meta);
+
+    return section;
+  }
+
   function renderDiagnostic() {
     const requiredMissing = getRequiredMissing();
     const optionalMissing = getOptionalMissing();
-    const confidence = getConfidence();
     const knownItems = Array.from(state.knowledge.values());
-    const statusText = state.ready ? "Prêt" : "En cours";
+    const status = getStatus();
 
     diagnostic.innerHTML = "";
 
@@ -303,10 +413,7 @@
       return;
     }
 
-    const status = document.createElement("div");
-    status.className = `atlas-status${state.ready ? " ready" : ""}`;
-    status.textContent = `${statusText} - Confiance ${confidence}%`;
-    diagnostic.appendChild(status);
+    diagnostic.appendChild(renderProgress(status));
 
     const known = document.createElement("div");
     known.innerHTML = `<strong>Connaissances obtenues</strong><ul>${knownItems.map((item) => `<li>${escapeHtml(item.key)} : ${escapeHtml(String(item.value))}</li>`).join("") || "<li>Aucune pour le moment</li>"}</ul>`;
@@ -320,9 +427,9 @@
     optional.innerHTML = `<strong>Informations encore estimées</strong><ul>${optionalMissing.map((item) => `<li>${escapeHtml(item.label)}</li>`).join("") || "<li>Aucune information optionnelle demandée</li>"}</ul>`;
     diagnostic.appendChild(optional);
 
-    if (state.currentQuestion) {
+    if (status.nextAction) {
       const action = document.createElement("div");
-      action.innerHTML = `<strong>Prochaine action</strong><p>${escapeHtml(state.currentQuestion.acceptedSources.map((source) => SOURCE_LABELS[source] || source).join(", "))}</p>`;
+      action.innerHTML = `<strong>Prochaine action</strong><p>${escapeHtml(status.nextAction.description || status.nextAction.label)}</p>`;
       diagnostic.appendChild(action);
     }
   }
