@@ -1,9 +1,9 @@
-const assert = require('node:assert/strict');
+﻿const assert = require('node:assert/strict');
 const { AtlasEngine } = require('../AtlasEngine');
 const { ConversationEngine } = require('../ConversationEngine');
 const { DiagnosticEngine } = require('../DiagnosticEngine');
 const { QuestionEngine } = require('../QuestionEngine');
-const { AtlasSessionOrchestrator } = require('../AtlasSessionOrchestrator');
+const { AtlasSessionOrchestrator, NextAction } = require('../AtlasSessionOrchestrator');
 const { buildSchema, loadObjective } = require('../../knowledge/ObjectiveRegistry');
 
 function test(name, callback) {
@@ -42,6 +42,9 @@ test('demarre une session avec objectif', () => {
   assert.equal(atlasEngine.project.objective.value, 'doublage');
   assert.equal(conversationEngine.session.status, 'active');
   assert.equal(status.ready, false);
+  assert.ok(status.progress);
+  assert.ok(status.nextAction);
+  assert.ok(status.summary);
 });
 
 test('genere une premiere question', () => {
@@ -86,6 +89,67 @@ test('le diagnostic se met a jour', () => {
   assert.equal(after.missingCount < before.missingCount, true);
 });
 
+test('progression 0 %', () => {
+  const { orchestrator } = createOrchestrator();
+  const status = orchestrator.start('doublage');
+
+  assert.equal(status.progress.completionPercent, 0);
+  assert.equal(status.progress.completedRequirements.length, 0);
+  assert.equal(status.progress.remainingRequirements.length, 6);
+  assert.equal(status.progress.blockingRequirements.length, 6);
+});
+
+test('progression intermediaire', () => {
+  const { orchestrator } = createOrchestrator();
+  orchestrator.start('doublage');
+  const question = orchestrator.generateNextQuestion();
+  orchestrator.submitAnswer({ value: answerForQuestion(question), source: sourceForQuestion(question), confidence: 1 });
+
+  const progress = orchestrator.getProgress();
+
+  assert.equal(progress.completionPercent, 17);
+  assert.equal(progress.completedRequirements.length, 1);
+  assert.equal(progress.remainingRequirements.length, 5);
+  assert.equal(progress.blockingRequirements.length, 5);
+});
+
+test('progression 100 %', () => {
+  const { orchestrator } = createOrchestrator();
+  completeRequiredRequirements(orchestrator);
+
+  const progress = orchestrator.getProgress();
+
+  assert.equal(progress.completionPercent, 100);
+  assert.equal(progress.completedRequirements.length, 6);
+  assert.equal(progress.remainingRequirements.length, 0);
+  assert.equal(progress.blockingRequirements.length, 0);
+});
+
+test('prochaine action correcte', () => {
+  const { orchestrator } = createOrchestrator();
+  orchestrator.start('doublage');
+  const nextAction = orchestrator.getNextAction();
+  const remainingActions = orchestrator.getRemainingActions();
+
+  assert.ok(nextAction instanceof NextAction);
+  assert.equal(nextAction.blocking, true);
+  assert.equal(nextAction.origin, 'diagnostic');
+  assert.equal(nextAction.priority, 5);
+  assert.equal(nextAction.type, 'MEASURE');
+  assert.equal(nextAction.label, 'Mesurer: Surface des murs');
+  assert.deepEqual(remainingActions[0], nextAction);
+});
+
+test('aucune action lorsque projet termine', () => {
+  const { orchestrator } = createOrchestrator();
+  completeRequiredRequirements(orchestrator);
+
+  assert.equal(orchestrator.getStatus().ready, true);
+  assert.equal(orchestrator.getNextAction(), null);
+  assert.deepEqual(orchestrator.getRemainingActions(), []);
+  assert.equal(orchestrator.getStatus().nextAction, null);
+});
+
 test('boucle jusqu a projet pret', () => {
   const { orchestrator } = createOrchestrator();
   orchestrator.start('doublage');
@@ -110,6 +174,8 @@ test('boucle jusqu a projet pret', () => {
 
   assert.equal(status.ready, true);
   assert.equal(status.blockingCount, 0);
+  assert.equal(status.progress.completionPercent, 100);
+  assert.equal(status.nextAction, null);
   assert.equal(orchestrator.getSummary().diagnostic.ready, true);
 });
 
@@ -121,7 +187,28 @@ test('aucun moteur existant modifie inutilement', () => {
   assert.ok(conversationEngine instanceof ConversationEngine);
   assert.equal(typeof atlasEngine.addKnowledge, 'function');
   assert.equal(typeof conversationEngine.recordAnswer, 'function');
+  assert.equal(typeof orchestrator.getProgress, 'function');
 });
+
+function completeRequiredRequirements(orchestrator) {
+  orchestrator.start('doublage');
+
+  let guard = 0;
+  while (!orchestrator.getStatus().ready && guard < 20) {
+    const question = orchestrator.generateNextQuestion();
+
+    if (!question) {
+      break;
+    }
+
+    orchestrator.submitAnswer({
+      value: answerForQuestion(question),
+      source: sourceForQuestion(question),
+      confidence: 1
+    });
+    guard += 1;
+  }
+}
 
 function answerForQuestion(question) {
   if (question.expectedAnswerType === 'number' || question.expectedAnswerType === 'range' || question.expectedAnswerType === 'measure') {
@@ -146,3 +233,4 @@ function sourceForQuestion(question) {
 
   return 'USER';
 }
+
