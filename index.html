@@ -236,6 +236,7 @@
     // Surcharger renderSidebar
     const nav = [
       { page:'dashboard', icon:'🏠', label:'Tableau de bord' },
+      { page:'atlas', icon:'🤖', label:'Atlas' },
       { page:'calcExpressV2', icon:'⚡', label:'Nouveau chiffrage' },
       { section:'📂 Gestion' },
       { page:'clients', icon:'👥', label:'Clients' },
@@ -352,6 +353,7 @@
 
       const titles = {
         dashboard:   'Tableau de bord',
+        atlas:       '🤖 Atlas',
         calculateur: 'Calcul Express',
         clients:     'Clients',
         chantiers:   'Chantiers',
@@ -412,6 +414,18 @@
 
       const pageMap = {
         dashboard:   function() { return Pages.dashboard(); },
+        atlas:       function() {
+          var frame = document.createElement('iframe');
+          frame.className = 'atlas-frame';
+          frame.title = 'Atlas';
+          frame.src = 'atlas.html';
+          frame.style.width = '100%';
+          frame.style.minHeight = 'calc(100vh - 120px)';
+          frame.style.border = '0';
+          frame.style.borderRadius = '12px';
+          frame.loading = 'lazy';
+          return frame;
+        },
         calculateur: function() { return Pages.calculateur(); },
         clients:     function() { return Pages.clients(); },
         chantiers:   function() { return Pages.chantiers(params); },

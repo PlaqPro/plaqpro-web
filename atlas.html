@@ -1,0 +1,35 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atlas - Diagnostic chantier</title>
+  <link rel="stylesheet" href="css/atlas.css">
+</head>
+<body>
+  <main class="atlas-shell" aria-labelledby="atlas-title">
+    <section class="atlas-panel atlas-intro">
+      <p class="atlas-kicker">Assistant chantier</p>
+      <h1 id="atlas-title">Atlas</h1>
+      <p class="atlas-lead">Racontez-moi votre chantier.</p>
+      <form id="atlas-form" class="atlas-form">
+        <label class="atlas-label" for="atlas-input">Votre réponse</label>
+        <textarea id="atlas-input" rows="4" autocomplete="off" placeholder="doublage, peinture ou carrelage"></textarea>
+        <button id="atlas-submit" type="submit">Commencer le diagnostic</button>
+      </form>
+    </section>
+
+    <section class="atlas-panel atlas-conversation-panel" aria-labelledby="atlas-conversation-title">
+      <h2 id="atlas-conversation-title">Conversation</h2>
+      <div id="atlas-conversation" class="atlas-conversation" aria-live="polite"></div>
+    </section>
+
+    <section class="atlas-panel atlas-diagnostic-panel" aria-labelledby="atlas-diagnostic-title">
+      <h2 id="atlas-diagnostic-title">Diagnostic</h2>
+      <div id="atlas-diagnostic" class="atlas-diagnostic" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <script src="js/atlas_ui.js" defer></script>
+</body>
+</html>
