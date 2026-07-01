@@ -1,6 +1,8 @@
 ﻿(function() {
   "use strict";
 
+  const INTENTS_CATALOG = "knowledge/intents/intents.json";
+
   const OBJECTIVES = {
     doublage: "knowledge/objectives/doublage.json",
     peinture: "knowledge/objectives/peinture.json",
@@ -43,7 +45,98 @@
   }
 
   function normalizeObjective(value) {
-    return String(value || "").trim().toLowerCase();
+    return normalizeIntentText(value);
+  }
+
+  function normalizeIntentText(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim()
+      .replace(/\s+/g, " ");
+  }
+
+  async function loadIntentCatalog() {
+    const response = await fetch(INTENTS_CATALOG);
+
+    if (!response.ok) {
+      throw new Error(`Impossible de charger ${INTENTS_CATALOG}`);
+    }
+
+    const catalog = await response.json();
+    return Array.isArray(catalog.intents) ? catalog.intents : [];
+  }
+
+  async function resolveObjectiveFromInput(rawValue) {
+    const directObjective = normalizeObjective(rawValue);
+
+    if (OBJECTIVES[directObjective]) {
+      return directObjective;
+    }
+
+    const intents = await loadIntentCatalog();
+    const match = getBestIntentMatch(rawValue, intents);
+
+    return match ? match.linkedObjective : null;
+  }
+
+  function getBestIntentMatch(text, intents) {
+    const normalizedText = normalizeIntentText(text);
+
+    if (!normalizedText) {
+      return null;
+    }
+
+    const matches = intents
+      .map((intent) => scoreIntent(intent, normalizedText))
+      .sort((left, right) => right.confidence - left.confidence || right.score - left.score);
+    const bestMatch = matches[0] || null;
+
+    if (!bestMatch || bestMatch.confidence < bestMatch.confidenceThreshold) {
+      return null;
+    }
+
+    return bestMatch;
+  }
+
+  function scoreIntent(intent, normalizedText) {
+    const examples = Array.isArray(intent.examples) ? intent.examples : [];
+    const keywords = Array.isArray(intent.keywords) ? intent.keywords : [];
+    const words = new Set(normalizedText.split(" ").filter(Boolean));
+    let score = 0;
+
+    if (normalizeIntentText(intent.linkedObjective) === normalizedText || normalizeIntentText(intent.id) === normalizedText) {
+      score += 10;
+    }
+
+    examples.map(normalizeIntentText).forEach((example) => {
+      if (!example) return;
+      if (example === normalizedText) {
+        score += 8;
+      } else if (normalizedText.includes(example) || example.includes(normalizedText)) {
+        score += 4;
+      }
+    });
+
+    keywords.map(normalizeIntentText).forEach((keyword) => {
+      if (!keyword) return;
+      if (normalizedText.includes(keyword)) {
+        score += keyword.includes(" ") ? 3 : 2;
+      } else if (words.has(keyword)) {
+        score += 2;
+      }
+    });
+
+    return {
+      id: intent.id,
+      label: intent.label,
+      linkedObjective: intent.linkedObjective,
+      confidence: Math.min(1, score / 10),
+      confidenceThreshold: Number.isFinite(Number(intent.confidenceThreshold)) ? Number(intent.confidenceThreshold) : 0.35,
+      score
+    };
   }
 
   function normalizeAnswer(requirement, rawValue) {
@@ -236,16 +329,27 @@
   }
 
   async function startSession(rawObjective) {
-    const objective = normalizeObjective(rawObjective);
-    const objectivePath = OBJECTIVES[objective];
+    submit.disabled = true;
 
-    if (!objectivePath) {
-      addMessage("system", "Objectif inconnu. Choisissez doublage, peinture ou carrelage.");
+    let objective = null;
+
+    try {
+      objective = await resolveObjectiveFromInput(rawObjective);
+    } catch (error) {
+      addMessage("system", error.message || "Chargement des intentions impossible.");
       renderDiagnostic();
+      submit.disabled = false;
       return;
     }
 
-    submit.disabled = true;
+    const objectivePath = objective ? OBJECTIVES[objective] : null;
+
+    if (!objectivePath) {
+      addMessage("system", "Je n’ai pas encore reconnu l’objectif. Essayez : doublage, peinture ou carrelage.");
+      renderDiagnostic();
+      submit.disabled = false;
+      return;
+    }
 
     try {
       const response = await fetch(objectivePath);

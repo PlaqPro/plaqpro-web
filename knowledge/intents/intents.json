@@ -1,0 +1,80 @@
+{
+  "intents": [
+    {
+      "id": "doublage",
+      "label": "Doublage / isolation des murs",
+      "examples": [
+        "doublage",
+        "Je dois isoler les murs",
+        "Je veux doubler les murs",
+        "préparer un doublage",
+        "poser de l'isolant sur les murs"
+      ],
+      "keywords": [
+        "doublage",
+        "doubler",
+        "isoler",
+        "isolation",
+        "isolant",
+        "murs",
+        "mur",
+        "placo",
+        "contre cloison"
+      ],
+      "linkedObjective": "doublage",
+      "confidenceThreshold": 0.35
+    },
+    {
+      "id": "peinture",
+      "label": "Peinture",
+      "examples": [
+        "peinture",
+        "Je dois peindre une pièce",
+        "Je veux repeindre les murs",
+        "préparer un chantier peinture",
+        "peindre les plafonds"
+      ],
+      "keywords": [
+        "peinture",
+        "peindre",
+        "repeindre",
+        "murs",
+        "mur",
+        "plafond",
+        "plafonds",
+        "couche",
+        "finition"
+      ],
+      "linkedObjective": "peinture",
+      "confidenceThreshold": 0.35
+    },
+    {
+      "id": "carrelage",
+      "label": "Carrelage",
+      "examples": [
+        "carrelage",
+        "Je dois poser du carrelage",
+        "poser du carrelage au sol",
+        "préparer une pose de faïence",
+        "carreler une salle de bain"
+      ],
+      "keywords": [
+        "carrelage",
+        "carreler",
+        "carrelé",
+        "carrele",
+        "carrelé",
+        "carrelage",
+        "poser",
+        "pose",
+        "sol",
+        "faience",
+        "faïence",
+        "joint",
+        "joints"
+      ],
+      "linkedObjective": "carrelage",
+      "confidenceThreshold": 0.35
+    }
+  ]
+}
